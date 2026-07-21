@@ -115,6 +115,22 @@ describe('isDraftDirty', () => {
     expect(isDraftDirty(savedItems, savedItems)).toBe(false);
   });
 
+  it('does not treat metadata-only differences as dirty', () => {
+    const savedWithMetadata = {
+      ...savedItems,
+      submittedAt: '2026-01-01T10:00:00.000Z',
+      updatedAt: '2026-01-01T11:00:00.000Z',
+      timingStatus: 'on-time' as const,
+      basePoints: 20,
+      timingAdjustment: 5 as const,
+      totalPoints: 25,
+      menuVersion: '2026-v1',
+      menuCycleWeek: 1,
+    };
+    const draft: DraftSnapshot = { ...savedItems };
+    expect(isDraftDirty(draft, savedWithMetadata)).toBe(false);
+  });
+
   it('treats identical no-lunch declarations as not dirty', () => {
     const saved: DraftSnapshot = { noLunch: true, quantities: {} };
     const draft: DraftSnapshot = { noLunch: true, quantities: { meatballs: 0 } };

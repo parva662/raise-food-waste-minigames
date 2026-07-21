@@ -7,5 +7,18 @@ export default defineConfig(({ command }) => ({
   plugins: [react()],
   test: {
     environment: 'node',
+    setupFiles: ['./src/test/setup.ts'],
+    include: ['src/**/*.test.{ts,tsx}'],
+    coverage: {
+      provider: 'v8',
+      reporter: ['text', 'json-summary', 'html'],
+      include: [
+        'src/services/**/*.ts',
+        'src/repositories/**/*.ts',
+        'src/utils/**/*.ts',
+        'src/hooks/**/*.ts',
+      ],
+      exclude: ['**/*.test.ts', '**/*.test.tsx', 'src/test/**'],
+    },
   },
 }));

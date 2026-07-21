@@ -89,6 +89,11 @@ function buildMenuItems(itemIds: string[]): MenuItem[] {
     .filter((item): item is MenuItem => item !== undefined);
 }
 
+/** Returns catalogue IDs that are missing from the shared food catalogue. */
+export function findMissingCatalogueIds(itemIds: string[]): string[] {
+  return itemIds.filter((id) => foodCatalogue[id] === undefined);
+}
+
 export function resolveMenuForDate(lunchDate: string): MenuAvailability {
   if (!isWithinValidity(lunchDate)) {
     return { status: 'unavailable' };
