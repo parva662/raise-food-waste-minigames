@@ -1,311 +1,141 @@
-# Student Lunch Declaration — Product and Technical Specification
+# Student lunch declaration — product and technical specification
 
-**Document status:** Derived from repository evidence (source, tests, config).  
-**Repository:** `gamebus-lunch-dnd-v2`  
-**Evidence labels:** CONFIRMED BY CODE | CONFIRMED BY TEST | INFERRED | UNKNOWN
-
-**Revision (2026-07-27):** Canteen-accurate meal types (regular / soup / no lunch). Single final submission. Regular lunch portion quantities restored. Compact game-status UI. Temporary menu data unchanged.
+**Repository:** `gamebus-lunch-dnd-v2` (npm package name; GitHub: `raise-food-waste-minigames`)  
+**Status:** Current implementation in `src/` is authoritative.  
+**GameBus integration:** Design only — see [`GAMEBUS_LUNCH_CONTRACT.md`](./GAMEBUS_LUNCH_CONTRACT.md).
 
 ---
 
 ## 1. Purpose
 
-Students declare tomorrow’s canteen lunch so the kitchen can plan quantities. **CONFIRMED BY CODE:** `GameStatusHeader`, `useLunchSelection` (`getTomorrowIsoDate`).
-
-Workflow:
-
-1. Choose **Regular lunch**, **Soup lunch**, or **No lunch**.
-2. Complete the choice (regular: ≥1 of main/vegetarian; soup: fixed package).
-3. **Submit once** before the deadline; declaration becomes read-only.
-4. See deadline, points, and confirmation toast.
-
-**CONFIRMED BY CODE:** Single-page app (`main.tsx`, `App.tsx`); no routing.
+Students declare tomorrow’s canteen lunch using one of three mutually exclusive options: **Regular lunch**, **Soup lunch**, or **No lunch**. Submission is **final** (one submit per lunch date). Scoring uses Europe/Helsinki deadlines (18:00 on-time, 23:00 late close).
 
 ---
 
-## 2. Current product scope
+## 2. User interface
 
-| Area | Implementation | Evidence |
-|------|----------------|----------|
-| Target user | `demo-student-001` | CONFIRMED BY CODE: `canteen.ts` |
-| Lunch date | Browser-local **tomorrow** | CONFIRMED BY CODE: `dates.ts` |
-| Meal types | Regular, soup, no lunch (vertical sections) | CONFIRMED BY CODE: `MealSection`, `App` |
-| Regular lunch | Unified `PortionFoodCard` qty controls for main + vegetarian | CONFIRMED BY TEST: `mealChoice.test.ts`, `mealDraftActions.test.ts` |
-| Soup lunch | Same card pattern for soup + dessert; independent quantities | CONFIRMED BY TEST: `mealChoice.test.ts` |
-| No lunch | Full-section activate; clears all portion quantities | CONFIRMED BY CODE: `ACTIVATE_MEAL_CHOICE` |
-| Menu data | 15 rotating weekday menus (unchanged example data) | CONFIRMED BY TEST: `menuResolver.test.ts` |
-| Meal slots | `mealSlots.ts` picks index 0 per section | CONFIRMED BY TEST: `mealSlots.test.ts` |
-| Submission | One submit; UI locked after save | CONFIRMED BY TEST: `useLunchSelection.test.tsx` |
-| Updates | Not supported in UI | CONFIRMED BY CODE: no update/late-confirm components |
-| Deadline | Day before lunch, **Europe/Helsinki** | CONFIRMED BY TEST: `submissionWindow.test.ts` |
-| Points | 25 on-time, 15 late (20 base ±5) | CONFIRMED BY TEST: `points.test.ts` |
-| Persistence | `localStorage`, one key per student+date | CONFIRMED BY TEST: `LocalStorageDeclarationRepository.test.ts` |
-| Post-submit | Saved status row + toast (~4s) | CONFIRMED BY CODE: `SavedStatusRow`, `SubmissionMessage` |
+### 2.1 Layout
 
-**Not in scope:** GameBus, auth, chef/waste apps, real Excel menu import.
+- **GameStatusHeader** — deadline / points guidance.
+- **Three vertical sections** (always visible):
+  1. **Regular lunch** — main + vegetarian portion cards.
+  2. **Soup lunch** — soup + dessert portion cards.
+  3. **No lunch** — whole-section activate (no food quantities).
+- **SelectionPanel** — summary, submit, saved status after submit.
+- **Mobile action bar** — reset + submit when interactive.
 
----
+### 2.2 Section interaction
 
-## 3. Detailed user flow
+- Only one section is **active** (`mealChoice`: `regular` | `soup` | `no_lunch`).
+- Inactive sections are **muted** but remain visible.
+- Activating another section (section header or `+` on a card) **clears all portion quantities** from the previous section (`draftForMealChoice` in `src/utils/mealDraftActions.ts`).
+- `+` / `−` adjust quantities within max per catalogue item (`clampItemQuantity`).
 
-### 3.1 Load
+### 2.3 Validity before submit
 
-1. `App` waits for `initialized` (**CONFIRMED BY CODE**).
-2. Resolve menu availability and `mealSlots` for tomorrow.
-3. If saved declaration exists → **RESTORE** read-only state (**CONFIRMED BY CODE**).
-4. Closed/unavailable → `MenuStatusBanner`.
+| Section | Valid when |
+|---------|------------|
+| Regular | `mainQuantity > 0` OR `vegetarianQuantity > 0` |
+| Soup | `soupQuantity > 0` OR `dessertQuantity > 0` |
+| No lunch | `mealChoice === 'no_lunch'` (all quantities 0) |
 
-### 3.2 Before submit (interactive)
+User must pick a section (`mealChoice !== null`) and satisfy the rule above (`isMealDraftSubmittable` in `src/utils/mealChoice.ts`).
 
-1. Pick meal type by activating one of three **always-visible** sections (`MealSection` header).
-2. **Regular:** select main and/or vegetarian; adjust portion quantity per selected dish (`RegularLunchPanel`, `QuantityControl`).
-3. **Soup:** adjust soup and dessert portion quantities independently (`SoupLunchPanel`).
-4. **No lunch:** activate section only (no items).
-5. Switching section clears quantities from the previous section (**CONFIRMED BY TEST:** hook tests).
-6. **Reset all** clears draft (**CONFIRMED BY CODE:** `RESET_DRAFT`).
+### 2.4 Submit behavior
 
-### 3.3 Submit
-
-1. **Submit my lunch** enabled when `isMealDraftSubmittable` and window open.
-2. `createDeclarationFromDraft` → `upsertDeclaration` → **SUBMIT_SUCCESS**.
-3. Message states declaration is **final**.
-
-### 3.4 After submit
-
-1. `hasSavedDeclaration` → controls disabled, no submit/reset actions.
-2. Saved status + “cannot be changed” notice (**CONFIRMED BY TEST:** `lunchComponents.test.tsx`).
-
-### 3.5 Closed window
-
-Submit disabled; `menuInteractive` false (**CONFIRMED BY TEST**).
+- Single button: **Submit my lunch** (`ActionButtons.tsx`).
+- After submit: **Final — no changes allowed**; submit disabled (`hasSavedDeclaration`).
+- **No** update flow, **no** late-update dialog, **no** second submit in UI.
+- Success toast via `SubmissionMessage`.
 
 ---
 
-## 4. Functional requirements
+## 3. Domain model
 
-| ID | Requirement | Source | Function / component | Test |
-|----|-------------|--------|----------------------|------|
-| FR-001 | Lunch date = tomorrow (local) | CONFIRMED BY CODE | `getTomorrowIsoDate` | hook mocks date |
-| FR-002 | Resolve menu availability | CONFIRMED BY CODE | `resolveMenuForDate` | `menuResolver.test.ts` |
-| FR-003 | 15 weekday menus in validity range | CONFIRMED BY TEST | `dailyMenus` | `menuResolver.test.ts` |
-| FR-004 | 3-week rotation | CONFIRMED BY TEST | `getMenuCycleWeek` | `menuResolver.test.ts` |
-| FR-005 | Closed/replace overrides | CONFIRMED BY TEST | `menuOverrides` | `menuResolver.test.ts` |
-| FR-006 | Meal slots = first ID per section | CONFIRMED BY TEST | `mealSlotsFromDailyMenu` | `mealSlots.test.ts` |
-| FR-007 | Three always-visible meal sections (vertical) | CONFIRMED BY CODE | `MealSection`, `App` | `lunchComponents.test.tsx` |
-| FR-008 | Regular requires ≥1 dish with positive quantity each | CONFIRMED BY TEST | `isMealDraftSubmittable` | `mealChoice.test.ts` |
-| FR-009 | Soup saves soup+dessert with independent quantities | CONFIRMED BY TEST | `buildSelectionsFromMealDraft` | `mealChoice.test.ts` |
-| FR-010 | Switching type clears incompatible state | CONFIRMED BY TEST | `SET_MEAL_CHOICE` | `useLunchSelection.test.tsx` |
-| FR-011 | Helsinki submission day before lunch | CONFIRMED BY CODE | `submissionWindow.ts` | `submissionWindow.test.ts` |
-| FR-012 | 18:00 inclusive on-time | CONFIRMED BY TEST | `getSubmissionPhase` | `submissionWindow.test.ts` |
-| FR-013 | After 18:00 late until 23:00 | CONFIRMED BY TEST | `getSubmissionPhase` | `submissionWindow.test.ts` |
-| FR-014 | After 23:00 closed | CONFIRMED BY TEST | `getSubmissionPhase` | `submissionWindow.test.ts` |
-| FR-015 | Points 25 / 15 at submit instant | CONFIRMED BY TEST | `points.ts`, `createDeclarationFromDraft` | `points.test.ts` |
-| FR-016 | Declaration includes `mealChoice` | CONFIRMED BY CODE | `ActiveDeclaration` | `declaration.test.ts` |
-| FR-017 | Submit disabled when already saved | CONFIRMED BY TEST | `isSubmitDisabled` | `declarationSelection.test.ts` |
-| FR-018 | Submit disabled when draft invalid | CONFIRMED BY TEST | hook + `declarationSelection` | `useLunchSelection.test.tsx` |
-| FR-019 | One storage key per student+date | CONFIRMED BY TEST | `buildStorageKey` | repository test |
-| FR-020 | Legacy records normalized on read | CONFIRMED BY TEST | `normalizeDeclarationRecord` | repository test |
-| FR-021 | Production base path `/raise-food-waste-minigames/` | CONFIRMED BY CODE | `vite.config.ts` | build |
-| FR-022 | CI: tsc, vitest, build | CONFIRMED BY CODE | `.github/workflows/test.yml` | — |
+### 3.1 `MealDraft` (in-memory)
 
----
+`src/types/mealChoice.ts`:
 
-## 5. Business rules
+- `mealChoice`: `'regular' | 'soup' | 'no_lunch' | null`
+- `mainQuantity`, `vegetarianQuantity`, `soupQuantity`, `dessertQuantity`: non-negative integers, clamped to slot `maxQuantity`
 
-### 5.1 Meal draft (`MealDraft`)
+### 3.2 `DailyMealSlots`
 
-- `mealChoice`: `regular` \| `soup` \| `no_lunch` \| `null`
-- Regular: `mainQuantity`, `vegetarianQuantity` (0 = not selected); all cards show **+**/**−**; qty > 0 = selected; ≥ one > 0 to submit.
-- Soup: `soupQuantity`, `dessertQuantity`; same interaction; valid when at least one > 0.
-- Activating a section via **+** switches meal type, clears the previous section’s quantities, and applies the increment. Card or section header click activates only (no quantity change).
-- No lunch: quantities zero; empty selections; `noLunch: true` on declaration.
+One resolved main (classic), vegetarian, soup, dessert per lunch date (`resolveMealSlotsForDate` in `src/services/mealSlots.ts`).
 
-**CONFIRMED BY CODE:** `types/mealChoice.ts`, `utils/mealChoice.ts`.
+### 3.3 `ActiveDeclaration` (persisted)
 
-### 5.2 Switching meal type
+`src/types/declaration.ts` — written on submit by `createDeclarationFromDraft`:
 
-`SET_MEAL_CHOICE` resets incompatible fields (**CONFIRMED BY CODE:** `useLunchSelection` reducer).
+- Identity: `studentId`, `lunchDate`
+- Menu metadata: `menuCycleWeek`, `menuVersion`
+- Choice: `mealChoice`, `noLunch`, optional `regularMainSelected` / `regularVegetarianSelected`
+- `selections`: `SelectionEntry[]` built from draft + slots (`buildSelectionsFromMealDraft`)
+- Scoring: `timingStatus`, `basePoints` (20), `timingAdjustment` (±5), `totalPoints` (25 or 15)
+- Timestamps: `submittedAt`, `updatedAt` (equal on first submit)
+- `includeInForecast`: always `true`
 
-### 5.3 Submission window & points
+### 3.4 Submission window
 
-Unchanged from prior spec: Helsinki boundaries; `getPointsBreakdownForInstant` at submit (**CONFIRMED BY TEST**).
+`src/services/submissionWindow.ts` — day before lunch, **Europe/Helsinki**:
 
-### 5.4 Submit enablement
+- `now <= 18:00:00` → on-time (25 points)
+- `18:00:00 < now <= 23:00:00` → late (15 points)
+- After 23:00:00 on submission day, or from lunch-day midnight → closed (`createDeclarationFromDraft` returns `null`)
 
-`isSubmitDisabled(hasSaved, canSubmit, menuInteractive)` → true if closed, already saved, or invalid draft (**CONFIRMED BY CODE:** `declarationSelection.ts`).
-
-### 5.5 Final submission
-
-UI never calls submit after `savedSnapshot` is set. Repository may still upsert if invoked (**CONFIRMED BY CODE**); GameBus layer should enforce single activity later (**UNKNOWN**).
-
-### 5.6 `CANTEEN_CONFIG`
-
-See `src/config/canteen.ts` (timezone, 18:00 / 23:00, points, cycle dates, `menuVersion`).
+Lunch date: **tomorrow** via `getTomorrowIsoDate()` (`src/utils/dates.ts`) — browser local calendar.
 
 ---
 
-## 6. Domain model
-
-### 6.1 `ActiveDeclaration`
-
-| Field | Meaning |
-|-------|---------|
-| `mealChoice` | `regular` \| `soup` \| `no_lunch` |
-| `regularMainSelected` / `regularVegetarianSelected` | When `mealChoice === 'regular'` |
-| `noLunch` | true when `no_lunch` |
-| `selections` | Persisted lines (0, 1, or 2 for regular; 2 for soup) |
-| Scoring fields | `timingStatus`, `basePoints`, `timingAdjustment`, `totalPoints` |
-| Timestamps | `submittedAt`, `updatedAt` (both set on first save) |
-| `includeInForecast` | always `true` |
-
-**CONFIRMED BY CODE:** `types/declaration.ts`, `createDeclarationFromDraft`.
-
-### 6.2 `DailyMealSlots`
-
-`main`, `vegetarian`, `soup`, `dessert` — each a `MenuItem`. **CONFIRMED BY CODE:** `mealSlots.ts`.
-
-### 6.3 `DeclarationRepository`
-
-`getDeclaration`, `upsertDeclaration` — **CONFIRMED BY CODE:** `declarationRepository.ts`.
-
----
-
-## 7. Application architecture
+## 4. Application architecture
 
 | Layer | Location |
 |-------|----------|
-| UI | `App.tsx`, `components/*` (`GameStatusHeader`, meal-type UI, `QuantityControl`, selection panel) |
-| State | `hooks/useLunchSelection.ts` (`useReducer`) |
-| Services | `menuResolver.ts`, `submissionWindow.ts`, `mealSlots.ts` |
-| Domain utils | `mealChoice.ts`, `declaration.ts`, `points.ts`, `declarationSelection.ts` |
-| Data | `foodCatalogue.ts`, `menuSchedule.ts`, `menuOverrides.ts` |
-| Persistence | `LocalStorageDeclarationRepository` |
-| Tests | Vitest, 10 files, `pool: 'forks'`, `maxWorkers: 1` |
+| UI | `src/App.tsx`, `src/components/*` |
+| State | `useReducer` in `src/hooks/useLunchSelection.ts` |
+| Menu | `menuResolver.ts`, `mealSlots.ts`, `src/data/*` |
+| Rules | `mealChoice.ts`, `mealDraftActions.ts`, `declarationSelection.ts` |
+| Persistence | `DeclarationRepository` + `LocalStorageDeclarationRepository` |
+| Config | `src/config/canteen.ts` |
+| Styles | `src/styles.css` |
+
+No client-side routing (single SPA).
 
 ---
 
-## 8. Persistence contract
+## 5. Persistence
 
-| Topic | Behavior |
-|-------|----------|
-| Key | `lunch-declaration-{studentId}-{lunchDate}` |
-| Write | On successful submit only (from UI) |
-| Read | On init if menu available |
-| Legacy | Missing `mealChoice` → inferred on read (`withDefaultMealChoice`) |
-
-**CONFIRMED BY TEST:** repository tests.
+- Key: `lunch-declaration-{studentId}-{lunchDate}` (`declarationRepository.ts`)
+- Full `ActiveDeclaration` JSON on submit only
+- Restore on load when menu available; after submit UI locks
+- **GameBus embed:** localStorage is not authoritative; see `GAMEBUS_LUNCH_CONTRACT.md`
 
 ---
 
-## 9. UI inventory
+## 6. Build and deploy
 
-| Component | Responsibility |
-|-----------|----------------|
-| `App` | Layout, meal-type flow |
-| `GameStatusHeader` | Compact title, date, points badges, deadline, countdown |
-| `MealSection` | Section header + body; active/muted states |
-| `MealTypeChooser` | *(unused)* legacy segmented control |
-| `PortionFoodCard` | Unified food card (image, label, name, qty controls) |
-| `RegularLunchPanel` / `SoupLunchPanel` | Two-card grids using `PortionFoodCard` |
-| `SelectionPanel` | Compact summary, points-if-now, submit/reset, final notice |
-| `ActionButtons` | Reset + submit (pre-submit only) |
-| `SavedStatusRow` | Points summary after save |
-| `SubmissionMessage` | Toast |
-| `MenuStatusBanner` | Closed / unavailable |
-| `FoodImage` | Image + fallback |
+- **Dev:** `npm run dev` (base `/`)
+- **Production:** `npm run build` — base `/raise-food-waste-minigames/` (`vite.config.ts`)
+- **CI:** `.github/workflows/test.yml` — `tsc`, `vitest run`, `build`
+- **Pages:** `.github/workflows/deploy-pages.yml`
 
 ---
 
-## 10. Test coverage
+## 7. Tests
 
-**106 tests, 11 files** — **CONFIRMED BY TEST:** `npm run test:run`.
-
-| Area | Test file |
-|------|-----------|
-| Menu rotation | `menuResolver.test.ts` |
-| Meal slots | `mealSlots.test.ts` |
-| Meal draft rules | `mealChoice.test.ts` |
-| Deadlines / points | `submissionWindow.test.ts`, `points.test.ts` |
-| Declaration build | `declaration.test.ts` |
-| Submit disabled rules | `declarationSelection.test.ts` |
-| Storage | `LocalStorageDeclarationRepository.test.ts` |
-| Hook flow | `useLunchSelection.test.tsx` |
-| Components | `lunchComponents.test.tsx` |
-
-**Untested / partial:** live `getTomorrowIsoDate`; full responsive CSS; E2E browser.
+**106 tests** in 11 files (`npm run test:run`). Coverage focuses on menu resolution, meal slots, submission window, meal draft actions, declaration build, hook submit/lock behavior, and key UI strings.
 
 ---
 
-## 11. Non-functional behavior
+## 8. Out of scope (this repo)
 
-| Topic | Detail |
-|-------|--------|
-| Responsive | Sticky panel / mobile action bar (`styles.css`) |
-| Node CI | 20 (`.github/workflows/test.yml`) |
-| Deploy | GitHub Pages, subpath base on build |
-| a11y | `aria-pressed`, live regions, progressbar |
+- Chef forecast, waste, production activities (separate GameBus templates exist in test env only)
+- GameBus iframe bridge (**planned** — contract written, code not implemented)
+- Authentication / real student identity (demo `studentId` only)
+- Menu import from workbook (`reference/Example_menu.xlsx` not used at runtime)
 
 ---
 
-## 12. Current limitations
+## 9. Migration notes (historical)
 
-- Hardcoded student ID; localStorage only.
-- No GameBus activity on submit.
-- Example menu only (no Excel import).
-- Repository upsert exists; UI assumes single submit.
-- Browser-local tomorrow vs Helsinki deadlines near TZ edges (**UNKNOWN** intent).
-
----
-
-## 13. Migration contract
-
-| Module | Port unchanged | Replace / adapt |
-|--------|----------------|-----------------|
-| `mealChoice.ts`, `mealSlots.ts`, `submissionWindow.ts`, `points.ts` | ✓ | |
-| `declaration.ts`, types | ✓ | studentId source |
-| `useLunchSelection.ts` | | Adapt to Svelte/store |
-| `components/*` | | Replace UI |
-| `LocalStorageDeclarationRepository` | | GameBus backend |
-
-See **NEXT_STEPS.md** for GameBus roadmap.
-
----
-
-## 14. Scope classification
-
-| Feature | Class |
-|---------|--------|
-| Meal-type UI + final submit | **Current MVP** |
-| Deadline + points | **Current MVP** |
-| Example menu + rotation | **Current MVP** |
-| GameBus submit | **Not present** |
-| Menu import | **Not present** |
-| AppHeader menu button | **Provisional** (no handler) |
-
----
-
-## 15. Acceptance criteria
-
-| ID | Criterion | Evidence |
-|----|-----------|----------|
-| AC-001 | Three meal types shown | CONFIRMED BY TEST |
-| AC-002 | Regular requires ≥1 dish with valid quantity to enable submit | CONFIRMED BY TEST |
-| AC-003 | Soup declaration contains soup and dessert with stored quantities | CONFIRMED BY TEST |
-| AC-004 | After submit, submit stays disabled | CONFIRMED BY TEST |
-| AC-005 | Saved UI shows final notice | CONFIRMED BY TEST |
-| AC-006 | 18:00 on-time / 23:00 late boundaries | CONFIRMED BY TEST |
-| AC-007 | 25 points on-time submit | CONFIRMED BY TEST |
-| AC-008 | 15 points late submit | CONFIRMED BY TEST |
-| AC-009 | 15 menus + rotation tests pass | CONFIRMED BY TEST |
-| AC-010 | `npm run test:run` all pass | CONFIRMED BY TEST |
-| AC-011 | `npm run build` succeeds | CONFIRMED BY TEST |
-
----
-
-## Verification checklist
-
-- [x] No imports of removed update-flow code in `src/`
-- [x] Regular portion quantities via `QuantityControl`
-- [x] Compact game-status header (no duplicated rules prose)
-- [x] FR/AC renumbered to current behavior
-- [x] `IMPLEMENTATION_INVENTORY.json` updated
+Earlier revisions used four menu grids with per-item quantities across all categories and an **update** flow. The current product uses **three sections**, **mealChoice**, and **one-shot submit** only. Do not reintroduce update or `SILENT_ACTIVITY` without an explicit product change.
