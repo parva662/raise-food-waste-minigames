@@ -126,14 +126,6 @@ export function isSubmissionAllowed(now: Date, lunchDate: string): boolean {
   return getSubmissionPhase(now, lunchDate) !== 'closed';
 }
 
-export function requiresLateUpdateConfirmation(
-  savedTimingStatus: TimingStatus,
-  now: Date,
-  lunchDate: string,
-): boolean {
-  return savedTimingStatus === 'on-time' && getSubmissionPhase(now, lunchDate) === 'late';
-}
-
 export function formatCountdown(now: Date, targetIso: string): string {
   const targetMs = new Date(targetIso).getTime();
   const diffMs = Math.max(0, targetMs - now.getTime());

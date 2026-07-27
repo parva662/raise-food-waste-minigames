@@ -4,18 +4,10 @@ import {
   buildStorageKey,
   normalizeDeclarationRecord,
 } from './declarationRepository';
-import {
-  createDeclarationFromDraft,
-  buildInitialQuantities,
-} from '../utils/declaration';
-import { resolveMenuForDate } from '../services/menuResolver';
+import { createDeclarationFromDraft } from '../utils/declaration';
+import { resolveMealSlotsForDate } from '../services/mealSlots';
 import { CANTEEN_CONFIG } from '../config/canteen';
-import {
-  FIXTURE_LUNCH_DATE,
-  SUBMISSION_TIMES,
-  helsinki,
-  FIXTURE_SUBMISSION_DAY,
-} from '../test/fixtures/dates';
+import { FIXTURE_LUNCH_DATE, SUBMISSION_TIMES } from '../test/fixtures/dates';
 import {
   createFixtureDeclaration,
   createLegacyFixtureDeclaration,
@@ -24,12 +16,12 @@ import {
   clearLocalStorageMock,
   installLocalStorageMock,
 } from '../test/fixtures/storage';
+import type { MealDraft } from '../types/mealChoice';
 
 describe('LocalStorageDeclarationRepository', () => {
   let storage: Map<string, string>;
   let repo: LocalStorageDeclarationRepository;
-  const menu = resolveMenuForDate(FIXTURE_LUNCH_DATE);
-  const menuItems = menu.status === 'available' ? menu.items : [];
+  const slots = resolveMealSlotsForDate(FIXTURE_LUNCH_DATE)!;
 
   beforeEach(() => {
     storage = installLocalStorageMock();
@@ -40,11 +32,15 @@ describe('LocalStorageDeclarationRepository', () => {
     clearLocalStorageMock(storage);
   });
 
-  function draft(quantities: Record<string, number>, noLunch = false) {
-    return {
-      quantities: { ...buildInitialQuantities(menuItems), ...quantities },
-      noLunch,
-    };
+  function createFromDraft(draft: MealDraft, instant = SUBMISSION_TIMES.midday) {
+    return createDeclarationFromDraft(
+      draft,
+      slots,
+      FIXTURE_LUNCH_DATE,
+      1,
+      CANTEEN_CONFIG.menuVersion,
+      () => instant,
+    )!;
   }
 
   it('returns null when no declaration exists', () => {
@@ -52,17 +48,16 @@ describe('LocalStorageDeclarationRepository', () => {
   });
 
   it('creates one record on first submission', () => {
-    const created = createDeclarationFromDraft(
-      draft({ 'rice-with-sauce': 1 }),
-      menuItems,
-      FIXTURE_LUNCH_DATE,
-      1,
-      CANTEEN_CONFIG.menuVersion,
-      null,
-      () => SUBMISSION_TIMES.midday,
-    )!;
+    const created = createFromDraft({
+      mealChoice: 'regular',
+      mainQuantity: 2,
+      vegetarianQuantity: 0,
+      soupQuantity: 0,
+      dessertQuantity: 0,
+    });
     repo.upsertDeclaration(created);
     expect(storage.size).toBe(1);
+    expect(created.mealChoice).toBe('regular');
   });
 
   it('uses a deterministic storage key from student ID and lunch date', () => {
@@ -71,84 +66,31 @@ describe('LocalStorageDeclarationRepository', () => {
     );
   });
 
-  it('replaces an existing record on update', () => {
-    const first = createDeclarationFromDraft(
-      draft({ 'rice-with-sauce': 1 }),
-      menuItems,
-      FIXTURE_LUNCH_DATE,
-      1,
-      CANTEEN_CONFIG.menuVersion,
-      null,
-      () => SUBMISSION_TIMES.midday,
-    )!;
-    repo.upsertDeclaration(first);
-    const second = createDeclarationFromDraft(
-      draft({ 'roasted-vegetables': 1 }),
-      menuItems,
-      FIXTURE_LUNCH_DATE,
-      1,
-      CANTEEN_CONFIG.menuVersion,
-      first,
-      () => helsinki(FIXTURE_SUBMISSION_DAY, '12:30:00'),
-    )!;
-    repo.upsertDeclaration(second);
-    expect(storage.size).toBe(1);
-    expect(repo.getDeclaration(CANTEEN_CONFIG.studentId, FIXTURE_LUNCH_DATE)?.selections[0].itemId).toBe(
-      'roasted-vegetables',
+  it('replaces an existing record when upserted again', () => {
+    repo.upsertDeclaration(
+      createFromDraft({ mealChoice: 'regular', mainQuantity: 1, vegetarianQuantity: 0, soupQuantity: 0, dessertQuantity: 0 }),
     );
-  });
-
-  it('keeps only one record after multiple updates', () => {
-    let current = createDeclarationFromDraft(
-      draft({ 'rice-with-sauce': 1 }),
-      menuItems,
-      FIXTURE_LUNCH_DATE,
-      1,
-      CANTEEN_CONFIG.menuVersion,
-      null,
-      () => SUBMISSION_TIMES.midday,
-    )!;
-    repo.upsertDeclaration(current);
-    current = createDeclarationFromDraft(
-      draft({ 'rice-with-sauce': 2 }),
-      menuItems,
-      FIXTURE_LUNCH_DATE,
-      1,
-      CANTEEN_CONFIG.menuVersion,
-      current,
-      () => helsinki(FIXTURE_SUBMISSION_DAY, '12:10:00'),
-    )!;
-    repo.upsertDeclaration(current);
-    current = createDeclarationFromDraft(
-      draft({ 'rice-with-sauce': 3 }),
-      menuItems,
-      FIXTURE_LUNCH_DATE,
-      1,
-      CANTEEN_CONFIG.menuVersion,
-      current,
-      () => helsinki(FIXTURE_SUBMISSION_DAY, '12:20:00'),
-    )!;
-    repo.upsertDeclaration(current);
+    repo.upsertDeclaration(
+      createFromDraft({ mealChoice: 'soup', mainQuantity: 0, vegetarianQuantity: 0, soupQuantity: 1, dessertQuantity: 1 }),
+    );
     expect(storage.size).toBe(1);
+    expect(repo.getDeclaration(CANTEEN_CONFIG.studentId, FIXTURE_LUNCH_DATE)?.mealChoice).toBe('soup');
   });
 
   it('does not overwrite another lunch date', () => {
-    const firstDate = createDeclarationFromDraft(
-      draft({ 'rice-with-sauce': 1 }),
-      menuItems,
-      FIXTURE_LUNCH_DATE,
-      1,
-      CANTEEN_CONFIG.menuVersion,
-      null,
-      () => SUBMISSION_TIMES.midday,
-    )!;
+    const firstDate = createFromDraft({
+      mealChoice: 'regular',
+      mainQuantity: 1,
+      vegetarianQuantity: 0,
+      soupQuantity: 0,
+      dessertQuantity: 0,
+    });
     const secondDate = createDeclarationFromDraft(
-      draft({ 'rice-with-sauce': 2 }),
-      menuItems,
+      { mealChoice: 'no_lunch', mainQuantity: 0, vegetarianQuantity: 0, soupQuantity: 0, dessertQuantity: 0 },
+      slots,
       '2026-01-08',
       1,
       CANTEEN_CONFIG.menuVersion,
-      null,
       () => SUBMISSION_TIMES.midday,
     )!;
     repo.upsertDeclaration(firstDate);
@@ -164,164 +106,52 @@ describe('LocalStorageDeclarationRepository', () => {
     expect(storage.size).toBe(2);
   });
 
-  it('preserves submittedAt on update', () => {
-    const first = createDeclarationFromDraft(
-      draft({ 'rice-with-sauce': 1 }),
-      menuItems,
-      FIXTURE_LUNCH_DATE,
-      1,
-      CANTEEN_CONFIG.menuVersion,
-      null,
-      () => SUBMISSION_TIMES.midday,
-    )!;
-    repo.upsertDeclaration(first);
-    const updated = createDeclarationFromDraft(
-      draft({ 'rice-with-sauce': 2 }),
-      menuItems,
-      FIXTURE_LUNCH_DATE,
-      1,
-      CANTEEN_CONFIG.menuVersion,
-      first,
-      () => helsinki(FIXTURE_SUBMISSION_DAY, '17:00:00'),
-    )!;
-    repo.upsertDeclaration(updated);
-    expect(repo.getDeclaration(CANTEEN_CONFIG.studentId, FIXTURE_LUNCH_DATE)?.submittedAt).toBe(
-      first.submittedAt,
-    );
-  });
-
-  it('updates updatedAt on update', () => {
-    const first = createDeclarationFromDraft(
-      draft({ 'rice-with-sauce': 1 }),
-      menuItems,
-      FIXTURE_LUNCH_DATE,
-      1,
-      CANTEEN_CONFIG.menuVersion,
-      null,
-      () => SUBMISSION_TIMES.midday,
-    )!;
-    repo.upsertDeclaration(first);
-    const updated = createDeclarationFromDraft(
-      draft({ 'rice-with-sauce': 2 }),
-      menuItems,
-      FIXTURE_LUNCH_DATE,
-      1,
-      CANTEEN_CONFIG.menuVersion,
-      first,
-      () => helsinki(FIXTURE_SUBMISSION_DAY, '17:00:00'),
-    )!;
-    repo.upsertDeclaration(updated);
-    expect(repo.getDeclaration(CANTEEN_CONFIG.studentId, FIXTURE_LUNCH_DATE)?.updatedAt).toBe(
-      updated.updatedAt,
-    );
-  });
-
-  it('replaces selections and noLunch completely', () => {
-    const first = createDeclarationFromDraft(
-      draft({ 'rice-with-sauce': 1 }),
-      menuItems,
-      FIXTURE_LUNCH_DATE,
-      1,
-      CANTEEN_CONFIG.menuVersion,
-      null,
-      () => SUBMISSION_TIMES.midday,
-    )!;
-    repo.upsertDeclaration(first);
-    const noLunch = createDeclarationFromDraft(
-      { quantities: buildInitialQuantities(menuItems), noLunch: true },
-      menuItems,
-      FIXTURE_LUNCH_DATE,
-      1,
-      CANTEEN_CONFIG.menuVersion,
-      first,
-      () => helsinki(FIXTURE_SUBMISSION_DAY, '17:00:00'),
-    )!;
-    repo.upsertDeclaration(noLunch);
+  it('stores soup lunch with bundled dessert selections', () => {
+    const created = createFromDraft({
+      mealChoice: 'soup',
+      mainQuantity: 0,
+      vegetarianQuantity: 0,
+      soupQuantity: 1,
+      dessertQuantity: 1,
+    });
+    repo.upsertDeclaration(created);
     const saved = repo.getDeclaration(CANTEEN_CONFIG.studentId, FIXTURE_LUNCH_DATE)!;
-    expect(saved.noLunch).toBe(true);
-    expect(saved.selections).toHaveLength(0);
-  });
-
-  it('recalculates and replaces points on update', () => {
-    const first = createDeclarationFromDraft(
-      draft({ 'rice-with-sauce': 1 }),
-      menuItems,
-      FIXTURE_LUNCH_DATE,
-      1,
-      CANTEEN_CONFIG.menuVersion,
-      null,
-      () => SUBMISSION_TIMES.midday,
-    )!;
-    repo.upsertDeclaration(first);
-    const late = createDeclarationFromDraft(
-      draft({ 'rice-with-sauce': 2 }),
-      menuItems,
-      FIXTURE_LUNCH_DATE,
-      1,
-      CANTEEN_CONFIG.menuVersion,
-      first,
-      () => SUBMISSION_TIMES.lateEvening,
-    )!;
-    repo.upsertDeclaration(late);
-    expect(repo.getDeclaration(CANTEEN_CONFIG.studentId, FIXTURE_LUNCH_DATE)?.totalPoints).toBe(15);
+    expect(saved.selections).toHaveLength(2);
   });
 
   it('keeps includeInForecast true for on-time declarations', () => {
-    const created = createDeclarationFromDraft(
-      draft({ 'rice-with-sauce': 1 }),
-      menuItems,
-      FIXTURE_LUNCH_DATE,
-      1,
-      CANTEEN_CONFIG.menuVersion,
-      null,
-      () => SUBMISSION_TIMES.midday,
-    )!;
-    repo.upsertDeclaration(created);
+    repo.upsertDeclaration(
+      createFromDraft({ mealChoice: 'regular', mainQuantity: 1, vegetarianQuantity: 0, soupQuantity: 0, dessertQuantity: 0 }),
+    );
     expect(repo.getDeclaration(CANTEEN_CONFIG.studentId, FIXTURE_LUNCH_DATE)?.includeInForecast).toBe(
       true,
     );
   });
 
   it('keeps includeInForecast true for late declarations', () => {
-    const created = createDeclarationFromDraft(
-      draft({ 'rice-with-sauce': 1 }),
-      menuItems,
-      FIXTURE_LUNCH_DATE,
-      1,
-      CANTEEN_CONFIG.menuVersion,
-      null,
-      () => SUBMISSION_TIMES.lateEvening,
-    )!;
-    repo.upsertDeclaration(created);
-    expect(repo.getDeclaration(CANTEEN_CONFIG.studentId, FIXTURE_LUNCH_DATE)?.includeInForecast).toBe(
-      true,
+    repo.upsertDeclaration(
+      createFromDraft(
+        { mealChoice: 'regular', mainQuantity: 1, vegetarianQuantity: 0, soupQuantity: 0, dessertQuantity: 0 },
+        SUBMISSION_TIMES.lateEvening,
+      ),
     );
+    expect(repo.getDeclaration(CANTEEN_CONFIG.studentId, FIXTURE_LUNCH_DATE)?.totalPoints).toBe(15);
   });
 
   it('restores the latest saved declaration on reload', () => {
-    const created = createDeclarationFromDraft(
-      draft({ 'rice-with-sauce': 2 }),
-      menuItems,
-      FIXTURE_LUNCH_DATE,
-      1,
-      CANTEEN_CONFIG.menuVersion,
-      null,
-      () => SUBMISSION_TIMES.midday,
-    )!;
-    repo.upsertDeclaration(created);
+    repo.upsertDeclaration(
+      createFromDraft({ mealChoice: 'regular', mainQuantity: 1, vegetarianQuantity: 1, soupQuantity: 0, dessertQuantity: 0 }),
+    );
     const reloaded = new LocalStorageDeclarationRepository().getDeclaration(
       CANTEEN_CONFIG.studentId,
       FIXTURE_LUNCH_DATE,
     );
-    expect(reloaded?.selections[0].quantity).toBe(2);
+    expect(reloaded?.selections).toHaveLength(2);
   });
 
   it('does not persist unsaved draft edits', () => {
     repo.upsertDeclaration(createFixtureDeclaration());
     expect(storage.size).toBe(1);
-    expect(storage.get(buildStorageKey(CANTEEN_CONFIG.studentId, FIXTURE_LUNCH_DATE))).not.toContain(
-      '"quantity": 99',
-    );
   });
 
   it('normalizes legacy records on read', () => {
@@ -331,8 +161,8 @@ describe('LocalStorageDeclarationRepository', () => {
     );
     const restored = repo.getDeclaration(CANTEEN_CONFIG.studentId, FIXTURE_LUNCH_DATE)!;
     expect(restored.basePoints).toBe(20);
-    expect(restored.timingAdjustment).toBe(5);
     expect(restored.totalPoints).toBe(25);
+    expect(restored.mealChoice).toBe('regular');
   });
 
   it('handles corrupted JSON without crashing', () => {

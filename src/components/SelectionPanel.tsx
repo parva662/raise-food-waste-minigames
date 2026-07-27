@@ -1,137 +1,80 @@
-import type { SelectionEntry } from '../types/menu';
-import type { SubmitButtonState } from '../utils/declaration';
 import type { SubmissionWindowStatus } from '../types/declaration';
 import type { PointsBreakdown } from '../utils/points';
-import { SelectedItem } from './SelectedItem';
-import { NoLunchOption } from './NoLunchOption';
+import type { MealSummaryLine } from '../utils/mealChoice';
 import { ActionButtons } from './ActionButtons';
 import { SavedStatusRow } from './SavedStatusRow';
-import { SubmissionStatusPanel } from './SubmissionStatusPanel';
 
 interface SelectionPanelProps {
-  selections: SelectionEntry[];
-  itemCount: number;
-  totalPortions: number;
-  progressPercent: number;
-  noLunch: boolean;
+  summaryLines: MealSummaryLine[];
   hasSavedDeclaration: boolean;
   updatedAt: string | null;
   savedScoring: PointsBreakdown | null;
-  submitButtonState: SubmitButtonState;
   isSubmitDisabled: boolean;
-  isDirty: boolean;
-  menuChanged: boolean;
   submissionWindow: SubmissionWindowStatus;
-  submissionNow: Date;
   menuInteractive: boolean;
-  onIncrement: (itemId: string) => void;
-  onDecrement: (itemId: string) => void;
-  onRemove: (itemId: string) => void;
-  onNoLunchToggle: () => void;
   onReset: () => void;
   onSubmit: () => void;
   showActions?: boolean;
 }
 
 export function SelectionPanel({
-  selections,
-  itemCount,
-  totalPortions,
-  progressPercent,
-  noLunch,
+  summaryLines,
   hasSavedDeclaration,
   updatedAt,
   savedScoring,
-  submitButtonState,
   isSubmitDisabled,
-  isDirty,
-  menuChanged,
   submissionWindow,
-  submissionNow,
   menuInteractive,
-  onIncrement,
-  onDecrement,
-  onRemove,
-  onNoLunchToggle,
   onReset,
   onSubmit,
   showActions = true,
 }: SelectionPanelProps) {
-  const hasSelections = selections.length > 0 || noLunch;
+  const hasSummary = summaryLines.length > 0;
+  const pointsNow = submissionWindow.totalPointsIfSubmittedNow;
 
   return (
-    <aside className="selection-panel">
-      <div className="selection-panel__header">
-        <h2 className="selection-panel__title">Your Selection</h2>
-        <span className="selection-panel__badge">
-          {itemCount} {itemCount === 1 ? 'item' : 'items'} &bull; {totalPortions}{' '}
-          {totalPortions === 1 ? 'portion' : 'portions'}
-        </span>
-      </div>
-
-      <SubmissionStatusPanel status={submissionWindow} now={submissionNow} />
+    <aside className="selection-panel selection-panel--compact">
+      <h2 className="selection-panel__title">Your selection</h2>
 
       {hasSavedDeclaration && updatedAt && savedScoring && (
-        <SavedStatusRow scoring={savedScoring} updatedAt={updatedAt} />
+        <>
+          <SavedStatusRow scoring={savedScoring} updatedAt={updatedAt} />
+          <p className="selection-panel__final-notice" role="status">
+            Final — no changes allowed.
+          </p>
+        </>
       )}
 
-      {menuChanged && (
-        <p className="selection-panel__menu-changed" role="status">
-          The menu for this date has changed. Please review and confirm your selection again.
+      {!hasSavedDeclaration && pointsNow !== null && (
+        <p className="selection-panel__points-now">
+          Submit now for <strong>{pointsNow} points</strong>
         </p>
       )}
 
-      <div
-        className="selection-panel__progress"
-        role="progressbar"
-        aria-valuenow={progressPercent}
-        aria-valuemin={0}
-        aria-valuemax={100}
-        aria-label="Selection progress"
-      >
-        <div
-          className="selection-panel__progress-fill"
-          style={{ width: `${progressPercent}%` }}
-        />
-      </div>
-
-      <p className="selection-panel__hint">
-        {hasSelections
-          ? 'You can still add or remove items.'
-          : 'Your selected items will appear here.'}
-      </p>
-
-      {selections.length > 0 && (
-        <ul className="selection-panel__list">
-          {selections.map((entry) => (
-            <SelectedItem
-              key={entry.itemId}
-              entry={entry}
-              onIncrement={() => onIncrement(entry.itemId)}
-              onDecrement={() => onDecrement(entry.itemId)}
-              onRemove={() => onRemove(entry.itemId)}
-              disabled={noLunch || !menuInteractive}
-            />
+      {hasSummary ? (
+        <dl className="selection-panel__summary">
+          {summaryLines.map((line) => (
+            <div key={`${line.label}-${line.detail}`} className="selection-panel__summary-row">
+              <dt>{line.label}</dt>
+              <dd>{line.detail}</dd>
+            </div>
           ))}
-        </ul>
+        </dl>
+      ) : (
+        <p className="selection-panel__hint">Choose a lunch type to begin.</p>
       )}
 
-      <NoLunchOption
-        active={noLunch}
-        onToggle={onNoLunchToggle}
-        disabled={!menuInteractive}
-      />
+      {!hasSavedDeclaration && (
+        <p className="selection-panel__lock-hint">
+          One submit only — your choice becomes final.
+        </p>
+      )}
 
-      {showActions && (
+      {showActions && menuInteractive && !hasSavedDeclaration && (
         <ActionButtons
           onReset={onReset}
           onSubmit={onSubmit}
-          submitButtonState={submitButtonState}
           isSubmitDisabled={isSubmitDisabled}
-          hasSavedDeclaration={hasSavedDeclaration}
-          isDirty={isDirty}
-          menuChanged={menuChanged}
-          menuInteractive={menuInteractive}
           variant="panel"
         />
       )}

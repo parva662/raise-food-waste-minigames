@@ -1,0 +1,104 @@
+{
+  "framework": "React 19 + Vite 6 + TypeScript 5.8",
+  "routes": [],
+  "components": [
+    "src/App.tsx",
+    "src/components/GameStatusHeader.tsx",
+    "src/components/MealSection.tsx",
+    "src/components/RegularLunchPanel.tsx",
+    "src/components/SoupLunchPanel.tsx",
+    "src/components/PortionFoodCard.tsx",
+    "src/components/QuantityControl.tsx",
+    "src/components/SelectionPanel.tsx",
+    "src/components/SavedStatusRow.tsx",
+    "src/components/SubmissionMessage.tsx",
+    "src/components/MenuStatusBanner.tsx",
+    "src/components/ActionButtons.tsx",
+    "src/components/FoodImage.tsx",
+    "src/components/AppHeader.tsx",
+    "src/components/SubmissionRulesMessage.tsx",
+    "src/components/SubmissionStatusPanel.tsx"
+  ],
+  "domainTypes": [
+    "src/types/declaration.ts",
+    "src/types/menu.ts",
+    "src/types/mealChoice.ts"
+  ],
+  "services": [
+    "src/services/menuResolver.ts",
+    "src/services/submissionWindow.ts",
+    "src/services/mealSlots.ts",
+    "src/hooks/useLunchSelection.ts"
+  ],
+  "utilities": [
+    "src/utils/mealChoice.ts",
+    "src/utils/mealDraftActions.ts",
+    "src/utils/points.ts",
+    "src/utils/declaration.ts",
+    "src/utils/declarationSelection.ts",
+    "src/utils/dates.ts",
+    "src/utils/storage.ts"
+  ],
+  "repositories": [
+    "src/repositories/declarationRepository.ts"
+  ],
+  "configuration": [
+    "src/config/canteen.ts",
+    "src/data/foodCatalogue.ts",
+    "src/data/menuSchedule.ts",
+    "src/data/menuOverrides.ts",
+    "vite.config.ts",
+    "SPEC.md",
+    "IMPLEMENTATION_INVENTORY.json",
+    "NEXT_STEPS.md"
+  ],
+  "tests": [
+    "src/services/menuResolver.test.ts",
+    "src/services/submissionWindow.test.ts",
+    "src/services/mealSlots.test.ts",
+    "src/repositories/LocalStorageDeclarationRepository.test.ts",
+    "src/utils/declaration.test.ts",
+    "src/utils/mealChoice.test.ts",
+    "src/utils/mealDraftActions.test.ts",
+    "src/utils/points.test.ts",
+    "src/utils/declarationSelection.test.ts",
+    "src/hooks/useLunchSelection.test.tsx",
+    "src/components/lunchComponents.test.tsx"
+  ],
+  "confirmedFeatures": [
+    "Regular / soup / no lunch meal types",
+    "Unified PortionFoodCard interaction for all four menu items",
+    "Auto-activate meal section on + from inactive section",
+    "Regular lunch main and vegetarian portion quantities (separate counts)",
+    "Soup lunch soup and dessert portion quantities (separate counts)",
+    "Compact game-status header",
+    "Single final submission with read-only post-submit UI",
+    "Europe/Helsinki deadline and 25/15 points",
+    "Temporary 15-day rotating menu data",
+    "localStorage persistence with mealChoice on declaration"
+  ],
+  "provisionalFeatures": [
+    "Hardcoded demo studentId",
+    "LocalStorage repository (GameBus replacement planned)",
+    "Repository upsert at storage layer though UI submits once",
+    "Legacy AppHeader / SubmissionRulesMessage (unused by App; kept in repo)"
+  ],
+  "unknowns": [
+    "GameBus ACTIVITY payload mapping",
+    "Whether backend should reject second upsert explicitly"
+  ],
+  "removedLegacy": [
+    "src/components/MenuSection.tsx",
+    "src/components/MenuItemCard.tsx",
+    "src/components/SelectedItem.tsx",
+    "src/components/NoLunchOption.tsx",
+    "src/components/CategoryLegend.tsx",
+    "src/data/menu.ts",
+    "Update my lunch flow",
+    "Late-update confirmation dialog",
+    "requiresLateUpdateConfirmation",
+    "Boolean-only regular lunch selection (regularMain / regularVegetarian draft fields)",
+    "Oversized stacked meal-type cards and duplicate rules prose in main layout",
+    "Tab/segmented meal-type selector as primary navigation"
+  ]
+}

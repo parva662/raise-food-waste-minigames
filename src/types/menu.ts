@@ -27,11 +27,6 @@ export interface SelectionEntry {
   unit: string;
 }
 
-export interface CategoryConfig {
-  key: MenuCategory;
-  title: string;
-}
-
 export type MenuAvailability =
   | {
       status: 'available';

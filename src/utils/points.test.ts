@@ -13,7 +13,6 @@ import {
   getSubmissionPhase,
   getSubmissionWindowStatus,
   isSubmissionAllowed,
-  requiresLateUpdateConfirmation,
 } from '../services/submissionWindow';
 
 function helsinki(date: string, time: string): Date {
@@ -116,19 +115,5 @@ describe('deadline card copy', () => {
     expect(status.detailLines[2]).toBe(
       'Your selection will still be included in the canteen estimate.',
     );
-  });
-});
-
-describe('late update confirmation trigger', () => {
-  it('requires confirmation when an on-time declaration is updated late', () => {
-    expect(
-      requiresLateUpdateConfirmation('on-time', helsinki(SUBMISSION_DAY, '19:00:00'), LUNCH_DATE),
-    ).toBe(true);
-  });
-
-  it('does not require confirmation for already-late declarations', () => {
-    expect(
-      requiresLateUpdateConfirmation('late', helsinki(SUBMISSION_DAY, '19:00:00'), LUNCH_DATE),
-    ).toBe(false);
   });
 });

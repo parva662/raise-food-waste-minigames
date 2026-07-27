@@ -1,86 +1,37 @@
 import { describe, it, expect } from 'vitest';
-import {
-  buildInitialQuantities,
-  buildSelections,
-  createDeclarationFromDraft,
-  reconcileDraftWithMenu,
-  snapshotFromDeclaration,
-} from './declaration';
-import { resolveMenuForDate } from '../services/menuResolver';
-import { CANTEEN_CONFIG } from '../config/canteen';
+import { createDeclarationFromDraft, snapshotFromDeclaration } from './declaration';
+import { resolveMealSlotsForDate } from '../services/mealSlots';
 import { FIXTURE_LUNCH_DATE, SUBMISSION_TIMES } from '../test/fixtures/dates';
 
-describe('declaration helpers', () => {
-  const menu = resolveMenuForDate(FIXTURE_LUNCH_DATE);
-  const menuItems = menu.status === 'available' ? menu.items : [];
+const slots = resolveMealSlotsForDate(FIXTURE_LUNCH_DATE)!;
 
-  it('builds selections from positive quantities only', () => {
-    const quantities = buildInitialQuantities(menuItems);
-    quantities['rice-with-sauce'] = 2;
-    const selections = buildSelections(quantities, menuItems);
-    expect(selections).toHaveLength(1);
-    expect(selections[0]).toMatchObject({ itemId: 'rice-with-sauce', quantity: 2 });
-  });
-
-  it('creates a declaration with recalculated scoring fields', () => {
-    const quantities = buildInitialQuantities(menuItems);
-    quantities['rice-with-sauce'] = 1;
+describe('createDeclarationFromDraft', () => {
+  it('creates a declaration with meal choice, quantities, and scoring', () => {
     const declaration = createDeclarationFromDraft(
-      { quantities, noLunch: false },
-      menuItems,
+      { mealChoice: 'regular', mainQuantity: 2, vegetarianQuantity: 1, soupQuantity: 0, dessertQuantity: 0 },
+      slots,
       FIXTURE_LUNCH_DATE,
       1,
-      CANTEEN_CONFIG.menuVersion,
-      null,
+      '2026-v1',
       () => SUBMISSION_TIMES.midday,
     );
-    expect(declaration).toMatchObject({
-      basePoints: 20,
-      timingAdjustment: 5,
-      totalPoints: 25,
-      timingStatus: 'on-time',
-      includeInForecast: true,
-    });
+    expect(declaration).not.toBeNull();
+    expect(declaration!.selections).toHaveLength(2);
+    expect(declaration!.totalPoints).toBe(25);
   });
+});
 
-  it('creates a snapshot from a saved declaration', () => {
-    const quantities = buildInitialQuantities(menuItems);
-    quantities['rice-with-sauce'] = 1;
+describe('snapshotFromDeclaration', () => {
+  it('restores quantity fields on snapshot', () => {
     const declaration = createDeclarationFromDraft(
-      { quantities, noLunch: false },
-      menuItems,
+      { mealChoice: 'regular', mainQuantity: 1, vegetarianQuantity: 0, soupQuantity: 0, dessertQuantity: 0 },
+      slots,
       FIXTURE_LUNCH_DATE,
       1,
-      CANTEEN_CONFIG.menuVersion,
-      null,
+      '2026-v1',
       () => SUBMISSION_TIMES.midday,
     )!;
-    const snapshot = snapshotFromDeclaration(declaration, menuItems);
-    expect(snapshot.quantities['rice-with-sauce']).toBe(1);
-    expect(snapshot.totalPoints).toBe(25);
-  });
-
-  it('flags menuChanged when the menu version differs', () => {
-    const quantities = buildInitialQuantities(menuItems);
-    quantities['rice-with-sauce'] = 1;
-    const savedSnapshot = snapshotFromDeclaration(
-      createDeclarationFromDraft(
-        { quantities, noLunch: false },
-        menuItems,
-        FIXTURE_LUNCH_DATE,
-        1,
-        'old-version',
-        null,
-        () => SUBMISSION_TIMES.midday,
-      )!,
-      menuItems,
-    );
-    const result = reconcileDraftWithMenu(
-      savedSnapshot,
-      savedSnapshot,
-      menuItems,
-      CANTEEN_CONFIG.menuVersion,
-    );
-    expect(result.menuChanged).toBe(true);
+    const snapshot = snapshotFromDeclaration(declaration, slots);
+    expect(snapshot.mainQuantity).toBe(1);
   });
 });

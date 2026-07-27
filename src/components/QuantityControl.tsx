@@ -6,8 +6,10 @@ interface QuantityControlProps {
   onIncrement: () => void;
   onDecrement: () => void;
   disabled?: boolean;
-  size?: 'default' | 'compact';
-  itemName?: string;
+  incrementDisabled?: boolean;
+  decrementDisabled?: boolean;
+  itemName: string;
+  compact?: boolean;
 }
 
 export function QuantityControl({
@@ -16,25 +18,26 @@ export function QuantityControl({
   onIncrement,
   onDecrement,
   disabled = false,
-  size = 'default',
+  incrementDisabled,
+  decrementDisabled,
   itemName,
+  compact = false,
 }: QuantityControlProps) {
-  const label = itemName ? ` for ${itemName}` : '';
-  const minusDisabled = disabled || quantity <= 0;
-  const plusDisabled = disabled || quantity >= maxQuantity;
+  const minusDisabled = (decrementDisabled ?? disabled) || quantity <= 0;
+  const plusDisabled = (incrementDisabled ?? disabled) || quantity >= maxQuantity;
 
   return (
-    <div className={`quantity-control quantity-control--${size}`}>
+    <div className={`quantity-control${compact ? ' quantity-control--compact' : ''}`}>
       <button
         type="button"
         className="quantity-control__btn"
         onClick={onDecrement}
         disabled={minusDisabled}
-        aria-label={`Decrease quantity${label}`}
+        aria-label={`Decrease ${itemName}`}
       >
-        <Minus size={size === 'compact' ? 14 : 16} aria-hidden="true" />
+        <Minus size={compact ? 14 : 16} aria-hidden="true" />
       </button>
-      <span className="quantity-control__value" aria-live="polite" aria-atomic="true">
+      <span className="quantity-control__value" aria-live="polite">
         {quantity}
       </span>
       <button
@@ -42,10 +45,11 @@ export function QuantityControl({
         className="quantity-control__btn"
         onClick={onIncrement}
         disabled={plusDisabled}
-        aria-label={`Increase quantity${label}`}
+        aria-label={`Increase ${itemName}`}
       >
-        <Plus size={size === 'compact' ? 14 : 16} aria-hidden="true" />
+        <Plus size={compact ? 14 : 16} aria-hidden="true" />
       </button>
+      <span className="quantity-control__max">Max {maxQuantity}</span>
     </div>
   );
 }

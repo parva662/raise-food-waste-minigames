@@ -1,5 +1,6 @@
 import { CANTEEN_CONFIG } from '../config/canteen';
 import type { ActiveDeclaration, TimingStatus } from '../types/declaration';
+import type { MealChoice } from '../types/mealChoice';
 import { calculatePointsForTimingStatus } from '../utils/points';
 
 export interface DeclarationRepository {
@@ -56,6 +57,18 @@ export function normalizeDeclarationRecord(parsed: Record<string, unknown>): Act
   };
 }
 
+function withDefaultMealChoice(declaration: ActiveDeclaration): ActiveDeclaration {
+  if (
+    declaration.mealChoice === 'regular' ||
+    declaration.mealChoice === 'soup' ||
+    declaration.mealChoice === 'no_lunch'
+  ) {
+    return declaration;
+  }
+  const mealChoice: MealChoice = declaration.noLunch ? 'no_lunch' : 'regular';
+  return { ...declaration, mealChoice };
+}
+
 /**
  * Local prototype persistence. This repository can later be replaced
  * by a GameBus-backed implementation without changing UI or business rules.
@@ -70,8 +83,7 @@ export class LocalStorageDeclarationRepository implements DeclarationRepository 
       if (!normalized || normalized.studentId !== studentId || normalized.lunchDate !== lunchDate) {
         return null;
       }
-      return normalized;
-    } catch {
+      return withDefaultMealChoice(normalized);    } catch {
       return null;
     }
   }

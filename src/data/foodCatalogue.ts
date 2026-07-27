@@ -70,7 +70,7 @@ export const foodCatalogue: Record<string, FoodItem> = {
     category: 'soup',
     unit: 'cups',
     maxQuantity: 2,
-    image: 'https://images.unsplash.com/photo-1547595628-c61a29f496f0?w=400&h=240&fit=crop&q=80',
+    image: 'https://images.unsplash.com/photo-1547592166-23ac45744acd?w=400&h=240&fit=crop&q=80',
     dietaryTags: ['vegetarian'],
   },
   'yogurt-berries': {

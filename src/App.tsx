@@ -1,41 +1,31 @@
-import { Info } from 'lucide-react';
-import { AppHeader } from './components/AppHeader';
-import { CategoryLegend } from './components/CategoryLegend';
-import { MenuSection } from './components/MenuSection';
+import { GameStatusHeader } from './components/GameStatusHeader';
+import { MealSection } from './components/MealSection';
+import { RegularLunchPanel } from './components/RegularLunchPanel';
+import { SoupLunchPanel } from './components/SoupLunchPanel';
 import { SelectionPanel } from './components/SelectionPanel';
-import { ActionButtons } from './components/ActionButtons';
 import { SubmissionMessage } from './components/SubmissionMessage';
-import { LateUpdateConfirmDialog } from './components/LateUpdateConfirmDialog';
 import { MenuStatusBanner } from './components/MenuStatusBanner';
-import { categoryOrder } from './data/menu';
+import { ActionButtons } from './components/ActionButtons';
 import { useLunchSelection } from './hooks/useLunchSelection';
 import './styles.css';
 
 function App() {
   const {
     state,
-    selections,
-    summary,
-    progressPercent,
+    draft,
+    summaryLines,
     hasSavedDeclaration,
-    isDirty,
-    submitButtonState,
     isSubmitDisabled,
     savedScoring,
     initialized,
     menuAvailability,
-    menuItems,
+    mealSlots,
     submissionWindow,
     menuInteractive,
-    getQuantity,
-    increment,
-    decrement,
-    removeItem,
-    setNoLunch,
+    activateMealChoice,
+    adjustPortion,
     resetDraft,
     submit,
-    confirmLateUpdate,
-    cancelLateUpdate,
     clearSuccess,
     now,
   } = useLunchSelection();
@@ -44,13 +34,18 @@ function App() {
     return null;
   }
 
-  const menuDisabled = state.noLunch || !menuInteractive;
+  const mealChoice = draft.mealChoice;
+  const anotherSectionActive = mealChoice !== null;
+
+  const regularActive = mealChoice === 'regular';
+  const soupActive = mealChoice === 'soup';
+  const noLunchActive = mealChoice === 'no_lunch';
 
   return (
     <div className="app">
-      <AppHeader />
+      <GameStatusHeader submissionWindow={submissionWindow} now={now} />
 
-      <main className="app-main">
+      <main className="app-main app-main--compact">
         {menuAvailability.status === 'closed' && (
           <MenuStatusBanner
             message="The canteen is closed on this date."
@@ -63,56 +58,75 @@ function App() {
 
         <div className="app-layout">
           <div className="menu-column">
-            <div className="menu-column__header">
-              <h2 className="menu-column__title">Tomorrow&apos;s Menu</h2>
-              <CategoryLegend />
-            </div>
+            {menuAvailability.status === 'available' && mealSlots && (
+              <div className="meal-sections">
+                <MealSection
+                  sectionId="regular-lunch"
+                  title="Regular lunch"
+                  description="Choose the main dish, the vegetarian dish, or both."
+                  active={regularActive}
+                  muted={anotherSectionActive && !regularActive}
+                  onActivate={() => activateMealChoice('regular')}
+                  activateDisabled={!menuInteractive}
+                >
+                  <RegularLunchPanel
+                    main={mealSlots.main}
+                    vegetarian={mealSlots.vegetarian}
+                    mainQuantity={draft.mainQuantity}
+                    vegetarianQuantity={draft.vegetarianQuantity}
+                    sectionActive={regularActive}
+                    menuInteractive={menuInteractive}
+                    onActivateSection={() => activateMealChoice('regular')}
+                    onAdjustMain={(delta) => adjustPortion('main', delta)}
+                    onAdjustVegetarian={(delta) => adjustPortion('vegetarian', delta)}
+                  />
+                </MealSection>
 
-            {menuAvailability.status === 'available' &&
-              categoryOrder.map((category) => (
-                <MenuSection
-                  key={category.key}
-                  title={category.title}
-                  category={category.key}
-                  items={menuItems.filter((item) => item.category === category.key)}
-                  getQuantity={getQuantity}
-                  onIncrement={increment}
-                  onDecrement={decrement}
-                  disabled={menuDisabled}
+                <MealSection
+                  sectionId="soup-lunch"
+                  title="Soup lunch"
+                  description="Choose your soup and dessert portions."
+                  active={soupActive}
+                  muted={anotherSectionActive && !soupActive}
+                  onActivate={() => activateMealChoice('soup')}
+                  activateDisabled={!menuInteractive}
+                >
+                  <SoupLunchPanel
+                    soup={mealSlots.soup}
+                    dessert={mealSlots.dessert}
+                    soupQuantity={draft.soupQuantity}
+                    dessertQuantity={draft.dessertQuantity}
+                    sectionActive={soupActive}
+                    menuInteractive={menuInteractive}
+                    onActivateSection={() => activateMealChoice('soup')}
+                    onAdjustSoup={(delta) => adjustPortion('soup', delta)}
+                    onAdjustDessert={(delta) => adjustPortion('dessert', delta)}
+                  />
+                </MealSection>
+
+                <MealSection
+                  sectionId="no-lunch"
+                  title="No lunch"
+                  description="You will not eat at the canteen tomorrow."
+                  active={noLunchActive}
+                  muted={anotherSectionActive && !noLunchActive}
+                  onActivate={() => activateMealChoice('no_lunch')}
+                  activateDisabled={!menuInteractive}
+                  fullSectionActivate
                 />
-              ))}
-
-            {menuAvailability.status === 'available' && (
-              <div className="info-panel">
-                <Info size={18} className="info-panel__icon" aria-hidden="true" />
-                <p>
-                  Choose any items and quantities. You can combine classic and vegetarian options.
-                </p>
               </div>
             )}
           </div>
 
           <div className="selection-column">
             <SelectionPanel
-              selections={selections}
-              itemCount={summary.itemCount}
-              totalPortions={summary.totalPortions}
-              progressPercent={progressPercent}
-              noLunch={state.noLunch}
+              summaryLines={summaryLines}
               hasSavedDeclaration={hasSavedDeclaration}
               updatedAt={state.savedSnapshot?.updatedAt ?? null}
               savedScoring={savedScoring}
-              submitButtonState={submitButtonState}
               isSubmitDisabled={isSubmitDisabled}
-              isDirty={isDirty}
-              menuChanged={state.menuChanged}
               submissionWindow={submissionWindow}
-              submissionNow={now}
               menuInteractive={menuInteractive}
-              onIncrement={increment}
-              onDecrement={decrement}
-              onRemove={removeItem}
-              onNoLunchToggle={() => setNoLunch(!state.noLunch)}
               onReset={resetDraft}
               onSubmit={submit}
               showActions
@@ -127,22 +141,16 @@ function App() {
         onDismiss={clearSuccess}
       />
 
-      <LateUpdateConfirmDialog
-        open={state.showLateConfirm}
-        onConfirm={confirmLateUpdate}
-        onCancel={cancelLateUpdate}
-      />
-
-      <div className="mobile-action-bar" aria-label="Actions">
-        <ActionButtons
-          onReset={resetDraft}
-          onSubmit={submit}
-          submitButtonState={submitButtonState}
-          isSubmitDisabled={isSubmitDisabled}
-          hasSavedDeclaration={hasSavedDeclaration}
-          variant="sticky"
-        />
-      </div>
+      {menuInteractive && (
+        <div className="mobile-action-bar" aria-label="Actions">
+          <ActionButtons
+            onReset={resetDraft}
+            onSubmit={submit}
+            isSubmitDisabled={isSubmitDisabled}
+            variant="sticky"
+          />
+        </div>
+      )}
     </div>
   );
 }

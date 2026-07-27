@@ -14,10 +14,3 @@ export function getFixtureDailyMenuCatalogue() {
 }
 
 export const SECTION_KEYS = ['vegetarian', 'classic', 'soups', 'desserts'] as const;
-
-export const CATEGORY_TITLES = [
-  'Vegetarian Lunch',
-  'Classic Lunch',
-  'Soups',
-  'Desserts',
-] as const;

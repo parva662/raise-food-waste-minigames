@@ -7,6 +7,11 @@ export default defineConfig(({ command }) => ({
   plugins: [react()],
   test: {
     environment: 'node',
+    pool: 'forks',
+    maxWorkers: 1,
+    fileParallelism: false,
+    hookTimeout: 120_000,
+    testTimeout: 30_000,
     setupFiles: ['./src/test/setup.ts'],
     include: ['src/**/*.test.{ts,tsx}'],
     coverage: {

@@ -1,5 +1,3 @@
-import type { SelectionEntry } from '../types/menu';
-import type { MenuItem } from '../types/menu';
 import { CANTEEN_CONFIG } from '../config/canteen';
 import {
   getPointsBreakdownForInstant,
@@ -7,17 +5,18 @@ import {
   systemClock,
 } from '../services/submissionWindow';
 import type { ActiveDeclaration } from '../types/declaration';
+import type { DailyMealSlots, MealDraft } from '../types/mealChoice';
 import { declarationRepository } from '../repositories/declarationRepository';
-import { isDraftDirty } from './declarationSelection';
+import {
+  buildSelectionsFromMealDraft,
+  mealDraftFromDeclaration,
+} from './mealChoice';
 
-export { declarationRepository, isDraftDirty };
+export { declarationRepository };
 
-export interface DraftSnapshot {
-  quantities: Record<string, number>;
-  noLunch: boolean;
-}
+export type DraftSnapshot = MealDraft;
 
-export interface SavedSnapshot extends DraftSnapshot {
+export interface SavedSnapshot extends MealDraft {
   submittedAt: string;
   updatedAt: string;
   timingStatus: ActiveDeclaration['timingStatus'];
@@ -28,37 +27,23 @@ export interface SavedSnapshot extends DraftSnapshot {
   menuCycleWeek: number;
 }
 
-export function buildInitialQuantities(menuItems: MenuItem[]): Record<string, number> {
-  return Object.fromEntries(menuItems.map((item) => [item.id, 0]));
-}
-
-export function buildSelections(
-  quantities: Record<string, number>,
-  menuItems: MenuItem[],
-): SelectionEntry[] {
-  return menuItems
-    .filter((item) => (quantities[item.id] ?? 0) > 0)
-    .map((item) => ({
-      itemId: item.id,
-      name: item.name,
-      quantity: quantities[item.id],
-      unit: item.unit,
-    }));
+export function createEmptyDraft(): DraftSnapshot {
+  return {
+    mealChoice: null,
+    mainQuantity: 0,
+    vegetarianQuantity: 0,
+    soupQuantity: 0,
+    dessertQuantity: 0,
+  };
 }
 
 export function snapshotFromDeclaration(
   declaration: ActiveDeclaration,
-  menuItems: MenuItem[],
+  slots: DailyMealSlots,
 ): SavedSnapshot {
-  const quantities = buildInitialQuantities(menuItems);
-  for (const selection of declaration.selections) {
-    if (quantities[selection.itemId] !== undefined) {
-      quantities[selection.itemId] = selection.quantity;
-    }
-  }
+  const draft = mealDraftFromDeclaration(declaration, slots);
   return {
-    quantities,
-    noLunch: declaration.noLunch,
+    ...draft,
     submittedAt: declaration.submittedAt,
     updatedAt: declaration.updatedAt,
     timingStatus: declaration.timingStatus,
@@ -72,74 +57,39 @@ export function snapshotFromDeclaration(
 
 export function createDeclarationFromDraft(
   draft: DraftSnapshot,
-  menuItems: MenuItem[],
+  slots: DailyMealSlots,
   lunchDate: string,
   menuCycleWeek: number,
   menuVersion: string,
-  existing: ActiveDeclaration | null,
   clock: Clock = systemClock,
 ): ActiveDeclaration | null {
+  if (draft.mealChoice === null) return null;
+
   const now = clock();
   const pointsBreakdown = getPointsBreakdownForInstant(now, lunchDate);
   if (pointsBreakdown === null) return null;
 
-  const selections = buildSelections(draft.quantities, menuItems);
+  const noLunch = draft.mealChoice === 'no_lunch';
+  const selections = noLunch ? [] : buildSelectionsFromMealDraft(draft, slots);
 
   return {
     studentId: CANTEEN_CONFIG.studentId,
     lunchDate,
     menuCycleWeek,
     menuVersion,
-    noLunch: draft.noLunch,
+    mealChoice: draft.mealChoice,
+    regularMainSelected:
+      draft.mealChoice === 'regular' ? draft.mainQuantity > 0 : undefined,
+    regularVegetarianSelected:
+      draft.mealChoice === 'regular' ? draft.vegetarianQuantity > 0 : undefined,
+    noLunch,
     selections,
     timingStatus: pointsBreakdown.timingStatus,
     basePoints: pointsBreakdown.basePoints,
     timingAdjustment: pointsBreakdown.timingAdjustment,
     totalPoints: pointsBreakdown.totalPoints,
-    submittedAt: existing?.submittedAt ?? now.toISOString(),
+    submittedAt: now.toISOString(),
     updatedAt: now.toISOString(),
     includeInForecast: true,
   };
-}
-
-export function reconcileDraftWithMenu(
-  draft: DraftSnapshot,
-  saved: SavedSnapshot | null,
-  menuItems: MenuItem[],
-  currentMenuVersion: string,
-): {
-  draft: DraftSnapshot;
-  menuChanged: boolean;
-} {
-  const availableIds = new Set(menuItems.map((item) => item.id));
-  const nextQuantities = { ...draft.quantities };
-  let removedAny = false;
-
-  for (const item of menuItems) {
-    if (nextQuantities[item.id] === undefined) {
-      nextQuantities[item.id] = 0;
-    }
-  }
-
-  for (const itemId of Object.keys(nextQuantities)) {
-    if (!availableIds.has(itemId) && nextQuantities[itemId] > 0) {
-      nextQuantities[itemId] = 0;
-      removedAny = true;
-    }
-  }
-
-  const menuChanged =
-    removedAny ||
-    (saved !== null && saved.menuVersion !== currentMenuVersion);
-
-  return {
-    draft: { quantities: nextQuantities, noLunch: draft.noLunch },
-    menuChanged,
-  };
-}
-
-export type SubmitButtonState = 'submit' | 'update';
-
-export function getSubmitButtonState(hasSavedDeclaration: boolean): SubmitButtonState {
-  return hasSavedDeclaration ? 'update' : 'submit';
 }

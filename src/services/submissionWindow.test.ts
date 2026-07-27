@@ -4,17 +4,15 @@ import {
   getPointsBreakdownForInstant,
   getTimingStatusForInstant,
   isSubmissionAllowed,
-  requiresLateUpdateConfirmation,
   getSubmissionWindowStatus,
 } from './submissionWindow';
-import { createDeclarationFromDraft, buildInitialQuantities } from '../utils/declaration';
-import { resolveMenuForDate } from './menuResolver';
+import { createDeclarationFromDraft } from '../utils/declaration';
+import { resolveMealSlotsForDate } from './mealSlots';
 import { CANTEEN_CONFIG } from '../config/canteen';
 import {
   FIXTURE_LUNCH_DATE,
   SUBMISSION_TIMES,
   helsinki,
-  FIXTURE_SUBMISSION_DAY,
 } from '../test/fixtures/dates';
 
 describe('submission window boundaries', () => {
@@ -66,15 +64,14 @@ describe('submission window boundaries', () => {
   });
 
   it('prevents declaration creation when submission is closed', () => {
-    const menu = resolveMenuForDate(FIXTURE_LUNCH_DATE);
-    if (menu.status !== 'available') throw new Error('Expected available menu');
+    const slots = resolveMealSlotsForDate(FIXTURE_LUNCH_DATE);
+    if (!slots) throw new Error('Expected meal slots');
     const declaration = createDeclarationFromDraft(
-      { quantities: buildInitialQuantities(menu.items), noLunch: true },
-      menu.items,
+      { mealChoice: 'no_lunch', mainQuantity: 0, vegetarianQuantity: 0, soupQuantity: 0, dessertQuantity: 0 },
+      slots,
       FIXTURE_LUNCH_DATE,
       1,
       CANTEEN_CONFIG.menuVersion,
-      null,
       () => SUBMISSION_TIMES.closedJustAfter,
     );
     expect(declaration).toBeNull();
@@ -105,61 +102,16 @@ describe('submission window scoring integration', () => {
     expect(getPointsBreakdownForInstant(SUBMISSION_TIMES.closedJustAfter, FIXTURE_LUNCH_DATE)).toBeNull();
   });
 
-  it('requires confirmation when updating an on-time declaration late', () => {
-    expect(
-      requiresLateUpdateConfirmation('on-time', SUBMISSION_TIMES.lateEvening, FIXTURE_LUNCH_DATE),
-    ).toBe(true);
-    expect(
-      requiresLateUpdateConfirmation('late', SUBMISSION_TIMES.lateEvening, FIXTURE_LUNCH_DATE),
-    ).toBe(false);
-  });
-});
-
-describe('late update scoring behaviour', () => {
-  const menu = resolveMenuForDate(FIXTURE_LUNCH_DATE);
-  const menuItems = menu.status === 'available' ? menu.items : [];
-
-  it('preserves 25 points when updating before 18:00', () => {
-    const first = createDeclarationFromDraft(
-      { quantities: { ...buildInitialQuantities(menuItems), 'rice-with-sauce': 1 }, noLunch: false },
-      menuItems,
+  it('scores late submissions at 15 points at submit time', () => {
+    const slots = resolveMealSlotsForDate(FIXTURE_LUNCH_DATE)!;
+    const declaration = createDeclarationFromDraft(
+      { mealChoice: 'soup', mainQuantity: 0, vegetarianQuantity: 0, soupQuantity: 1, dessertQuantity: 1 },
+      slots,
       FIXTURE_LUNCH_DATE,
       1,
       CANTEEN_CONFIG.menuVersion,
-      null,
-      () => SUBMISSION_TIMES.midday,
-    )!;
-    const updated = createDeclarationFromDraft(
-      { quantities: { ...buildInitialQuantities(menuItems), 'rice-with-sauce': 2 }, noLunch: false },
-      menuItems,
-      FIXTURE_LUNCH_DATE,
-      1,
-      CANTEEN_CONFIG.menuVersion,
-      first,
-      () => helsinki(FIXTURE_SUBMISSION_DAY, '17:00:00'),
-    )!;
-    expect(updated.totalPoints).toBe(25);
-  });
-
-  it('changes 25 points to 15 when updating after 18:00', () => {
-    const first = createDeclarationFromDraft(
-      { quantities: { ...buildInitialQuantities(menuItems), 'rice-with-sauce': 1 }, noLunch: false },
-      menuItems,
-      FIXTURE_LUNCH_DATE,
-      1,
-      CANTEEN_CONFIG.menuVersion,
-      null,
-      () => SUBMISSION_TIMES.midday,
-    )!;
-    const lateUpdate = createDeclarationFromDraft(
-      { quantities: { ...buildInitialQuantities(menuItems), 'rice-with-sauce': 3 }, noLunch: false },
-      menuItems,
-      FIXTURE_LUNCH_DATE,
-      1,
-      CANTEEN_CONFIG.menuVersion,
-      first,
       () => SUBMISSION_TIMES.lateEvening,
-    )!;
-    expect(lateUpdate.totalPoints).toBe(15);
+    );
+    expect(declaration?.totalPoints).toBe(15);
   });
 });

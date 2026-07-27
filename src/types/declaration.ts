@@ -1,4 +1,5 @@
 import type { SelectionEntry } from './menu';
+import type { MealChoice } from './mealChoice';
 
 export type TimingStatus = 'on-time' | 'late';
 export type TimingAdjustment = 5 | -5;
@@ -8,6 +9,9 @@ export interface ActiveDeclaration {
   lunchDate: string;
   menuCycleWeek: number;
   menuVersion: string;
+  mealChoice: MealChoice;
+  regularMainSelected?: boolean;
+  regularVegetarianSelected?: boolean;
   noLunch: boolean;
   selections: SelectionEntry[];
   timingStatus: TimingStatus;
