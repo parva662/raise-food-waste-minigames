@@ -22,3 +22,6 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Local external protocol reference (not part of this repo)
+reference/gamebus-minigame-demo-main/
