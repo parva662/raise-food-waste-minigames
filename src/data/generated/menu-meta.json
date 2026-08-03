@@ -1,0 +1,25 @@
+{
+  "sourceWorkbook": "C:\\Users\\20184558\\gamebus-lunch-dnd-v2\\reference\\Example_menu.xlsx",
+  "generatedAt": "2026-08-03T13:35:19.374Z",
+  "menuVersion": "excel-2026-07-27-2026-11-20",
+  "dateRange": {
+    "start": "2026-07-27",
+    "end": "2026-11-20"
+  },
+  "dailyMenuCount": 75,
+  "catalogueItemCount": 116,
+  "dateShift": {
+    "workbookStartDate": "2026-02-02",
+    "runtimeStartDate": "2026-07-27",
+    "dateOffsetDays": 175,
+    "workbookDateRange": {
+      "start": "2026-02-02",
+      "end": "2026-05-29"
+    },
+    "runtimeDateRange": {
+      "start": "2026-07-27",
+      "end": "2026-11-20"
+    },
+    "runtimeEndDate": "2026-11-20"
+  }
+}

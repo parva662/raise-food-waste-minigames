@@ -1,7 +1,23 @@
+import type { MealDraft } from '../types/mealChoice';
 import type { TaskActivityTemplate, TaskData } from './types';
-import { STUDENT_LUNCH_CHECKIN_REFS } from './mapStudentLunchCheckinLegacy';
+import {
+  orderedPropertyRefsForDraft,
+  STUDENT_LUNCH_CHECKIN_OPTIONAL_ITEM_REFS,
+  STUDENT_LUNCH_CHECKIN_REQUIRED_REFS,
+  type StudentLunchOptionalItemRef,
+} from './mapStudentLunchCheckin';
 
 export const STUDENT_LUNCH_CHECKIN_REF = 'studentLunchCheckin';
+
+const QUANTITY_BY_OPTIONAL_ITEM_REF: Record<
+  StudentLunchOptionalItemRef,
+  'mainQuantity' | 'vegetarianQuantity' | 'soupQuantity' | 'dessertQuantity'
+> = {
+  mainItemId: 'mainQuantity',
+  vegetarianItemId: 'vegetarianQuantity',
+  soupItemId: 'soupQuantity',
+  dessertItemId: 'dessertQuantity',
+};
 
 export function findActivityTemplate(
   task: TaskData,
@@ -83,10 +99,10 @@ export function assertStudentLunchCheckinActivity(
 
   const linked = resolveLinkedPropertyRefs(activity);
   if (linked.length > 0) {
-    const missing = STUDENT_LUNCH_CHECKIN_REFS.filter((ref) => !linked.includes(ref));
-    if (missing.length > 0) {
+    const missingRequired = STUDENT_LUNCH_CHECKIN_REQUIRED_REFS.filter((ref) => !linked.includes(ref));
+    if (missingRequired.length > 0) {
       throw new Error(
-        `Activity template "${STUDENT_LUNCH_CHECKIN_REF}" missing linked property refs: ${missing.join(', ')}`,
+        `Activity template "${STUDENT_LUNCH_CHECKIN_REF}" missing linked property refs: ${missingRequired.join(', ')}`,
       );
     }
   }
@@ -94,8 +110,29 @@ export function assertStudentLunchCheckinActivity(
   return activity;
 }
 
-/** Ordered legacy property references for ACTIVITY.properties[].template */
-export function propertyRefsForStudentLunchActivity(task: TaskData): readonly string[] {
+/** Ordered property references for ACTIVITY.properties[].template (item IDs only when selected). */
+export function propertyRefsForStudentLunchActivity(
+  task: TaskData,
+  draft: MealDraft,
+): readonly string[] {
   assertStudentLunchCheckinActivity(task, STUDENT_LUNCH_CHECKIN_REF);
-  return STUDENT_LUNCH_CHECKIN_REFS;
+  const linked = resolveLinkedPropertyRefs(
+    findActivityTemplate(task, STUDENT_LUNCH_CHECKIN_REF)!,
+  );
+  const ordered = orderedPropertyRefsForDraft(draft);
+
+  if (linked.length === 0) {
+    return ordered;
+  }
+
+  for (const itemRef of STUDENT_LUNCH_CHECKIN_OPTIONAL_ITEM_REFS) {
+    const qty = draft[QUANTITY_BY_OPTIONAL_ITEM_REF[itemRef]];
+    if (qty > 0 && !linked.includes(itemRef)) {
+      throw new Error(
+        `Activity template "${STUDENT_LUNCH_CHECKIN_REF}" missing linked property ref "${itemRef}" for selected dish`,
+      );
+    }
+  }
+
+  return ordered;
 }

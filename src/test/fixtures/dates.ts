@@ -1,10 +1,10 @@
 import { fromZonedTime } from 'date-fns-tz';
 
-/** Lunch date used across submission and declaration tests (Wednesday, Week 1). */
-export const FIXTURE_LUNCH_DATE = '2026-01-07';
+/** Lunch date used across submission and declaration tests (Wednesday in runtime menu). */
+export const FIXTURE_LUNCH_DATE = '2026-07-29';
 
 /** Submission day is the calendar day before the lunch date. */
-export const FIXTURE_SUBMISSION_DAY = '2026-01-06';
+export const FIXTURE_SUBMISSION_DAY = '2026-07-28';
 
 export function helsinki(dateIso: string, time: string): Date {
   return fromZonedTime(`${dateIso} ${time}`, 'Europe/Helsinki');
@@ -21,28 +21,29 @@ export const SUBMISSION_TIMES = {
   lateEvening: helsinki(FIXTURE_SUBMISSION_DAY, '19:00:00'),
 } as const;
 
-/**
- * Known rotation dates derived from menuCycleStartDate 2026-01-06 (Week 1 Tuesday).
- * Weekday labels match the actual calendar weekday for each ISO date.
- */
-export const ROTATION_DATES = {
-  cycleStartTuesday: '2026-01-06',
-  week1Monday: '2026-01-12',
-  week1Friday: '2026-01-09',
-  week2Monday: '2026-01-19',
-  week3Monday: '2026-01-26',
-  week4Monday: '2026-02-02',
-  week4Tuesday: '2026-01-27',
-  week5Wednesday: '2026-02-04',
-  week6Thursday: '2026-02-12',
-  monthBoundaryFriday: '2026-01-30',
-  yearBoundaryWeekday: '2026-12-30',
-  beforeValidity: '2025-12-31',
-  afterValidity: '2027-01-01',
-  closedOverride: '2026-02-23',
-  replaceOverride: '2026-03-15',
-  replaceOverrideNormalDay: '2026-03-13',
-  replaceOverrideAfterDay: '2026-03-16',
+/** Known dates for generated Excel menu tests (runtime-shifted calendar). */
+export const MENU_DATES = {
+  runtimeMonday: '2026-07-27',
+  runtimeTuesday: '2026-07-28',
+  runtimeWednesday: '2026-07-29',
+  runtimeThursday: '2026-07-30',
+  runtimeFriday: '2026-07-31',
+  missingFromWorkbook: '2026-01-07',
+  closedWorkbookDay: '2026-09-25',
+  beforeRange: '2026-07-26',
+  afterRange: '2026-11-21',
+  weekend: '2026-08-01',
+  closedOverride: '2026-08-17',
+  replaceOverride: '2026-09-15',
+  replaceOverrideNormalDay: '2026-09-14',
+  replaceOverrideAfterDay: '2026-09-16',
+} as const;
+
+/** Original workbook dates (pre-shift), for pipeline tests. */
+export const WORKBOOK_DATES = {
+  first: '2026-02-02',
+  secondWeekday: '2026-02-03',
+  last: '2026-05-29',
 } as const;
 
 export function fixedClock(isoInstant: string): () => Date {

@@ -1,0 +1,245 @@
+{
+  "sourcePath": "C:\\Users\\20184558\\gamebus-lunch-dnd-v2\\reference\\Example_menu.xlsx",
+  "sheetNames": [
+    "Week 2",
+    "Week 3",
+    "Week 8",
+    "Week 9",
+    "Week 10",
+    "Week 13",
+    "Week 14",
+    "Week 15",
+    "Week 16",
+    "Week 17",
+    "Week 18",
+    "Week 19",
+    "Week 20",
+    "Week 21",
+    "Week 22"
+  ],
+  "sheets": [
+    {
+      "name": "Week 2",
+      "usedRange": "A1:F21",
+      "mergeCount": 0,
+      "headerRow": [
+        "MENU ITEMS",
+        "QUANTITY",
+        "DATE"
+      ],
+      "rowCount": 20,
+      "weekNumber": 2,
+      "weekValid": true,
+      "notes": []
+    },
+    {
+      "name": "Week 3",
+      "usedRange": "A1:C21",
+      "mergeCount": 0,
+      "headerRow": [
+        "MENU ITEMS",
+        "QUANTITY",
+        "DATE"
+      ],
+      "rowCount": 20,
+      "weekNumber": 3,
+      "weekValid": true,
+      "notes": []
+    },
+    {
+      "name": "Week 8",
+      "usedRange": "A1:C21",
+      "mergeCount": 0,
+      "headerRow": [
+        "MENU ITEMS",
+        "QUANTITY",
+        "DATE"
+      ],
+      "rowCount": 20,
+      "weekNumber": 8,
+      "weekValid": true,
+      "notes": []
+    },
+    {
+      "name": "Week 9",
+      "usedRange": "A1:C21",
+      "mergeCount": 0,
+      "headerRow": [
+        "MENU ITEMS",
+        "QUANTITY",
+        "DATE"
+      ],
+      "rowCount": 20,
+      "weekNumber": 9,
+      "weekValid": true,
+      "notes": []
+    },
+    {
+      "name": "Week 10",
+      "usedRange": "A1:C21",
+      "mergeCount": 0,
+      "headerRow": [
+        "MENU ITEMS",
+        "QUANTITY",
+        "DATE"
+      ],
+      "rowCount": 20,
+      "weekNumber": 10,
+      "weekValid": true,
+      "notes": []
+    },
+    {
+      "name": "Week 13",
+      "usedRange": "A1:C21",
+      "mergeCount": 0,
+      "headerRow": [
+        "MENU ITEMS",
+        "QUANTITY",
+        "DATE"
+      ],
+      "rowCount": 20,
+      "weekNumber": 13,
+      "weekValid": true,
+      "notes": []
+    },
+    {
+      "name": "Week 14",
+      "usedRange": "A1:C21",
+      "mergeCount": 0,
+      "headerRow": [
+        "MENU ITEMS",
+        "QUANTITY",
+        "DATE"
+      ],
+      "rowCount": 20,
+      "weekNumber": 14,
+      "weekValid": true,
+      "notes": []
+    },
+    {
+      "name": "Week 15",
+      "usedRange": "A1:C21",
+      "mergeCount": 0,
+      "headerRow": [
+        "MENU ITEMS",
+        "QUANTITY",
+        "DATE"
+      ],
+      "rowCount": 20,
+      "weekNumber": 15,
+      "weekValid": true,
+      "notes": []
+    },
+    {
+      "name": "Week 16",
+      "usedRange": "A1:C21",
+      "mergeCount": 0,
+      "headerRow": [
+        "MENU ITEMS",
+        "QUANTITY",
+        "DATE"
+      ],
+      "rowCount": 20,
+      "weekNumber": 16,
+      "weekValid": true,
+      "notes": []
+    },
+    {
+      "name": "Week 17",
+      "usedRange": "A1:C21",
+      "mergeCount": 0,
+      "headerRow": [
+        "MENU ITEMS",
+        "QUANTITY",
+        "DATE"
+      ],
+      "rowCount": 20,
+      "weekNumber": 17,
+      "weekValid": true,
+      "notes": []
+    },
+    {
+      "name": "Week 18",
+      "usedRange": "A1:C21",
+      "mergeCount": 0,
+      "headerRow": [
+        "MENU ITEMS",
+        "QUANTITY",
+        "DATE"
+      ],
+      "rowCount": 20,
+      "weekNumber": 18,
+      "weekValid": true,
+      "notes": []
+    },
+    {
+      "name": "Week 19",
+      "usedRange": "A1:C21",
+      "mergeCount": 0,
+      "headerRow": [
+        "MENU ITEMS",
+        "QUANTITY",
+        "DATE"
+      ],
+      "rowCount": 20,
+      "weekNumber": 19,
+      "weekValid": true,
+      "notes": []
+    },
+    {
+      "name": "Week 20",
+      "usedRange": "A1:C21",
+      "mergeCount": 0,
+      "headerRow": [
+        "MENU ITEMS",
+        "QUANTITY",
+        "DATE"
+      ],
+      "rowCount": 20,
+      "weekNumber": 20,
+      "weekValid": true,
+      "notes": []
+    },
+    {
+      "name": "Week 21",
+      "usedRange": "A1:C21",
+      "mergeCount": 0,
+      "headerRow": [
+        "MENU ITEMS",
+        "QUANTITY",
+        "DATE"
+      ],
+      "rowCount": 20,
+      "weekNumber": 21,
+      "weekValid": true,
+      "notes": []
+    },
+    {
+      "name": "Week 22",
+      "usedRange": "A1:C21",
+      "mergeCount": 0,
+      "headerRow": [
+        "MENU ITEMS",
+        "QUANTITY",
+        "DATE"
+      ],
+      "rowCount": 20,
+      "weekNumber": 22,
+      "weekValid": true,
+      "notes": []
+    }
+  ],
+  "mappingStatus": "mappable",
+  "unresolved": [],
+  "slotOrderPerDay": [
+    "main",
+    "vegetarian",
+    "soup",
+    "dessert"
+  ],
+  "languagesDetected": [
+    "en"
+  ],
+  "hasExplicitItemIdColumn": false,
+  "hasFormulas": false
+}

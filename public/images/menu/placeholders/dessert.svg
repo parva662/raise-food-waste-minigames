@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="400" height="240" viewBox="0 0 400 240" role="img" aria-label="Dessert placeholder">
+  <rect width="400" height="240" fill="#f5eef3"/>
+  <rect x="80" y="96" width="240" height="72" rx="16" fill="#e8d0dc"/>
+  <circle cx="140" cy="132" r="20" fill="#d4a8be"/>
+  <circle cx="200" cy="132" r="20" fill="#c992ad"/>
+  <circle cx="260" cy="132" r="20" fill="#d4a8be"/>
+  <text x="200" y="210" text-anchor="middle" font-family="system-ui,sans-serif" font-size="14" fill="#7a5a6a">Dessert</text>
+</svg>

@@ -15,6 +15,11 @@ export interface FoodItem {
   maxQuantity: number;
   image: string;
   dietaryTags: string[];
+  /** Category placeholder used when dedicated image is missing or fails to load. */
+  imagePlaceholder?: string;
+  /** Expected dedicated asset path (may 404 until photography is added). */
+  imageDedicated?: string;
+  usesPlaceholderImage?: boolean;
 }
 
 /** Resolved menu item shown in the UI (same shape as catalogue entry). */
@@ -33,6 +38,8 @@ export type MenuAvailability =
       items: MenuItem[];
       dailyMenuId: string;
       menuCycleWeek: number;
+      /** Workbook sheet week label when using generated dated menus. */
+      sheetWeek?: number;
       menuVersion: string;
     }
   | { status: 'closed'; reason?: string }

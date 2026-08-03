@@ -13,7 +13,7 @@ export default defineConfig(({ command }) => ({
     hookTimeout: 120_000,
     testTimeout: 30_000,
     setupFiles: ['./src/test/setup.ts'],
-    include: ['src/**/*.test.{ts,tsx}'],
+    include: ['src/**/*.test.{ts,tsx}', 'scripts/**/*.test.ts'],
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json-summary', 'html'],

@@ -11,9 +11,9 @@ export const CANTEEN_CONFIG = {
   onTimeBonus: 5 as const,
   latePenalty: -5 as const,
   menuCycleStartDate: '2026-01-06',
-  menuValidityStartDate: '2026-01-01',
-  menuValidityEndDate: '2026-12-31',
-  menuVersion: '2026-v1',
+  menuValidityStartDate: '2026-07-27',
+  menuValidityEndDate: '2026-11-20',
+  menuVersion: 'excel-dated-menu',
   menuCycleWeeks: 3,
 } as const;
 

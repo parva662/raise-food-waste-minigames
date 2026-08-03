@@ -2,7 +2,7 @@
 
 **Repository:** `gamebus-lunch-dnd-v2` (npm package name; GitHub: `raise-food-waste-minigames`)  
 **Status:** Current implementation in `src/` is authoritative.  
-**GameBus integration:** Design only — see [`GAMEBUS_LUNCH_CONTRACT.md`](./GAMEBUS_LUNCH_CONTRACT.md).
+**GameBus integration:** Single quantity-aware `studentLunchCheckin` ACTIVITY mapper — see [`GAMEBUS_LUNCH_CONTRACT.md`](./GAMEBUS_LUNCH_CONTRACT.md). **Repository mapper is ready**; live GameBus activity must still be **manually migrated** to the twelve-property set.
 
 ---
 
@@ -87,13 +87,24 @@ Lunch date: **tomorrow** via `getTomorrowIsoDate()` (`src/utils/dates.ts`) — b
 
 ---
 
-## 4. Application architecture
+## 3.5 Menu data and images
+
+- **Source:** `reference/Example_menu.xlsx`, converted with `npm run menu:convert` into `generated-data/menu/` and runtime copies under `src/data/generated/`.
+- **Date shift:** Workbook dates (`2026-02-02`–`2026-05-29`) are shifted by **+175 days** to runtime (`2026-07-27`–`2026-11-20`) via `scripts/menu/menuConfig.ts` — not edited manually in JSON.
+- **Resolution:** `menuResolver.ts` looks up lunch by **ISO calendar date** (weekdays only). There is **no** fallback to the old three-week rotation.
+- **CLOSED days** (workbook `CLOSED` rows or override): menu status `closed` — no selectable dishes, submit disabled.
+- **Missing dates** (outside `2026-02-02`–`2026-05-29` range or not in the workbook): status `unavailable` — submit disabled.
+- **Quantities:** `maxQuantity` / `unit` come from the generated catalogue (product defaults), not Excel forecast portions.
+- **Images:** Expected dedicated files at `public/images/menu/items/<item-id>.webp`. Until added, neutral **category placeholders** (`public/images/menu/placeholders/*.svg`) are shown. The app does **not** download images from the internet.
+- **Diagnostics:** `generated-data/menu/missing-images.json` lists items still on placeholders.
+
+---
 
 | Layer | Location |
 |-------|----------|
 | UI | `src/App.tsx`, `src/components/*` |
 | State | `useReducer` in `src/hooks/useLunchSelection.ts` |
-| Menu | `menuResolver.ts`, `mealSlots.ts`, `src/data/*` |
+| Menu | `menuResolver.ts`, `mealSlots.ts`, `src/data/generated/*`, `generatedMenuData.ts` |
 | Rules | `mealChoice.ts`, `mealDraftActions.ts`, `declarationSelection.ts` |
 | Persistence | `DeclarationRepository` + `LocalStorageDeclarationRepository` |
 | Config | `src/config/canteen.ts` |
@@ -123,16 +134,16 @@ No client-side routing (single SPA).
 
 ## 7. Tests
 
-**106 tests** in 11 files (`npm run test:run`). Coverage focuses on menu resolution, meal slots, submission window, meal draft actions, declaration build, hook submit/lock behavior, and key UI strings.
+**Coverage includes** GameBus `studentLunchCheckin` ACTIVITY mapping (twelve properties), dated menu resolution, placeholder images, menu workbook pipeline, meal slots, submission window, meal draft actions, declaration build, hook submit/lock behavior, and key UI strings. Run `npm run test:run` for the current count.
 
 ---
 
 ## 8. Out of scope (this repo)
 
 - Chef forecast, waste, production activities (separate GameBus templates exist in test env only)
-- GameBus iframe bridge (**planned** — contract written, code not implemented)
-- Authentication / real student identity (demo `studentId` only)
-- Menu import from workbook (`reference/Example_menu.xlsx` not used at runtime)
+- GameBus iframe bridge (`studentLunchCheckin` mapper; live admin migration pending)
+- Authentication / real student identity (demo `studentId` only; not sent on embedded ACTIVITY)
+- Dedicated food photography (`public/images/menu/items/*.webp`)
 
 ---
 

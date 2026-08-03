@@ -1,6 +1,6 @@
 import type { DailyMenuDefinition, Weekday } from '../types/menu';
 
-/** Fifteen complete daily menus — one per cycle weekday (Mon–Fri × 3 weeks). */
+/** @deprecated Legacy 3-week rotation — not used at runtime. Dated menus come from `src/data/generated/`. */
 export const dailyMenus: DailyMenuDefinition[] = [
   {
     id: 'week1-monday',

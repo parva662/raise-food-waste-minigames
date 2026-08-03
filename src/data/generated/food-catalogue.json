@@ -1,0 +1,1176 @@
+[
+  {
+    "id": "apple-compote",
+    "name": "Apple compote",
+    "category": "dessert",
+    "unit": "pieces",
+    "maxQuantity": 2,
+    "image": "",
+    "dietaryTags": []
+  },
+  {
+    "id": "apricot-and-apple-lassi",
+    "name": "Apricot and apple lassi",
+    "category": "dessert",
+    "unit": "pieces",
+    "maxQuantity": 2,
+    "image": "",
+    "dietaryTags": []
+  },
+  {
+    "id": "asparagus-soup-flow-surplus-not-normally-on-the-menu",
+    "name": "Asparagus soup (Flow surplus; not normally on the menu)",
+    "category": "soup",
+    "unit": "cups",
+    "maxQuantity": 2,
+    "image": "",
+    "dietaryTags": []
+  },
+  {
+    "id": "baked-banana-smoothie",
+    "name": "Baked banana smoothie",
+    "category": "dessert",
+    "unit": "pieces",
+    "maxQuantity": 2,
+    "image": "",
+    "dietaryTags": []
+  },
+  {
+    "id": "baltic-herring-patties-with-root-vegetable-puree-and-lemon-sauce",
+    "name": "Baltic herring patties with root vegetable purée and lemon sauce",
+    "category": "classic",
+    "unit": "pieces",
+    "maxQuantity": 6,
+    "image": "",
+    "dietaryTags": [
+      "meat"
+    ]
+  },
+  {
+    "id": "banana-smoothie",
+    "name": "Banana smoothie",
+    "category": "dessert",
+    "unit": "pieces",
+    "maxQuantity": 2,
+    "image": "",
+    "dietaryTags": []
+  },
+  {
+    "id": "black-bean-patty-with-mashed-potatoes-and-lemon-aioli",
+    "name": "Black bean patty with mashed potatoes and lemon aioli",
+    "category": "vegetarian",
+    "unit": "portion",
+    "maxQuantity": 3,
+    "image": "",
+    "dietaryTags": [
+      "vegetarian"
+    ]
+  },
+  {
+    "id": "blueberry-smoothie",
+    "name": "Blueberry smoothie",
+    "category": "dessert",
+    "unit": "pieces",
+    "maxQuantity": 2,
+    "image": "",
+    "dietaryTags": []
+  },
+  {
+    "id": "blueberry-soup",
+    "name": "Blueberry soup",
+    "category": "dessert",
+    "unit": "pieces",
+    "maxQuantity": 2,
+    "image": "",
+    "dietaryTags": []
+  },
+  {
+    "id": "breaded-country-style-chicken-with-bbq-mayonnaise",
+    "name": "Breaded country-style chicken with BBQ mayonnaise",
+    "category": "classic",
+    "unit": "pieces",
+    "maxQuantity": 6,
+    "image": "",
+    "dietaryTags": [
+      "meat"
+    ]
+  },
+  {
+    "id": "breaded-flounder-with-lemon-sauce",
+    "name": "Breaded flounder with lemon sauce",
+    "category": "classic",
+    "unit": "pieces",
+    "maxQuantity": 6,
+    "image": "",
+    "dietaryTags": [
+      "meat"
+    ]
+  },
+  {
+    "id": "brie-cheese-soup",
+    "name": "Brie cheese soup",
+    "category": "soup",
+    "unit": "cups",
+    "maxQuantity": 2,
+    "image": "",
+    "dietaryTags": []
+  },
+  {
+    "id": "butter-chicken-with-rice-new-recipe-being-tested",
+    "name": "Butter chicken with rice (new recipe being tested)",
+    "category": "classic",
+    "unit": "pieces",
+    "maxQuantity": 6,
+    "image": "",
+    "dietaryTags": [
+      "meat"
+    ]
+  },
+  {
+    "id": "cabbage-rolls-with-lingonberries",
+    "name": "Cabbage rolls with lingonberries",
+    "category": "classic",
+    "unit": "pieces",
+    "maxQuantity": 6,
+    "image": "",
+    "dietaryTags": [
+      "meat"
+    ]
+  },
+  {
+    "id": "cajun-soy-strip-stew-with-rice",
+    "name": "Cajun soy-strip stew with rice",
+    "category": "vegetarian",
+    "unit": "portion",
+    "maxQuantity": 3,
+    "image": "",
+    "dietaryTags": [
+      "vegetarian"
+    ]
+  },
+  {
+    "id": "carrot-and-spinach-pancakes-with-rice-and-lingonberries",
+    "name": "Carrot and spinach pancakes with rice and lingonberries",
+    "category": "vegetarian",
+    "unit": "portion",
+    "maxQuantity": 3,
+    "image": "",
+    "dietaryTags": [
+      "vegetarian"
+    ]
+  },
+  {
+    "id": "cauliflower-and-quinoa-risotto",
+    "name": "Cauliflower and quinoa risotto",
+    "category": "vegetarian",
+    "unit": "portion",
+    "maxQuantity": 3,
+    "image": "",
+    "dietaryTags": [
+      "vegetarian"
+    ]
+  },
+  {
+    "id": "chicken-and-chorizo-with-pasta",
+    "name": "Chicken and chorizo with pasta",
+    "category": "classic",
+    "unit": "pieces",
+    "maxQuantity": 6,
+    "image": "",
+    "dietaryTags": [
+      "meat"
+    ]
+  },
+  {
+    "id": "chicken-and-lentil-soup",
+    "name": "Chicken and lentil soup",
+    "category": "soup",
+    "unit": "cups",
+    "maxQuantity": 2,
+    "image": "",
+    "dietaryTags": []
+  },
+  {
+    "id": "chicken-coconut-soup",
+    "name": "Chicken coconut soup",
+    "category": "soup",
+    "unit": "cups",
+    "maxQuantity": 2,
+    "image": "",
+    "dietaryTags": []
+  },
+  {
+    "id": "chicken-kyiv-with-potato-wedges-and-curry-mayonnaise",
+    "name": "Chicken Kyiv with potato wedges and curry mayonnaise",
+    "category": "classic",
+    "unit": "pieces",
+    "maxQuantity": 6,
+    "image": "",
+    "dietaryTags": [
+      "meat"
+    ]
+  },
+  {
+    "id": "chicken-steak-with-pesto-sauce-and-pasta",
+    "name": "Chicken steak with pesto sauce and pasta",
+    "category": "classic",
+    "unit": "pieces",
+    "maxQuantity": 6,
+    "image": "",
+    "dietaryTags": [
+      "meat"
+    ]
+  },
+  {
+    "id": "chickpea-and-apricot-stew-with-pasta",
+    "name": "Chickpea and apricot stew with pasta",
+    "category": "vegetarian",
+    "unit": "portion",
+    "maxQuantity": 3,
+    "image": "",
+    "dietaryTags": [
+      "vegetarian"
+    ]
+  },
+  {
+    "id": "chickpea-and-cauliflower-curry-with-rice",
+    "name": "Chickpea and cauliflower curry with rice",
+    "category": "vegetarian",
+    "unit": "portion",
+    "maxQuantity": 3,
+    "image": "",
+    "dietaryTags": [
+      "vegetarian"
+    ]
+  },
+  {
+    "id": "chickpea-caponata-with-pasta",
+    "name": "Chickpea caponata with pasta",
+    "category": "vegetarian",
+    "unit": "portion",
+    "maxQuantity": 3,
+    "image": "",
+    "dietaryTags": [
+      "vegetarian"
+    ]
+  },
+  {
+    "id": "chickpeas-and-soy-in-tomato-sauce-with-rice",
+    "name": "Chickpeas and soy in tomato sauce with rice",
+    "category": "vegetarian",
+    "unit": "portion",
+    "maxQuantity": 3,
+    "image": "",
+    "dietaryTags": [
+      "vegetarian"
+    ]
+  },
+  {
+    "id": "chili-con-carne-with-rice",
+    "name": "Chili con carne with rice",
+    "category": "classic",
+    "unit": "pieces",
+    "maxQuantity": 6,
+    "image": "",
+    "dietaryTags": [
+      "meat"
+    ]
+  },
+  {
+    "id": "chocolate-mousse",
+    "name": "Chocolate mousse",
+    "category": "dessert",
+    "unit": "pieces",
+    "maxQuantity": 2,
+    "image": "",
+    "dietaryTags": []
+  },
+  {
+    "id": "coconut-smoothie",
+    "name": "Coconut smoothie",
+    "category": "dessert",
+    "unit": "pieces",
+    "maxQuantity": 2,
+    "image": "",
+    "dietaryTags": []
+  },
+  {
+    "id": "coq-au-vin-with-rice",
+    "name": "Coq au vin with rice",
+    "category": "classic",
+    "unit": "pieces",
+    "maxQuantity": 6,
+    "image": "",
+    "dietaryTags": [
+      "meat"
+    ]
+  },
+  {
+    "id": "corn-soup",
+    "name": "Corn soup",
+    "category": "soup",
+    "unit": "cups",
+    "maxQuantity": 2,
+    "image": "",
+    "dietaryTags": []
+  },
+  {
+    "id": "creamy-beetroot-soup",
+    "name": "Creamy beetroot soup",
+    "category": "soup",
+    "unit": "cups",
+    "maxQuantity": 2,
+    "image": "",
+    "dietaryTags": []
+  },
+  {
+    "id": "creamy-rainbow-trout-soup",
+    "name": "Creamy rainbow trout soup",
+    "category": "soup",
+    "unit": "cups",
+    "maxQuantity": 2,
+    "image": "",
+    "dietaryTags": []
+  },
+  {
+    "id": "creamy-root-vegetable-soup",
+    "name": "Creamy root vegetable soup",
+    "category": "soup",
+    "unit": "cups",
+    "maxQuantity": 2,
+    "image": "",
+    "dietaryTags": []
+  },
+  {
+    "id": "creamy-salmon-soup",
+    "name": "Creamy salmon soup",
+    "category": "soup",
+    "unit": "cups",
+    "maxQuantity": 2,
+    "image": "",
+    "dietaryTags": []
+  },
+  {
+    "id": "creamy-sweet-potato-soup",
+    "name": "Creamy sweet potato soup",
+    "category": "soup",
+    "unit": "cups",
+    "maxQuantity": 2,
+    "image": "",
+    "dietaryTags": []
+  },
+  {
+    "id": "falafel-balls-with-aioli",
+    "name": "Falafel balls with aioli",
+    "category": "vegetarian",
+    "unit": "portion",
+    "maxQuantity": 3,
+    "image": "",
+    "dietaryTags": [
+      "vegetarian"
+    ]
+  },
+  {
+    "id": "finnish-layered-dessert-with-berries-and-whipped-cream",
+    "name": "Finnish layered dessert with berries and whipped cream",
+    "category": "dessert",
+    "unit": "pieces",
+    "maxQuantity": 2,
+    "image": "",
+    "dietaryTags": []
+  },
+  {
+    "id": "fish-and-shrimp-soup",
+    "name": "Fish and shrimp soup",
+    "category": "soup",
+    "unit": "cups",
+    "maxQuantity": 2,
+    "image": "",
+    "dietaryTags": []
+  },
+  {
+    "id": "fish-fingers-with-tartar-sauce-and-mashed-potatoes",
+    "name": "Fish fingers with tartar sauce and mashed potatoes",
+    "category": "classic",
+    "unit": "pieces",
+    "maxQuantity": 6,
+    "image": "",
+    "dietaryTags": [
+      "meat"
+    ]
+  },
+  {
+    "id": "fish-solyanka-soup",
+    "name": "Fish solyanka soup",
+    "category": "soup",
+    "unit": "cups",
+    "maxQuantity": 2,
+    "image": "",
+    "dietaryTags": []
+  },
+  {
+    "id": "forest-berry-buttermilk-drink",
+    "name": "Forest berry buttermilk drink",
+    "category": "dessert",
+    "unit": "pieces",
+    "maxQuantity": 2,
+    "image": "",
+    "dietaryTags": []
+  },
+  {
+    "id": "fried-vegetable-rice",
+    "name": "Fried vegetable rice",
+    "category": "vegetarian",
+    "unit": "portion",
+    "maxQuantity": 3,
+    "image": "",
+    "dietaryTags": [
+      "vegetarian"
+    ]
+  },
+  {
+    "id": "fried-vegetable-rice-with-tofu",
+    "name": "Fried vegetable rice with tofu",
+    "category": "vegetarian",
+    "unit": "portion",
+    "maxQuantity": 3,
+    "image": "",
+    "dietaryTags": [
+      "vegetarian"
+    ]
+  },
+  {
+    "id": "fruit",
+    "name": "Fruit",
+    "category": "dessert",
+    "unit": "pieces",
+    "maxQuantity": 2,
+    "image": "",
+    "dietaryTags": []
+  },
+  {
+    "id": "fruit-salad",
+    "name": "Fruit salad",
+    "category": "dessert",
+    "unit": "pieces",
+    "maxQuantity": 2,
+    "image": "",
+    "dietaryTags": []
+  },
+  {
+    "id": "game-meat-and-root-vegetable-stew",
+    "name": "Game meat and root vegetable stew",
+    "category": "classic",
+    "unit": "pieces",
+    "maxQuantity": 6,
+    "image": "",
+    "dietaryTags": [
+      "meat"
+    ]
+  },
+  {
+    "id": "ginger-and-melon-fruit-smoothie",
+    "name": "Ginger and melon fruit smoothie",
+    "category": "dessert",
+    "unit": "pieces",
+    "maxQuantity": 2,
+    "image": "",
+    "dietaryTags": []
+  },
+  {
+    "id": "ginger-chicken-with-rice",
+    "name": "Ginger chicken with rice",
+    "category": "classic",
+    "unit": "pieces",
+    "maxQuantity": 6,
+    "image": "",
+    "dietaryTags": [
+      "meat"
+    ]
+  },
+  {
+    "id": "goat-cheese-and-potato-rosti",
+    "name": "Goat cheese and potato rösti",
+    "category": "vegetarian",
+    "unit": "portion",
+    "maxQuantity": 3,
+    "image": "",
+    "dietaryTags": [
+      "vegetarian"
+    ]
+  },
+  {
+    "id": "greek-style-vegetable-casserole",
+    "name": "Greek-style vegetable casserole",
+    "category": "vegetarian",
+    "unit": "portion",
+    "maxQuantity": 3,
+    "image": "",
+    "dietaryTags": [
+      "vegetarian"
+    ]
+  },
+  {
+    "id": "green-power-smoothie",
+    "name": "Green power smoothie",
+    "category": "dessert",
+    "unit": "pieces",
+    "maxQuantity": 2,
+    "image": "",
+    "dietaryTags": []
+  },
+  {
+    "id": "halloumi-and-beetroot-patty",
+    "name": "Halloumi and beetroot patty",
+    "category": "vegetarian",
+    "unit": "portion",
+    "maxQuantity": 3,
+    "image": "",
+    "dietaryTags": [
+      "vegetarian"
+    ]
+  },
+  {
+    "id": "hamburger-with-potato-wedges",
+    "name": "Hamburger with potato wedges",
+    "category": "classic",
+    "unit": "pieces",
+    "maxQuantity": 6,
+    "image": "",
+    "dietaryTags": [
+      "meat"
+    ]
+  },
+  {
+    "id": "lentil-lasagne",
+    "name": "Lentil lasagne",
+    "category": "vegetarian",
+    "unit": "portion",
+    "maxQuantity": 3,
+    "image": "",
+    "dietaryTags": [
+      "vegetarian"
+    ]
+  },
+  {
+    "id": "lindstrom-patty-with-onion-sauce-and-mashed-potatoes",
+    "name": "Lindström patty with onion sauce and mashed potatoes",
+    "category": "classic",
+    "unit": "pieces",
+    "maxQuantity": 6,
+    "image": "",
+    "dietaryTags": [
+      "meat"
+    ]
+  },
+  {
+    "id": "lingonberry-quark",
+    "name": "Lingonberry quark",
+    "category": "dessert",
+    "unit": "pieces",
+    "maxQuantity": 2,
+    "image": "",
+    "dietaryTags": []
+  },
+  {
+    "id": "lyon-style-chicken",
+    "name": "Lyon-style chicken",
+    "category": "classic",
+    "unit": "pieces",
+    "maxQuantity": 6,
+    "image": "",
+    "dietaryTags": [
+      "meat"
+    ]
+  },
+  {
+    "id": "mango-and-mint-quark",
+    "name": "Mango and mint quark",
+    "category": "dessert",
+    "unit": "pieces",
+    "maxQuantity": 2,
+    "image": "",
+    "dietaryTags": []
+  },
+  {
+    "id": "mango-and-pear-lassi",
+    "name": "Mango and pear lassi",
+    "category": "dessert",
+    "unit": "pieces",
+    "maxQuantity": 2,
+    "image": "",
+    "dietaryTags": []
+  },
+  {
+    "id": "marinated-berries",
+    "name": "Marinated berries",
+    "category": "dessert",
+    "unit": "pieces",
+    "maxQuantity": 2,
+    "image": "",
+    "dietaryTags": []
+  },
+  {
+    "id": "meat-and-macaroni-casserole",
+    "name": "Meat and macaroni casserole",
+    "category": "classic",
+    "unit": "pieces",
+    "maxQuantity": 6,
+    "image": "",
+    "dietaryTags": [
+      "meat"
+    ]
+  },
+  {
+    "id": "meatballs-in-cream-sauce-with-mashed-potatoes",
+    "name": "Meatballs in cream sauce with mashed potatoes",
+    "category": "classic",
+    "unit": "pieces",
+    "maxQuantity": 6,
+    "image": "",
+    "dietaryTags": [
+      "meat"
+    ]
+  },
+  {
+    "id": "minced-meat-and-bean-soup",
+    "name": "Minced meat and bean soup",
+    "category": "soup",
+    "unit": "cups",
+    "maxQuantity": 2,
+    "image": "",
+    "dietaryTags": []
+  },
+  {
+    "id": "minced-meat-lasagne",
+    "name": "Minced meat lasagne",
+    "category": "classic",
+    "unit": "pieces",
+    "maxQuantity": 6,
+    "image": "",
+    "dietaryTags": [
+      "meat"
+    ]
+  },
+  {
+    "id": "orange-pork-with-rice",
+    "name": "Orange pork with rice",
+    "category": "classic",
+    "unit": "pieces",
+    "maxQuantity": 6,
+    "image": "",
+    "dietaryTags": [
+      "meat"
+    ]
+  },
+  {
+    "id": "orange-quark",
+    "name": "Orange quark",
+    "category": "dessert",
+    "unit": "pieces",
+    "maxQuantity": 2,
+    "image": "",
+    "dietaryTags": []
+  },
+  {
+    "id": "oven-baked-sausage-with-mashed-root-vegetables",
+    "name": "Oven-baked sausage with mashed root vegetables",
+    "category": "classic",
+    "unit": "pieces",
+    "maxQuantity": 6,
+    "image": "",
+    "dietaryTags": [
+      "meat"
+    ]
+  },
+  {
+    "id": "oven-pancake",
+    "name": "Oven pancake",
+    "category": "dessert",
+    "unit": "pieces",
+    "maxQuantity": 2,
+    "image": "",
+    "dietaryTags": []
+  },
+  {
+    "id": "pad-thai",
+    "name": "Pad Thai",
+    "category": "vegetarian",
+    "unit": "portion",
+    "maxQuantity": 3,
+    "image": "",
+    "dietaryTags": [
+      "vegetarian"
+    ]
+  },
+  {
+    "id": "palak-paneer-cheese-curry-with-rice",
+    "name": "Palak paneer cheese curry with rice",
+    "category": "vegetarian",
+    "unit": "portion",
+    "maxQuantity": 3,
+    "image": "",
+    "dietaryTags": [
+      "vegetarian"
+    ]
+  },
+  {
+    "id": "pan-fried-patty-stuffed-with-chanterelles-with-mashed-potatoes",
+    "name": "Pan-fried patty stuffed with chanterelles, with mashed potatoes",
+    "category": "classic",
+    "unit": "pieces",
+    "maxQuantity": 6,
+    "image": "",
+    "dietaryTags": [
+      "meat"
+    ]
+  },
+  {
+    "id": "panna-cotta",
+    "name": "Panna cotta",
+    "category": "dessert",
+    "unit": "pieces",
+    "maxQuantity": 2,
+    "image": "",
+    "dietaryTags": []
+  },
+  {
+    "id": "parsnip-soup",
+    "name": "Parsnip soup",
+    "category": "soup",
+    "unit": "cups",
+    "maxQuantity": 2,
+    "image": "",
+    "dietaryTags": []
+  },
+  {
+    "id": "pasta-bolognese",
+    "name": "Pasta Bolognese",
+    "category": "classic",
+    "unit": "pieces",
+    "maxQuantity": 6,
+    "image": "",
+    "dietaryTags": [
+      "meat"
+    ]
+  },
+  {
+    "id": "pea-soup",
+    "name": "Pea soup",
+    "category": "soup",
+    "unit": "cups",
+    "maxQuantity": 2,
+    "image": "",
+    "dietaryTags": []
+  },
+  {
+    "id": "peanut-and-bean-stew",
+    "name": "Peanut and bean stew",
+    "category": "vegetarian",
+    "unit": "portion",
+    "maxQuantity": 3,
+    "image": "",
+    "dietaryTags": [
+      "vegetarian"
+    ]
+  },
+  {
+    "id": "pike-fish-ball-soup",
+    "name": "Pike fish ball soup",
+    "category": "soup",
+    "unit": "cups",
+    "maxQuantity": 2,
+    "image": "",
+    "dietaryTags": []
+  },
+  {
+    "id": "pike-fish-patty-with-lemon-sauce-and-mashed-potatoes",
+    "name": "Pike fish patty with lemon sauce and mashed potatoes",
+    "category": "classic",
+    "unit": "pieces",
+    "maxQuantity": 6,
+    "image": "",
+    "dietaryTags": [
+      "meat"
+    ]
+  },
+  {
+    "id": "pulled-oat-casserole",
+    "name": "Pulled-oat casserole",
+    "category": "vegetarian",
+    "unit": "portion",
+    "maxQuantity": 3,
+    "image": "",
+    "dietaryTags": [
+      "vegetarian"
+    ]
+  },
+  {
+    "id": "pumpkin-soup",
+    "name": "Pumpkin soup",
+    "category": "soup",
+    "unit": "cups",
+    "maxQuantity": 2,
+    "image": "",
+    "dietaryTags": []
+  },
+  {
+    "id": "quorn-and-mushroom-stew",
+    "name": "Quorn and mushroom stew",
+    "category": "vegetarian",
+    "unit": "portion",
+    "maxQuantity": 3,
+    "image": "",
+    "dietaryTags": [
+      "vegetarian"
+    ]
+  },
+  {
+    "id": "quorn-and-vegetable-stew-with-mashed-potatoes",
+    "name": "Quorn and vegetable stew with mashed potatoes",
+    "category": "vegetarian",
+    "unit": "portion",
+    "maxQuantity": 3,
+    "image": "",
+    "dietaryTags": [
+      "vegetarian"
+    ]
+  },
+  {
+    "id": "quorn-bolognese",
+    "name": "Quorn Bolognese",
+    "category": "vegetarian",
+    "unit": "portion",
+    "maxQuantity": 3,
+    "image": "",
+    "dietaryTags": [
+      "vegetarian"
+    ]
+  },
+  {
+    "id": "ratatouille-with-chickpeas-and-rice",
+    "name": "Ratatouille with chickpeas and rice",
+    "category": "vegetarian",
+    "unit": "portion",
+    "maxQuantity": 3,
+    "image": "",
+    "dietaryTags": [
+      "vegetarian"
+    ]
+  },
+  {
+    "id": "redcurrant-quark",
+    "name": "Redcurrant quark",
+    "category": "dessert",
+    "unit": "pieces",
+    "maxQuantity": 2,
+    "image": "",
+    "dietaryTags": []
+  },
+  {
+    "id": "roasted-bell-pepper-soup",
+    "name": "Roasted bell pepper soup",
+    "category": "soup",
+    "unit": "cups",
+    "maxQuantity": 2,
+    "image": "",
+    "dietaryTags": []
+  },
+  {
+    "id": "roasted-rainbow-trout-with-lemon-sauce-and-potatoes",
+    "name": "Roasted rainbow trout with lemon sauce and potatoes",
+    "category": "classic",
+    "unit": "pieces",
+    "maxQuantity": 6,
+    "image": "",
+    "dietaryTags": [
+      "meat"
+    ]
+  },
+  {
+    "id": "salmon-and-pike-patty-with-lemon-sauce-and-mashed-potatoes",
+    "name": "Salmon and pike patty with lemon sauce and mashed potatoes",
+    "category": "classic",
+    "unit": "pieces",
+    "maxQuantity": 6,
+    "image": "",
+    "dietaryTags": [
+      "meat"
+    ]
+  },
+  {
+    "id": "sausage-sauce-with-roasted-potatoes",
+    "name": "Sausage sauce with roasted potatoes",
+    "category": "classic",
+    "unit": "pieces",
+    "maxQuantity": 6,
+    "image": "",
+    "dietaryTags": [
+      "meat"
+    ]
+  },
+  {
+    "id": "sausage-soup",
+    "name": "Sausage soup",
+    "category": "soup",
+    "unit": "cups",
+    "maxQuantity": 2,
+    "image": "",
+    "dietaryTags": []
+  },
+  {
+    "id": "sausage-stroganoff-with-mashed-potatoes",
+    "name": "Sausage stroganoff with mashed potatoes",
+    "category": "classic",
+    "unit": "pieces",
+    "maxQuantity": 6,
+    "image": "",
+    "dietaryTags": [
+      "meat"
+    ]
+  },
+  {
+    "id": "seitan-kebab",
+    "name": "Seitan kebab",
+    "category": "vegetarian",
+    "unit": "portion",
+    "maxQuantity": 3,
+    "image": "",
+    "dietaryTags": [
+      "vegetarian"
+    ]
+  },
+  {
+    "id": "shiitake-mushroom-soup",
+    "name": "Shiitake mushroom soup",
+    "category": "soup",
+    "unit": "cups",
+    "maxQuantity": 2,
+    "image": "",
+    "dietaryTags": []
+  },
+  {
+    "id": "siskonmakkara-sausage-soup",
+    "name": "Siskonmakkara sausage soup",
+    "category": "soup",
+    "unit": "cups",
+    "maxQuantity": 2,
+    "image": "",
+    "dietaryTags": []
+  },
+  {
+    "id": "spinach-filled-fish-roulade-with-potatoes",
+    "name": "Spinach-filled fish roulade with potatoes",
+    "category": "classic",
+    "unit": "pieces",
+    "maxQuantity": 6,
+    "image": "",
+    "dietaryTags": [
+      "meat"
+    ]
+  },
+  {
+    "id": "spinach-pancakes-with-mashed-potatoes-and-lingonberries",
+    "name": "Spinach pancakes with mashed potatoes and lingonberries",
+    "category": "vegetarian",
+    "unit": "portion",
+    "maxQuantity": 3,
+    "image": "",
+    "dietaryTags": [
+      "vegetarian"
+    ]
+  },
+  {
+    "id": "stewed-apple-with-ginger-cream",
+    "name": "Stewed apple with ginger cream",
+    "category": "dessert",
+    "unit": "pieces",
+    "maxQuantity": 2,
+    "image": "",
+    "dietaryTags": []
+  },
+  {
+    "id": "summer-berry-compote",
+    "name": "Summer berry compote",
+    "category": "dessert",
+    "unit": "pieces",
+    "maxQuantity": 2,
+    "image": "",
+    "dietaryTags": []
+  },
+  {
+    "id": "sweet-and-sour-soy-strips",
+    "name": "Sweet-and-sour soy strips",
+    "category": "vegetarian",
+    "unit": "portion",
+    "maxQuantity": 3,
+    "image": "",
+    "dietaryTags": [
+      "vegetarian"
+    ]
+  },
+  {
+    "id": "tandoori-chicken-soup",
+    "name": "Tandoori chicken soup",
+    "category": "soup",
+    "unit": "cups",
+    "maxQuantity": 2,
+    "image": "",
+    "dietaryTags": []
+  },
+  {
+    "id": "tandoori-pork-with-rice",
+    "name": "Tandoori pork with rice",
+    "category": "classic",
+    "unit": "pieces",
+    "maxQuantity": 6,
+    "image": "",
+    "dietaryTags": [
+      "meat"
+    ]
+  },
+  {
+    "id": "thai-meatballs-with-rice",
+    "name": "Thai meatballs with rice",
+    "category": "classic",
+    "unit": "pieces",
+    "maxQuantity": 6,
+    "image": "",
+    "dietaryTags": [
+      "meat"
+    ]
+  },
+  {
+    "id": "thai-pork-meatballs-with-rice",
+    "name": "Thai pork meatballs with rice",
+    "category": "classic",
+    "unit": "pieces",
+    "maxQuantity": 6,
+    "image": "",
+    "dietaryTags": [
+      "meat"
+    ]
+  },
+  {
+    "id": "tomato-and-goat-cheese-soup-new-recipe-being-tested",
+    "name": "Tomato and goat cheese soup (new recipe being tested)",
+    "category": "soup",
+    "unit": "cups",
+    "maxQuantity": 2,
+    "image": "",
+    "dietaryTags": []
+  },
+  {
+    "id": "tomato-and-lentil-soup",
+    "name": "Tomato and lentil soup",
+    "category": "soup",
+    "unit": "cups",
+    "maxQuantity": 2,
+    "image": "",
+    "dietaryTags": []
+  },
+  {
+    "id": "tomato-fish-soup",
+    "name": "Tomato fish soup",
+    "category": "soup",
+    "unit": "cups",
+    "maxQuantity": 2,
+    "image": "",
+    "dietaryTags": []
+  },
+  {
+    "id": "tomato-pulled-oat-pasta",
+    "name": "Tomato pulled-oat pasta",
+    "category": "vegetarian",
+    "unit": "portion",
+    "maxQuantity": 3,
+    "image": "",
+    "dietaryTags": [
+      "vegetarian"
+    ]
+  },
+  {
+    "id": "turkey-cordon-bleu-with-pesto-mayonnaise-and-potato-wedges",
+    "name": "Turkey Cordon Bleu with pesto mayonnaise and potato wedges",
+    "category": "classic",
+    "unit": "pieces",
+    "maxQuantity": 6,
+    "image": "",
+    "dietaryTags": [
+      "meat"
+    ]
+  },
+  {
+    "id": "vegan-pea-soup",
+    "name": "Vegan pea soup",
+    "category": "soup",
+    "unit": "cups",
+    "maxQuantity": 2,
+    "image": "",
+    "dietaryTags": []
+  },
+  {
+    "id": "vegetable-borscht",
+    "name": "Vegetable borscht",
+    "category": "soup",
+    "unit": "cups",
+    "maxQuantity": 2,
+    "image": "",
+    "dietaryTags": []
+  },
+  {
+    "id": "vegetable-patties-with-tartar-sauce-and-pasta",
+    "name": "Vegetable patties with tartar sauce and pasta",
+    "category": "vegetarian",
+    "unit": "portion",
+    "maxQuantity": 3,
+    "image": "",
+    "dietaryTags": [
+      "vegetarian"
+    ]
+  },
+  {
+    "id": "vegetarian-burger-with-potato-wedges",
+    "name": "Vegetarian burger with potato wedges",
+    "category": "vegetarian",
+    "unit": "portion",
+    "maxQuantity": 3,
+    "image": "",
+    "dietaryTags": [
+      "vegetarian"
+    ]
+  },
+  {
+    "id": "vegetarian-cabbage-rolls",
+    "name": "Vegetarian cabbage rolls",
+    "category": "vegetarian",
+    "unit": "portion",
+    "maxQuantity": 3,
+    "image": "",
+    "dietaryTags": [
+      "vegetarian"
+    ]
+  },
+  {
+    "id": "vegetarian-chili-with-rice",
+    "name": "Vegetarian chili with rice",
+    "category": "vegetarian",
+    "unit": "portion",
+    "maxQuantity": 3,
+    "image": "",
+    "dietaryTags": [
+      "vegetarian"
+    ]
+  },
+  {
+    "id": "vegetarian-kofta-with-mashed-potatoes",
+    "name": "Vegetarian kofta with mashed potatoes",
+    "category": "vegetarian",
+    "unit": "portion",
+    "maxQuantity": 3,
+    "image": "",
+    "dietaryTags": [
+      "vegetarian"
+    ]
+  }
+]

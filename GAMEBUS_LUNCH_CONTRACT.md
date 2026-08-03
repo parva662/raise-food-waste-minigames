@@ -102,21 +102,18 @@ All numeric quantity schemas: **integer**, **minimum 0**, **maximum** = per-slot
 |-----------|-------|----------|----------------------|--------------|---------|
 | `targetDate` | Target date | yes | `string`, `format: date` | `lunchDate` | `"2026-07-28"` |
 | `mealType` | Meal type | yes | `string`, `enum`: `regular`, `soup`, `no_lunch` | `mealChoice` | `"regular"` |
-| `mainItemId` | Main dish id | yes* | `string`, `minLength: 1` | `mealSlots.main.id` | `"meatballs"` |
-| `mainQuantity` | Main quantity | yes | `integer`, `minimum: 0`, `maximum: 6` | `mainQuantity` (0 if not regular) | `2` |
-| `vegetarianItemId` | Vegetarian dish id | yes* | `string`, `minLength: 1` | `mealSlots.vegetarian.id` | `"pasta-primavera"` |
+| `mainItemId` | Main dish id | optional link | `string`, `minLength: 1` | `mealSlots.main.id` when `mainQuantity > 0` | `"meatballs"` |
+| `mainQuantity` | Main quantity | yes | `integer`, `minimum: 0`, `maximum: 6` | `mainQuantity` | `2` |
+| `vegetarianItemId` | Vegetarian dish id | optional link | `string`, `minLength: 1` | `mealSlots.vegetarian.id` when `vegetarianQuantity > 0` | `"pasta-primavera"` |
 | `vegetarianQuantity` | Vegetarian quantity | yes | `integer`, `minimum: 0`, `maximum: 6` | `vegetarianQuantity` | `0` |
-| `soupItemId` | Soup id | yes* | `string`, `minLength: 1` | `mealSlots.soup.id` | `"tomato-soup"` |
+| `soupItemId` | Soup id | optional link | `string`, `minLength: 1` | `mealSlots.soup.id` when `soupQuantity > 0` | `"tomato-soup"` |
 | `soupQuantity` | Soup quantity | yes | `integer`, `minimum: 0`, `maximum: 6` | `soupQuantity` | `1` |
-| `dessertItemId` | Dessert id | yes* | `string`, `minLength: 1` | `mealSlots.dessert.id` | `"yogurt-berries"` |
+| `dessertItemId` | Dessert id | optional link | `string`, `minLength: 1` | `mealSlots.dessert.id` when `dessertQuantity > 0` | `"yogurt-berries"` |
 | `dessertQuantity` | Dessert quantity | yes | `integer`, `minimum: 0`, `maximum: 6` | `dessertQuantity` | `0` |
 | `timingStatus` | Timing status | yes | `string`, `enum`: `on-time`, `late` | `timingStatus` | `"on-time"` |
-| `basePoints` | Base points | yes | `integer`, `const` or `minimum: 20`, `maximum: 20` | `basePoints` | `20` |
-| `timingAdjustment` | Timing adjustment | yes | `integer`, `enum`: `5`, `-5` | `timingAdjustment` | `5` |
-| `totalPoints` | Total points | yes | `integer`, `enum`: `25`, `15` | `totalPoints` | `25` |
 | `submittedAt` | Submitted at | yes | `string`, `format: date-time` | `submittedAt` | `"2026-07-27T15:30:00.000Z"` |
 
-\* **Item ids:** Always send the **day’s** slot ids from `DailyMealSlots`, even when quantity is 0, so consumers know which menu row applied. Names are not duplicated on GameBus; display names stay in catalogue / `selections[].name` locally.
+\* **Item ids:** Include only when the corresponding quantity is **> 0**. Omit the property entirely when not selected. No sentinels (`noMain`, `noVeg`, etc.). Scoring fields remain in `ActiveDeclaration` locally but are **not** sent on ACTIVITY.
 
 **Justification:** Replaces sentinel strings (`noVeg`, `noSoup`, `noDessert`) and ambiguous `comingStatus` with explicit `mealType` + numeric quantities. Matches the React model directly.
 
@@ -133,9 +130,9 @@ All numeric quantity schemas: **integer**, **minimum 0**, **maximum** = per-slot
 | `selectedSoupOrNoSoup` | **Remove** → `soupItemId` + `soupQuantity` | No `noSoup` sentinel |
 | `selectedDessertOrNoDessert` | **Remove** → `dessertItemId` + `dessertQuantity` | No `noDessert` sentinel |
 | `submittedAt` | **Retain** | Same |
-| — | **Add** `mealType`, scoring fields | Align with app points and section choice |
+| — | **Add** `mealType`, four quantities, `timingStatus`, optional item ids | Align with React quantity model |
 
-Until admin templates are updated, the React mapper must **not** target the old string properties.
+Until admin templates are updated, **live ingest will not match** the repository mapper. The React app targets the final twelve-property set only.
 
 ---
 
@@ -180,16 +177,10 @@ Assume lunch date **2026-07-28**, slots: main `meatballs`, vegetarian `pasta-pri
       { "template": "mealType", "obj": { "value": "regular" } },
       { "template": "mainItemId", "obj": { "value": "meatballs" } },
       { "template": "mainQuantity", "obj": { "value": 2 } },
-      { "template": "vegetarianItemId", "obj": { "value": "pasta-primavera" } },
       { "template": "vegetarianQuantity", "obj": { "value": 0 } },
-      { "template": "soupItemId", "obj": { "value": "tomato-soup" } },
       { "template": "soupQuantity", "obj": { "value": 0 } },
-      { "template": "dessertItemId", "obj": { "value": "yogurt-berries" } },
       { "template": "dessertQuantity", "obj": { "value": 0 } },
       { "template": "timingStatus", "obj": { "value": "on-time" } },
-      { "template": "basePoints", "obj": { "value": 20 } },
-      { "template": "timingAdjustment", "obj": { "value": 5 } },
-      { "template": "totalPoints", "obj": { "value": 25 } },
       { "template": "submittedAt", "obj": { "value": "2026-07-27T16:00:00.000Z" } }
     ]
   }
@@ -220,7 +211,7 @@ Same as (1) with `"mainQuantity": { "value": 0 }`, `"vegetarianQuantity": { "val
 
 ### 7. No lunch
 
-`mealType` `no_lunch`, all quantities 0, item ids still the day’s slot ids.
+`mealType` `no_lunch`, all quantities 0, **no item-id properties**.
 
 ```json
 {
@@ -232,25 +223,18 @@ Same as (1) with `"mainQuantity": { "value": 0 }`, `"vegetarianQuantity": { "val
     "properties": [
       { "template": "targetDate", "obj": { "value": "2026-07-28" } },
       { "template": "mealType", "obj": { "value": "no_lunch" } },
-      { "template": "mainItemId", "obj": { "value": "meatballs" } },
       { "template": "mainQuantity", "obj": { "value": 0 } },
-      { "template": "vegetarianItemId", "obj": { "value": "pasta-primavera" } },
       { "template": "vegetarianQuantity", "obj": { "value": 0 } },
-      { "template": "soupItemId", "obj": { "value": "tomato-soup" } },
       { "template": "soupQuantity", "obj": { "value": 0 } },
-      { "template": "dessertItemId", "obj": { "value": "yogurt-berries" } },
       { "template": "dessertQuantity", "obj": { "value": 0 } },
       { "template": "timingStatus", "obj": { "value": "on-time" } },
-      { "template": "basePoints", "obj": { "value": 20 } },
-      { "template": "timingAdjustment", "obj": { "value": 5 } },
-      { "template": "totalPoints", "obj": { "value": 25 } },
       { "template": "submittedAt", "obj": { "value": "2026-07-27T16:00:00.000Z" } }
     ]
   }
 }
 ```
 
-**Late submit:** same payloads with `timingStatus` `late`, `timingAdjustment` `-5`, `totalPoints` `15`.
+**Late submit:** same payloads with `timingStatus` `late` (scoring stays local only; not on ACTIVITY).
 
 ---
 
@@ -366,3 +350,12 @@ From `gamebus-minigame-demo` `embed/task/+page.svelte`:
 - Submit: `postMessage({ type: 'ACTIVITY', data: buildActivityPayload() })`.
 
 Child does **not** receive confirmation message in the demo; success is assumed when parent closes iframe. Implementation should treat close as success and optionally listen for future error events if the platform adds them.
+
+---
+
+## Status (repo consolidation)
+
+- **One workflow:** `studentLunchCheckin` via `src/gamebus/mapStudentLunchCheckin.ts` (twelve logical properties; optional item IDs omitted when quantity is 0).
+- **Live GameBus** still has seven legacy linked properties until manual admin migration (`NEXT_STEPS.md`).
+- Item IDs in ACTIVITY match **generated catalogue slugs** from `reference/Example_menu.xlsx` (via `src/data/generated/`).
+- **`studentLunchCheckinV2` is not supported** in this repository.

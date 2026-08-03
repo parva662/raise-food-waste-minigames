@@ -1,6 +1,5 @@
 import { describe, it, expect } from 'vitest';
 import { buildActivityMessage } from './buildActivityMessage';
-import { STUDENT_LUNCH_CHECKIN_REFS } from './mapStudentLunchCheckinLegacy';
 import {
   assertStudentLunchCheckinActivity,
   propertyRefsForStudentLunchActivity,
@@ -12,8 +11,6 @@ import { pariStudentLunchTaskFixture } from './taskFixtures';
 import type { TaskActivityTemplate, TaskData } from './types';
 import type { ActiveDeclaration } from '../types/declaration';
 import type { DailyMealSlots } from '../types/mealChoice';
-
-const legacyOrder = [...STUDENT_LUNCH_CHECKIN_REFS];
 
 function minimalStudentLunchTask(
   activityOverrides: Partial<TaskActivityTemplate> = {},
@@ -44,21 +41,10 @@ function minimalStudentLunchTask(
 describe('resolveActivityProperties', () => {
   it('reads property refs from linkedProperties[].ref', () => {
     const activity = pariStudentLunchTaskFixture.activityTemplates[0];
-    expect(resolveLinkedPropertyRefs(activity)).toEqual(legacyOrder);
-  });
-
-  it('reads property refs from linkedProperties[].reference', () => {
-    const activity: TaskActivityTemplate = {
-      id: 'a1',
-      reference: STUDENT_LUNCH_CHECKIN_REF,
-      name: 'Check-in',
-      providers: [],
-      linkedProperties: legacyOrder.map((reference, index) => ({
-        order: index + 1,
-        reference,
-      })),
-    };
-    expect(resolveLinkedPropertyRefs(activity)).toEqual(legacyOrder);
+    const refs = resolveLinkedPropertyRefs(activity);
+    expect(refs).toContain('mealType');
+    expect(refs).toContain('mainQuantity');
+    expect(refs).not.toContain('comingStatus');
   });
 
   it('resolver may return partial TASK.data.propertyTemplates for diagnostics', () => {
@@ -66,26 +52,29 @@ describe('resolveActivityProperties', () => {
     expect(resolvePropertyRefsForActivity(task, STUDENT_LUNCH_CHECKIN_REF)).toEqual(['targetDate']);
   });
 
-  it('propertyRefsForStudentLunchActivity always returns all seven legacy refs', () => {
+  it('propertyRefsForStudentLunchActivity returns draft-aware final order', () => {
     const task = minimalStudentLunchTask({ linkedProperties: undefined, properties: undefined });
-    expect(propertyRefsForStudentLunchActivity(task)).toEqual(legacyOrder);
-  });
-
-  it('keeps stable ACTIVITY property order for studentLunchCheckin', () => {
-    const task = minimalStudentLunchTask({ linkedProperties: undefined, properties: undefined });
-    const refs = propertyRefsForStudentLunchActivity(task);
-    expect(refs.map(String)).toEqual([
+    const draft = {
+      mealChoice: 'regular' as const,
+      mainQuantity: 1,
+      vegetarianQuantity: 0,
+      soupQuantity: 0,
+      dessertQuantity: 0,
+    };
+    expect(propertyRefsForStudentLunchActivity(task, draft)).toEqual([
       'targetDate',
-      'comingStatus',
-      'selectedMain',
-      'selectedVegetarianOrNoVeg',
-      'selectedSoupOrNoSoup',
-      'selectedDessertOrNoDessert',
+      'mealType',
+      'mainItemId',
+      'mainQuantity',
+      'vegetarianQuantity',
+      'soupQuantity',
+      'dessertQuantity',
+      'timingStatus',
       'submittedAt',
     ]);
   });
 
-  it('fails safely when studentLunchCheckin activity template is missing', () => {
+  it('fails when studentLunchCheckin activity template is missing', () => {
     const task: TaskData = {
       ...pariStudentLunchTaskFixture,
       activityTemplates: [
@@ -116,8 +105,8 @@ describe('buildActivityMessage sparse TASK.data.propertyTemplates', () => {
     };
     const declaration: ActiveDeclaration = {
       studentId: 's1',
-      lunchDate: '2026-01-07',
-      menuCycleWeek: 1,
+      lunchDate: '2026-07-29',
+      menuCycleWeek: 2,
       menuVersion: 'v1',
       mealChoice: 'regular' as const,
       regularMainSelected: true,
@@ -128,8 +117,8 @@ describe('buildActivityMessage sparse TASK.data.propertyTemplates', () => {
       basePoints: 20,
       timingAdjustment: 5 as const,
       totalPoints: 25,
-      submittedAt: '2026-01-06T12:00:00.000Z',
-      updatedAt: '2026-01-06T12:00:00.000Z',
+      submittedAt: '2026-07-28T12:00:00.000Z',
+      updatedAt: '2026-07-28T12:00:00.000Z',
       includeInForecast: true as const,
     };
     const slots = {
@@ -172,7 +161,8 @@ describe('buildActivityMessage sparse TASK.data.propertyTemplates', () => {
     } as DailyMealSlots;
     const message = buildActivityMessage(task, declaration, draft, slots);
 
-    expect(message.data.properties).toHaveLength(7);
-    expect(message.data.properties.map((p) => p.template)).toEqual(legacyOrder);
+    expect(message.data.properties.length).toBeGreaterThanOrEqual(8);
+    expect(message.data.properties.map((p) => p.template)).toContain('mealType');
+    expect(message.data.properties.map((p) => p.template)).not.toContain('comingStatus');
   });
 });

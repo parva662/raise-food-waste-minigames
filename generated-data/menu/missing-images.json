@@ -1,0 +1,814 @@
+[
+  {
+    "itemId": "apple-compote",
+    "name": "Apple compote",
+    "category": "dessert",
+    "expectedDedicatedPath": "/images/menu/items/apple-compote.webp",
+    "placeholderUsed": "/images/menu/placeholders/dessert.svg"
+  },
+  {
+    "itemId": "apricot-and-apple-lassi",
+    "name": "Apricot and apple lassi",
+    "category": "dessert",
+    "expectedDedicatedPath": "/images/menu/items/apricot-and-apple-lassi.webp",
+    "placeholderUsed": "/images/menu/placeholders/dessert.svg"
+  },
+  {
+    "itemId": "asparagus-soup-flow-surplus-not-normally-on-the-menu",
+    "name": "Asparagus soup (Flow surplus; not normally on the menu)",
+    "category": "soup",
+    "expectedDedicatedPath": "/images/menu/items/asparagus-soup-flow-surplus-not-normally-on-the-menu.webp",
+    "placeholderUsed": "/images/menu/placeholders/soup.svg"
+  },
+  {
+    "itemId": "baked-banana-smoothie",
+    "name": "Baked banana smoothie",
+    "category": "dessert",
+    "expectedDedicatedPath": "/images/menu/items/baked-banana-smoothie.webp",
+    "placeholderUsed": "/images/menu/placeholders/dessert.svg"
+  },
+  {
+    "itemId": "baltic-herring-patties-with-root-vegetable-puree-and-lemon-sauce",
+    "name": "Baltic herring patties with root vegetable purée and lemon sauce",
+    "category": "classic",
+    "expectedDedicatedPath": "/images/menu/items/baltic-herring-patties-with-root-vegetable-puree-and-lemon-sauce.webp",
+    "placeholderUsed": "/images/menu/placeholders/main.svg"
+  },
+  {
+    "itemId": "banana-smoothie",
+    "name": "Banana smoothie",
+    "category": "dessert",
+    "expectedDedicatedPath": "/images/menu/items/banana-smoothie.webp",
+    "placeholderUsed": "/images/menu/placeholders/dessert.svg"
+  },
+  {
+    "itemId": "black-bean-patty-with-mashed-potatoes-and-lemon-aioli",
+    "name": "Black bean patty with mashed potatoes and lemon aioli",
+    "category": "vegetarian",
+    "expectedDedicatedPath": "/images/menu/items/black-bean-patty-with-mashed-potatoes-and-lemon-aioli.webp",
+    "placeholderUsed": "/images/menu/placeholders/vegetarian.svg"
+  },
+  {
+    "itemId": "blueberry-smoothie",
+    "name": "Blueberry smoothie",
+    "category": "dessert",
+    "expectedDedicatedPath": "/images/menu/items/blueberry-smoothie.webp",
+    "placeholderUsed": "/images/menu/placeholders/dessert.svg"
+  },
+  {
+    "itemId": "blueberry-soup",
+    "name": "Blueberry soup",
+    "category": "dessert",
+    "expectedDedicatedPath": "/images/menu/items/blueberry-soup.webp",
+    "placeholderUsed": "/images/menu/placeholders/dessert.svg"
+  },
+  {
+    "itemId": "breaded-country-style-chicken-with-bbq-mayonnaise",
+    "name": "Breaded country-style chicken with BBQ mayonnaise",
+    "category": "classic",
+    "expectedDedicatedPath": "/images/menu/items/breaded-country-style-chicken-with-bbq-mayonnaise.webp",
+    "placeholderUsed": "/images/menu/placeholders/main.svg"
+  },
+  {
+    "itemId": "breaded-flounder-with-lemon-sauce",
+    "name": "Breaded flounder with lemon sauce",
+    "category": "classic",
+    "expectedDedicatedPath": "/images/menu/items/breaded-flounder-with-lemon-sauce.webp",
+    "placeholderUsed": "/images/menu/placeholders/main.svg"
+  },
+  {
+    "itemId": "brie-cheese-soup",
+    "name": "Brie cheese soup",
+    "category": "soup",
+    "expectedDedicatedPath": "/images/menu/items/brie-cheese-soup.webp",
+    "placeholderUsed": "/images/menu/placeholders/soup.svg"
+  },
+  {
+    "itemId": "butter-chicken-with-rice-new-recipe-being-tested",
+    "name": "Butter chicken with rice (new recipe being tested)",
+    "category": "classic",
+    "expectedDedicatedPath": "/images/menu/items/butter-chicken-with-rice-new-recipe-being-tested.webp",
+    "placeholderUsed": "/images/menu/placeholders/main.svg"
+  },
+  {
+    "itemId": "cabbage-rolls-with-lingonberries",
+    "name": "Cabbage rolls with lingonberries",
+    "category": "classic",
+    "expectedDedicatedPath": "/images/menu/items/cabbage-rolls-with-lingonberries.webp",
+    "placeholderUsed": "/images/menu/placeholders/main.svg"
+  },
+  {
+    "itemId": "cajun-soy-strip-stew-with-rice",
+    "name": "Cajun soy-strip stew with rice",
+    "category": "vegetarian",
+    "expectedDedicatedPath": "/images/menu/items/cajun-soy-strip-stew-with-rice.webp",
+    "placeholderUsed": "/images/menu/placeholders/vegetarian.svg"
+  },
+  {
+    "itemId": "carrot-and-spinach-pancakes-with-rice-and-lingonberries",
+    "name": "Carrot and spinach pancakes with rice and lingonberries",
+    "category": "vegetarian",
+    "expectedDedicatedPath": "/images/menu/items/carrot-and-spinach-pancakes-with-rice-and-lingonberries.webp",
+    "placeholderUsed": "/images/menu/placeholders/vegetarian.svg"
+  },
+  {
+    "itemId": "cauliflower-and-quinoa-risotto",
+    "name": "Cauliflower and quinoa risotto",
+    "category": "vegetarian",
+    "expectedDedicatedPath": "/images/menu/items/cauliflower-and-quinoa-risotto.webp",
+    "placeholderUsed": "/images/menu/placeholders/vegetarian.svg"
+  },
+  {
+    "itemId": "chicken-and-chorizo-with-pasta",
+    "name": "Chicken and chorizo with pasta",
+    "category": "classic",
+    "expectedDedicatedPath": "/images/menu/items/chicken-and-chorizo-with-pasta.webp",
+    "placeholderUsed": "/images/menu/placeholders/main.svg"
+  },
+  {
+    "itemId": "chicken-and-lentil-soup",
+    "name": "Chicken and lentil soup",
+    "category": "soup",
+    "expectedDedicatedPath": "/images/menu/items/chicken-and-lentil-soup.webp",
+    "placeholderUsed": "/images/menu/placeholders/soup.svg"
+  },
+  {
+    "itemId": "chicken-coconut-soup",
+    "name": "Chicken coconut soup",
+    "category": "soup",
+    "expectedDedicatedPath": "/images/menu/items/chicken-coconut-soup.webp",
+    "placeholderUsed": "/images/menu/placeholders/soup.svg"
+  },
+  {
+    "itemId": "chicken-kyiv-with-potato-wedges-and-curry-mayonnaise",
+    "name": "Chicken Kyiv with potato wedges and curry mayonnaise",
+    "category": "classic",
+    "expectedDedicatedPath": "/images/menu/items/chicken-kyiv-with-potato-wedges-and-curry-mayonnaise.webp",
+    "placeholderUsed": "/images/menu/placeholders/main.svg"
+  },
+  {
+    "itemId": "chicken-steak-with-pesto-sauce-and-pasta",
+    "name": "Chicken steak with pesto sauce and pasta",
+    "category": "classic",
+    "expectedDedicatedPath": "/images/menu/items/chicken-steak-with-pesto-sauce-and-pasta.webp",
+    "placeholderUsed": "/images/menu/placeholders/main.svg"
+  },
+  {
+    "itemId": "chickpea-and-apricot-stew-with-pasta",
+    "name": "Chickpea and apricot stew with pasta",
+    "category": "vegetarian",
+    "expectedDedicatedPath": "/images/menu/items/chickpea-and-apricot-stew-with-pasta.webp",
+    "placeholderUsed": "/images/menu/placeholders/vegetarian.svg"
+  },
+  {
+    "itemId": "chickpea-and-cauliflower-curry-with-rice",
+    "name": "Chickpea and cauliflower curry with rice",
+    "category": "vegetarian",
+    "expectedDedicatedPath": "/images/menu/items/chickpea-and-cauliflower-curry-with-rice.webp",
+    "placeholderUsed": "/images/menu/placeholders/vegetarian.svg"
+  },
+  {
+    "itemId": "chickpea-caponata-with-pasta",
+    "name": "Chickpea caponata with pasta",
+    "category": "vegetarian",
+    "expectedDedicatedPath": "/images/menu/items/chickpea-caponata-with-pasta.webp",
+    "placeholderUsed": "/images/menu/placeholders/vegetarian.svg"
+  },
+  {
+    "itemId": "chickpeas-and-soy-in-tomato-sauce-with-rice",
+    "name": "Chickpeas and soy in tomato sauce with rice",
+    "category": "vegetarian",
+    "expectedDedicatedPath": "/images/menu/items/chickpeas-and-soy-in-tomato-sauce-with-rice.webp",
+    "placeholderUsed": "/images/menu/placeholders/vegetarian.svg"
+  },
+  {
+    "itemId": "chili-con-carne-with-rice",
+    "name": "Chili con carne with rice",
+    "category": "classic",
+    "expectedDedicatedPath": "/images/menu/items/chili-con-carne-with-rice.webp",
+    "placeholderUsed": "/images/menu/placeholders/main.svg"
+  },
+  {
+    "itemId": "chocolate-mousse",
+    "name": "Chocolate mousse",
+    "category": "dessert",
+    "expectedDedicatedPath": "/images/menu/items/chocolate-mousse.webp",
+    "placeholderUsed": "/images/menu/placeholders/dessert.svg"
+  },
+  {
+    "itemId": "coconut-smoothie",
+    "name": "Coconut smoothie",
+    "category": "dessert",
+    "expectedDedicatedPath": "/images/menu/items/coconut-smoothie.webp",
+    "placeholderUsed": "/images/menu/placeholders/dessert.svg"
+  },
+  {
+    "itemId": "coq-au-vin-with-rice",
+    "name": "Coq au vin with rice",
+    "category": "classic",
+    "expectedDedicatedPath": "/images/menu/items/coq-au-vin-with-rice.webp",
+    "placeholderUsed": "/images/menu/placeholders/main.svg"
+  },
+  {
+    "itemId": "corn-soup",
+    "name": "Corn soup",
+    "category": "soup",
+    "expectedDedicatedPath": "/images/menu/items/corn-soup.webp",
+    "placeholderUsed": "/images/menu/placeholders/soup.svg"
+  },
+  {
+    "itemId": "creamy-beetroot-soup",
+    "name": "Creamy beetroot soup",
+    "category": "soup",
+    "expectedDedicatedPath": "/images/menu/items/creamy-beetroot-soup.webp",
+    "placeholderUsed": "/images/menu/placeholders/soup.svg"
+  },
+  {
+    "itemId": "creamy-rainbow-trout-soup",
+    "name": "Creamy rainbow trout soup",
+    "category": "soup",
+    "expectedDedicatedPath": "/images/menu/items/creamy-rainbow-trout-soup.webp",
+    "placeholderUsed": "/images/menu/placeholders/soup.svg"
+  },
+  {
+    "itemId": "creamy-root-vegetable-soup",
+    "name": "Creamy root vegetable soup",
+    "category": "soup",
+    "expectedDedicatedPath": "/images/menu/items/creamy-root-vegetable-soup.webp",
+    "placeholderUsed": "/images/menu/placeholders/soup.svg"
+  },
+  {
+    "itemId": "creamy-salmon-soup",
+    "name": "Creamy salmon soup",
+    "category": "soup",
+    "expectedDedicatedPath": "/images/menu/items/creamy-salmon-soup.webp",
+    "placeholderUsed": "/images/menu/placeholders/soup.svg"
+  },
+  {
+    "itemId": "creamy-sweet-potato-soup",
+    "name": "Creamy sweet potato soup",
+    "category": "soup",
+    "expectedDedicatedPath": "/images/menu/items/creamy-sweet-potato-soup.webp",
+    "placeholderUsed": "/images/menu/placeholders/soup.svg"
+  },
+  {
+    "itemId": "falafel-balls-with-aioli",
+    "name": "Falafel balls with aioli",
+    "category": "vegetarian",
+    "expectedDedicatedPath": "/images/menu/items/falafel-balls-with-aioli.webp",
+    "placeholderUsed": "/images/menu/placeholders/vegetarian.svg"
+  },
+  {
+    "itemId": "finnish-layered-dessert-with-berries-and-whipped-cream",
+    "name": "Finnish layered dessert with berries and whipped cream",
+    "category": "dessert",
+    "expectedDedicatedPath": "/images/menu/items/finnish-layered-dessert-with-berries-and-whipped-cream.webp",
+    "placeholderUsed": "/images/menu/placeholders/dessert.svg"
+  },
+  {
+    "itemId": "fish-and-shrimp-soup",
+    "name": "Fish and shrimp soup",
+    "category": "soup",
+    "expectedDedicatedPath": "/images/menu/items/fish-and-shrimp-soup.webp",
+    "placeholderUsed": "/images/menu/placeholders/soup.svg"
+  },
+  {
+    "itemId": "fish-fingers-with-tartar-sauce-and-mashed-potatoes",
+    "name": "Fish fingers with tartar sauce and mashed potatoes",
+    "category": "classic",
+    "expectedDedicatedPath": "/images/menu/items/fish-fingers-with-tartar-sauce-and-mashed-potatoes.webp",
+    "placeholderUsed": "/images/menu/placeholders/main.svg"
+  },
+  {
+    "itemId": "fish-solyanka-soup",
+    "name": "Fish solyanka soup",
+    "category": "soup",
+    "expectedDedicatedPath": "/images/menu/items/fish-solyanka-soup.webp",
+    "placeholderUsed": "/images/menu/placeholders/soup.svg"
+  },
+  {
+    "itemId": "forest-berry-buttermilk-drink",
+    "name": "Forest berry buttermilk drink",
+    "category": "dessert",
+    "expectedDedicatedPath": "/images/menu/items/forest-berry-buttermilk-drink.webp",
+    "placeholderUsed": "/images/menu/placeholders/dessert.svg"
+  },
+  {
+    "itemId": "fried-vegetable-rice",
+    "name": "Fried vegetable rice",
+    "category": "vegetarian",
+    "expectedDedicatedPath": "/images/menu/items/fried-vegetable-rice.webp",
+    "placeholderUsed": "/images/menu/placeholders/vegetarian.svg"
+  },
+  {
+    "itemId": "fried-vegetable-rice-with-tofu",
+    "name": "Fried vegetable rice with tofu",
+    "category": "vegetarian",
+    "expectedDedicatedPath": "/images/menu/items/fried-vegetable-rice-with-tofu.webp",
+    "placeholderUsed": "/images/menu/placeholders/vegetarian.svg"
+  },
+  {
+    "itemId": "fruit",
+    "name": "Fruit",
+    "category": "dessert",
+    "expectedDedicatedPath": "/images/menu/items/fruit.webp",
+    "placeholderUsed": "/images/menu/placeholders/dessert.svg"
+  },
+  {
+    "itemId": "fruit-salad",
+    "name": "Fruit salad",
+    "category": "dessert",
+    "expectedDedicatedPath": "/images/menu/items/fruit-salad.webp",
+    "placeholderUsed": "/images/menu/placeholders/dessert.svg"
+  },
+  {
+    "itemId": "game-meat-and-root-vegetable-stew",
+    "name": "Game meat and root vegetable stew",
+    "category": "classic",
+    "expectedDedicatedPath": "/images/menu/items/game-meat-and-root-vegetable-stew.webp",
+    "placeholderUsed": "/images/menu/placeholders/main.svg"
+  },
+  {
+    "itemId": "ginger-and-melon-fruit-smoothie",
+    "name": "Ginger and melon fruit smoothie",
+    "category": "dessert",
+    "expectedDedicatedPath": "/images/menu/items/ginger-and-melon-fruit-smoothie.webp",
+    "placeholderUsed": "/images/menu/placeholders/dessert.svg"
+  },
+  {
+    "itemId": "ginger-chicken-with-rice",
+    "name": "Ginger chicken with rice",
+    "category": "classic",
+    "expectedDedicatedPath": "/images/menu/items/ginger-chicken-with-rice.webp",
+    "placeholderUsed": "/images/menu/placeholders/main.svg"
+  },
+  {
+    "itemId": "goat-cheese-and-potato-rosti",
+    "name": "Goat cheese and potato rösti",
+    "category": "vegetarian",
+    "expectedDedicatedPath": "/images/menu/items/goat-cheese-and-potato-rosti.webp",
+    "placeholderUsed": "/images/menu/placeholders/vegetarian.svg"
+  },
+  {
+    "itemId": "greek-style-vegetable-casserole",
+    "name": "Greek-style vegetable casserole",
+    "category": "vegetarian",
+    "expectedDedicatedPath": "/images/menu/items/greek-style-vegetable-casserole.webp",
+    "placeholderUsed": "/images/menu/placeholders/vegetarian.svg"
+  },
+  {
+    "itemId": "green-power-smoothie",
+    "name": "Green power smoothie",
+    "category": "dessert",
+    "expectedDedicatedPath": "/images/menu/items/green-power-smoothie.webp",
+    "placeholderUsed": "/images/menu/placeholders/dessert.svg"
+  },
+  {
+    "itemId": "halloumi-and-beetroot-patty",
+    "name": "Halloumi and beetroot patty",
+    "category": "vegetarian",
+    "expectedDedicatedPath": "/images/menu/items/halloumi-and-beetroot-patty.webp",
+    "placeholderUsed": "/images/menu/placeholders/vegetarian.svg"
+  },
+  {
+    "itemId": "hamburger-with-potato-wedges",
+    "name": "Hamburger with potato wedges",
+    "category": "classic",
+    "expectedDedicatedPath": "/images/menu/items/hamburger-with-potato-wedges.webp",
+    "placeholderUsed": "/images/menu/placeholders/main.svg"
+  },
+  {
+    "itemId": "lentil-lasagne",
+    "name": "Lentil lasagne",
+    "category": "vegetarian",
+    "expectedDedicatedPath": "/images/menu/items/lentil-lasagne.webp",
+    "placeholderUsed": "/images/menu/placeholders/vegetarian.svg"
+  },
+  {
+    "itemId": "lindstrom-patty-with-onion-sauce-and-mashed-potatoes",
+    "name": "Lindström patty with onion sauce and mashed potatoes",
+    "category": "classic",
+    "expectedDedicatedPath": "/images/menu/items/lindstrom-patty-with-onion-sauce-and-mashed-potatoes.webp",
+    "placeholderUsed": "/images/menu/placeholders/main.svg"
+  },
+  {
+    "itemId": "lingonberry-quark",
+    "name": "Lingonberry quark",
+    "category": "dessert",
+    "expectedDedicatedPath": "/images/menu/items/lingonberry-quark.webp",
+    "placeholderUsed": "/images/menu/placeholders/dessert.svg"
+  },
+  {
+    "itemId": "lyon-style-chicken",
+    "name": "Lyon-style chicken",
+    "category": "classic",
+    "expectedDedicatedPath": "/images/menu/items/lyon-style-chicken.webp",
+    "placeholderUsed": "/images/menu/placeholders/main.svg"
+  },
+  {
+    "itemId": "mango-and-mint-quark",
+    "name": "Mango and mint quark",
+    "category": "dessert",
+    "expectedDedicatedPath": "/images/menu/items/mango-and-mint-quark.webp",
+    "placeholderUsed": "/images/menu/placeholders/dessert.svg"
+  },
+  {
+    "itemId": "mango-and-pear-lassi",
+    "name": "Mango and pear lassi",
+    "category": "dessert",
+    "expectedDedicatedPath": "/images/menu/items/mango-and-pear-lassi.webp",
+    "placeholderUsed": "/images/menu/placeholders/dessert.svg"
+  },
+  {
+    "itemId": "marinated-berries",
+    "name": "Marinated berries",
+    "category": "dessert",
+    "expectedDedicatedPath": "/images/menu/items/marinated-berries.webp",
+    "placeholderUsed": "/images/menu/placeholders/dessert.svg"
+  },
+  {
+    "itemId": "meat-and-macaroni-casserole",
+    "name": "Meat and macaroni casserole",
+    "category": "classic",
+    "expectedDedicatedPath": "/images/menu/items/meat-and-macaroni-casserole.webp",
+    "placeholderUsed": "/images/menu/placeholders/main.svg"
+  },
+  {
+    "itemId": "meatballs-in-cream-sauce-with-mashed-potatoes",
+    "name": "Meatballs in cream sauce with mashed potatoes",
+    "category": "classic",
+    "expectedDedicatedPath": "/images/menu/items/meatballs-in-cream-sauce-with-mashed-potatoes.webp",
+    "placeholderUsed": "/images/menu/placeholders/main.svg"
+  },
+  {
+    "itemId": "minced-meat-and-bean-soup",
+    "name": "Minced meat and bean soup",
+    "category": "soup",
+    "expectedDedicatedPath": "/images/menu/items/minced-meat-and-bean-soup.webp",
+    "placeholderUsed": "/images/menu/placeholders/soup.svg"
+  },
+  {
+    "itemId": "minced-meat-lasagne",
+    "name": "Minced meat lasagne",
+    "category": "classic",
+    "expectedDedicatedPath": "/images/menu/items/minced-meat-lasagne.webp",
+    "placeholderUsed": "/images/menu/placeholders/main.svg"
+  },
+  {
+    "itemId": "orange-pork-with-rice",
+    "name": "Orange pork with rice",
+    "category": "classic",
+    "expectedDedicatedPath": "/images/menu/items/orange-pork-with-rice.webp",
+    "placeholderUsed": "/images/menu/placeholders/main.svg"
+  },
+  {
+    "itemId": "orange-quark",
+    "name": "Orange quark",
+    "category": "dessert",
+    "expectedDedicatedPath": "/images/menu/items/orange-quark.webp",
+    "placeholderUsed": "/images/menu/placeholders/dessert.svg"
+  },
+  {
+    "itemId": "oven-baked-sausage-with-mashed-root-vegetables",
+    "name": "Oven-baked sausage with mashed root vegetables",
+    "category": "classic",
+    "expectedDedicatedPath": "/images/menu/items/oven-baked-sausage-with-mashed-root-vegetables.webp",
+    "placeholderUsed": "/images/menu/placeholders/main.svg"
+  },
+  {
+    "itemId": "oven-pancake",
+    "name": "Oven pancake",
+    "category": "dessert",
+    "expectedDedicatedPath": "/images/menu/items/oven-pancake.webp",
+    "placeholderUsed": "/images/menu/placeholders/dessert.svg"
+  },
+  {
+    "itemId": "pad-thai",
+    "name": "Pad Thai",
+    "category": "vegetarian",
+    "expectedDedicatedPath": "/images/menu/items/pad-thai.webp",
+    "placeholderUsed": "/images/menu/placeholders/vegetarian.svg"
+  },
+  {
+    "itemId": "palak-paneer-cheese-curry-with-rice",
+    "name": "Palak paneer cheese curry with rice",
+    "category": "vegetarian",
+    "expectedDedicatedPath": "/images/menu/items/palak-paneer-cheese-curry-with-rice.webp",
+    "placeholderUsed": "/images/menu/placeholders/vegetarian.svg"
+  },
+  {
+    "itemId": "pan-fried-patty-stuffed-with-chanterelles-with-mashed-potatoes",
+    "name": "Pan-fried patty stuffed with chanterelles, with mashed potatoes",
+    "category": "classic",
+    "expectedDedicatedPath": "/images/menu/items/pan-fried-patty-stuffed-with-chanterelles-with-mashed-potatoes.webp",
+    "placeholderUsed": "/images/menu/placeholders/main.svg"
+  },
+  {
+    "itemId": "panna-cotta",
+    "name": "Panna cotta",
+    "category": "dessert",
+    "expectedDedicatedPath": "/images/menu/items/panna-cotta.webp",
+    "placeholderUsed": "/images/menu/placeholders/dessert.svg"
+  },
+  {
+    "itemId": "parsnip-soup",
+    "name": "Parsnip soup",
+    "category": "soup",
+    "expectedDedicatedPath": "/images/menu/items/parsnip-soup.webp",
+    "placeholderUsed": "/images/menu/placeholders/soup.svg"
+  },
+  {
+    "itemId": "pasta-bolognese",
+    "name": "Pasta Bolognese",
+    "category": "classic",
+    "expectedDedicatedPath": "/images/menu/items/pasta-bolognese.webp",
+    "placeholderUsed": "/images/menu/placeholders/main.svg"
+  },
+  {
+    "itemId": "pea-soup",
+    "name": "Pea soup",
+    "category": "soup",
+    "expectedDedicatedPath": "/images/menu/items/pea-soup.webp",
+    "placeholderUsed": "/images/menu/placeholders/soup.svg"
+  },
+  {
+    "itemId": "peanut-and-bean-stew",
+    "name": "Peanut and bean stew",
+    "category": "vegetarian",
+    "expectedDedicatedPath": "/images/menu/items/peanut-and-bean-stew.webp",
+    "placeholderUsed": "/images/menu/placeholders/vegetarian.svg"
+  },
+  {
+    "itemId": "pike-fish-ball-soup",
+    "name": "Pike fish ball soup",
+    "category": "soup",
+    "expectedDedicatedPath": "/images/menu/items/pike-fish-ball-soup.webp",
+    "placeholderUsed": "/images/menu/placeholders/soup.svg"
+  },
+  {
+    "itemId": "pike-fish-patty-with-lemon-sauce-and-mashed-potatoes",
+    "name": "Pike fish patty with lemon sauce and mashed potatoes",
+    "category": "classic",
+    "expectedDedicatedPath": "/images/menu/items/pike-fish-patty-with-lemon-sauce-and-mashed-potatoes.webp",
+    "placeholderUsed": "/images/menu/placeholders/main.svg"
+  },
+  {
+    "itemId": "pulled-oat-casserole",
+    "name": "Pulled-oat casserole",
+    "category": "vegetarian",
+    "expectedDedicatedPath": "/images/menu/items/pulled-oat-casserole.webp",
+    "placeholderUsed": "/images/menu/placeholders/vegetarian.svg"
+  },
+  {
+    "itemId": "pumpkin-soup",
+    "name": "Pumpkin soup",
+    "category": "soup",
+    "expectedDedicatedPath": "/images/menu/items/pumpkin-soup.webp",
+    "placeholderUsed": "/images/menu/placeholders/soup.svg"
+  },
+  {
+    "itemId": "quorn-and-mushroom-stew",
+    "name": "Quorn and mushroom stew",
+    "category": "vegetarian",
+    "expectedDedicatedPath": "/images/menu/items/quorn-and-mushroom-stew.webp",
+    "placeholderUsed": "/images/menu/placeholders/vegetarian.svg"
+  },
+  {
+    "itemId": "quorn-and-vegetable-stew-with-mashed-potatoes",
+    "name": "Quorn and vegetable stew with mashed potatoes",
+    "category": "vegetarian",
+    "expectedDedicatedPath": "/images/menu/items/quorn-and-vegetable-stew-with-mashed-potatoes.webp",
+    "placeholderUsed": "/images/menu/placeholders/vegetarian.svg"
+  },
+  {
+    "itemId": "quorn-bolognese",
+    "name": "Quorn Bolognese",
+    "category": "vegetarian",
+    "expectedDedicatedPath": "/images/menu/items/quorn-bolognese.webp",
+    "placeholderUsed": "/images/menu/placeholders/vegetarian.svg"
+  },
+  {
+    "itemId": "ratatouille-with-chickpeas-and-rice",
+    "name": "Ratatouille with chickpeas and rice",
+    "category": "vegetarian",
+    "expectedDedicatedPath": "/images/menu/items/ratatouille-with-chickpeas-and-rice.webp",
+    "placeholderUsed": "/images/menu/placeholders/vegetarian.svg"
+  },
+  {
+    "itemId": "redcurrant-quark",
+    "name": "Redcurrant quark",
+    "category": "dessert",
+    "expectedDedicatedPath": "/images/menu/items/redcurrant-quark.webp",
+    "placeholderUsed": "/images/menu/placeholders/dessert.svg"
+  },
+  {
+    "itemId": "roasted-bell-pepper-soup",
+    "name": "Roasted bell pepper soup",
+    "category": "soup",
+    "expectedDedicatedPath": "/images/menu/items/roasted-bell-pepper-soup.webp",
+    "placeholderUsed": "/images/menu/placeholders/soup.svg"
+  },
+  {
+    "itemId": "roasted-rainbow-trout-with-lemon-sauce-and-potatoes",
+    "name": "Roasted rainbow trout with lemon sauce and potatoes",
+    "category": "classic",
+    "expectedDedicatedPath": "/images/menu/items/roasted-rainbow-trout-with-lemon-sauce-and-potatoes.webp",
+    "placeholderUsed": "/images/menu/placeholders/main.svg"
+  },
+  {
+    "itemId": "salmon-and-pike-patty-with-lemon-sauce-and-mashed-potatoes",
+    "name": "Salmon and pike patty with lemon sauce and mashed potatoes",
+    "category": "classic",
+    "expectedDedicatedPath": "/images/menu/items/salmon-and-pike-patty-with-lemon-sauce-and-mashed-potatoes.webp",
+    "placeholderUsed": "/images/menu/placeholders/main.svg"
+  },
+  {
+    "itemId": "sausage-sauce-with-roasted-potatoes",
+    "name": "Sausage sauce with roasted potatoes",
+    "category": "classic",
+    "expectedDedicatedPath": "/images/menu/items/sausage-sauce-with-roasted-potatoes.webp",
+    "placeholderUsed": "/images/menu/placeholders/main.svg"
+  },
+  {
+    "itemId": "sausage-soup",
+    "name": "Sausage soup",
+    "category": "soup",
+    "expectedDedicatedPath": "/images/menu/items/sausage-soup.webp",
+    "placeholderUsed": "/images/menu/placeholders/soup.svg"
+  },
+  {
+    "itemId": "sausage-stroganoff-with-mashed-potatoes",
+    "name": "Sausage stroganoff with mashed potatoes",
+    "category": "classic",
+    "expectedDedicatedPath": "/images/menu/items/sausage-stroganoff-with-mashed-potatoes.webp",
+    "placeholderUsed": "/images/menu/placeholders/main.svg"
+  },
+  {
+    "itemId": "seitan-kebab",
+    "name": "Seitan kebab",
+    "category": "vegetarian",
+    "expectedDedicatedPath": "/images/menu/items/seitan-kebab.webp",
+    "placeholderUsed": "/images/menu/placeholders/vegetarian.svg"
+  },
+  {
+    "itemId": "shiitake-mushroom-soup",
+    "name": "Shiitake mushroom soup",
+    "category": "soup",
+    "expectedDedicatedPath": "/images/menu/items/shiitake-mushroom-soup.webp",
+    "placeholderUsed": "/images/menu/placeholders/soup.svg"
+  },
+  {
+    "itemId": "siskonmakkara-sausage-soup",
+    "name": "Siskonmakkara sausage soup",
+    "category": "soup",
+    "expectedDedicatedPath": "/images/menu/items/siskonmakkara-sausage-soup.webp",
+    "placeholderUsed": "/images/menu/placeholders/soup.svg"
+  },
+  {
+    "itemId": "spinach-filled-fish-roulade-with-potatoes",
+    "name": "Spinach-filled fish roulade with potatoes",
+    "category": "classic",
+    "expectedDedicatedPath": "/images/menu/items/spinach-filled-fish-roulade-with-potatoes.webp",
+    "placeholderUsed": "/images/menu/placeholders/main.svg"
+  },
+  {
+    "itemId": "spinach-pancakes-with-mashed-potatoes-and-lingonberries",
+    "name": "Spinach pancakes with mashed potatoes and lingonberries",
+    "category": "vegetarian",
+    "expectedDedicatedPath": "/images/menu/items/spinach-pancakes-with-mashed-potatoes-and-lingonberries.webp",
+    "placeholderUsed": "/images/menu/placeholders/vegetarian.svg"
+  },
+  {
+    "itemId": "stewed-apple-with-ginger-cream",
+    "name": "Stewed apple with ginger cream",
+    "category": "dessert",
+    "expectedDedicatedPath": "/images/menu/items/stewed-apple-with-ginger-cream.webp",
+    "placeholderUsed": "/images/menu/placeholders/dessert.svg"
+  },
+  {
+    "itemId": "summer-berry-compote",
+    "name": "Summer berry compote",
+    "category": "dessert",
+    "expectedDedicatedPath": "/images/menu/items/summer-berry-compote.webp",
+    "placeholderUsed": "/images/menu/placeholders/dessert.svg"
+  },
+  {
+    "itemId": "sweet-and-sour-soy-strips",
+    "name": "Sweet-and-sour soy strips",
+    "category": "vegetarian",
+    "expectedDedicatedPath": "/images/menu/items/sweet-and-sour-soy-strips.webp",
+    "placeholderUsed": "/images/menu/placeholders/vegetarian.svg"
+  },
+  {
+    "itemId": "tandoori-chicken-soup",
+    "name": "Tandoori chicken soup",
+    "category": "soup",
+    "expectedDedicatedPath": "/images/menu/items/tandoori-chicken-soup.webp",
+    "placeholderUsed": "/images/menu/placeholders/soup.svg"
+  },
+  {
+    "itemId": "tandoori-pork-with-rice",
+    "name": "Tandoori pork with rice",
+    "category": "classic",
+    "expectedDedicatedPath": "/images/menu/items/tandoori-pork-with-rice.webp",
+    "placeholderUsed": "/images/menu/placeholders/main.svg"
+  },
+  {
+    "itemId": "thai-meatballs-with-rice",
+    "name": "Thai meatballs with rice",
+    "category": "classic",
+    "expectedDedicatedPath": "/images/menu/items/thai-meatballs-with-rice.webp",
+    "placeholderUsed": "/images/menu/placeholders/main.svg"
+  },
+  {
+    "itemId": "thai-pork-meatballs-with-rice",
+    "name": "Thai pork meatballs with rice",
+    "category": "classic",
+    "expectedDedicatedPath": "/images/menu/items/thai-pork-meatballs-with-rice.webp",
+    "placeholderUsed": "/images/menu/placeholders/main.svg"
+  },
+  {
+    "itemId": "tomato-and-goat-cheese-soup-new-recipe-being-tested",
+    "name": "Tomato and goat cheese soup (new recipe being tested)",
+    "category": "soup",
+    "expectedDedicatedPath": "/images/menu/items/tomato-and-goat-cheese-soup-new-recipe-being-tested.webp",
+    "placeholderUsed": "/images/menu/placeholders/soup.svg"
+  },
+  {
+    "itemId": "tomato-and-lentil-soup",
+    "name": "Tomato and lentil soup",
+    "category": "soup",
+    "expectedDedicatedPath": "/images/menu/items/tomato-and-lentil-soup.webp",
+    "placeholderUsed": "/images/menu/placeholders/soup.svg"
+  },
+  {
+    "itemId": "tomato-fish-soup",
+    "name": "Tomato fish soup",
+    "category": "soup",
+    "expectedDedicatedPath": "/images/menu/items/tomato-fish-soup.webp",
+    "placeholderUsed": "/images/menu/placeholders/soup.svg"
+  },
+  {
+    "itemId": "tomato-pulled-oat-pasta",
+    "name": "Tomato pulled-oat pasta",
+    "category": "vegetarian",
+    "expectedDedicatedPath": "/images/menu/items/tomato-pulled-oat-pasta.webp",
+    "placeholderUsed": "/images/menu/placeholders/vegetarian.svg"
+  },
+  {
+    "itemId": "turkey-cordon-bleu-with-pesto-mayonnaise-and-potato-wedges",
+    "name": "Turkey Cordon Bleu with pesto mayonnaise and potato wedges",
+    "category": "classic",
+    "expectedDedicatedPath": "/images/menu/items/turkey-cordon-bleu-with-pesto-mayonnaise-and-potato-wedges.webp",
+    "placeholderUsed": "/images/menu/placeholders/main.svg"
+  },
+  {
+    "itemId": "vegan-pea-soup",
+    "name": "Vegan pea soup",
+    "category": "soup",
+    "expectedDedicatedPath": "/images/menu/items/vegan-pea-soup.webp",
+    "placeholderUsed": "/images/menu/placeholders/soup.svg"
+  },
+  {
+    "itemId": "vegetable-borscht",
+    "name": "Vegetable borscht",
+    "category": "soup",
+    "expectedDedicatedPath": "/images/menu/items/vegetable-borscht.webp",
+    "placeholderUsed": "/images/menu/placeholders/soup.svg"
+  },
+  {
+    "itemId": "vegetable-patties-with-tartar-sauce-and-pasta",
+    "name": "Vegetable patties with tartar sauce and pasta",
+    "category": "vegetarian",
+    "expectedDedicatedPath": "/images/menu/items/vegetable-patties-with-tartar-sauce-and-pasta.webp",
+    "placeholderUsed": "/images/menu/placeholders/vegetarian.svg"
+  },
+  {
+    "itemId": "vegetarian-burger-with-potato-wedges",
+    "name": "Vegetarian burger with potato wedges",
+    "category": "vegetarian",
+    "expectedDedicatedPath": "/images/menu/items/vegetarian-burger-with-potato-wedges.webp",
+    "placeholderUsed": "/images/menu/placeholders/vegetarian.svg"
+  },
+  {
+    "itemId": "vegetarian-cabbage-rolls",
+    "name": "Vegetarian cabbage rolls",
+    "category": "vegetarian",
+    "expectedDedicatedPath": "/images/menu/items/vegetarian-cabbage-rolls.webp",
+    "placeholderUsed": "/images/menu/placeholders/vegetarian.svg"
+  },
+  {
+    "itemId": "vegetarian-chili-with-rice",
+    "name": "Vegetarian chili with rice",
+    "category": "vegetarian",
+    "expectedDedicatedPath": "/images/menu/items/vegetarian-chili-with-rice.webp",
+    "placeholderUsed": "/images/menu/placeholders/vegetarian.svg"
+  },
+  {
+    "itemId": "vegetarian-kofta-with-mashed-potatoes",
+    "name": "Vegetarian kofta with mashed potatoes",
+    "category": "vegetarian",
+    "expectedDedicatedPath": "/images/menu/items/vegetarian-kofta-with-mashed-potatoes.webp",
+    "placeholderUsed": "/images/menu/placeholders/vegetarian.svg"
+  }
+]

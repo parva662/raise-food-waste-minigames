@@ -21,13 +21,50 @@
   "domainTypes": [
     "src/types/declaration.ts",
     "src/types/mealChoice.ts",
-    "src/types/menu.ts"
+    "src/types/menu.ts",
+    "src/types/generatedMenu.ts"
   ],
   "services": [
     "src/services/menuResolver.ts",
     "src/services/mealSlots.ts",
     "src/services/submissionWindow.ts",
     "src/hooks/useLunchSelection.ts"
+  ],
+  "gamebus": [
+    "src/gamebus/bridge.ts",
+    "src/gamebus/buildActivityMessage.ts",
+    "src/gamebus/mapStudentLunchCheckin.ts",
+    "src/gamebus/propertySchemas.ts",
+    "src/gamebus/resolveActivityProperties.ts",
+    "src/gamebus/useGameBusEmbed.ts",
+    "src/gamebus/taskFixtures.ts"
+  ],
+  "menuPipeline": [
+    "scripts/menu/workbook.ts",
+    "scripts/menu/runtimeMenu.ts",
+    "scripts/menu/imagePaths.ts",
+    "scripts/menu/constants.ts",
+    "scripts/menu/normalize.ts",
+    "scripts/menu/types.ts",
+    "scripts/menu/inspect-cli.ts",
+    "scripts/menu/convert-cli.ts",
+    "scripts/menu/check-cli.ts",
+    "generated-data/menu/README.md",
+    "generated-data/menu/missing-images.json"
+  ],
+  "runtimeMenuData": [
+    "src/data/generated/food-catalogue.json",
+    "src/data/generated/daily-menus.json",
+    "src/data/generated/menu-meta.json",
+    "src/data/generated/image-manifest.json",
+    "src/data/generated/README.md",
+    "src/data/generatedMenuData.ts"
+  ],
+  "placeholderAssets": [
+    "public/images/menu/placeholders/main.svg",
+    "public/images/menu/placeholders/vegetarian.svg",
+    "public/images/menu/placeholders/soup.svg",
+    "public/images/menu/placeholders/dessert.svg"
   ],
   "utilities": [
     "src/utils/points.ts",
@@ -36,7 +73,9 @@
     "src/utils/mealChoice.ts",
     "src/utils/mealDraftActions.ts",
     "src/utils/dates.ts",
-    "src/utils/storage.ts"
+    "src/utils/storage.ts",
+    "src/utils/menuItemImage.ts",
+    "src/config/menuImagePaths.ts"
   ],
   "repositories": [
     "src/repositories/declarationRepository.ts"
@@ -46,7 +85,6 @@
     "src/data/foodCatalogue.ts",
     "src/data/menuSchedule.ts",
     "src/data/menuOverrides.ts",
-    "src/data/menu.ts",
     "src/main.tsx",
     "src/styles.css",
     "vite.config.ts",
@@ -70,38 +108,50 @@
     "src/utils/declarationSelection.test.ts",
     "src/utils/mealChoice.test.ts",
     "src/utils/mealDraftActions.test.ts",
+    "src/utils/menuItemImage.test.tsx",
     "src/hooks/useLunchSelection.test.tsx",
     "src/components/lunchComponents.test.tsx",
+    "src/gamebus/gamebus.test.ts",
+    "src/gamebus/handshake.test.ts",
+    "src/gamebus/resolveActivityProperties.test.ts",
+    "src/gamebus/mapStudentLunchCheckin.test.ts",
+    "scripts/menu/menuPipeline.test.ts",
     "src/test/setup.ts",
     "src/test/fixtures/dates.ts",
     "src/test/fixtures/storage.ts",
     "src/test/fixtures/declarations.ts",
     "src/test/fixtures/menus.ts"
   ],
+  "testCounts": {
+    "totalTests": "see npm run test:run",
+    "testFiles": 18
+  },
   "confirmedFeatures": [
     "Three always-visible meal sections: Regular lunch, Soup lunch, No lunch",
     "Single active section; switching clears other sections quantities",
     "Portion quantities for main, vegetarian, soup, dessert (0 = not selected)",
     "Tomorrow lunch date targeting",
-    "Daily meal slots (one item per slot from menu schedule)",
+    "Dated Excel menu (calendar lookup, four slots per day)",
     "Europe/Helsinki submission window (18:00 on-time, 23:00 late close)",
     "Points 20 base +5 on-time / -5 late (25 / 15 total)",
     "One final submit per date; no update flow in UI",
     "localStorage persistence for standalone demo",
     "GitHub Pages build base /raise-food-waste-minigames/",
-    "CI: Node 20, tsc, vitest (106 tests), build"
+    "GameBus embed ACTIVITY for studentLunchCheckin (twelve-property quantity-aware mapper)",
+    "Category placeholder images with optional dedicated public/images/menu/items/*.webp",
+    "Excel menu inspect/convert/check CLI",
+    "CI: Node 20, tsc, vitest (136 tests), build"
   ],
   "provisionalFeatures": [
-    "Hardcoded studentId demo-student-001",
-    "LocalStorageDeclarationRepository (GameBus bridge planned — GAMEBUS_LUNCH_CONTRACT.md)",
+    "Hardcoded studentId demo-student-001 (local declaration only; not on ACTIVITY)",
+    "LocalStorageDeclarationRepository for standalone mode",
     "includeInForecast always true with no downstream consumer",
-    "External Unsplash images in food catalogue",
-    "Temporary menuSchedule until real menu import"
+    "Legacy menuSchedule.ts retained but not used at runtime"
   ],
   "unknowns": [
-    "GameBus property template admin update timeline for studentLunchCheckin",
-    "Pari task linked activity template reference confirmation",
-    "Production embed URL and postMessage origin allowlist",
-    "Whether INPUT_COLLECTIONS me should replace demo studentId"
+    "Live GameBus studentLunchCheckin admin migration to twelve properties and ingest verification",
+    "Optional item-ID property omission accepted by GameBus ingest",
+    "Participant association without actors/studentId on ACTIVITY",
+    "Production embed URL and postMessage origin allowlist"
   ]
 }

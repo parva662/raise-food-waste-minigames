@@ -42,8 +42,9 @@ export function PortionFoodCard({
       tabIndex={menuInteractive ? 0 : undefined}
     >
       <FoodImage
-        src={item.image}
-        alt=""
+        src={item.imageDedicated ?? item.image}
+        placeholderSrc={item.imagePlaceholder}
+        alt={item.name}
         category={item.category}
         className="portion-food-card__image"
         fallbackClassName="portion-food-card__image-fallback"

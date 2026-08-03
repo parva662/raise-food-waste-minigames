@@ -88,7 +88,7 @@ describe('LocalStorageDeclarationRepository', () => {
     const secondDate = createDeclarationFromDraft(
       { mealChoice: 'no_lunch', mainQuantity: 0, vegetarianQuantity: 0, soupQuantity: 0, dessertQuantity: 0 },
       slots,
-      '2026-01-08',
+      '2026-07-30',
       1,
       CANTEEN_CONFIG.menuVersion,
       () => SUBMISSION_TIMES.midday,

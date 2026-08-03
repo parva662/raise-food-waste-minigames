@@ -4,6 +4,7 @@ import type { MenuCategory } from '../types/menu';
 
 interface FoodImageProps {
   src: string;
+  placeholderSrc?: string;
   alt: string;
   category: MenuCategory;
   className?: string;
@@ -24,17 +25,20 @@ function FallbackIcon({ category, size }: { category: MenuCategory; size: number
   }
 }
 
+type ImageStage = 'primary' | 'placeholder' | 'icon';
+
 export function FoodImage({
   src,
+  placeholderSrc,
   alt,
   category,
   className = '',
   fallbackClassName = '',
   iconSize = 24,
 }: FoodImageProps) {
-  const [imageError, setImageError] = useState(false);
+  const [stage, setStage] = useState<ImageStage>('primary');
 
-  if (imageError) {
+  if (stage === 'icon') {
     return (
       <div className={`food-image-fallback ${fallbackClassName}`} aria-hidden={alt === ''}>
         <FallbackIcon category={category} size={iconSize} />
@@ -42,13 +46,23 @@ export function FoodImage({
     );
   }
 
+  const activeSrc = stage === 'placeholder' && placeholderSrc ? placeholderSrc : src;
+
   return (
     <img
-      src={src}
+      src={activeSrc}
       alt={alt}
       className={className}
       loading="lazy"
-      onError={() => setImageError(true)}
+      data-placeholder={stage === 'placeholder' ? 'true' : undefined}
+      onError={() => {
+        setStage((current) => {
+          if (current === 'primary' && placeholderSrc && placeholderSrc !== src) {
+            return 'placeholder';
+          }
+          return 'icon';
+        });
+      }}
     />
   );
 }

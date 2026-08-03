@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="400" height="240" viewBox="0 0 400 240" role="img" aria-label="Main course placeholder">
+  <rect width="400" height="240" fill="#e8e4df"/>
+  <rect x="48" y="56" width="304" height="128" rx="12" fill="#d4cfc8"/>
+  <circle cx="200" cy="120" r="36" fill="#b8b0a6"/>
+  <text x="200" y="210" text-anchor="middle" font-family="system-ui,sans-serif" font-size="14" fill="#6b6560">Main course</text>
+</svg>

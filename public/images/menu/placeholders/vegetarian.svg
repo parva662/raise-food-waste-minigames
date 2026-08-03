@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="400" height="240" viewBox="0 0 400 240" role="img" aria-label="Vegetarian placeholder">
+  <rect width="400" height="240" fill="#e6efe8"/>
+  <rect x="48" y="56" width="304" height="128" rx="12" fill="#c8dccf"/>
+  <path d="M200 88c-18 0-32 14-32 32s14 32 32 32 32-14 32-32-14-32-32-32z" fill="#7fa88a"/>
+  <text x="200" y="210" text-anchor="middle" font-family="system-ui,sans-serif" font-size="14" fill="#4d6b57">Vegetarian</text>
+</svg>

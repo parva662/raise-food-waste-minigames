@@ -1,5 +1,22 @@
 import type { TaskData } from './types';
-import { STUDENT_LUNCH_CHECKIN_REFS } from './mapStudentLunchCheckinLegacy';
+import { STUDENT_LUNCH_CHECKIN_OPTIONAL_ITEM_REFS } from './mapStudentLunchCheckin';
+
+const FINAL_LINKED_REFS = [
+  'targetDate',
+  'mealType',
+  'mainItemId',
+  'mainQuantity',
+  'vegetarianItemId',
+  'vegetarianQuantity',
+  'soupItemId',
+  'soupQuantity',
+  'dessertItemId',
+  'dessertQuantity',
+  'timingStatus',
+  'submittedAt',
+] as const;
+
+const OPTIONAL_ITEM_IDS = new Set<string>(STUDENT_LUNCH_CHECKIN_OPTIONAL_ITEM_REFS);
 
 /** Runtime-like TASK: properties live on the activity template, not TASK.data.propertyTemplates. */
 export const pariStudentLunchTaskFixture: TaskData = {
@@ -20,10 +37,10 @@ export const pariStudentLunchTaskFixture: TaskData = {
       reference: 'studentLunchCheckin',
       name: 'Student lunch check-in',
       providers: [],
-      linkedProperties: STUDENT_LUNCH_CHECKIN_REFS.map((ref, index) => ({
+      linkedProperties: FINAL_LINKED_REFS.map((ref, index) => ({
         order: index + 1,
         name: ref,
-        required: true,
+        required: !OPTIONAL_ITEM_IDS.has(ref),
         ref,
       })),
     },

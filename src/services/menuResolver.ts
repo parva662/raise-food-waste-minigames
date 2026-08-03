@@ -1,31 +1,23 @@
-import { parseISO, differenceInCalendarDays } from 'date-fns';
-import { toZonedTime } from 'date-fns-tz';
-import { CANTEEN_CONFIG } from '../config/canteen';
-import { foodCatalogue } from '../data/foodCatalogue';
-import { dailyMenus, findDailyMenu, dailyMenuItemIds } from '../data/menuSchedule';
+import { foodCatalogue, getGeneratedDailyMenu, getGeneratedMenuMeta } from '../data/generatedMenuData';
 import { menuOverrides } from '../data/menuOverrides';
 import type {
-  DailyMenuDefinition,
   DailyMenuSections,
   MenuAvailability,
   MenuItem,
   Weekday,
 } from '../types/menu';
+import { parseISO } from 'date-fns';
+import { toZonedTime } from 'date-fns-tz';
+import { CANTEEN_CONFIG } from '../config/canteen';
 
-const WEEKDAYS: Weekday[] = [
-  'monday',
-  'tuesday',
-  'wednesday',
-  'thursday',
-  'friday',
-];
+const WEEKDAYS: Weekday[] = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday'];
 
-function isWithinValidity(lunchDate: string): boolean {
-  return (
-    lunchDate >= CANTEEN_CONFIG.menuValidityStartDate &&
-    lunchDate <= CANTEEN_CONFIG.menuValidityEndDate
-  );
-}
+const SLOT_TO_CATEGORY = {
+  main: 'classic',
+  vegetarian: 'vegetarian',
+  soup: 'soup',
+  dessert: 'dessert',
+} as const;
 
 function getWeekday(lunchDate: string): Weekday | null {
   const date = parseISO(lunchDate);
@@ -35,87 +27,114 @@ function getWeekday(lunchDate: string): Weekday | null {
   return WEEKDAYS[dayIndex - 1];
 }
 
-/** Returns 1-based cycle week (1, 2, or 3) for the given lunch date. */
-export function getMenuCycleWeek(lunchDate: string): number {
-  const cycleStart = parseISO(CANTEEN_CONFIG.menuCycleStartDate);
-  const lunch = parseISO(lunchDate);
-  const daysSinceStart = differenceInCalendarDays(lunch, cycleStart);
-  const completeWeeks = Math.floor(daysSinceStart / 7);
-  const weekIndex = ((completeWeeks % CANTEEN_CONFIG.menuCycleWeeks) + CANTEEN_CONFIG.menuCycleWeeks)
-    % CANTEEN_CONFIG.menuCycleWeeks;
-  return weekIndex + 1;
+function isWeekday(lunchDate: string): boolean {
+  return getWeekday(lunchDate) !== null;
 }
 
-function sectionsToDailyMenu(
-  sections: DailyMenuSections,
-  id: string,
-  week: number,
-  weekday: Weekday,
-): DailyMenuDefinition {
-  return {
-    id,
-    week: week as 1 | 2 | 3,
-    weekday,
-    vegetarian: sections.vegetarian,
-    classic: sections.classic,
-    soups: sections.soups,
-    desserts: sections.desserts,
-  };
+function isWithinGeneratedRange(lunchDate: string): boolean {
+  const { start, end } = getGeneratedMenuMeta().dateRange;
+  return lunchDate >= start && lunchDate <= end;
 }
 
-function resolveDailyMenu(lunchDate: string): DailyMenuDefinition | 'closed' | null {
-  const override = menuOverrides.find((entry) => entry.lunchDate === lunchDate);
-  if (override?.type === 'closed') return 'closed';
-  if (override?.type === 'replace') {
-    const weekday = getWeekday(lunchDate) ?? 'monday';
-    return sectionsToDailyMenu(
-      override.menu,
-      `override-${lunchDate}`,
-      getMenuCycleWeek(lunchDate) as 1 | 2 | 3,
-      weekday,
-    );
+function catalogueItem(id: string): MenuItem | undefined {
+  return foodCatalogue[id];
+}
+
+function firstCatalogueItem(ids: string[]): MenuItem | undefined {
+  for (const id of ids) {
+    const item = catalogueItem(id);
+    if (item) return item;
   }
-
-  const weekday = getWeekday(lunchDate);
-  if (!weekday) return null;
-
-  const cycleWeek = getMenuCycleWeek(lunchDate);
-  return findDailyMenu(cycleWeek, weekday) ?? null;
+  return undefined;
 }
 
-function buildMenuItems(itemIds: string[]): MenuItem[] {
-  return itemIds
-    .map((id) => foodCatalogue[id])
-    .filter((item): item is MenuItem => item !== undefined);
+function mealItemsFromSections(sections: DailyMenuSections): MenuItem[] | null {
+  const main = firstCatalogueItem([sections.classic[0]]);
+  const vegetarian = firstCatalogueItem([sections.vegetarian[0]]);
+  const soup = firstCatalogueItem([sections.soups[0]]);
+  const dessert = firstCatalogueItem([sections.desserts[0]]);
+  if (!main || !vegetarian || !soup || !dessert) return null;
+  return [main, vegetarian, soup, dessert];
 }
 
-/** Returns catalogue IDs that are missing from the shared food catalogue. */
+function mealItemsFromGeneratedDate(lunchDate: string): MenuItem[] | null {
+  const day = getGeneratedDailyMenu(lunchDate);
+  if (!day || day.closed) return null;
+
+  const items: MenuItem[] = [];
+  for (const slot of day.slots) {
+    if (slot.closed) return null;
+    const item = catalogueItem(slot.itemId);
+    if (!item) return null;
+    const expectedCategory = SLOT_TO_CATEGORY[slot.slot];
+    if (item.category !== expectedCategory) return null;
+    items.push(item);
+  }
+  if (items.length !== 4) return null;
+  return items;
+}
+
+/** Workbook sheet week for a lunch date (0 when unknown). */
+export function getMenuCycleWeek(lunchDate: string): number {
+  return getGeneratedDailyMenu(lunchDate)?.sheetWeek ?? 0;
+}
+
+/** Returns catalogue IDs that are missing from the generated food catalogue. */
 export function findMissingCatalogueIds(itemIds: string[]): string[] {
   return itemIds.filter((id) => foodCatalogue[id] === undefined);
 }
 
 export function resolveMenuForDate(lunchDate: string): MenuAvailability {
-  if (!isWithinValidity(lunchDate)) {
+  if (!isWeekday(lunchDate)) {
     return { status: 'unavailable' };
   }
 
-  const dailyMenu = resolveDailyMenu(lunchDate);
-  if (dailyMenu === 'closed') {
-    const override = menuOverrides.find(
-      (entry) => entry.lunchDate === lunchDate && entry.type === 'closed',
-    );
-    return { status: 'closed', reason: override?.reason };
+  const override = menuOverrides.find((entry) => entry.lunchDate === lunchDate);
+  if (override?.type === 'closed') {
+    return { status: 'closed', reason: override.reason };
   }
-  if (dailyMenu === null) {
+
+  if (override?.type === 'replace') {
+    const items = mealItemsFromSections(override.menu);
+    if (!items) {
+      return { status: 'unavailable' };
+    }
+    const sheetWeek = getMenuCycleWeek(lunchDate);
+    return {
+      status: 'available',
+      items,
+      dailyMenuId: `override-${lunchDate}`,
+      menuCycleWeek: sheetWeek,
+      sheetWeek: sheetWeek || undefined,
+      menuVersion: getGeneratedMenuMeta().menuVersion,
+    };
+  }
+
+  if (!isWithinGeneratedRange(lunchDate)) {
+    return { status: 'unavailable' };
+  }
+
+  const day = getGeneratedDailyMenu(lunchDate);
+  if (!day) {
+    return { status: 'unavailable' };
+  }
+
+  if (day.closed) {
+    return { status: 'closed', reason: 'Canteen closed' };
+  }
+
+  const items = mealItemsFromGeneratedDate(lunchDate);
+  if (!items) {
     return { status: 'unavailable' };
   }
 
   return {
     status: 'available',
-    items: buildMenuItems(dailyMenuItemIds(dailyMenu)),
-    dailyMenuId: dailyMenu.id,
-    menuCycleWeek: dailyMenu.week,
-    menuVersion: CANTEEN_CONFIG.menuVersion,
+    items,
+    dailyMenuId: `dated-${lunchDate}`,
+    menuCycleWeek: day.sheetWeek,
+    sheetWeek: day.sheetWeek,
+    menuVersion: getGeneratedMenuMeta().menuVersion,
   };
 }
 
@@ -124,7 +143,6 @@ export function getOverrideReason(lunchDate: string): string | undefined {
   return override?.reason;
 }
 
-/** Exported for tests — confirms exactly 15 complete daily menus are defined. */
-export function getDailyMenuCatalogue(): DailyMenuDefinition[] {
-  return dailyMenus;
+export function getGeneratedMenuDateRange(): { start: string; end: string } {
+  return getGeneratedMenuMeta().dateRange;
 }

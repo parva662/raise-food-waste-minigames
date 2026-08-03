@@ -1,7 +1,10 @@
 import type { ActiveDeclaration } from '../types/declaration';
 import type { DailyMealSlots, MealDraft } from '../types/mealChoice';
 import type { ActivityMessage, TaskData } from './types';
-import { mapStudentLunchCheckinLegacy, type StudentLunchPropertyRef } from './mapStudentLunchCheckinLegacy';
+import {
+  mapStudentLunchCheckin,
+  type StudentLunchPropertyRef,
+} from './mapStudentLunchCheckin';
 import {
   assertStudentLunchCheckinActivity,
   propertyRefsForStudentLunchActivity,
@@ -16,9 +19,16 @@ export function selectActivityTemplate(task: TaskData): {
   if (templates.length === 0) {
     throw new Error('TASK has no activityTemplates');
   }
-  const preferred = templates.find((t) => t.reference === STUDENT_LUNCH_CHECKIN_REF);
-  const chosen = preferred ?? templates[0];
-  return { reference: chosen.reference, name: chosen.name };
+
+  const activity = templates.find((t) => t.reference === STUDENT_LUNCH_CHECKIN_REF);
+  if (!activity) {
+    const found = templates.map((t) => t.reference).join(', ');
+    throw new Error(
+      `TASK has no supported lunch activity template (expected ${STUDENT_LUNCH_CHECKIN_REF}). Found: ${found || '(none)'}`,
+    );
+  }
+
+  return { reference: activity.reference, name: activity.name };
 }
 
 export function buildActivityMessage(
@@ -30,14 +40,14 @@ export function buildActivityMessage(
   const { reference: templateRef } = selectActivityTemplate(task);
   assertStudentLunchCheckinActivity(task, templateRef);
 
-  const propertyRefs = propertyRefsForStudentLunchActivity(task);
-  const values = mapStudentLunchCheckinLegacy(declaration, draft, slots);
+  const propertyRefs = propertyRefsForStudentLunchActivity(task, draft);
+  const values = mapStudentLunchCheckin(declaration, draft, slots);
   const start = new Date(declaration.submittedAt);
   const end = new Date(start.getTime() + 60_000);
 
   const properties = propertyRefs.map((ref) => ({
     template: ref,
-    obj: values[ref as StudentLunchPropertyRef],
+    obj: values[ref as StudentLunchPropertyRef] as Record<string, unknown>,
   }));
 
   return {

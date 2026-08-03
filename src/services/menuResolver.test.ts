@@ -1,244 +1,169 @@
 import { describe, it, expect } from 'vitest';
-import { fromZonedTime } from 'date-fns-tz';
 import {
-  getMenuCycleWeek,
-  resolveMenuForDate,
-  getDailyMenuCatalogue,
   findMissingCatalogueIds,
+  getGeneratedMenuDateRange,
+  getMenuCycleWeek,
   getOverrideReason,
+  resolveMenuForDate,
 } from './menuResolver';
+import { resolveMealSlotsForDate } from './mealSlots';
+import { buildActivityMessage } from '../gamebus/buildActivityMessage';
+import { pariStudentLunchTaskFixture } from '../gamebus/taskFixtures';
+import { MENU_DATES } from '../test/fixtures/dates';
 import { foodCatalogue } from '../data/foodCatalogue';
-import { dailyMenuItemIds } from '../data/menuSchedule';
-import { ROTATION_DATES } from '../test/fixtures/dates';
-import { SECTION_KEYS } from '../test/fixtures/menus';
+import { getAllGeneratedDailyMenus } from '../data/generatedMenuData';
 
-describe('three-week menu rotation', () => {
-  it('resolves the first Monday in cycle week 1', () => {
-    const menu = resolveMenuForDate(ROTATION_DATES.week1Monday);
-    expect(getMenuCycleWeek(ROTATION_DATES.week1Monday)).toBe(1);
+describe('generated dated menu resolver', () => {
+  it('resolves Monday 2026-07-27 as the runtime menu start', () => {
+    const menu = resolveMenuForDate(MENU_DATES.runtimeMonday);
+    expect(menu.status).toBe('available');
+    const range = getGeneratedMenuDateRange();
+    expect(range.start).toBe(MENU_DATES.runtimeMonday);
+    if (menu.status === 'available') {
+      expect(menu.items).toHaveLength(4);
+      expect(menu.dailyMenuId).toBe(`dated-${MENU_DATES.runtimeMonday}`);
+    }
+  });
+
+  it('resolves Tuesday 2026-07-28 in sequence after Monday', () => {
+    const menu = resolveMenuForDate(MENU_DATES.runtimeTuesday);
+    expect(menu.status).toBe('available');
+  });
+
+  it('resolves a known runtime date with four slots', () => {
+    const menu = resolveMenuForDate(MENU_DATES.runtimeWednesday);
     expect(menu.status).toBe('available');
     if (menu.status === 'available') {
-      expect(menu.dailyMenuId).toBe('week1-monday');
-    }
-  });
-
-  it('resolves cycle start Tuesday as Week 1 Tuesday', () => {
-    expect(getMenuCycleWeek(ROTATION_DATES.cycleStartTuesday)).toBe(1);
-    const menu = resolveMenuForDate(ROTATION_DATES.cycleStartTuesday);
-    if (menu.status === 'available') {
-      expect(menu.dailyMenuId).toBe('week1-tuesday');
-    }
-  });
-
-  it('resolves Week 1 Friday', () => {
-    expect(getMenuCycleWeek(ROTATION_DATES.week1Friday)).toBe(1);
-    const menu = resolveMenuForDate(ROTATION_DATES.week1Friday);
-    if (menu.status === 'available') {
-      expect(menu.dailyMenuId).toBe('week1-friday');
-    }
-  });
-
-  it('resolves the following Monday as Week 2 Monday', () => {
-    expect(getMenuCycleWeek(ROTATION_DATES.week2Monday)).toBe(2);
-    const menu = resolveMenuForDate(ROTATION_DATES.week2Monday);
-    if (menu.status === 'available') {
-      expect(menu.dailyMenuId).toBe('week2-monday');
-    }
-  });
-
-  it('resolves the third Monday as Week 3 Monday', () => {
-    expect(getMenuCycleWeek(ROTATION_DATES.week3Monday)).toBe(3);
-    const menu = resolveMenuForDate(ROTATION_DATES.week3Monday);
-    if (menu.status === 'available') {
-      expect(menu.dailyMenuId).toBe('week3-monday');
-    }
-  });
-
-  it('rotates the fourth Monday back to Week 1 Monday', () => {
-    expect(getMenuCycleWeek(ROTATION_DATES.week4Monday)).toBe(1);
-    const menu = resolveMenuForDate(ROTATION_DATES.week4Monday);
-    if (menu.status === 'available') {
-      expect(menu.dailyMenuId).toBe('week1-monday');
-    }
-  });
-
-  it('rotates Week 4 Tuesday back to Week 1 Tuesday', () => {
-    expect(getMenuCycleWeek(ROTATION_DATES.week4Tuesday)).toBe(1);
-    const menu = resolveMenuForDate(ROTATION_DATES.week4Tuesday);
-    if (menu.status === 'available') {
-      expect(menu.dailyMenuId).toBe('week1-tuesday');
-    }
-  });
-
-  it('resolves Week 5 Wednesday as Week 2 Wednesday', () => {
-    expect(getMenuCycleWeek(ROTATION_DATES.week5Wednesday)).toBe(2);
-    const menu = resolveMenuForDate(ROTATION_DATES.week5Wednesday);
-    if (menu.status === 'available') {
-      expect(menu.dailyMenuId).toBe('week2-wednesday');
-    }
-  });
-
-  it('resolves Week 6 Thursday as Week 3 Thursday', () => {
-    expect(getMenuCycleWeek(ROTATION_DATES.week6Thursday)).toBe(3);
-    const menu = resolveMenuForDate(ROTATION_DATES.week6Thursday);
-    if (menu.status === 'available') {
-      expect(menu.dailyMenuId).toBe('week3-thursday');
-    }
-  });
-
-  it('returns all four sections for a resolved daily menu', () => {
-    const menu = resolveMenuForDate(ROTATION_DATES.cycleStartTuesday);
-    expect(menu.status).toBe('available');
-    if (menu.status === 'available') {
-      expect(menu.items.filter((item) => item.category === 'vegetarian')).toHaveLength(2);
-      expect(menu.items.filter((item) => item.category === 'classic')).toHaveLength(2);
-      expect(menu.items.filter((item) => item.category === 'soup')).toHaveLength(2);
-      expect(menu.items.filter((item) => item.category === 'dessert')).toHaveLength(2);
-    }
-  });
-
-  it('resolves every daily-menu item ID to a catalogue entry', () => {
-    for (const dailyMenu of getDailyMenuCatalogue()) {
-      const missing = findMissingCatalogueIds(dailyMenuItemIds(dailyMenu));
-      expect(missing).toEqual([]);
-    }
-  });
-
-  it('detects missing catalogue IDs instead of silently ignoring them', () => {
-    expect(findMissingCatalogueIds(['rice-with-sauce', 'missing-item-id'])).toEqual([
-      'missing-item-id',
-    ]);
-  });
-
-  it('keeps rotation stable across a month boundary', () => {
-    const menu = resolveMenuForDate(ROTATION_DATES.monthBoundaryFriday);
-    expect(menu.status).toBe('available');
-    expect(getMenuCycleWeek(ROTATION_DATES.monthBoundaryFriday)).toBe(1);
-  });
-
-  it('keeps rotation stable across a year boundary within validity', () => {
-    const menu = resolveMenuForDate(ROTATION_DATES.yearBoundaryWeekday);
-    expect(menu.status).toBe('available');
-    expect(getMenuCycleWeek(ROTATION_DATES.yearBoundaryWeekday)).toBe(1);
-  });
-
-  it('does not depend on the machine local timezone', () => {
-    const utcNoon = fromZonedTime(`${ROTATION_DATES.week2Monday} 12:00:00`, 'UTC');
-    const helsinkiNoon = fromZonedTime(`${ROTATION_DATES.week2Monday} 12:00:00`, 'Europe/Helsinki');
-    expect(getMenuCycleWeek(ROTATION_DATES.week2Monday)).toBe(2);
-    expect(resolveMenuForDate(ROTATION_DATES.week2Monday).status).toBe('available');
-    expect(utcNoon.toISOString()).not.toBe(helsinkiNoon.toISOString());
-    expect(getMenuCycleWeek(ROTATION_DATES.week2Monday)).toBe(2);
-  });
-
-  it('rejects dates before menu validity', () => {
-    expect(resolveMenuForDate(ROTATION_DATES.beforeValidity)).toEqual({ status: 'unavailable' });
-  });
-
-  it('rejects dates after menu validity', () => {
-    expect(resolveMenuForDate(ROTATION_DATES.afterValidity)).toEqual({ status: 'unavailable' });
-  });
-});
-
-describe('menu overrides', () => {
-  it('uses a replacement override instead of the rotating daily menu', () => {
-    const normal = resolveMenuForDate(ROTATION_DATES.replaceOverrideNormalDay);
-    const overridden = resolveMenuForDate(ROTATION_DATES.replaceOverride);
-    expect(normal.status).toBe('available');
-    expect(overridden.status).toBe('available');
-    if (normal.status === 'available' && overridden.status === 'available') {
-      expect(overridden.dailyMenuId).toBe(`override-${ROTATION_DATES.replaceOverride}`);
-      expect(overridden.items.map((item) => item.id)).not.toEqual(
-        normal.items.map((item) => item.id),
+      expect(menu.items).toHaveLength(4);
+      expect(menu.dailyMenuId).toBe(`dated-${MENU_DATES.runtimeWednesday}`);
+      expect(menu.items.map((item) => item.category).sort()).toEqual(
+        ['classic', 'dessert', 'soup', 'vegetarian'].sort(),
       );
     }
   });
 
+  it('maps main, vegetarian, soup, and dessert to the correct catalogue IDs', () => {
+    const slots = resolveMealSlotsForDate(MENU_DATES.runtimeWednesday);
+    expect(slots).not.toBeNull();
+    expect(slots!.main.id).toBe('chicken-steak-with-pesto-sauce-and-pasta');
+    expect(slots!.vegetarian.id).toBe('chickpea-and-apricot-stew-with-pasta');
+    expect(slots!.soup.id).toBe('pike-fish-ball-soup');
+    expect(slots!.dessert.id).toBe('mango-and-pear-lassi');
+  });
+
+  it('uses sheet week metadata instead of a 3-week rotation', () => {
+    expect(getMenuCycleWeek(MENU_DATES.runtimeWednesday)).toBe(2);
+    const menu = resolveMenuForDate(MENU_DATES.runtimeMonday);
+    if (menu.status === 'available') {
+      expect(menu.menuCycleWeek).toBe(2);
+      expect(menu.menuCycleWeek).not.toBe(1);
+    }
+    expect(resolveMenuForDate(MENU_DATES.missingFromWorkbook).status).toBe('unavailable');
+  });
+
+  it('marks workbook CLOSED days as closed', () => {
+    expect(resolveMenuForDate(MENU_DATES.closedWorkbookDay)).toEqual({
+      status: 'closed',
+      reason: 'Canteen closed',
+    });
+    expect(resolveMealSlotsForDate(MENU_DATES.closedWorkbookDay)).toBeNull();
+  });
+
+  it('returns unavailable for dates missing from the workbook', () => {
+    expect(resolveMenuForDate(MENU_DATES.missingFromWorkbook)).toEqual({ status: 'unavailable' });
+    expect(resolveMealSlotsForDate(MENU_DATES.missingFromWorkbook)).toBeNull();
+  });
+
+  it('returns unavailable for weekends', () => {
+    expect(resolveMenuForDate(MENU_DATES.weekend)).toEqual({ status: 'unavailable' });
+  });
+
+  it('returns unavailable before and after the generated date range', () => {
+    const range = getGeneratedMenuDateRange();
+    expect(range.start).toBe(MENU_DATES.runtimeMonday);
+    expect(range.end).toBe('2026-11-20');
+    expect(resolveMenuForDate(MENU_DATES.beforeRange)).toEqual({ status: 'unavailable' });
+    expect(resolveMenuForDate(MENU_DATES.afterRange)).toEqual({ status: 'unavailable' });
+  });
+
+  it('exposes generated item IDs to GameBus studentLunchCheckin mapper', () => {
+    const slots = resolveMealSlotsForDate(MENU_DATES.runtimeWednesday)!;
+    const draft = {
+      mealChoice: 'regular' as const,
+      mainQuantity: 1,
+      vegetarianQuantity: 0,
+      soupQuantity: 0,
+      dessertQuantity: 0,
+    };
+    const message = buildActivityMessage(
+      pariStudentLunchTaskFixture,
+      {
+        studentId: 'demo',
+        lunchDate: MENU_DATES.runtimeWednesday,
+        menuCycleWeek: 2,
+        menuVersion: 'test',
+        mealChoice: 'regular',
+        regularMainSelected: true,
+        regularVegetarianSelected: false,
+        noLunch: false,
+        selections: [],
+        timingStatus: 'on-time',
+        basePoints: 20,
+        timingAdjustment: 5,
+        totalPoints: 25,
+        submittedAt: '2026-02-03T12:00:00.000Z',
+        updatedAt: '2026-02-03T12:00:00.000Z',
+        includeInForecast: true,
+      },
+      draft,
+      slots,
+    );
+    const mainProp = message.data.properties.find((p) => p.template === 'mainItemId');
+    expect(mainProp?.obj).toEqual({ value: slots.main.id });
+  });
+
+  it('resolves every catalogue item with image paths', () => {
+    for (const item of Object.values(foodCatalogue)) {
+      expect(item.image.length).toBeGreaterThan(0);
+      expect(item.imagePlaceholder?.length).toBeGreaterThan(0);
+      expect(item.imageDedicated?.length).toBeGreaterThan(0);
+    }
+  });
+
+  it('detects missing catalogue IDs', () => {
+    expect(findMissingCatalogueIds(['chicken-steak-with-pesto-sauce-and-pasta', 'missing'])).toEqual([
+      'missing',
+    ]);
+  });
+});
+
+describe('menu overrides with generated catalogue', () => {
   it('marks a closed-date override as closed', () => {
-    expect(resolveMenuForDate(ROTATION_DATES.closedOverride)).toEqual({
+    expect(resolveMenuForDate(MENU_DATES.closedOverride)).toEqual({
       status: 'closed',
       reason: 'Public holiday',
     });
   });
 
-  it('prevents normal menu rendering on a closed override date', () => {
-    const menu = resolveMenuForDate(ROTATION_DATES.closedOverride);
-    expect(menu.status).not.toBe('available');
-  });
-
-  it('applies an override only to its exact date', () => {
-    expect(resolveMenuForDate(ROTATION_DATES.replaceOverrideNormalDay).status).toBe('available');
-    expect(resolveMenuForDate(ROTATION_DATES.replaceOverride).status).toBe('available');
-    expect(resolveMenuForDate(ROTATION_DATES.replaceOverrideAfterDay).status).toBe('available');
-  });
-
-  it('resumes the normal rotating menu after an override date', () => {
-    const after = resolveMenuForDate(ROTATION_DATES.replaceOverrideAfterDay);
-    expect(after.status).toBe('available');
-    if (after.status === 'available') {
-      expect(after.dailyMenuId).not.toContain('override-');
+  it('uses a replacement override instead of the generated daily menu', () => {
+    const normal = resolveMenuForDate(MENU_DATES.replaceOverrideNormalDay);
+    const overridden = resolveMenuForDate(MENU_DATES.replaceOverride);
+    expect(normal.status).toBe('available');
+    expect(overridden.status).toBe('available');
+    if (normal.status === 'available' && overridden.status === 'available') {
+      expect(overridden.dailyMenuId).toBe(`override-${MENU_DATES.replaceOverride}`);
+      expect(overridden.items.map((item) => item.id)).not.toEqual(normal.items.map((item) => item.id));
+      expect(overridden.items[0]?.id).toBe('thai-pork-meatballs-with-rice');
     }
-  });
-
-  it('reports invalid override item IDs through missing-ID detection', () => {
-    expect(findMissingCatalogueIds(['invalid-override-item'])).toEqual(['invalid-override-item']);
   });
 
   it('preserves the optional closure reason', () => {
-    expect(getOverrideReason(ROTATION_DATES.closedOverride)).toBe('Public holiday');
+    expect(getOverrideReason(MENU_DATES.closedOverride)).toBe('Public holiday');
   });
 });
 
-describe('daily menu integrity', () => {
-  const catalogue = getDailyMenuCatalogue();
-
-  it('defines exactly 15 complete daily menus', () => {
-    expect(catalogue).toHaveLength(15);
-  });
-
-  it('includes Monday through Friday for each cycle week', () => {
-    for (const week of [1, 2, 3] as const) {
-      const weekdays = catalogue.filter((menu) => menu.week === week).map((menu) => menu.weekday);
-      expect(weekdays.sort()).toEqual(['friday', 'monday', 'thursday', 'tuesday', 'wednesday']);
-    }
-  });
-
-  it('uses stable unique daily-menu IDs', () => {
-    const ids = catalogue.map((menu) => menu.id);
-    expect(new Set(ids).size).toBe(15);
-  });
-
-  it('includes all four section arrays on every daily menu', () => {
-    for (const dailyMenu of catalogue) {
-      for (const section of SECTION_KEYS) {
-        expect(Array.isArray(dailyMenu[section])).toBe(true);
-        expect(dailyMenu[section].length).toBeGreaterThan(0);
-      }
-    }
-  });
-
-  it('does not treat section headings as selectable item IDs', () => {
-    const invalidHeadingIds = ['Vegetarian Lunch', 'Classic Lunch', 'Soups', 'Desserts'];
-    expect(findMissingCatalogueIds(invalidHeadingIds)).toEqual(invalidHeadingIds);
-  });
-
-  it('avoids duplicate item IDs within the same section', () => {
-    for (const dailyMenu of catalogue) {
-      for (const section of SECTION_KEYS) {
-        expect(new Set(dailyMenu[section]).size).toBe(dailyMenu[section].length);
-      }
-    }
-  });
-
-  it('references only catalogue items with positive quantities and units', () => {
-    for (const dailyMenu of catalogue) {
-      for (const itemId of dailyMenuItemIds(dailyMenu)) {
-        const item = foodCatalogue[itemId];
-        expect(item).toBeDefined();
-        expect(item.maxQuantity).toBeGreaterThan(0);
-        expect(item.unit.length).toBeGreaterThan(0);
-        expect(item.image.length).toBeGreaterThan(0);
-      }
-    }
+describe('generated daily menu integrity', () => {
+  it('defines one record per workbook lunch day', () => {
+    expect(getAllGeneratedDailyMenus().length).toBeGreaterThan(0);
   });
 });

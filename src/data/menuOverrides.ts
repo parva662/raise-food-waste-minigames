@@ -15,21 +15,21 @@ export interface MenuOverrideClosed {
 
 export type MenuOverride = MenuOverrideReplace | MenuOverrideClosed;
 
-/** Date-specific menu overrides take priority over the rotating schedule. */
+/** Date-specific menu overrides take priority over generated dated menus (runtime-shifted dates). */
 export const menuOverrides: MenuOverride[] = [
   {
     type: 'closed',
-    lunchDate: '2026-02-23',
+    lunchDate: '2026-08-17',
     reason: 'Public holiday',
   },
   {
     type: 'replace',
-    lunchDate: '2026-03-15',
+    lunchDate: '2026-09-15',
     menu: {
-      vegetarian: ['pasta-primavera', 'roasted-vegetables'],
-      classic: ['grilled-chicken', 'meatballs'],
-      soups: ['tomato-soup', 'mushroom-soup'],
-      desserts: ['yogurt-berries', 'chocolate-cake'],
+      classic: ['thai-pork-meatballs-with-rice'],
+      vegetarian: ['quorn-and-mushroom-stew'],
+      soups: ['pumpkin-soup'],
+      desserts: ['apple-compote'],
     },
     reason: 'Special themed lunch day',
   },

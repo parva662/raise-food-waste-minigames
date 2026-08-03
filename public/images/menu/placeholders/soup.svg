@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="400" height="240" viewBox="0 0 400 240" role="img" aria-label="Soup placeholder">
+  <rect width="400" height="240" fill="#e8eef5"/>
+  <ellipse cx="200" cy="140" rx="120" ry="40" fill="#c5d4e8"/>
+  <rect x="120" y="72" width="160" height="96" rx="48" fill="#9eb8d9"/>
+  <text x="200" y="210" text-anchor="middle" font-family="system-ui,sans-serif" font-size="14" fill="#5a6d85">Soup</text>
+</svg>

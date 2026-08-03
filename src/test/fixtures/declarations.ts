@@ -22,7 +22,7 @@ export function createFixtureDeclaration(
   return {
     studentId: CANTEEN_CONFIG.studentId,
     lunchDate: FIXTURE_LUNCH_DATE,
-    menuCycleWeek: 1,
+    menuCycleWeek: 2,
     menuVersion: CANTEEN_CONFIG.menuVersion,
     mealChoice: 'regular',
     regularMainSelected: true,

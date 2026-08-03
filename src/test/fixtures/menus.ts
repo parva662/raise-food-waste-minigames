@@ -1,4 +1,4 @@
-import { resolveMenuForDate, getDailyMenuCatalogue } from '../../services/menuResolver';
+import { resolveMenuForDate } from '../../services/menuResolver';
 import { FIXTURE_LUNCH_DATE } from './dates';
 
 export function getFixtureMenuItems() {
@@ -7,10 +7,6 @@ export function getFixtureMenuItems() {
     throw new Error('Expected fixture lunch date to have an available menu');
   }
   return menu.items;
-}
-
-export function getFixtureDailyMenuCatalogue() {
-  return getDailyMenuCatalogue();
 }
 
 export const SECTION_KEYS = ['vegetarian', 'classic', 'soups', 'desserts'] as const;
