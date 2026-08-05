@@ -10,26 +10,7 @@ import {
   propertyRefsForStudentLunchActivity,
   STUDENT_LUNCH_CHECKIN_REF,
 } from './resolveActivityProperties';
-
-export function selectActivityTemplate(task: TaskData): {
-  reference: string;
-  name: string | null;
-} {
-  const templates = task.activityTemplates ?? [];
-  if (templates.length === 0) {
-    throw new Error('TASK has no activityTemplates');
-  }
-
-  const activity = templates.find((t) => t.reference === STUDENT_LUNCH_CHECKIN_REF);
-  if (!activity) {
-    const found = templates.map((t) => t.reference).join(', ');
-    throw new Error(
-      `TASK has no supported lunch activity template (expected ${STUDENT_LUNCH_CHECKIN_REF}). Found: ${found || '(none)'}`,
-    );
-  }
-
-  return { reference: activity.reference, name: activity.name };
-}
+import { selectActivityTemplate } from './selectActivityTemplate';
 
 export function buildActivityMessage(
   task: TaskData,
@@ -37,7 +18,7 @@ export function buildActivityMessage(
   draft: MealDraft,
   slots: DailyMealSlots,
 ): ActivityMessage {
-  const { reference: templateRef } = selectActivityTemplate(task);
+  const { reference: templateRef } = selectActivityTemplate(task, STUDENT_LUNCH_CHECKIN_REF);
   assertStudentLunchCheckinActivity(task, templateRef);
 
   const propertyRefs = propertyRefsForStudentLunchActivity(task, draft);

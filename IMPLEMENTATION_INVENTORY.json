@@ -1,8 +1,20 @@
 {
   "framework": "React 19 + Vite 6 + TypeScript 5.8 (package.json, src/main.tsx)",
-  "routes": [],
+  "routes": [
+    "/ (student lunch declaration — default)",
+    "#/chef (chef kitchen forecast)"
+  ],
   "components": [
     "src/App.tsx",
+    "src/AppRouter.tsx",
+    "src/chef/ChefApp.tsx",
+    "src/chef/components/ChefForecastCard.tsx",
+    "src/chef/components/ChefForecastHeader.tsx",
+    "src/chef/components/ChefForecastSummary.tsx",
+    "src/chef/components/ChefExpectedCustomersField.tsx",
+    "src/chef/components/ChefAdditionalContext.tsx",
+    "src/chef/components/ChefIntegerInput.tsx",
+    "src/chef/components/ChefSubmitPanel.tsx",
     "src/components/GameStatusHeader.tsx",
     "src/components/MealSection.tsx",
     "src/components/RegularLunchPanel.tsx",
@@ -17,6 +29,14 @@
     "src/components/SubmissionRulesMessage.tsx",
     "src/components/SubmissionStatusPanel.tsx",
     "src/components/MenuStatusBanner.tsx"
+  ],
+  "chefDomain": [
+    "src/chef/types.ts",
+    "src/chef/validation.ts",
+    "src/chef/optionalFields.ts",
+    "src/chef/chefSubmissionWindow.ts",
+    "src/chef/chefSummary.ts",
+    "src/chef/useChefForecast.ts"
   ],
   "domainTypes": [
     "src/types/declaration.ts",
@@ -33,11 +53,17 @@
   "gamebus": [
     "src/gamebus/bridge.ts",
     "src/gamebus/buildActivityMessage.ts",
+    "src/gamebus/buildChefActivityMessage.ts",
     "src/gamebus/mapStudentLunchCheckin.ts",
+    "src/gamebus/mapChefForecast.ts",
+    "src/gamebus/resolveChefForecastProperties.ts",
+    "src/gamebus/selectActivityTemplate.ts",
+    "src/gamebus/appMode.ts",
     "src/gamebus/propertySchemas.ts",
     "src/gamebus/resolveActivityProperties.ts",
     "src/gamebus/useGameBusEmbed.ts",
-    "src/gamebus/taskFixtures.ts"
+    "src/gamebus/taskFixtures.ts",
+    "src/gamebus/chefTaskFixtures.ts"
   ],
   "menuPipeline": [
     "scripts/menu/workbook.ts",
@@ -82,6 +108,7 @@
   ],
   "configuration": [
     "src/config/canteen.ts",
+    "src/config/chef.ts",
     "src/data/foodCatalogue.ts",
     "src/data/menuSchedule.ts",
     "src/data/menuOverrides.ts",
@@ -96,6 +123,8 @@
     "SPEC.md",
     "IMPLEMENTATION_INVENTORY.json",
     "GAMEBUS_LUNCH_CONTRACT.md",
+    "GAMEBUS_CHEF_FORECAST_CONTRACT.md",
+    "RAISE_BARLAUREA_STUDY_AND_SYSTEM_MASTER_PLAN.md",
     "NEXT_STEPS.md"
   ],
   "tests": [
@@ -111,10 +140,15 @@
     "src/utils/menuItemImage.test.tsx",
     "src/hooks/useLunchSelection.test.tsx",
     "src/components/lunchComponents.test.tsx",
+    "src/chef/chefRoute.test.tsx",
+    "src/chef/chefAvailability.test.tsx",
+    "src/chef/chefUx.test.tsx",
+    "src/chef/optionalFields.test.ts",
     "src/gamebus/gamebus.test.ts",
     "src/gamebus/handshake.test.ts",
     "src/gamebus/resolveActivityProperties.test.ts",
     "src/gamebus/mapStudentLunchCheckin.test.ts",
+    "src/gamebus/mapChefForecast.test.ts",
     "scripts/menu/menuPipeline.test.ts",
     "src/test/setup.ts",
     "src/test/fixtures/dates.ts",
@@ -123,35 +157,41 @@
     "src/test/fixtures/menus.ts"
   ],
   "testCounts": {
-    "totalTests": "see npm run test:run",
-    "testFiles": 18
+    "totalTests": 222,
+    "testFiles": 25
   },
   "confirmedFeatures": [
+    "Student lunch declaration (default route)",
+    "Chef kitchen forecast (#/chef route)",
+    "Chef forecast: expected customers and menu quantities are independent forecasts (no cross-field comparison in UI)",
     "Three always-visible meal sections: Regular lunch, Soup lunch, No lunch",
     "Single active section; switching clears other sections quantities",
     "Portion quantities for main, vegetarian, soup, dessert (0 = not selected)",
     "Tomorrow lunch date targeting",
     "Dated Excel menu (calendar lookup, four slots per day)",
     "Europe/Helsinki submission window (18:00 on-time, 23:00 late close)",
-    "Points 20 base +5 on-time / -5 late (25 / 15 total)",
+    "Chef forecast deadline configurable in src/config/chef.ts (default 23:00)",
+    "Points 20 base +5 on-time / -5 late (25 / 15 total) — student only",
     "One final submit per date; no update flow in UI",
-    "localStorage persistence for standalone demo",
+    "localStorage persistence for standalone student demo",
     "GitHub Pages build base /raise-food-waste-minigames/",
-    "GameBus embed ACTIVITY for studentLunchCheckin (twelve-property quantity-aware mapper)",
+    "GameBus embed ACTIVITY for studentLunchCheckin (twelve-property mapper)",
+    "GameBus embed ACTIVITY for chefForecast (twelve required + two optional property mapper)",
     "Category placeholder images with optional dedicated public/images/menu/items/*.webp",
     "Excel menu inspect/convert/check CLI",
-    "CI: Node 20, tsc, vitest (136 tests), build"
+    "CI: Node 20, tsc, vitest (219 tests), build"
   ],
   "provisionalFeatures": [
     "Hardcoded studentId demo-student-001 (local declaration only; not on ACTIVITY)",
-    "LocalStorageDeclarationRepository for standalone mode",
+    "LocalStorageDeclarationRepository for standalone student mode",
     "includeInForecast always true with no downstream consumer",
     "Legacy menuSchedule.ts retained but not used at runtime"
   ],
   "unknowns": [
-    "Live GameBus studentLunchCheckin admin migration to twelve properties and ingest verification",
-    "Optional item-ID property omission accepted by GameBus ingest",
-    "Participant association without actors/studentId on ACTIVITY",
+    "Live GameBus studentLunchCheckin admin migration to twelve properties",
+    "Live GameBus chefForecast admin migration (fourteen links; create forecastDessert only if missing)",
+    "Optional item-ID property omission accepted by GameBus ingest (student only)",
+    "Participant association without actors/studentId/chefId on ACTIVITY",
     "Production embed URL and postMessage origin allowlist"
   ]
 }

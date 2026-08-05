@@ -1,16 +1,44 @@
 # Next steps — GameBus integration
 
-**Single workflow:** activity template **`studentLunchCheckin`** (existing reference retained) with **twelve** quantity-aware properties.
+**Student workflow:** activity template **`studentLunchCheckin`** (twelve quantity-aware properties).  
+**Chef workflow:** activity template **`chefForecast`** (twelve required properties + two optional links — mapper implemented in repo).
 
-**References:** [`GAMEBUS_LUNCH_CONTRACT.md`](./GAMEBUS_LUNCH_CONTRACT.md), [`SPEC.md`](./SPEC.md), `src/gamebus/propertySchemas.ts`, Louar `gamebus-minigame-demo` (`schemas.ts`, `embed/task`).
+**References:** [`GAMEBUS_LUNCH_CONTRACT.md`](./GAMEBUS_LUNCH_CONTRACT.md), [`GAMEBUS_CHEF_FORECAST_CONTRACT.md`](./GAMEBUS_CHEF_FORECAST_CONTRACT.md), [`RAISE_BARLAUREA_STUDY_AND_SYSTEM_MASTER_PLAN.md`](./RAISE_BARLAUREA_STUDY_AND_SYSTEM_MASTER_PLAN.md), [`SPEC.md`](./SPEC.md).
 
-**Participant model:** Embedded submit does **not** send `studentId` on ACTIVITY; persistence must bind to the **authenticated GameBus user** (verify after admin migration). `CANTEEN_CONFIG.studentId` is used by the local declaration model and standalone storage only. Do not add `actors` unless participant association verification fails.
+**Participant model:** Embedded submit does **not** send `studentId` or `chefId` on ACTIVITY; persistence must bind to the **authenticated GameBus user**.
 
-**Do not create** `studentLunchCheckinV2` or relink Pari in this phase.
+**Do not create** `studentLunchCheckinV2`, `chefForecastV2`, or relink embedded tasks in this phase.
 
 ---
 
-## Final `studentLunchCheckin` property set (repo mapper ready)
+## Chef `chefForecast` — repo mapper ready
+
+| Property | Activity link | Notes |
+|----------|---------------|-------|
+| `targetDate` | required | reuse |
+| `forecastTotalCustomers` | required | reuse (expected customers) |
+| `mainItemId` | required | reuse global + link |
+| `forecastMeat` | required | reuse (main quantity) |
+| `vegetarianItemId` | required | reuse global + link |
+| `forecastVegetarian` | required | reuse |
+| `soupItemId` | required | reuse global + link |
+| `forecastSoup` | required | reuse |
+| `dessertItemId` | required | reuse global + link |
+| `forecastDessert` | required | **create** new template |
+| `timingStatus` | required | reuse global + link |
+| `submittedAt` | required | reuse global + link |
+| `confidence` | **optional link** | **keep linked** — omit from payload when unanswered |
+| `notes` | **optional link** | **keep linked** — omit from payload when empty |
+
+**Research value:** `confidence` supports perceived vs actual forecast accuracy; `notes` preserve context for unusual service days and FAIR metadata.
+
+Full YAML schemas: `GAMEBUS_CHEF_FORECAST_CONTRACT.md`, `src/gamebus/propertySchemas.ts`.
+
+Chef embed URL: `https://parva662.github.io/raise-food-waste-minigames/#/chef`
+
+---
+
+## Student `studentLunchCheckin` — repo mapper ready
 
 | Property | Activity link | JSON Schema (`obj.value`) |
 |----------|---------------|---------------------------|
@@ -56,28 +84,39 @@ Full JSON Schemas and examples: `src/gamebus/propertySchemas.ts`.
 
 ## Roadmap (ordered)
 
-1. Create or update **property templates** in GameBus admin (one step at a time; schemas in `propertySchemas.ts`).
-2. Update **`studentLunchCheckin`** activity-template property links (8 required + 4 optional item IDs).
+### Chef forecast (manual admin)
+
+1. Create **`forecastDessert`** property template in GameBus admin **only if missing**.
+2. Link item IDs, `timingStatus`, `submittedAt`, `forecastDessert` on **`chefForecast`** (verify existing links).
+3. **Keep** `confidence` and `notes` linked as **optional** activity properties.
+4. Create embedded task pointing to `#/chef` URL.
+5. Verify ingest, participant association, duplicate behaviour, modal closure.
+
+### Student lunch (manual admin)
+
+1. Create or update **property templates** in GameBus admin (schemas in `propertySchemas.ts`).
+2. Update **`studentLunchCheckin`** activity-template property links.
 3. Confirm optional item-ID **omission**, enum behaviour, and schema validation on ingest.
-4. **Test Pari** embedded task against migrated template (no relink if reference unchanged).
-5. Verify stored values and **logged-in participant** association (no `studentId` on ACTIVITY).
-6. Verify duplicate behaviour and modal closure.
-7. Production hardening (origins, iframe, repeat access, mobile, deploy, recovery).
+4. **Test Pari** embedded task against migrated template.
+5. Verify stored values and **logged-in participant** association.
+6. Production hardening (origins, iframe, mobile, deploy).
 
 ## Completed in repo (do not regress)
 
-- Single embed mapper: `src/gamebus/mapStudentLunchCheckin.ts` → `studentLunchCheckin` only.
+- Student embed mapper: `src/gamebus/mapStudentLunchCheckin.ts` → `studentLunchCheckin`.
+- **Chef forecast:** `src/chef/*`, `src/gamebus/mapChefForecast.ts`, route `#/chef`.
 - Pari iframe on GitHub Pages + `providerPari` origin (admin).
 - Node **Excel → JSON** conversion (`scripts/menu/`, `generated-data/menu/`).
-- **Runtime dated menu** from `src/data/generated/` (synced by `menu:convert`); +175 day date shift unchanged.
+- **Runtime dated menu** from `src/data/generated/`; +175 day date shift unchanged.
 - **Category placeholder images** (`public/images/menu/placeholders/`).
 
 ## Still pending (manual / live)
 
-- GameBus admin: migrate `studentLunchCheckin` to the twelve-property set (live template still has seven legacy properties).
-- Participant association without `studentId` on ACTIVITY (verify on test env).
+- GameBus admin: migrate `studentLunchCheckin` to twelve properties.
+- GameBus admin: migrate `chefForecast` to fourteen links (12 required + 2 optional; create `forecastDessert` only if missing).
+- Participant association without `studentId`/`chefId` on ACTIVITY (verify on test env).
 - Real food photography (`public/images/menu/items/<id>.webp`).
 
 ## Out of scope this phase
 
-- Commit; deploy; relink `embedded-task-Pari`; create `studentLunchCheckinV2`; delete existing GameBus property templates.
+- Commit; deploy; actual-waste import; result/badge calculation; dashboards; delete existing GameBus property templates.

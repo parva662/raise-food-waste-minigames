@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
-import { buildActivityMessage, selectActivityTemplate } from './buildActivityMessage';
+import { buildActivityMessage } from './buildActivityMessage';
 import { mapStudentLunchCheckin } from './mapStudentLunchCheckin';
+import { selectActivityTemplate } from './selectActivityTemplate';
 import type { ActiveDeclaration } from '../types/declaration';
 import type { DailyMealSlots, MealDraft } from '../types/mealChoice';
 import { CANTEEN_CONFIG } from '../config/canteen';

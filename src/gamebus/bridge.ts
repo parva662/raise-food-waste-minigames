@@ -1,10 +1,14 @@
-import { buildActivityMessage, selectActivityTemplate } from './buildActivityMessage';
+import { buildActivityMessage } from './buildActivityMessage';
+import { buildChefActivityMessage } from './buildChefActivityMessage';
+import { getExpectedActivityRef } from './appMode';
 import { isGameBusEmbed } from './detectEmbed';
 import { gamebusDevLog } from './devLog';
 import { logTaskStructureSanitized } from './logTaskStructure';
+import { selectActivityTemplate } from './selectActivityTemplate';
 import type { ActivityMessage, TaskData, TaskMessage } from './types';
 import type { ActiveDeclaration } from '../types/declaration';
 import type { DailyMealSlots, MealDraft } from '../types/mealChoice';
+import type { ChefForecastDraft, ChefForecastSubmission } from '../chef/types';
 
 const HANDSHAKE_RETRY_MS = 875;
 
@@ -53,7 +57,8 @@ function sendIframeReadyAttempt(): void {
 function acceptTaskFromParent(data: TaskData): void {
   taskData = data;
   logTaskStructureSanitized(taskData);
-  const selected = selectActivityTemplate(taskData);
+  const expectedRef = getExpectedActivityRef();
+  const selected = selectActivityTemplate(taskData, expectedRef);
   gamebusDevLog('TASK received', {
     taskId: taskData.id,
     activityTemplate: selected.reference,
@@ -192,6 +197,44 @@ export function tryPostActivity(
   submissionInFlight = true;
   try {
     const message = buildActivityMessage(taskData, declaration, draft, slots);
+    window.parent.postMessage(message, '*');
+    hasPostedActivity = true;
+    gamebusDevLog('ACTIVITY sent', {
+      type: message.type,
+      template: message.data.template,
+      propertyCount: message.data.properties.length,
+    });
+    return { ok: true, message };
+  } catch (error) {
+    return {
+      ok: false,
+      reason: error instanceof Error ? error.message : 'build_failed',
+    };
+  } finally {
+    submissionInFlight = false;
+  }
+}
+
+export function tryPostChefActivity(
+  submission: ChefForecastSubmission,
+  draft: ChefForecastDraft,
+  slots: DailyMealSlots,
+): { ok: true; message: ActivityMessage } | { ok: false; reason: string } {
+  if (hasPostedActivity) {
+    gamebusDevLog('submission blocked as duplicate');
+    return { ok: false, reason: 'duplicate' };
+  }
+  if (submissionInFlight) {
+    gamebusDevLog('submission blocked as duplicate');
+    return { ok: false, reason: 'in_flight' };
+  }
+  if (!taskData) {
+    return { ok: false, reason: 'no_task' };
+  }
+
+  submissionInFlight = true;
+  try {
+    const message = buildChefActivityMessage(taskData, submission, draft, slots);
     window.parent.postMessage(message, '*');
     hasPostedActivity = true;
     gamebusDevLog('ACTIVITY sent', {

@@ -102,15 +102,16 @@ Lunch date: **tomorrow** via `getTomorrowIsoDate()` (`src/utils/dates.ts`) — b
 
 | Layer | Location |
 |-------|----------|
-| UI | `src/App.tsx`, `src/components/*` |
-| State | `useReducer` in `src/hooks/useLunchSelection.ts` |
+| UI | `src/App.tsx`, `src/AppRouter.tsx`, `src/chef/*`, `src/components/*` |
+| State | `useReducer` in `src/hooks/useLunchSelection.ts`, `src/chef/useChefForecast.ts` |
 | Menu | `menuResolver.ts`, `mealSlots.ts`, `src/data/generated/*`, `generatedMenuData.ts` |
-| Rules | `mealChoice.ts`, `mealDraftActions.ts`, `declarationSelection.ts` |
+| Rules | `mealChoice.ts`, `mealDraftActions.ts`, `declarationSelection.ts`, `src/chef/validation.ts` |
 | Persistence | `DeclarationRepository` + `LocalStorageDeclarationRepository` |
-| Config | `src/config/canteen.ts` |
+| Config | `src/config/canteen.ts`, `src/config/chef.ts` |
+| GameBus | `src/gamebus/mapStudentLunchCheckin.ts`, `src/gamebus/mapChefForecast.ts` |
 | Styles | `src/styles.css` |
 
-No client-side routing (single SPA).
+Routing: student default at `/`; chef forecast at `#/chef`.
 
 ---
 
@@ -134,19 +135,31 @@ No client-side routing (single SPA).
 
 ## 7. Tests
 
-**Coverage includes** GameBus `studentLunchCheckin` ACTIVITY mapping (twelve properties), dated menu resolution, placeholder images, menu workbook pipeline, meal slots, submission window, meal draft actions, declaration build, hook submit/lock behavior, and key UI strings. Run `npm run test:run` for the current count.
+**Coverage includes** GameBus `studentLunchCheckin` and `chefForecast` ACTIVITY mapping, chef route, dated menu resolution, placeholder images, menu workbook pipeline, meal slots, submission windows, and key UI strings. Run `npm run test:run` for the current count (219 tests).
 
 ---
 
-## 8. Out of scope (this repo)
+## 8. Out of scope (later phases)
 
-- Chef forecast, waste, production activities (separate GameBus templates exist in test env only)
-- GameBus iframe bridge (`studentLunchCheckin` mapper; live admin migration pending)
+- Actual-waste import, forecast-result calculations, badges, leaderboards, dashboards
+- Live GameBus admin migration (manual; see contract docs)
 - Authentication / real student identity (demo `studentId` only; not sent on embedded ACTIVITY)
 - Dedicated food photography (`public/images/menu/items/*.webp`)
 
 ---
 
-## 9. Migration notes (historical)
+## 9. Chef kitchen forecast (`#/chef`)
+
+- **Route:** `#/chef` — `https://parva662.github.io/raise-food-waste-minigames/#/chef`
+- **Activity:** `chefForecast` only (mapper in `src/gamebus/mapChefForecast.ts`)
+- **Properties:** twelve always sent; `confidence` and `notes` optional in payload when entered (keep linked in GameBus)
+- **Input model:** all five numeric fields start blank (unanswered); explicit `0` is intentional zero; all five required before submit; confidence uses five labeled options mapped to 0–1; no auto-distribution of portions
+- **Forecast semantics:** `forecastTotalCustomers` is a headcount forecast; each menu quantity (`forecastMeat`, `forecastVegetarian`, `forecastSoup`, `forecastDessert`) is an independent category forecast. One customer may correspond to multiple prepared portions or menu items (e.g. main plus soup, meal plus dessert). The chef UI does **not** compare or force equality between expected customers and menu quantities. Later analysis compares each forecast with its matching actual value; waste is handled separately.
+- **Contract:** [`GAMEBUS_CHEF_FORECAST_CONTRACT.md`](./GAMEBUS_CHEF_FORECAST_CONTRACT.md)
+- **Master plan:** [`RAISE_BARLAUREA_STUDY_AND_SYSTEM_MASTER_PLAN.md`](./RAISE_BARLAUREA_STUDY_AND_SYSTEM_MASTER_PLAN.md)
+
+---
+
+## 10. Migration notes (historical)
 
 Earlier revisions used four menu grids with per-item quantities across all categories and an **update** flow. The current product uses **three sections**, **mealChoice**, and **one-shot submit** only. Do not reintroduce update or `SILENT_ACTIVITY` without an explicit product change.
