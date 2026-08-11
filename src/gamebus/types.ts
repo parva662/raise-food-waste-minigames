@@ -78,4 +78,12 @@ export type TaskMessage = {
   data: TaskData;
 };
 
-export type ParentToChildMessage = TaskMessage | { type: 'INPUT_COLLECTIONS'; data?: unknown };
+/** Raw parent payload — structure preserved until inspected from live GameBus. */
+export type GameBusInputCollectionsPayload = Record<string, unknown>;
+
+export type InputCollectionsMessage = {
+  type: 'INPUT_COLLECTIONS';
+  data?: GameBusInputCollectionsPayload;
+};
+
+export type ParentToChildMessage = TaskMessage | InputCollectionsMessage;

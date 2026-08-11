@@ -4,6 +4,7 @@ import { isChefForecastComplete } from '../chef/types';
 import type { ActivityMessage, TaskData } from './types';
 import { CHEF_ACTIVITY_REF } from './appMode';
 import {
+  CHEF_FORECAST_REQUIRED_REFS,
   mapChefForecastOptional,
   mapChefForecastRequired,
   type ChefForecastPropertyRef,
@@ -34,10 +35,24 @@ export function buildChefActivityMessage(
   const start = new Date(submission.submittedAt);
   const end = new Date(start.getTime() + 60_000);
 
-  const properties = propertyRefs.map((ref) => ({
-    template: ref,
-    obj: values[ref as ChefForecastPropertyRef] as Record<string, unknown>,
-  }));
+  const properties = propertyRefs.map((ref) => {
+    const obj = values[ref as ChefForecastPropertyRef];
+    if (obj === undefined) {
+      throw new Error(`Missing chefForecast value for property "${ref}"`);
+    }
+    return {
+      template: ref,
+      obj: obj as Record<string, unknown>,
+    };
+  });
+
+  const templates = properties.map((property) => property.template);
+  const missingRequired = CHEF_FORECAST_REQUIRED_REFS.filter((ref) => !templates.includes(ref));
+  if (missingRequired.length > 0) {
+    throw new Error(
+      `chefForecast ACTIVITY missing required properties: ${missingRequired.join(', ')}`,
+    );
+  }
 
   return {
     type: 'ACTIVITY',

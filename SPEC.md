@@ -160,6 +160,23 @@ Routing: student default at `/`; chef forecast at `#/chef`.
 
 ---
 
-## 10. Migration notes (historical)
+## 10. Service closeout (`#/service-closeout`)
+
+- **Route:** `#/service-closeout`
+- **Purpose:** Operational data entry for **today's** lunch service (not a dashboard).
+- **Service date:** current calendar date (`getTodayIsoDate()`); same menu resolver and item IDs as student/chef apps.
+- **Submitted forecast (read-only):** when embedded in GameBus, inbound `INPUT_COLLECTIONS` → `serviceCloseoutInput.chefForecasts` (legacy `serviceCloseoutInputs` accepted) provides the authenticated user's `chefForecast` activities.
+- **Inputs:** actual customers; head chef for the day (fixture `headChefUserId` in dev); per category — prepared portions, read-only standard portion weight (grams, from reference provider), overproduction waste (**entered in grams**).
+- **Domain model:** `ServiceCloseout` (application field names; overproduction in grams). Optional `NormalizedServiceCloseout` adds `overproductionKg` per category (`normalizeCloseoutKg()`).
+- **GameBus:** outbound **`wasteMeasurement`** ACTIVITY on Finalize (embed mode) — see [`GAMEBUS_SERVICE_CLOSEOUT_CONTRACT.md`](./GAMEBUS_SERVICE_CLOSEOUT_CONTRACT.md). Inbound forecast via `serviceCloseoutInput.chefForecasts`. One Finalize posts exactly one ACTIVITY; iframe closes via normal GameBus behaviour.
+- **Validation:** overproduction grams ≤ prepared quantity × portion weight; prepared 0 requires waste 0.
+- **State:** draft → ready → finalized (session-local in standalone; embed posts `wasteMeasurement` then relies on GameBus to close iframe).
+- **Fixtures:** development staff rotation and portion weights are **not study data** (`src/serviceCloseout/fixtures/`, `src/serviceCloseout/portionWeight/`).
+- **Future:** finalizing closeout will trigger per-user daily forecast evaluation; weekly results aggregate finalized daily results.
+- **Contract:** [`GAMEBUS_SERVICE_CLOSEOUT_CONTRACT.md`](./GAMEBUS_SERVICE_CLOSEOUT_CONTRACT.md)
+
+---
+
+## 11. Migration notes (historical)
 
 Earlier revisions used four menu grids with per-item quantities across all categories and an **update** flow. The current product uses **three sections**, **mealChoice**, and **one-shot submit** only. Do not reintroduce update or `SILENT_ACTIVITY` without an explicit product change.

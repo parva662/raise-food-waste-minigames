@@ -52,11 +52,22 @@ Chef form UX (repository): all five numeric fields start **blank** (unanswered);
 |------|--------|----------|
 | Student lunch declaration | `studentLunchCheckin` ACTIVITY | Research sample engagement |
 | Chef kitchen forecast | `chefForecast` ACTIVITY | Chef engagement + forecast record |
-| Whole-canteen actual portions served, production, waste | Client/API or import (later phase) | Operational comparison |
+| Whole-canteen actual portions served, production, waste | Service closeout UI (`#/service-closeout`) | Operational comparison (future) |
 
 **Chef forecast is compared with whole-canteen operational data**, not with student declarations.
 
-There is **no kitchen-operation game** in this phase. Actual operational and waste data arrive from the client/API or another import process.
+There is **no kitchen scoring or results dashboard** in this phase. Service closeout posts one `wasteMeasurement` ACTIVITY in embed mode (or finalizes locally in standalone). Actual operational comparison and individual daily results are a later calculation phase triggered by **Finalize service**.
+
+### 2.3 BarLaurea kitchen operations (closeout)
+
+- **One restaurant** (BarLaurea), **one lunch service per `targetDate`**.
+- Kitchen staff **rotate** across days; **head chef rotates** and is recorded on closeout as `headChefUserId` (not on `chefForecast`).
+- All participating staff use the same **`#/chef`** forecast game; the head chef also submits a personal forecast.
+- **One shared service closeout** per `targetDate` records actual customers, prepared portions, standard portion weights, and overproduction waste. UI entry for overproduction is **grams**; normalized representation may use **kg**.
+- **Submitted forecast (read-only):** closeout retrieves the authenticated user's `chefForecast` activities via GameBus Input Collection (`serviceCloseoutInput.chefForecasts`; legacy `serviceCloseoutInputs` accepted temporarily). `activity.actor` identifies the forecast owner. Forecast is matched by exact `targetDate` and shown read-only beside actual entry; actual production is entered separately.
+- **Finalize (embed):** one `wasteMeasurement` ACTIVITY per Finalize; iframe closes via normal GameBus behaviour. Waste UI uses grams; GameBus stores kg. Quantity properties are actual prepared portions. Portion weights are not persisted on the activity.
+- Main, Vegetarian, Soup, and Dessert remain **independent** categories.
+- Future individual daily results link **`userId` + `targetDate`**; weekly results aggregate finalized daily results (staff may participate on different days). **No team model.**
 
 ---
 
@@ -66,6 +77,7 @@ There is **no kitchen-operation game** in this phase. Actual operational and was
 |-------|-------------------|----------------|
 | `/` (default) | `studentLunchCheckin` | Implemented |
 | `#/chef` | `chefForecast` | Implemented (v1) |
+| `#/service-closeout` | `wasteMeasurement` | **Complete** (manually verified end-to-end) |
 
 Do **not** create `chefForecastV2` or `studentLunchCheckinV2`.
 
@@ -73,12 +85,12 @@ Do **not** create `chefForecastV2` or `studentLunchCheckinV2`.
 
 ## 5. Future result and badge boundary (not implemented)
 
-1. Chef submits `chefForecast`.
+1. Chef submits `chefForecast` (per participating user).
 2. Service happens.
-3. Client/API provides whole-canteen actual data.
-4. A small backend process compares each forecast property with its matching actual value (expected customers vs actual customers; each menu forecast vs actual quantity for that category). Waste is handled separately.
-5. The backend creates a derived **result** for the same target date and chef.
-6. GameBus awards an **individual badge** or achievement.
+3. Authorized staff **finalize service closeout** (`#/service-closeout`) — one record per `targetDate`.
+4. **Finalize service** triggers (future) daily calculation: each user's forecast vs shared actuals; waste handled separately.
+5. The backend creates a derived **result** per `userId` + `targetDate`.
+6. GameBus awards an **individual badge** or achievement (future).
 
 **Join keys** for the future result (schema not frozen in code):
 
@@ -91,22 +103,27 @@ Result is based on **actual canteen operational data**, not student declarations
 
 ---
 
-## 6. Technical boundaries (this phase)
+## 6. Technical boundaries
 
-**In scope (implemented):**
+**Completed in repository:**
 
-- Student lunch declaration (unchanged workflow).
-- Chef kitchen forecast minigame (`#/chef`).
-- Shared Excel→JSON menu pipeline and placeholder images.
-- GameBus ACTIVITY mappers for `studentLunchCheckin` and `chefForecast`.
+- Student lunch declaration (`studentLunchCheckin`).
+- Chef kitchen forecast minigame (`#/chef` → `chefForecast`).
+- **Service closeout** (`#/service-closeout`):
+  - reads `chefForecast` via Input Collection `serviceCloseoutInput` (legacy `serviceCloseoutInputs` alias);
+  - writes one `wasteMeasurement` ACTIVITY per Finalize;
+  - manually verified: real menu date, all item IDs, prepared quantities, kg waste conversion, `submittedAt`, authenticated actor, iframe close.
+- GameBus ACTIVITY mappers for `studentLunchCheckin`, `chefForecast`, and `wasteMeasurement`.
+- Contract: `GAMEBUS_SERVICE_CLOSEOUT_CONTRACT.md`.
+
+**Known non-blocking GameBus issue:** My Activities may display `overproductionDessertKg` with the wrong label (“Overproduction meat (kg)”) while persisting the correct dessert value. GameBus display/configuration investigation — not an application defect.
+
+**Next major phase (not started):** MULTI-USER / GAMEBUS PARTICIPANT ORGANIZATION AND VISIBILITY TESTING.
 
 **Out of scope (later phases):**
 
-- Actual-waste import.
-- Forecast-result calculations in this app.
-- Badges, leaderboards, dashboards.
+- Forecast-result calculations, scoring, badges, leaderboards, dashboards.
 - Live GameBus admin changes (manual migration plans documented separately).
-- Commit, push, deploy (per phase instructions).
 
 ---
 
@@ -115,4 +132,5 @@ Result is based on **actual canteen operational data**, not student declarations
 - [`SPEC.md`](./SPEC.md) — product specification.
 - [`GAMEBUS_LUNCH_CONTRACT.md`](./GAMEBUS_LUNCH_CONTRACT.md) — student activity contract.
 - [`GAMEBUS_CHEF_FORECAST_CONTRACT.md`](./GAMEBUS_CHEF_FORECAST_CONTRACT.md) — chef activity contract and admin migration.
+- [`GAMEBUS_SERVICE_CLOSEOUT_CONTRACT.md`](./GAMEBUS_SERVICE_CLOSEOUT_CONTRACT.md) — service closeout `wasteMeasurement` contract.
 - [`NEXT_STEPS.md`](./NEXT_STEPS.md) — ordered roadmap.

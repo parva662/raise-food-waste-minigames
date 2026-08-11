@@ -1,9 +1,11 @@
 import { useEffect, useSyncExternalStore } from 'react';
 import { isGameBusEmbed } from './detectEmbed';
 import {
+  getGameBusInputCollections,
   getGameBusTask,
   hasGameBusPostedActivity,
   startGameBusHandshake,
+  subscribeGameBusInputCollections,
   subscribeGameBusTask,
 } from './bridge';
 
@@ -15,9 +17,22 @@ function getTaskSnapshot() {
   return getGameBusTask();
 }
 
+function subscribeInputCollections(callback: () => void) {
+  return subscribeGameBusInputCollections(() => callback());
+}
+
+function getInputCollectionsSnapshot() {
+  return getGameBusInputCollections();
+}
+
 export function useGameBusEmbed() {
   const embedded = isGameBusEmbed();
   const task = useSyncExternalStore(subscribeTask, getTaskSnapshot, () => null);
+  const inputCollections = useSyncExternalStore(
+    subscribeInputCollections,
+    getInputCollectionsSnapshot,
+    () => null,
+  );
 
   useEffect(() => {
     if (!embedded) return;
@@ -28,6 +43,8 @@ export function useGameBusEmbed() {
     embedded,
     taskReady: task !== null,
     task,
+    inputCollectionsReady: inputCollections !== null,
+    inputCollections,
     hasPosted: hasGameBusPostedActivity(),
   };
 }

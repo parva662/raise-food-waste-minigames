@@ -59,3 +59,36 @@ export const pariChefForecastRequiredOnlyTaskFixture: TaskData = {
     },
   ],
 };
+
+const LEGACY_CHEF_LINKED_REFS = [
+  'targetDate',
+  'forecastTotalCustomers',
+  'mainItemId',
+  'forecastMeat',
+  'vegetarianItemId',
+  'forecastVegetarian',
+  'soupItemId',
+  'forecastSoup',
+  'submittedAt',
+  'confidence',
+  'notes',
+] as const;
+
+/**
+ * Runtime TASK before dessertItemId, forecastDessert, and timingStatus were linked.
+ * Used to prove ACTIVITY emission must not follow TASK linkedProperties alone.
+ */
+export const legacyChefForecastTaskFixture: TaskData = {
+  ...pariChefForecastTaskFixture,
+  activityTemplates: [
+    {
+      ...pariChefForecastTaskFixture.activityTemplates![0],
+      linkedProperties: LEGACY_CHEF_LINKED_REFS.map((ref, index) => ({
+        order: index + 1,
+        name: ref,
+        required: ref !== 'confidence' && ref !== 'notes',
+        ref,
+      })),
+    },
+  ],
+};

@@ -1,22 +1,25 @@
-import { useSyncExternalStore } from 'react';
+import { useEffect, useState } from 'react';
 import App from './App';
 import { ChefApp } from './chef/ChefApp';
+import { ServiceCloseoutApp } from './serviceCloseout/ServiceCloseoutApp';
 import { getAppMode, type AppMode } from './gamebus/appMode';
 
-function subscribeHash(callback: () => void) {
-  window.addEventListener('hashchange', callback);
-  return () => window.removeEventListener('hashchange', callback);
-}
-
-function getHashSnapshot(): AppMode {
-  return getAppMode();
-}
-
 export function AppRouter() {
-  const mode = useSyncExternalStore(subscribeHash, getHashSnapshot, () => 'student' as AppMode);
+  const [mode, setMode] = useState<AppMode>(() => getAppMode());
+
+  useEffect(() => {
+    const syncMode = () => setMode(getAppMode());
+    window.addEventListener('hashchange', syncMode);
+    syncMode();
+    return () => window.removeEventListener('hashchange', syncMode);
+  }, []);
 
   if (mode === 'chef') {
     return <ChefApp />;
+  }
+
+  if (mode === 'service-closeout') {
+    return <ServiceCloseoutApp />;
   }
 
   return <App />;

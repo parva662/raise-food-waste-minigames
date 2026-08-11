@@ -3,11 +3,35 @@ export { useGameBusEmbed } from './useGameBusEmbed';
 export {
   tryPostActivity,
   tryPostChefActivity,
+  tryPostCloseoutActivity,
   resetGameBusBridgeForTests,
   ingestTaskForTests,
+  ingestInputCollectionsForTests,
+  getGameBusInputCollections,
   startGameBusHandshake,
 } from './bridge';
+export {
+  getInputCollectionKeys,
+  getRawChefForecastsInput,
+  SERVICE_CLOSEOUT_CHEF_FORECASTS_REQUEST_KEY,
+  SERVICE_CLOSEOUT_INPUT_COLLECTION_KEY,
+  SERVICE_CLOSEOUT_INPUTS_COLLECTION_KEY,
+  SERVICE_CLOSEOUT_INPUTS_COLLECTION_KEY_LEGACY,
+} from './inputCollections';
 export { buildActivityMessage } from './buildActivityMessage';
 export { buildChefActivityMessage } from './buildChefActivityMessage';
-export { getAppMode, getExpectedActivityRef, CHEF_HASH_ROUTE } from './appMode';
-export type { ActivityMessage, TaskData, IframeReadyMessage } from './types';
+export { buildWasteMeasurementActivityMessage } from './buildWasteMeasurementActivityMessage';
+export {
+  getAppMode,
+  getExpectedActivityRef,
+  CHEF_HASH_ROUTE,
+  SERVICE_CLOSEOUT_ACTIVITY_REF,
+  WASTE_MEASUREMENT_ACTIVITY_REF,
+} from './appMode';
+export type {
+  ActivityMessage,
+  TaskData,
+  IframeReadyMessage,
+  GameBusInputCollectionsPayload,
+  InputCollectionsMessage,
+} from './types';

@@ -3,12 +3,14 @@ import { describe, it, expect, vi } from 'vitest';
 import { buildChefActivityMessage } from './buildChefActivityMessage';
 import { selectActivityTemplate } from './selectActivityTemplate';
 import {
+  CHEF_FORECAST_REQUIRED_REFS,
   mapChefForecast,
   mapChefForecastOptional,
   optionalChefForecastPropertyRefsForDraft,
 } from './mapChefForecast';
 import { propertyRefsForChefForecastActivity } from './resolveChefForecastProperties';
 import {
+  legacyChefForecastTaskFixture,
   pariChefForecastTaskFixture,
   pariChefForecastRequiredOnlyTaskFixture,
 } from './chefTaskFixtures';
@@ -236,6 +238,50 @@ describe('mapChefForecast / buildChefActivityMessage', () => {
     const msg = buildChefActivityMessage(taskFixture, submission, draft, slots);
     expect(msg.type).toBe('ACTIVITY');
     expect(msg.type).not.toBe('SILENT_ACTIVITY');
+  });
+
+  it('legacy TASK missing dessert/timing links still emits all twelve required ACTIVITY properties', () => {
+    const msg = buildChefActivityMessage(legacyChefForecastTaskFixture, submission, draft, slots);
+    expect(msg.data.properties.map((property) => property.template)).toEqual([
+      ...CHEF_FORECAST_REQUIRED_REFS,
+    ]);
+    const props = propertyMap(msg);
+    expect(props.dessertItemId).toEqual({ value: 'yogurt-berries' });
+    expect(props.forecastDessert).toEqual({ value: 25 });
+    expect(props.timingStatus).toEqual({ value: 'on-time' });
+  });
+
+  it('tryPostChefActivity final ACTIVITY contains all twelve required properties', () => {
+    resetGameBusBridgeForTests();
+    window.location.hash = '#/chef';
+    ingestTaskForTests(legacyChefForecastTaskFixture);
+    const parentPostMessage = vi.fn();
+    const originalParent = window.parent;
+    Object.defineProperty(window, 'parent', {
+      configurable: true,
+      value: { postMessage: parentPostMessage },
+    });
+
+    const result = tryPostChefActivity(submission, draft, slots);
+
+    Object.defineProperty(window, 'parent', {
+      configurable: true,
+      value: originalParent,
+    });
+    resetGameBusBridgeForTests();
+    window.location.hash = '';
+
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    const templates = result.message.data.properties.map((property) => property.template);
+    expect(templates).toEqual([...CHEF_FORECAST_REQUIRED_REFS]);
+    expect(templates).toContain('dessertItemId');
+    expect(templates).toContain('forecastDessert');
+    expect(templates).toContain('timingStatus');
+    const posted = parentPostMessage.mock.calls[0]?.[0];
+    expect(posted.data.properties.map((property: { template: string }) => property.template)).toEqual(
+      [...CHEF_FORECAST_REQUIRED_REFS],
+    );
   });
 
   it('double-click does not send two ACTIVITY messages', () => {

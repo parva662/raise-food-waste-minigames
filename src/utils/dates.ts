@@ -9,6 +9,16 @@ export function getTomorrowIsoDate(): string {
   return formatIsoDate(getTomorrowDate());
 }
 
+export function getTodayDate(): Date {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  return today;
+}
+
+export function getTodayIsoDate(): string {
+  return formatIsoDate(getTodayDate());
+}
+
 export function formatIsoDate(date: Date): string {
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, '0');

@@ -1,9 +1,10 @@
 # Next steps — GameBus integration
 
 **Student workflow:** activity template **`studentLunchCheckin`** (twelve quantity-aware properties).  
+**Closeout workflow:** activity template **`wasteMeasurement`** (fifteen required properties — mapper implemented in repo).  
 **Chef workflow:** activity template **`chefForecast`** (twelve required properties + two optional links — mapper implemented in repo).
 
-**References:** [`GAMEBUS_LUNCH_CONTRACT.md`](./GAMEBUS_LUNCH_CONTRACT.md), [`GAMEBUS_CHEF_FORECAST_CONTRACT.md`](./GAMEBUS_CHEF_FORECAST_CONTRACT.md), [`RAISE_BARLAUREA_STUDY_AND_SYSTEM_MASTER_PLAN.md`](./RAISE_BARLAUREA_STUDY_AND_SYSTEM_MASTER_PLAN.md), [`SPEC.md`](./SPEC.md).
+**References:** [`GAMEBUS_LUNCH_CONTRACT.md`](./GAMEBUS_LUNCH_CONTRACT.md), [`GAMEBUS_CHEF_FORECAST_CONTRACT.md`](./GAMEBUS_CHEF_FORECAST_CONTRACT.md), [`GAMEBUS_SERVICE_CLOSEOUT_CONTRACT.md`](./GAMEBUS_SERVICE_CLOSEOUT_CONTRACT.md), [`RAISE_BARLAUREA_STUDY_AND_SYSTEM_MASTER_PLAN.md`](./RAISE_BARLAUREA_STUDY_AND_SYSTEM_MASTER_PLAN.md), [`SPEC.md`](./SPEC.md).
 
 **Participant model:** Embedded submit does **not** send `studentId` or `chefId` on ACTIVITY; persistence must bind to the **authenticated GameBus user**.
 
@@ -35,6 +36,54 @@
 Full YAML schemas: `GAMEBUS_CHEF_FORECAST_CONTRACT.md`, `src/gamebus/propertySchemas.ts`.
 
 Chef embed URL: `https://parva662.github.io/raise-food-waste-minigames/#/chef`
+
+---
+
+## Service closeout — **completed** (manually verified end-to-end)
+
+| Item | Status |
+|------|--------|
+| Route `#/service-closeout` | **Complete** |
+| Input Collection canonical key | `serviceCloseoutInput` |
+| Legacy plural key | `serviceCloseoutInputs` — temporarily accepted for backwards compatibility |
+| **chefForecast retrieval** | **Complete** — `serviceCloseoutInput.chefForecasts` (`/api/me/activities`, authenticated user) |
+| `GameBusChefForecast` read model | Parsed from inbound activities; read-only in closeout UI |
+| Forecast selection | Exact `targetDate` match; duplicate testing activities → latest valid submission |
+| GameBus ACTIVITY output | **Complete** — one `wasteMeasurement` per Finalize (fifteen required properties) |
+| Embed behaviour | One Finalize → one ACTIVITY → iframe closes via normal GameBus behaviour |
+| Waste units | UI grams; GameBus persistence kg (`grams / 1000` at mapper boundary) |
+| Quantity properties | `mainQuantity`, `vegetarianQuantity`, `soupQuantity`, `dessertQuantity` = actual prepared portions |
+| Portion weights | Reference/calculation data in app only — **not** posted to GameBus |
+| Actor identity | Authenticated GameBus user (`activity.actor`) — no separate head-chef property on ACTIVITY |
+| Daily result calculation | **Not implemented** (future phase) |
+
+Closeout embed URL: `https://parva662.github.io/raise-food-waste-minigames/#/service-closeout`
+
+**Not used by operational closeout:** `actualServiceData`, `kitchenServiceCloseout`, `wasteReflection`, `productionPlan`.
+
+**Known non-blocking GameBus issue (display only):** My Activities may show dessert overproduction (`overproductionDessertKg`) with the label “Overproduction meat (kg)” even though the property reference and persisted value are correct. Investigate in GameBus admin/UI — no application change required.
+
+### `wasteMeasurement` required properties
+
+| Property | Maps from |
+|----------|-----------|
+| `serviceDate` | closeout `targetDate` |
+| `actualCustomers` | actual customers entered |
+| `mainItemId` | resolved Main menu item ID |
+| `mainQuantity` | Main prepared portions |
+| `vegetarianItemId` | resolved Vegetarian menu item ID |
+| `vegetarianQuantity` | Vegetarian prepared portions |
+| `soupItemId` | resolved Soup menu item ID |
+| `soupQuantity` | Soup prepared portions |
+| `dessertItemId` | resolved Dessert menu item ID |
+| `dessertQuantity` | Dessert prepared portions |
+| `overproductionMeatKg` | Main waste grams ÷ 1000 |
+| `overproductionVegetarianKg` | Vegetarian waste grams ÷ 1000 |
+| `overproductionSoupKg` | Soup waste grams ÷ 1000 |
+| `overproductionDessertKg` | Dessert waste grams ÷ 1000 |
+| `submittedAt` | finalization timestamp |
+
+**Not posted:** portion weights, `headChefUserId`, forecast fields, `actualServiceData`, `wasteReflection`, `productionPlan`, `kitchenServiceCloseout`.
 
 ---
 
@@ -82,6 +131,14 @@ Full JSON Schemas and examples: `src/gamebus/propertySchemas.ts`.
 
 ---
 
+## Next major phase (not started)
+
+### MULTI-USER / GAMEBUS PARTICIPANT ORGANIZATION AND VISIBILITY TESTING
+
+Validate participant association, multi-user visibility, and organization boundaries across student, chef, and closeout embeds in a real GameBus environment. **Do not implement in this repository phase.**
+
+---
+
 ## Roadmap (ordered)
 
 ### Chef forecast (manual admin)
@@ -105,6 +162,7 @@ Full JSON Schemas and examples: `src/gamebus/propertySchemas.ts`.
 
 - Student embed mapper: `src/gamebus/mapStudentLunchCheckin.ts` → `studentLunchCheckin`.
 - **Chef forecast:** `src/chef/*`, `src/gamebus/mapChefForecast.ts`, route `#/chef`.
+- **Service closeout:** `src/serviceCloseout/*`, `src/gamebus/mapWasteMeasurement.ts`, route `#/service-closeout` → `wasteMeasurement` ACTIVITY.
 - Pari iframe on GitHub Pages + `providerPari` origin (admin).
 - Node **Excel → JSON** conversion (`scripts/menu/`, `generated-data/menu/`).
 - **Runtime dated menu** from `src/data/generated/`; +175 day date shift unchanged.
@@ -119,4 +177,4 @@ Full JSON Schemas and examples: `src/gamebus/propertySchemas.ts`.
 
 ## Out of scope this phase
 
-- Commit; deploy; actual-waste import; result/badge calculation; dashboards; delete existing GameBus property templates.
+- Deploy; daily result calculation; badges/dashboards.

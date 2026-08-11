@@ -2,7 +2,8 @@
   "framework": "React 19 + Vite 6 + TypeScript 5.8 (package.json, src/main.tsx)",
   "routes": [
     "/ (student lunch declaration — default)",
-    "#/chef (chef kitchen forecast)"
+    "#/chef (chef kitchen forecast)",
+    "#/service-closeout (kitchen service closeout — local UI)"
   ],
   "components": [
     "src/App.tsx",
@@ -38,6 +39,19 @@
     "src/chef/chefSummary.ts",
     "src/chef/useChefForecast.ts"
   ],
+  "serviceCloseoutDomain": [
+    "src/serviceCloseout/types.ts",
+    "src/serviceCloseout/validation.ts",
+    "src/serviceCloseout/normalize.ts",
+    "src/serviceCloseout/operationalRecord.ts",
+    "src/serviceCloseout/units.ts",
+    "src/serviceCloseout/portionWeight/",
+    "src/serviceCloseout/accessPolicy.ts",
+    "src/serviceCloseout/useServiceCloseout.ts",
+    "src/serviceCloseout/useCloseoutChefForecast.ts",
+    "src/serviceCloseout/forecast/",
+    "src/config/serviceCloseout.ts"
+  ],
   "domainTypes": [
     "src/types/declaration.ts",
     "src/types/mealChoice.ts",
@@ -54,16 +68,21 @@
     "src/gamebus/bridge.ts",
     "src/gamebus/buildActivityMessage.ts",
     "src/gamebus/buildChefActivityMessage.ts",
+    "src/gamebus/buildWasteMeasurementActivityMessage.ts",
     "src/gamebus/mapStudentLunchCheckin.ts",
     "src/gamebus/mapChefForecast.ts",
+    "src/gamebus/mapWasteMeasurement.ts",
     "src/gamebus/resolveChefForecastProperties.ts",
+    "src/gamebus/resolveWasteMeasurementProperties.ts",
     "src/gamebus/selectActivityTemplate.ts",
     "src/gamebus/appMode.ts",
     "src/gamebus/propertySchemas.ts",
     "src/gamebus/resolveActivityProperties.ts",
     "src/gamebus/useGameBusEmbed.ts",
+    "src/gamebus/inputCollections.ts",
     "src/gamebus/taskFixtures.ts",
-    "src/gamebus/chefTaskFixtures.ts"
+    "src/gamebus/chefTaskFixtures.ts",
+    "src/gamebus/wasteMeasurementTaskFixtures.ts"
   ],
   "menuPipeline": [
     "scripts/menu/workbook.ts",
@@ -124,6 +143,7 @@
     "IMPLEMENTATION_INVENTORY.json",
     "GAMEBUS_LUNCH_CONTRACT.md",
     "GAMEBUS_CHEF_FORECAST_CONTRACT.md",
+    "GAMEBUS_SERVICE_CLOSEOUT_CONTRACT.md",
     "RAISE_BARLAUREA_STUDY_AND_SYSTEM_MASTER_PLAN.md",
     "NEXT_STEPS.md"
   ],
@@ -143,12 +163,18 @@
     "src/chef/chefRoute.test.tsx",
     "src/chef/chefAvailability.test.tsx",
     "src/chef/chefUx.test.tsx",
+    "src/serviceCloseout/serviceCloseoutDomain.test.ts",
+    "src/serviceCloseout/serviceCloseoutFixtures.test.ts",
+    "src/serviceCloseout/serviceCloseoutUx.test.tsx",
+    "src/serviceCloseout/serviceCloseoutForecast.test.tsx",
+    "src/serviceCloseout/forecast/parseGameBusChefForecast.test.ts",
     "src/chef/optionalFields.test.ts",
     "src/gamebus/gamebus.test.ts",
     "src/gamebus/handshake.test.ts",
     "src/gamebus/resolveActivityProperties.test.ts",
     "src/gamebus/mapStudentLunchCheckin.test.ts",
     "src/gamebus/mapChefForecast.test.ts",
+    "src/gamebus/mapWasteMeasurement.test.ts",
     "scripts/menu/menuPipeline.test.ts",
     "src/test/setup.ts",
     "src/test/fixtures/dates.ts",
@@ -157,13 +183,14 @@
     "src/test/fixtures/menus.ts"
   ],
   "testCounts": {
-    "totalTests": 222,
-    "testFiles": 25
+    "totalTests": 335,
+    "testFiles": 33
   },
   "confirmedFeatures": [
     "Student lunch declaration (default route)",
     "Chef kitchen forecast (#/chef route)",
     "Chef forecast: expected customers and menu quantities are independent forecasts (no cross-field comparison in UI)",
+    "Service closeout (#/service-closeout): wasteMeasurement ACTIVITY mapper; inbound chefForecast read model via INPUT_COLLECTIONS",
     "Three always-visible meal sections: Regular lunch, Soup lunch, No lunch",
     "Single active section; switching clears other sections quantities",
     "Portion quantities for main, vegetarian, soup, dessert (0 = not selected)",
@@ -177,6 +204,7 @@
     "GitHub Pages build base /raise-food-waste-minigames/",
     "GameBus embed ACTIVITY for studentLunchCheckin (twelve-property mapper)",
     "GameBus embed ACTIVITY for chefForecast (twelve required + two optional property mapper)",
+    "GameBus embed ACTIVITY for wasteMeasurement (fifteen required properties — service closeout)",
     "Category placeholder images with optional dedicated public/images/menu/items/*.webp",
     "Excel menu inspect/convert/check CLI",
     "CI: Node 20, tsc, vitest (219 tests), build"
