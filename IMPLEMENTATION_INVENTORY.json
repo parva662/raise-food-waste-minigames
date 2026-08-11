@@ -3,7 +3,9 @@
   "routes": [
     "/ (student lunch declaration — default)",
     "#/chef (chef kitchen forecast)",
-    "#/service-closeout (kitchen service closeout — local UI)"
+    "#/service-closeout (kitchen service closeout)",
+    "#/chef-results (participant forecast results — privacy-safe)",
+    "#/chef-results-admin (kitchen admin results — hidden research view)"
   ],
   "components": [
     "src/App.tsx",
@@ -38,6 +40,21 @@
     "src/chef/chefSubmissionWindow.ts",
     "src/chef/chefSummary.ts",
     "src/chef/useChefForecast.ts"
+  ],
+  "chefResultsDomain": [
+    "src/chefResults/types.ts",
+    "src/chefResults/calculateObservedCategory.ts",
+    "src/chefResults/calculateStaffCategorySimulation.ts",
+    "src/chefResults/calculateDailyResults.ts",
+    "src/chefResults/aggregateWeeklyResults.ts",
+    "src/chefResults/adapters/",
+    "src/chefResults/ChefResultsParticipantApp.tsx",
+    "src/chefResults/ChefResultsAdminApp.tsx",
+    "src/chefResults/currentUserContext.ts",
+    "src/chefResults/teamComparison.ts",
+    "src/chefResults/participantWeekData.ts",
+    "src/chefResults/components/participant/",
+    "src/chefResults/useChefResultsData.ts"
   ],
   "serviceCloseoutDomain": [
     "src/serviceCloseout/types.ts",
@@ -175,6 +192,9 @@
     "src/gamebus/mapStudentLunchCheckin.test.ts",
     "src/gamebus/mapChefForecast.test.ts",
     "src/gamebus/mapWasteMeasurement.test.ts",
+    "src/chefResults/chefResultsCalculation.test.ts",
+    "src/chefResults/chefResultsRoute.test.tsx",
+    "src/chefResults/chefResultsPrivacy.test.ts",
     "scripts/menu/menuPipeline.test.ts",
     "src/test/setup.ts",
     "src/test/fixtures/dates.ts",
@@ -183,8 +203,8 @@
     "src/test/fixtures/menus.ts"
   ],
   "testCounts": {
-    "totalTests": 335,
-    "testFiles": 33
+    "totalTests": 354,
+    "testFiles": 35
   },
   "confirmedFeatures": [
     "Student lunch declaration (default route)",
@@ -205,6 +225,8 @@
     "GameBus embed ACTIVITY for studentLunchCheckin (twelve-property mapper)",
     "GameBus embed ACTIVITY for chefForecast (twelve required + two optional property mapper)",
     "GameBus embed ACTIVITY for wasteMeasurement (fifteen required properties — service closeout)",
+    "Chef results participant view (#/chef-results) — fixture-backed; anonymous team comparison; no composite score",
+    "Chef results admin view (#/chef-results-admin) — all-staff research; authorization TBD",
     "Category placeholder images with optional dedicated public/images/menu/items/*.webp",
     "Excel menu inspect/convert/check CLI",
     "CI: Node 20, tsc, vitest (219 tests), build"
@@ -220,6 +242,10 @@
     "Live GameBus chefForecast admin migration (fourteen links; create forecastDessert only if missing)",
     "Optional item-ID property omission accepted by GameBus ingest (student only)",
     "Participant association without actors/studentId/chefId on ACTIVITY",
+    "Minimum staff threshold for anonymous team comparison range display",
+    "Authorization for #/chef-results-admin",
+    "Real GameBus current-user identity for participant results",
+    "Real cross-user GameBus forecast retrieval for calculation engine",
     "Production embed URL and postMessage origin allowlist"
   ]
 }

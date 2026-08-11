@@ -2167,3 +2167,627 @@ ul {
   white-space: pre-wrap;
   word-break: break-word;
 }
+
+/* Chef results (read-only simulation dashboard) */
+.chef-results-page {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: var(--spacing-lg) var(--spacing-md) var(--spacing-xl);
+}
+
+.chef-results-header {
+  margin-bottom: var(--spacing-lg);
+}
+
+.chef-results-header__eyebrow {
+  margin: 0 0 var(--spacing-xs);
+  font-size: 0.875rem;
+  color: var(--color-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.chef-results-header__title {
+  margin: 0 0 var(--spacing-sm);
+  font-size: 1.75rem;
+}
+
+.chef-results-header__intro {
+  margin: 0;
+  color: var(--color-text-secondary);
+  max-width: 52rem;
+}
+
+.chef-results-toolbar {
+  margin-bottom: var(--spacing-lg);
+}
+
+.chef-results-date-picker {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+  font-weight: 600;
+}
+
+.chef-results-date-picker select {
+  max-width: 14rem;
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+}
+
+.chef-results-panel {
+  margin-bottom: var(--spacing-xl);
+  padding: var(--spacing-lg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface-elevated, var(--color-surface));
+}
+
+.chef-results-panel__title {
+  margin: 0 0 var(--spacing-sm);
+  font-size: 1.25rem;
+}
+
+.chef-results-panel__intro {
+  margin: 0 0 var(--spacing-md);
+  color: var(--color-text-secondary);
+}
+
+.chef-results-metrics {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
+  gap: var(--spacing-md);
+  margin: 0 0 var(--spacing-md);
+}
+
+.chef-results-metrics--compact {
+  margin-bottom: var(--spacing-sm);
+}
+
+.chef-results-metrics dt {
+  font-size: 0.8125rem;
+  color: var(--color-text-secondary);
+}
+
+.chef-results-metrics dd {
+  margin: 0;
+  font-size: 1.125rem;
+  font-weight: 600;
+}
+
+.chef-results-table-wrap {
+  overflow-x: auto;
+}
+
+.chef-results-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+}
+
+.chef-results-table th,
+.chef-results-table td {
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border-bottom: 1px solid var(--color-border);
+  text-align: left;
+}
+
+.chef-results-table th {
+  font-weight: 600;
+  color: var(--color-text-secondary);
+}
+
+.chef-results-staff-grid {
+  display: grid;
+  gap: var(--spacing-md);
+}
+
+.chef-results-staff-card {
+  padding: var(--spacing-md);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+}
+
+.chef-results-staff-card--head-chef {
+  border-color: var(--color-accent, #2563eb);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--color-accent, #2563eb) 20%, transparent);
+}
+
+.chef-results-staff-card__header {
+  margin-bottom: var(--spacing-sm);
+}
+
+.chef-results-staff-card__name {
+  margin: 0 0 var(--spacing-xs);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+.chef-results-staff-card__badge {
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.125rem 0.5rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--color-accent, #2563eb) 12%, transparent);
+  color: var(--color-accent, #2563eb);
+}
+
+.chef-results-staff-card__note {
+  margin: 0;
+  font-size: 0.875rem;
+  color: var(--color-text-secondary);
+}
+
+.chef-results-category-details {
+  margin-top: var(--spacing-sm);
+}
+
+.chef-results-category-details summary {
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.chef-results-empty {
+  color: var(--color-text-secondary);
+}
+
+/* Participant results — gamified feedback dashboard */
+.chef-results-page--participant {
+  --chef-results-shortage: #7c3aed;
+  --chef-results-over: #ea580c;
+  --chef-results-neutral: #0d9488;
+  --chef-results-customers: #2563eb;
+  background:
+    radial-gradient(circle at top right, rgba(37, 99, 235, 0.08), transparent 40%),
+    radial-gradient(circle at top left, rgba(13, 148, 136, 0.08), transparent 35%);
+}
+
+.chef-results-dev-user {
+  margin-bottom: var(--spacing-md);
+  padding: var(--spacing-sm);
+  border: 1px dashed var(--color-border);
+  border-radius: var(--radius-sm);
+  font-size: 0.875rem;
+}
+
+.chef-results-participant-header {
+  margin-bottom: var(--spacing-lg);
+}
+
+.chef-results-participant-header__eyebrow {
+  margin: 0 0 var(--spacing-xs);
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--chef-results-customers);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.chef-results-participant-header__title {
+  margin: 0 0 var(--spacing-xs);
+  font-size: 2rem;
+}
+
+.chef-results-participant-header__date {
+  margin: 0 0 var(--spacing-sm);
+  font-weight: 600;
+}
+
+.chef-results-participant-header__intro {
+  margin: 0;
+  color: var(--color-text-secondary);
+  max-width: 42rem;
+}
+
+.chef-results-section-title {
+  margin: 0 0 var(--spacing-xs);
+  font-size: 1.25rem;
+}
+
+.chef-results-section-intro {
+  margin: 0 0 var(--spacing-md);
+  color: var(--color-text-secondary);
+}
+
+.chef-results-summary-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: var(--spacing-md);
+  margin-bottom: var(--spacing-xl);
+}
+
+.chef-results-summary-card {
+  padding: var(--spacing-lg);
+  border-radius: var(--radius-md);
+  border: 1px solid transparent;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
+}
+
+.chef-results-summary-card__icon {
+  font-size: 1.5rem;
+  margin-bottom: var(--spacing-sm);
+}
+
+.chef-results-summary-card__title {
+  margin: 0 0 var(--spacing-sm);
+  font-size: 1rem;
+}
+
+.chef-results-summary-card__value {
+  margin: 0;
+  font-size: 1.75rem;
+  font-weight: 700;
+}
+
+.chef-results-summary-card__hint,
+.chef-results-summary-card__metrics {
+  margin: var(--spacing-sm) 0 0;
+  font-size: 0.875rem;
+  color: var(--color-text-secondary);
+}
+
+.chef-results-summary-card__metrics {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--spacing-sm);
+}
+
+.chef-results-summary-card__metrics dt {
+  font-size: 0.75rem;
+}
+
+.chef-results-summary-card__metrics dd {
+  margin: 0;
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: var(--color-text);
+}
+
+.chef-results-summary-card--customers {
+  background: linear-gradient(160deg, rgba(37, 99, 235, 0.12), rgba(37, 99, 235, 0.03));
+  border-color: rgba(37, 99, 235, 0.2);
+}
+
+.chef-results-summary-card--over {
+  background: linear-gradient(160deg, rgba(234, 88, 12, 0.14), rgba(234, 88, 12, 0.03));
+  border-color: rgba(234, 88, 12, 0.25);
+}
+
+.chef-results-summary-card--short {
+  background: linear-gradient(160deg, rgba(124, 58, 237, 0.14), rgba(124, 58, 237, 0.03));
+  border-color: rgba(124, 58, 237, 0.25);
+}
+
+.chef-results-category-visual,
+.chef-results-team-compare,
+.chef-results-your-week,
+.chef-results-kitchen-progress,
+.chef-results-category-detail {
+  margin-bottom: var(--spacing-xl);
+  padding: var(--spacing-lg);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border);
+  background: var(--color-surface-elevated, var(--color-surface));
+}
+
+.chef-results-diverging-list {
+  display: grid;
+  gap: var(--spacing-md);
+}
+
+.chef-results-diverging-item__header {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--spacing-md);
+  align-items: baseline;
+  margin-bottom: var(--spacing-xs);
+}
+
+.chef-results-diverging-item h3 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.chef-results-diverging-item__values {
+  margin: 0;
+  display: flex;
+  gap: var(--spacing-sm);
+  flex-wrap: wrap;
+  font-size: 0.8125rem;
+}
+
+.chef-results-tone--shortage {
+  color: var(--chef-results-shortage);
+  font-weight: 600;
+}
+
+.chef-results-tone--over {
+  color: var(--chef-results-over);
+  font-weight: 600;
+}
+
+.chef-results-tone--neutral {
+  color: var(--chef-results-neutral);
+  font-weight: 600;
+}
+
+.chef-results-diverging-scale {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 2px;
+  min-height: 1.5rem;
+  margin-bottom: var(--spacing-xs);
+}
+
+.chef-results-diverging-scale__shortage {
+  justify-self: end;
+  height: 0.75rem;
+  border-radius: 999px 0 0 999px;
+  background: var(--chef-results-shortage);
+  min-width: 0;
+}
+
+.chef-results-diverging-scale__axis {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-width: 4.5rem;
+  height: 2rem;
+}
+
+.chef-results-diverging-scale__center-line {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: 2px;
+  transform: translateX(-50%);
+  border-radius: 999px;
+  background: linear-gradient(
+    180deg,
+    transparent,
+    var(--chef-results-neutral) 20%,
+    var(--chef-results-neutral) 80%,
+    transparent
+  );
+  opacity: 0.85;
+}
+
+.chef-results-diverging-scale__center-label {
+  position: relative;
+  z-index: 1;
+  padding: 0.125rem 0.375rem;
+  border-radius: 999px;
+  background: var(--color-surface);
+  border: 1px solid rgba(13, 148, 136, 0.35);
+  font-size: 0.6875rem;
+  font-weight: 700;
+  color: var(--chef-results-neutral);
+  white-space: nowrap;
+}
+
+.chef-results-diverging-scale__over {
+  justify-self: start;
+  height: 0.75rem;
+  border-radius: 0 999px 999px 0;
+  background: var(--chef-results-over);
+  min-width: 0;
+}
+
+.chef-results-diverging-scale__legend {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  gap: 2px;
+  font-size: 0.6875rem;
+  color: var(--color-text-secondary);
+}
+
+.chef-results-diverging-scale__legend span:nth-child(1) {
+  text-align: left;
+  color: var(--chef-results-shortage);
+}
+
+.chef-results-diverging-scale__legend span:nth-child(2) {
+  text-align: center;
+  color: var(--chef-results-neutral);
+  font-weight: 600;
+}
+
+.chef-results-diverging-scale__legend span:nth-child(3) {
+  text-align: right;
+  color: var(--chef-results-over);
+}
+
+.chef-results-category-detail__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: var(--spacing-md);
+  margin-top: var(--spacing-md);
+}
+
+.chef-results-category-detail__card {
+  padding: var(--spacing-md);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+}
+
+.chef-results-category-detail__card h3 {
+  margin: 0 0 var(--spacing-sm);
+}
+
+.chef-results-category-detail__card dl {
+  margin: 0;
+  display: grid;
+  gap: var(--spacing-xs);
+  font-size: 0.875rem;
+}
+
+.chef-results-insight-list {
+  margin: 0 0 var(--spacing-md);
+  padding-left: 1.25rem;
+}
+
+.chef-results-benchmark-chart__label {
+  margin: 0 0 var(--spacing-sm);
+  font-weight: 600;
+}
+
+.chef-results-benchmark-track {
+  position: relative;
+  height: 2.5rem;
+  margin-bottom: var(--spacing-xs);
+}
+
+.chef-results-benchmark-track__range {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  height: 0.5rem;
+  transform: translateY(-50%);
+  border-radius: 999px;
+  background: linear-gradient(90deg, rgba(124, 58, 237, 0.15), rgba(234, 88, 12, 0.15));
+}
+
+.chef-results-benchmark-track__median,
+.chef-results-benchmark-track__you {
+  position: absolute;
+  top: 0;
+  transform: translateX(-50%);
+  font-size: 0.75rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.chef-results-benchmark-track__median {
+  color: var(--chef-results-neutral);
+}
+
+.chef-results-benchmark-track__you {
+  color: var(--chef-results-customers);
+}
+
+.chef-results-benchmark-track__median span,
+.chef-results-benchmark-track__you span {
+  display: inline-block;
+  padding: 0.125rem 0.375rem;
+  border-radius: 999px;
+  background: var(--color-surface);
+  border: 1px solid currentColor;
+}
+
+.chef-results-benchmark-chart__axis {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.75rem;
+  color: var(--color-text-secondary);
+}
+
+.chef-results-week-metrics,
+.chef-results-kitchen-progress__metrics {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: var(--spacing-md);
+  margin-bottom: var(--spacing-md);
+}
+
+.chef-results-week-metrics dt,
+.chef-results-kitchen-progress__metrics dt {
+  font-size: 0.8125rem;
+  color: var(--color-text-secondary);
+}
+
+.chef-results-week-metrics dd,
+.chef-results-kitchen-progress__metrics dd {
+  margin: 0;
+  font-size: 1.125rem;
+  font-weight: 700;
+}
+
+.chef-results-week-metrics__value {
+  display: block;
+}
+
+.chef-results-week-metrics__context {
+  display: block;
+  margin-top: 0.125rem;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--color-text-secondary);
+}
+
+.chef-results-week-charts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: var(--spacing-md);
+}
+
+.chef-results-week-chart {
+  margin: 0;
+  padding: var(--spacing-md);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+}
+
+.chef-results-week-chart figcaption {
+  margin-bottom: var(--spacing-sm);
+  font-weight: 600;
+}
+
+.chef-results-week-chart svg {
+  width: 100%;
+  height: auto;
+}
+
+.chef-results-week-chart__line {
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.chef-results-week-chart__line--over {
+  stroke: var(--chef-results-over);
+}
+
+.chef-results-week-chart__line--short {
+  stroke: var(--chef-results-shortage);
+}
+
+.chef-results-week-chart__dot {
+  fill: var(--color-surface);
+  stroke-width: 2;
+}
+
+.chef-results-week-chart__dot--over {
+  stroke: var(--chef-results-over);
+}
+
+.chef-results-week-chart__dot--short {
+  stroke: var(--chef-results-shortage);
+}
+
+.chef-results-week-chart__value {
+  font-size: 9px;
+  font-weight: 700;
+  fill: var(--color-text);
+}
+
+.chef-results-week-chart__dates {
+  display: flex;
+  justify-content: space-between;
+  margin: var(--spacing-xs) 0 0;
+  padding: 0;
+  list-style: none;
+  font-size: 0.75rem;
+  color: var(--color-text-secondary);
+}

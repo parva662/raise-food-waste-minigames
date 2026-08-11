@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
 import App from './App';
 import { ChefApp } from './chef/ChefApp';
+import { ChefResultsAdminApp } from './chefResults/ChefResultsAdminApp';
+import { ChefResultsParticipantApp } from './chefResults/ChefResultsParticipantApp';
 import { ServiceCloseoutApp } from './serviceCloseout/ServiceCloseoutApp';
 import { getAppMode, type AppMode } from './gamebus/appMode';
 
@@ -16,6 +18,14 @@ export function AppRouter() {
 
   if (mode === 'chef') {
     return <ChefApp />;
+  }
+
+  if (mode === 'chef-results-admin') {
+    return <ChefResultsAdminApp />;
+  }
+
+  if (mode === 'chef-results') {
+    return <ChefResultsParticipantApp />;
   }
 
   if (mode === 'service-closeout') {

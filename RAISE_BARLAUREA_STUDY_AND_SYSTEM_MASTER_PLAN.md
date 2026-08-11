@@ -56,7 +56,7 @@ Chef form UX (repository): all five numeric fields start **blank** (unanswered);
 
 **Chef forecast is compared with whole-canteen operational data**, not with student declarations.
 
-There is **no kitchen scoring or results dashboard** in this phase. Service closeout posts one `wasteMeasurement` ACTIVITY in embed mode (or finalizes locally in standalone). Actual operational comparison and individual daily results are a later calculation phase triggered by **Finalize service**.
+There is **no kitchen scoring or results dashboard with composite scores** in this phase. Service closeout posts one `wasteMeasurement` ACTIVITY in embed mode. **`#/chef-results`** is the participant-safe results view (own data + anonymous team comparison; no ranking). **`#/chef-results-admin`** preserves the full all-staff fixture research view (hidden; route-level authorization still required). Full multi-user GameBus-backed results are the next major phase.
 
 ### 2.3 BarLaurea kitchen operations (closeout)
 
@@ -78,6 +78,8 @@ There is **no kitchen scoring or results dashboard** in this phase. Service clos
 | `/` (default) | `studentLunchCheckin` | Implemented |
 | `#/chef` | `chefForecast` | Implemented (v1) |
 | `#/service-closeout` | `wasteMeasurement` | **Complete** (manually verified end-to-end) |
+| `#/chef-results` | _(none — read-only page)_ | **Implemented** (participant-safe; fixture-backed) |
+| `#/chef-results-admin` | _(none — read-only page)_ | **Implemented** (admin/research; hidden; auth TBD) |
 
 Do **not** create `chefForecastV2` or `studentLunchCheckinV2`.
 
@@ -113,16 +115,25 @@ Result is based on **actual canteen operational data**, not student declarations
   - reads `chefForecast` via Input Collection `serviceCloseoutInput` (legacy `serviceCloseoutInputs` alias);
   - writes one `wasteMeasurement` ACTIVITY per Finalize;
   - manually verified: real menu date, all item IDs, prepared quantities, kg waste conversion, `submittedAt`, authenticated actor, iframe close.
+- **Chef results** — participant view `#/chef-results` (GameBus menu target; own results + anonymous comparison) and admin view `#/chef-results-admin` (all-staff research; authorization TBD). Shared fixture-backed calculation engine; no composite score.
 - GameBus ACTIVITY mappers for `studentLunchCheckin`, `chefForecast`, and `wasteMeasurement`.
 - Contract: `GAMEBUS_SERVICE_CLOSEOUT_CONTRACT.md`.
 
 **Known non-blocking GameBus issue:** My Activities may display `overproductionDessertKg` with the wrong label (“Overproduction meat (kg)”) while persisting the correct dessert value. GameBus display/configuration investigation — not an application defect.
 
-**Next major phase (not started):** MULTI-USER / GAMEBUS PARTICIPANT ORGANIZATION AND VISIBILITY TESTING.
+**Next major phase (not started):** MULTI-USER / GAMEBUS PARTICIPANT ORGANIZATION AND VISIBILITY TESTING — replace fixture inputs with real GameBus multi-user data; replace fixture current-user with authenticated GameBus actor; add admin route authorization.
+
+**Unresolved production decisions (chef results):**
+
+- Minimum staff count before anonymous team comparison range/position display.
+- Authorization mechanism for `#/chef-results-admin`.
+- Real GameBus current-user identity.
+- Real cross-user forecast retrieval.
 
 **Out of scope (later phases):**
 
-- Forecast-result calculations, scoring, badges, leaderboards, dashboards.
+- Composite score, points, weights, penalties, leaderboards, winner ranking.
+- Forecast-result badge awards.
 - Live GameBus admin changes (manual migration plans documented separately).
 
 ---

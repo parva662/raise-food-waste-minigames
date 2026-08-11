@@ -55,7 +55,7 @@ Chef embed URL: `https://parva662.github.io/raise-food-waste-minigames/#/chef`
 | Quantity properties | `mainQuantity`, `vegetarianQuantity`, `soupQuantity`, `dessertQuantity` = actual prepared portions |
 | Portion weights | Reference/calculation data in app only — **not** posted to GameBus |
 | Actor identity | Authenticated GameBus user (`activity.actor`) — no separate head-chef property on ACTIVITY |
-| Daily result calculation | **Not implemented** (future phase) |
+| Daily result calculation | **Implemented** — `#/chef-results` (fixture-backed simulation engine) |
 
 Closeout embed URL: `https://parva662.github.io/raise-food-waste-minigames/#/service-closeout`
 
@@ -131,11 +131,47 @@ Full JSON Schemas and examples: `src/gamebus/propertySchemas.ts`.
 
 ---
 
+---
+
+## Chef results — **implemented** (participant privacy + admin split)
+
+| Item | Status |
+|------|--------|
+| Route `#/chef-results` | **Implemented** — participant-safe view (GameBus menu target) |
+| Route `#/chef-results-admin` | **Implemented** — hidden admin/research all-staff view |
+| GameBus exposure | Participant menu already opens `#/chef-results`; no config change required |
+| Data source (this phase) | Development fixtures only — closeout actuals, chef forecasts, portion weights, staff rotation |
+| Calculation model | Shared pure engine; per-staff simulation against shared observed service reality |
+| Participant privacy | Own identifiable results + anonymous team median/range only |
+| Composite score / ranking | **Not approved** — no score, leaderboard, or winner language |
+| Admin authorization | **Not implemented** — route-level auth required before production |
+| Multi-user GameBus retrieval | **Not implemented** (next major phase) |
+| Fixture current user | Default `fixture-user-c`; dev selector + `sessionStorage` until GameBus actor |
+
+**Participant (`#/chef-results`):** summary cards, category diverging visual, anonymous “How you compare”, weekly trend, lightweight “Kitchen progress”. No coworker names/IDs.
+
+**Admin (`#/chef-results-admin`):** preserves prior all-staff research table — names, head chef, full calculation detail, weekly raw aggregation.
+
+**Unresolved production decisions:**
+
+- Minimum staff count before showing anonymous comparison range/position (code constant `MIN_ANONYMOUS_COMPARISON_PARTICIPANTS = 3`).
+- Authorization for admin results route.
+- Real GameBus current-user identity.
+- Real cross-user forecast retrieval.
+
+**Semantics:** Simulated overproduction / shortage answers: “What would have happened if this staff member’s forecast had been used as the production plan?” — based on observed service demand. This is **not** attributed actual waste per person.
+
+**Customer metrics (separate):** signed `forecastTotalCustomers - actualCustomers` and absolute error.
+
+**Weekly aggregation (participant):** participated service count only; absent days omitted; total simulated over/shortage grams; mean absolute customer error — no winner/ranking.
+
+---
+
 ## Next major phase (not started)
 
 ### MULTI-USER / GAMEBUS PARTICIPANT ORGANIZATION AND VISIBILITY TESTING
 
-Validate participant association, multi-user visibility, and organization boundaries across student, chef, and closeout embeds in a real GameBus environment. **Do not implement in this repository phase.**
+Validate participant association, multi-user visibility, and organization boundaries across student, chef, and closeout embeds in a real GameBus environment. Replace fixture forecasts with real multi-user GameBus data in the calculation engine. **Do not implement in this repository phase.**
 
 ---
 
@@ -163,6 +199,7 @@ Validate participant association, multi-user visibility, and organization bounda
 - Student embed mapper: `src/gamebus/mapStudentLunchCheckin.ts` → `studentLunchCheckin`.
 - **Chef forecast:** `src/chef/*`, `src/gamebus/mapChefForecast.ts`, route `#/chef`.
 - **Service closeout:** `src/serviceCloseout/*`, `src/gamebus/mapWasteMeasurement.ts`, route `#/service-closeout` → `wasteMeasurement` ACTIVITY.
+- **Chef results:** `src/chefResults/*`, route `#/chef-results` (participant-safe), `#/chef-results-admin` (admin/research).
 - Pari iframe on GitHub Pages + `providerPari` origin (admin).
 - Node **Excel → JSON** conversion (`scripts/menu/`, `generated-data/menu/`).
 - **Runtime dated menu** from `src/data/generated/`; +175 day date shift unchanged.

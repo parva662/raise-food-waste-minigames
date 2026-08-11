@@ -177,6 +177,42 @@ Routing: student default at `/`; chef forecast at `#/chef`.
 
 ---
 
-## 11. Migration notes (historical)
+## 11. Chef results — privacy split
+
+### Participant view (`#/chef-results`)
+
+- **Route:** `#/chef-results` — GameBus participant menu already targets this hash; no GameBus config change required.
+- **Purpose:** Participant-safe forecast simulation feedback — **not** a mission task.
+- **Identifiable data:** current user only (fixture `fixture-user-c` by default; dev selector + `sessionStorage` override until real GameBus actor identity).
+- **Default date:** latest available finalized result for the current participant; ISO internally, readable display labels in the UI.
+- **Team comparison:** anonymous aggregates only (median, optional range when sample size ≥ documented minimum). No coworker names, IDs, individual values, or leaderboard.
+- **Head chef:** treated as another participant in anonymous comparison — not separately labeled on this page.
+- **No composite score, points, weights, penalties, or ranking.**
+- **Visual UX:** summary cards, diverging category scale, benchmark chart, weekly trend — encouraging/game-like, not research-table density.
+- **Calculation:** reuses the shared pure engine (`src/chefResults/*`); formulas unchanged.
+
+### Admin / research view (`#/chef-results-admin`)
+
+- **Route:** `#/chef-results-admin` — intentionally hidden from participant navigation.
+- **Purpose:** preserve full all-staff fixture results for research/admin (service date selector, observed reality, staff names, head-chef indicator, category detail, weekly raw aggregation).
+- **Security:** **not** secured by obscurity — route-level authorization still required before production.
+
+### Shared calculation model
+
+- Each participating staff member is evaluated against the **same** observed service reality. Simulated overproduction / shortage reflects what would have happened if that person's forecast had been the production plan — **not** attributed actual waste.
+- **Customer metrics:** signed difference and absolute error kept separate from food-category weight simulations.
+- **Weekly view (participant):** only services the user participated in; absent days omitted (not zero-filled).
+- **Future:** replace fixture inputs and fixture current-user with real multi-user GameBus retrieval (next major phase).
+
+### Unresolved production decisions
+
+- Minimum staff count before displaying anonymous team comparison range/position (`MIN_ANONYMOUS_COMPARISON_PARTICIPANTS = 3` documented in code).
+- Authorization mechanism for `#/chef-results-admin`.
+- Real GameBus current-user identity (`activity.actor`).
+- Real cross-user forecast retrieval from GameBus.
+
+---
+
+## 12. Migration notes (historical)
 
 Earlier revisions used four menu grids with per-item quantities across all categories and an **update** flow. The current product uses **three sections**, **mealChoice**, and **one-shot submit** only. Do not reintroduce update or `SILENT_ACTIVITY` without an explicit product change.
