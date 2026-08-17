@@ -157,7 +157,7 @@ export interface UseServiceCloseoutOptions {
 export function useServiceCloseout(options: UseServiceCloseoutOptions = {}) {
   const clock = options.clock ?? (() => new Date());
   const accessPolicy = options.accessPolicy ?? developmentCloseoutAccessPolicy;
-  const serviceDate = resolveCloseoutServiceDate(options.serviceDate);
+  const serviceDate = resolveCloseoutServiceDate(options.serviceDate, clock());
 
   const menuAvailability = useMemo(() => resolveMenuForDate(serviceDate), [serviceDate]);
   const mealSlots = useMemo(() => resolveMealSlotsForDate(serviceDate), [serviceDate]);

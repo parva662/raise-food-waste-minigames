@@ -1,50 +1,79 @@
-export function getTomorrowDate(): Date {
-  const tomorrow = new Date();
-  tomorrow.setDate(tomorrow.getDate() + 1);
-  tomorrow.setHours(0, 0, 0, 0);
-  return tomorrow;
+import { addDays, format, parse } from 'date-fns';
+import { toZonedTime } from 'date-fns-tz';
+import { CANTEEN_CONFIG } from '../config/canteen';
+
+export const OPERATIONAL_TIMEZONE = CANTEEN_CONFIG.timezone;
+
+/** Calendar components for the current operational day in Europe/Helsinki. */
+export function getOperationalDateParts(now: Date = new Date()): {
+  year: number;
+  month: number;
+  day: number;
+} {
+  const zoned = toZonedTime(now, OPERATIONAL_TIMEZONE);
+  return {
+    year: zoned.getFullYear(),
+    month: zoned.getMonth() + 1,
+    day: zoned.getDate(),
+  };
 }
 
-export function getTomorrowIsoDate(): string {
-  return formatIsoDate(getTomorrowDate());
+/** YYYY-MM-DD for the current operational day in Europe/Helsinki. */
+export function getOperationalDateIso(now: Date = new Date()): string {
+  const zoned = toZonedTime(now, OPERATIONAL_TIMEZONE);
+  return format(zoned, 'yyyy-MM-dd');
 }
 
-export function getTodayDate(): Date {
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  return today;
+/** Advance a date-only ISO string by calendar days (timezone-neutral). */
+export function addDaysToIsoDate(isoDate: string, days: number): string {
+  const parsed = parse(isoDate, 'yyyy-MM-dd', new Date());
+  return format(addDays(parsed, days), 'yyyy-MM-dd');
 }
 
-export function getTodayIsoDate(): string {
-  return formatIsoDate(getTodayDate());
+/** YYYY-MM-DD for the next operational day in Europe/Helsinki. */
+export function getOperationalTomorrowDateIso(now: Date = new Date()): string {
+  return addDaysToIsoDate(getOperationalDateIso(now), 1);
 }
 
-export function formatIsoDate(date: Date): string {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const day = String(date.getDate()).padStart(2, '0');
-  return `${year}-${month}-${day}`;
+export function getTodayIsoDate(now?: Date): string {
+  return getOperationalDateIso(now ?? new Date());
 }
 
-export function formatFullDate(date: Date): string {
-  return date.toLocaleDateString('en-GB', {
+export function getTomorrowIsoDate(now?: Date): string {
+  return getOperationalTomorrowDateIso(now ?? new Date());
+}
+
+/** UTC noon anchor so date-only values format without shifting across timezones. */
+function calendarUtcInstant(isoDate: string): Date {
+  const [year, month, day] = isoDate.split('-').map(Number);
+  return new Date(Date.UTC(year, month - 1, day, 12, 0, 0));
+}
+
+/** Long weekday label for a date-only operational ISO value. */
+export function formatOperationalDate(isoDate: string): string {
+  return new Intl.DateTimeFormat('en-GB', {
     weekday: 'long',
     day: 'numeric',
     month: 'long',
     year: 'numeric',
-  });
+    timeZone: OPERATIONAL_TIMEZONE,
+  }).format(calendarUtcInstant(isoDate));
 }
 
 export function formatDisplayDate(isoDate: string): string {
-  const [year, month, day] = isoDate.split('-').map(Number);
-  const date = new Date(year, month - 1, day);
-  return formatFullDate(date);
+  return formatOperationalDate(isoDate);
+}
+
+/** HH:mm for an absolute instant, shown in Europe/Helsinki. */
+export function formatOperationalTime(isoInstant: string | Date): string {
+  const date = typeof isoInstant === 'string' ? new Date(isoInstant) : isoInstant;
+  return new Intl.DateTimeFormat('en-GB', {
+    hour: '2-digit',
+    minute: '2-digit',
+    timeZone: OPERATIONAL_TIMEZONE,
+  }).format(date);
 }
 
 export function formatSubmissionTime(isoTimestamp: string): string {
-  const date = new Date(isoTimestamp);
-  return date.toLocaleTimeString('en-GB', {
-    hour: '2-digit',
-    minute: '2-digit',
-  });
+  return formatOperationalTime(isoTimestamp);
 }

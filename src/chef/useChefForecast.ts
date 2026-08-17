@@ -119,11 +119,11 @@ function chefReducer(state: ChefForecastState, action: ChefAction): ChefForecast
 }
 
 export function useChefForecast(clock: Clock = systemClock) {
-  const serviceDate = getTomorrowIsoDate();
-  const menuAvailability = useMemo(() => resolveMenuForDate(serviceDate), [serviceDate]);
-  const mealSlots = useMemo(() => resolveMealSlotsForDate(serviceDate), [serviceDate]);
   const [state, dispatch] = useReducer(chefReducer, undefined, createInitialState);
   const [now, setNow] = useState(() => clock());
+  const serviceDate = useMemo(() => getTomorrowIsoDate(now), [now]);
+  const menuAvailability = useMemo(() => resolveMenuForDate(serviceDate), [serviceDate]);
+  const mealSlots = useMemo(() => resolveMealSlotsForDate(serviceDate), [serviceDate]);
   const embedded = isGameBusEmbed();
   const { taskReady, hasPosted: gameBusPosted } = useGameBusEmbed();
 

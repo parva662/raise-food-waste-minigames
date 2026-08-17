@@ -118,7 +118,10 @@ function lunchReducer(state: LunchSelectionState, action: LunchAction): LunchSel
 }
 
 export function useLunchSelection(clock: Clock = systemClock) {
-  const lunchDate = getTomorrowIsoDate();
+  const [state, dispatch] = useReducer(lunchReducer, undefined, createInitialState);
+  const [initialized, setInitialized] = useState(false);
+  const [now, setNow] = useState(() => clock());
+  const lunchDate = useMemo(() => getTomorrowIsoDate(now), [now]);
   const menuAvailability = useMemo(() => resolveMenuForDate(lunchDate), [lunchDate]);
   const mealSlots = useMemo(() => resolveMealSlotsForDate(lunchDate), [lunchDate]);
   const menuCycleWeek =
@@ -126,9 +129,6 @@ export function useLunchSelection(clock: Clock = systemClock) {
   const menuVersion =
     menuAvailability.status === 'available' ? menuAvailability.menuVersion : '';
 
-  const [state, dispatch] = useReducer(lunchReducer, undefined, createInitialState);
-  const [initialized, setInitialized] = useState(false);
-  const [now, setNow] = useState(() => clock());
   const embedded = isGameBusEmbed();
   const { taskReady, hasPosted: gameBusPosted } = useGameBusEmbed();
 

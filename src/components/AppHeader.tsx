@@ -1,9 +1,9 @@
 import { Menu } from 'lucide-react';
-import { getTomorrowDate, formatFullDate } from '../utils/dates';
+import { getTomorrowIsoDate, formatDisplayDate } from '../utils/dates';
 import { SubmissionRulesMessage } from './SubmissionRulesMessage';
 
 export function AppHeader() {
-  const tomorrow = getTomorrowDate();
+  const tomorrowIso = getTomorrowIsoDate();
 
   return (
     <header className="app-header">
@@ -19,8 +19,8 @@ export function AppHeader() {
         <div className="app-header__content">
           <div className="app-header__title-row">
             <h1 className="app-header__title">Tomorrow&apos;s Lunch</h1>
-            <time className="app-header__date" dateTime={tomorrow.toISOString()}>
-              {formatFullDate(tomorrow)}
+            <time className="app-header__date" dateTime={tomorrowIso}>
+              {formatDisplayDate(tomorrowIso)}
             </time>
           </div>
           <p className="app-header__subtitle">

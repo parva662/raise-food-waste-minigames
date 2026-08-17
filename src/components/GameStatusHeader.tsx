@@ -1,7 +1,7 @@
 import { CANTEEN_CONFIG } from '../config/canteen';
 import type { SubmissionWindowStatus } from '../types/declaration';
 import { formatCountdown } from '../services/submissionWindow';
-import { getTomorrowDate, formatFullDate } from '../utils/dates';
+import { getTomorrowIsoDate, formatDisplayDate } from '../utils/dates';
 
 interface GameStatusHeaderProps {
   submissionWindow: SubmissionWindowStatus;
@@ -9,7 +9,7 @@ interface GameStatusHeaderProps {
 }
 
 export function GameStatusHeader({ submissionWindow, now }: GameStatusHeaderProps) {
-  const tomorrow = getTomorrowDate();
+  const tomorrowIso = getTomorrowIsoDate(now);
   const countdown =
     submissionWindow.countdownTargetIso !== null
       ? formatCountdown(now, submissionWindow.countdownTargetIso)
@@ -20,8 +20,8 @@ export function GameStatusHeader({ submissionWindow, now }: GameStatusHeaderProp
       <div className="game-status-header__top">
         <div>
           <p className="game-status-header__eyebrow">Tomorrow&apos;s lunch</p>
-          <time className="game-status-header__date" dateTime={tomorrow.toISOString()}>
-            {formatFullDate(tomorrow)}
+          <time className="game-status-header__date" dateTime={tomorrowIso}>
+            {formatDisplayDate(tomorrowIso)}
           </time>
         </div>
         {countdown !== null && submissionWindow.phase !== 'closed' && (

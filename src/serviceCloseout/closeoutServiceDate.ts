@@ -15,11 +15,11 @@ export function parseCloseoutDevDateOverride(): string | null {
   return date;
 }
 
-export function resolveCloseoutServiceDate(explicitServiceDate?: string): string {
+export function resolveCloseoutServiceDate(explicitServiceDate?: string, now?: Date): string {
   if (explicitServiceDate) return explicitServiceDate;
   const devOverride = parseCloseoutDevDateOverride();
   if (devOverride) return devOverride;
-  return getTodayIsoDate();
+  return getTodayIsoDate(now);
 }
 
 export function isCloseoutDevDateOverrideActive(resolvedServiceDate: string): boolean {
