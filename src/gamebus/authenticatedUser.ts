@@ -19,12 +19,33 @@ function readNonEmptyString(value: unknown): string | null {
   return trimmed.length > 0 ? trimmed : null;
 }
 
+function buildDisplayName(record: Record<string, unknown>): string | null {
+  const legacyName = readNonEmptyString(record.name);
+  if (legacyName) return legacyName;
+
+  const firstName = readNonEmptyString(record.firstName);
+  const lastName = readNonEmptyString(record.lastName);
+
+  if (firstName && lastName) return `${firstName} ${lastName}`;
+  if (firstName) return firstName;
+  if (lastName) return lastName;
+  return null;
+}
+
+function parsePictureImage(record: Record<string, unknown>): string | undefined {
+  const picture = record.picture;
+  if (!isRecord(picture)) return undefined;
+  return readNonEmptyString(picture.filename) ?? undefined;
+}
+
 function parseUserRecord(record: Record<string, unknown>): GameBusAuthenticatedUser | null {
   const id = readNonEmptyString(record.id) ?? readNonEmptyString(record._id);
-  const name = readNonEmptyString(record.name);
+  const name = buildDisplayName(record);
   if (!id || !name) return null;
 
-  const image = readNonEmptyString(record.image) ?? undefined;
+  const image =
+    parsePictureImage(record) ?? readNonEmptyString(record.image) ?? undefined;
+
   return image ? { id, name, image } : { id, name };
 }
 

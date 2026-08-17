@@ -147,23 +147,34 @@ Full JSON Schemas and examples: `src/gamebus/propertySchemas.ts`.
 | Admin authorization | **Not implemented** — route-level auth required before production |
 | Multi-user GameBus retrieval | **Not implemented** (next major phase) |
 | Fixture current user | Default `fixture-user-c`; dev selector + `sessionStorage` for calculation testing only |
-| **GameBus authenticated identity** | **Implemented (read path)** — `inputCollectionPari.me` (`/api/me`); DEV diagnostic on `#/chef-results`; not yet used for calculation lookup |
+| **GameBus authenticated identity** | **Confirmed** — `inputCollectionPari.me` (`/api/me`); parses `id`, `firstName`, `lastName`; debug panel with `?gamebusDebug=1` only |
 
 **Participant (`#/chef-results`):** summary cards, category diverging visual, anonymous “How you compare”, weekly trend, lightweight “Kitchen progress”. No coworker names/IDs.
 
 **Admin (`#/chef-results-admin`):** preserves prior all-staff research table — names, head chef, full calculation detail, weekly raw aggregation.
 
-**Proven after manual verification (identity phase):**
+**Confirmed (GameBus identity):**
 
-- `#/chef-results` can receive the authenticated GameBus user through `inputCollectionPari.me` in embedded mode.
+- Custom Embed Pages receive `INPUT_COLLECTIONS`.
+- `inputCollectionPari.me` provides the authenticated GameBus account.
+- Real `/api/me` shape uses `id`, `firstName`, `lastName`, `picture`, etc. (no top-level `name`).
+- Current-user identity can be resolved in the app now.
+
+**Blocked / waiting for GameBus (Raoul endpoint in progress):**
+
+- Cross-user activity retrieval.
+- Retrieving all kitchen staff `chefForecast` activities.
+- Replacing fixture result users with real GameBus actors.
+- Participant anonymous group comparison using real users.
+
+**Student mission architecture (agreed, not implemented here):**
+
+1. Lunch declaration → `studentLunchCheckin` (this repository).
+2. Lunch observation/logging → future GameBus-native Activity task.
+
+Conditional availability of Task 2 should preferably use existing `studentLunchCheckin.mealType` (`no_lunch` vs lunch) through the planned GameBus task availability mechanism rather than creating a synthetic activity. Student observation activity property schema is **not** finalized in code yet.
 
 **Unresolved production decisions:**
-
-- Minimum staff count before showing anonymous comparison range/position (code constant `MIN_ANONYMOUS_COMPARISON_PARTICIPANTS = 3`).
-- Authorization for admin results route.
-- Retrieval of other staff members' `chefForecast` activities.
-- Group/campaign cross-user visibility.
-- Replacing fixture calculation users with real GameBus actors for results lookup.
 
 **Semantics:** Simulated overproduction / shortage answers: “What would have happened if this staff member’s forecast had been used as the production plan?” — based on observed service demand. This is **not** attributed actual waste per person.
 

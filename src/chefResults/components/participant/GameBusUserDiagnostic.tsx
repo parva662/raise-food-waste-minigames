@@ -1,12 +1,12 @@
-import { isChefResultsGameBusInvestigationEnabled } from '../../../gamebus/chefResultsInvestigation';
+import { isChefResultsGameBusDebugMode } from '../../../gamebus/chefResultsInvestigation';
 import { useGameBusAuthenticatedUser } from '../../useGameBusAuthenticatedUser';
 
 /**
- * Investigation diagnostic for real GameBus identity from inputCollectionPari.me.
- * Visible in DEV or with #/chef-results?gamebusDebug=1 on deployed builds.
+ * Temporary diagnostic for real GameBus identity from inputCollectionPari.me.
+ * Visible only with #/chef-results?gamebusDebug=1.
  */
 export function GameBusUserDiagnostic() {
-  if (!isChefResultsGameBusInvestigationEnabled()) return null;
+  if (!isChefResultsGameBusDebugMode()) return null;
 
   const { embedded, inputCollectionsReady, user } = useGameBusAuthenticatedUser();
 
@@ -32,8 +32,8 @@ export function GameBusUserDiagnostic() {
         </dl>
       )}
       <p className="chef-results-dev-user__note">
-        Real GameBus identity only — fixture calculation results still use the development
-        fixture profile below.
+        Real GameBus identity only — fixture calculation results still use development fixtures
+        until the cross-user GameBus endpoint is available.
       </p>
     </div>
   );

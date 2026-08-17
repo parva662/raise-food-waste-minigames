@@ -115,21 +115,35 @@ Result is based on **actual canteen operational data**, not student declarations
   - reads `chefForecast` via Input Collection `serviceCloseoutInput` (legacy `serviceCloseoutInputs` alias);
   - writes one `wasteMeasurement` ACTIVITY per Finalize;
   - manually verified: real menu date, all item IDs, prepared quantities, kg waste conversion, `submittedAt`, authenticated actor, iframe close.
-- **Chef results** — participant view `#/chef-results` (GameBus menu target; own results + anonymous comparison) and admin view `#/chef-results-admin` (all-staff research; authorization TBD). Shared fixture-backed calculation engine; no composite score. Authenticated GameBus identity is read from `inputCollectionPari.me` (DEV diagnostic); fixture profiles still drive calculation UI until real actor linkage.
+- **Chef results** — participant view `#/chef-results` (GameBus menu target; own results + anonymous comparison) and admin view `#/chef-results-admin` (all-staff research; authorization TBD). Shared fixture-backed calculation engine; no composite score. Authenticated GameBus identity is read from `inputCollectionPari.me` (`id`, `firstName`, `lastName`); fixture profiles still drive calculation UI until Raoul's cross-user endpoint is available.
 - GameBus ACTIVITY mappers for `studentLunchCheckin`, `chefForecast`, and `wasteMeasurement`.
 - Contract: `GAMEBUS_SERVICE_CLOSEOUT_CONTRACT.md`.
 
 **Known non-blocking GameBus issue:** My Activities may display `overproductionDessertKg` with the wrong label (“Overproduction meat (kg)”) while persisting the correct dessert value. GameBus display/configuration investigation — not an application defect.
 
-**Next major phase (in progress):** MULTI-USER / GAMEBUS PARTICIPANT ORGANIZATION AND VISIBILITY TESTING — authenticated identity via `inputCollectionPari.me` is implemented on `#/chef-results`; next: replace fixture inputs with real GameBus multi-user data and connect calculation lookup to authenticated `user.id`; add admin route authorization.
+**Next major phase (in progress):** MULTI-USER / GAMEBUS PARTICIPANT ORGANIZATION AND VISIBILITY TESTING — authenticated identity via `inputCollectionPari.me` is **confirmed** on Custom Embed Pages (`#/chef-results`); next: Raoul's cross-user endpoint for kitchen staff forecasts, then replace fixture inputs and connect calculation lookup to authenticated `user.id`; add admin route authorization.
+
+**Confirmed (GameBus identity):**
+
+- Custom Embed Pages receive `INPUT_COLLECTIONS`.
+- `inputCollectionPari.me` provides authenticated account (`id`, `firstName`, `lastName`, `picture`, etc.).
+- Current-user identity resolves in-app; not yet used for chef-results calculation lookup.
+
+**Blocked / waiting for GameBus:**
+
+- Cross-user activity retrieval (Raoul endpoint in progress).
+- Retrieving all kitchen staff `chefForecast` activities.
+- Replacing fixture calculation users with real GameBus actors.
+- Participant anonymous group comparison using real users.
+
+**Student mission architecture (agreed):**
+
+1. Lunch declaration → `studentLunchCheckin` (this repository).
+2. Lunch observation/logging → future GameBus-native Activity task.
+
+Task 2 availability should preferably use `studentLunchCheckin.mealType` (`no_lunch` vs lunch) via planned GameBus task availability — not a synthetic activity. Observation activity property schema not finalized in code.
 
 **Unresolved production decisions (chef results):**
-
-- Minimum staff count before anonymous team comparison range/position display.
-- Authorization mechanism for `#/chef-results-admin`.
-- Retrieval of other staff members' `chefForecast` activities.
-- Group/campaign cross-user visibility.
-- Replacing fixture calculation users with real GameBus actors.
 
 **Out of scope (later phases):**
 

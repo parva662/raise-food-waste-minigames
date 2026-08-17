@@ -12,12 +12,24 @@ import {
   INPUT_COLLECTION_PARI_ME_REQUEST_KEY,
 } from '../gamebus/inputCollections';
 
+function realMePayload(overrides: Record<string, unknown> = {}) {
+  return {
+    id: 'real-user-abc',
+    firstName: 'Test',
+    lastName: 'Account',
+    email: 'hidden@example.com',
+    roles: ['chef'],
+    ...overrides,
+  };
+}
+
 describe('GameBus authenticated user on chef results', () => {
   let originalParent: Window;
 
   beforeEach(() => {
     resetGameBusBridgeForTests();
     window.sessionStorage.clear();
+    window.location.hash = '#/chef-results?gamebusDebug=1';
     originalParent = window.parent;
     Object.defineProperty(window, 'parent', {
       configurable: true,
@@ -38,13 +50,10 @@ describe('GameBus authenticated user on chef results', () => {
     vi.unstubAllEnvs();
   });
 
-  it('shows the real GameBus user in the investigation diagnostic', () => {
+  it('shows parsed firstName + lastName in the GameBus diagnostic', () => {
     ingestInputCollectionsForTests({
       [INPUT_COLLECTION_PARI_KEY]: {
-        [INPUT_COLLECTION_PARI_ME_REQUEST_KEY]: {
-          id: 'real-user-abc',
-          name: 'Test Account',
-        },
+        [INPUT_COLLECTION_PARI_ME_REQUEST_KEY]: realMePayload(),
       },
     });
 
@@ -53,17 +62,18 @@ describe('GameBus authenticated user on chef results', () => {
     expect(screen.getByTestId('gamebus-user-diagnostic')).toBeInTheDocument();
     expect(screen.getByTestId('gamebus-user-name')).toHaveTextContent('Test Account');
     expect(screen.getByTestId('gamebus-user-id')).toHaveTextContent('real-user-abc');
+    expect(screen.queryByText('hidden@example.com')).not.toBeInTheDocument();
   });
 
   it('shows diagnostic on deployed build when gamebusDebug=1', () => {
     vi.stubEnv('DEV', false);
-    window.location.hash = '#/chef-results?gamebusDebug=1';
     ingestInputCollectionsForTests({
       [INPUT_COLLECTION_PARI_KEY]: {
-        [INPUT_COLLECTION_PARI_ME_REQUEST_KEY]: {
+        [INPUT_COLLECTION_PARI_ME_REQUEST_KEY]: realMePayload({
           id: 'deployed-user',
-          name: 'Deployed Account',
-        },
+          firstName: 'Deployed',
+          lastName: 'Account',
+        }),
       },
     });
 
@@ -71,17 +81,15 @@ describe('GameBus authenticated user on chef results', () => {
 
     expect(screen.getByTestId('gamebus-user-diagnostic')).toBeInTheDocument();
     expect(screen.getByTestId('gamebus-user-id')).toHaveTextContent('deployed-user');
+    expect(screen.getByTestId('gamebus-user-name')).toHaveTextContent('Deployed Account');
   });
 
-  it('hides diagnostic on deployed build without gamebusDebug=1', () => {
+  it('hides diagnostic without gamebusDebug=1', () => {
     vi.stubEnv('DEV', false);
     window.location.hash = '#/chef-results';
     ingestInputCollectionsForTests({
       [INPUT_COLLECTION_PARI_KEY]: {
-        [INPUT_COLLECTION_PARI_ME_REQUEST_KEY]: {
-          id: 'hidden-user',
-          name: 'Hidden Account',
-        },
+        [INPUT_COLLECTION_PARI_ME_REQUEST_KEY]: realMePayload(),
       },
     });
 
@@ -90,13 +98,26 @@ describe('GameBus authenticated user on chef results', () => {
     expect(screen.queryByTestId('gamebus-user-diagnostic')).not.toBeInTheDocument();
   });
 
+  it('does not render the raw INPUT_COLLECTIONS debug panel', () => {
+    ingestInputCollectionsForTests({
+      [INPUT_COLLECTION_PARI_KEY]: {
+        [INPUT_COLLECTION_PARI_ME_REQUEST_KEY]: realMePayload(),
+      },
+    });
+
+    render(<ChefResultsParticipantApp />);
+
+    expect(screen.queryByTestId('raw-input-collections-debug')).not.toBeInTheDocument();
+  });
+
   it('updates displayed id/name when the GameBus user payload changes', () => {
     ingestInputCollectionsForTests({
       [INPUT_COLLECTION_PARI_KEY]: {
-        [INPUT_COLLECTION_PARI_ME_REQUEST_KEY]: {
+        [INPUT_COLLECTION_PARI_ME_REQUEST_KEY]: realMePayload({
           id: 'user-one',
-          name: 'First Account',
-        },
+          firstName: 'First',
+          lastName: 'Account',
+        }),
       },
     });
 
@@ -107,10 +128,11 @@ describe('GameBus authenticated user on chef results', () => {
     resetGameBusBridgeForTests();
     ingestInputCollectionsForTests({
       [INPUT_COLLECTION_PARI_KEY]: {
-        [INPUT_COLLECTION_PARI_ME_REQUEST_KEY]: {
+        [INPUT_COLLECTION_PARI_ME_REQUEST_KEY]: realMePayload({
           id: 'user-two',
-          name: 'Second Account',
-        },
+          firstName: 'Second',
+          lastName: 'Account',
+        }),
       },
     });
 
@@ -122,10 +144,7 @@ describe('GameBus authenticated user on chef results', () => {
   it('does not map the real GameBus user to fixture calculation identity', () => {
     ingestInputCollectionsForTests({
       [INPUT_COLLECTION_PARI_KEY]: {
-        [INPUT_COLLECTION_PARI_ME_REQUEST_KEY]: {
-          id: 'real-user-abc',
-          name: 'Test Account',
-        },
+        [INPUT_COLLECTION_PARI_ME_REQUEST_KEY]: realMePayload(),
       },
     });
 
@@ -138,14 +157,15 @@ describe('GameBus authenticated user on chef results', () => {
     expect(screen.getByTestId('participant-summary-cards')).toBeInTheDocument();
   });
 
-  it('logs authenticated user in DEV embedded mode', () => {
+  it('logs authenticated user when gamebusDebug=1', () => {
     const infoSpy = vi.spyOn(console, 'info').mockImplementation(() => {});
     ingestInputCollectionsForTests({
       [INPUT_COLLECTION_PARI_KEY]: {
-        [INPUT_COLLECTION_PARI_ME_REQUEST_KEY]: {
+        [INPUT_COLLECTION_PARI_ME_REQUEST_KEY]: realMePayload({
           id: 'logged-user',
-          name: 'Logged User',
-        },
+          firstName: 'Logged',
+          lastName: 'User',
+        }),
       },
     });
 

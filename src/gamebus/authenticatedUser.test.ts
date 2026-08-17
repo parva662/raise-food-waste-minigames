@@ -1,53 +1,129 @@
 import { describe, it, expect } from 'vitest';
 import { parseGameBusAuthenticatedUser } from './authenticatedUser';
 
+const realMePayload = {
+  id: 'gb-user-123',
+  clientId: 'client-1',
+  firstName: 'Test',
+  lastName: 'Account',
+  email: 'test@example.com',
+  phone: '+358000000',
+  password: 'secret',
+  roles: ['chef'],
+  picture: { filename: 'avatars/test-account.png' },
+};
+
 describe('parseGameBusAuthenticatedUser', () => {
-  it('parses a valid direct /api/me user object', () => {
-    const user = parseGameBusAuthenticatedUser({
-      id: 'gb-user-123',
-      name: 'Test Account',
-      image: 'https://example.com/avatar.png',
-    });
+  it('parses real { id, firstName, lastName } payload correctly', () => {
+    const user = parseGameBusAuthenticatedUser(realMePayload);
     expect(user).toEqual({
       id: 'gb-user-123',
       name: 'Test Account',
+      image: 'avatars/test-account.png',
+    });
+  });
+
+  it('builds name as "First Last" from firstName and lastName', () => {
+    const user = parseGameBusAuthenticatedUser({
+      id: 'user-1',
+      firstName: 'Aino',
+      lastName: 'Virtanen',
+    });
+    expect(user?.name).toBe('Aino Virtanen');
+  });
+
+  it('supports first-name-only identity', () => {
+    const user = parseGameBusAuthenticatedUser({
+      id: 'user-2',
+      firstName: 'Solo',
+    });
+    expect(user).toEqual({ id: 'user-2', name: 'Solo' });
+  });
+
+  it('supports last-name-only identity', () => {
+    const user = parseGameBusAuthenticatedUser({
+      id: 'user-3',
+      lastName: 'Niemi',
+    });
+    expect(user).toEqual({ id: 'user-3', name: 'Niemi' });
+  });
+
+  it('rejects payload when id is missing', () => {
+    expect(
+      parseGameBusAuthenticatedUser({
+        firstName: 'Test',
+        lastName: 'Account',
+      }),
+    ).toBeNull();
+  });
+
+  it('rejects payload when usable name is missing', () => {
+    expect(
+      parseGameBusAuthenticatedUser({
+        id: 'user-4',
+        email: 'hidden@example.com',
+      }),
+    ).toBeNull();
+    expect(parseGameBusAuthenticatedUser({ id: 'user-4' })).toBeNull();
+  });
+
+  it('keeps legacy { id, name } support', () => {
+    expect(
+      parseGameBusAuthenticatedUser({
+        id: 'legacy-user',
+        name: 'Legacy Name',
+        image: 'https://example.com/avatar.png',
+      }),
+    ).toEqual({
+      id: 'legacy-user',
+      name: 'Legacy Name',
       image: 'https://example.com/avatar.png',
     });
   });
 
-  it('preserves real user id exactly', () => {
+  it('maps picture.filename to image when valid', () => {
     const user = parseGameBusAuthenticatedUser({
-      id: 'a1b2c3d4-e5f6-7890-abcd-ef1234567890',
-      name: 'Second Account',
+      id: 'user-5',
+      firstName: 'Camila',
+      lastName: 'Niemi',
+      picture: { filename: 'profile/camila.png' },
     });
-    expect(user?.id).toBe('a1b2c3d4-e5f6-7890-abcd-ef1234567890');
+    expect(user?.image).toBe('profile/camila.png');
   });
 
-  it('preserves real user name exactly', () => {
-    const user = parseGameBusAuthenticatedUser({
-      id: 'user-2',
-      name: 'Boris Lindström',
+  it('omits image when picture.filename is empty or invalid', () => {
+    expect(
+      parseGameBusAuthenticatedUser({
+        id: 'user-6',
+        firstName: 'No',
+        lastName: 'Image',
+        picture: { filename: '   ' },
+      }),
+    ).toEqual({ id: 'user-6', name: 'No Image' });
+  });
+
+  it('does not expose email, password, or roles in parsed model', () => {
+    const user = parseGameBusAuthenticatedUser(realMePayload);
+    expect(user).not.toBeNull();
+    expect(user).toEqual({
+      id: 'gb-user-123',
+      name: 'Test Account',
+      image: 'avatars/test-account.png',
     });
-    expect(user?.name).toBe('Boris Lindström');
+    expect(Object.keys(user!)).toEqual(['id', 'name', 'image']);
   });
 
   it('returns null for malformed input without throwing', () => {
     expect(parseGameBusAuthenticatedUser(null)).toBeNull();
     expect(parseGameBusAuthenticatedUser([])).toBeNull();
-    expect(parseGameBusAuthenticatedUser({ id: 123, name: 'X' })).toBeNull();
-    expect(parseGameBusAuthenticatedUser({ id: 'only-id' })).toBeNull();
-    expect(parseGameBusAuthenticatedUser({ name: 'only-name' })).toBeNull();
+    expect(parseGameBusAuthenticatedUser({ id: 123, firstName: 'X' })).toBeNull();
     expect(parseGameBusAuthenticatedUser('not-json')).toBeNull();
-  });
-
-  it('returns null when input is missing', () => {
-    expect(parseGameBusAuthenticatedUser(undefined)).toBeNull();
   });
 
   it('parses nested user objects defensively', () => {
     expect(
       parseGameBusAuthenticatedUser({
-        user: { id: 'nested-id', name: 'Nested User' },
+        user: { id: 'nested-id', firstName: 'Nested', lastName: 'User' },
       }),
     ).toEqual({ id: 'nested-id', name: 'Nested User' });
   });
