@@ -4,7 +4,7 @@ import { cleanup, render, screen } from '@testing-library/react';
 import { AppRouter } from '../AppRouter';
 import { resolveMealSlotsForDate } from '../services/mealSlots';
 import { MENU_DATES } from '../test/fixtures/dates';
-import * as datesModule from '../utils/dates';
+import * as operationalCalendarModule from '../services/operationalServiceCalendar';
 
 function setHash(hash: string) {
   window.location.hash = hash;
@@ -55,7 +55,9 @@ describe('App routing', () => {
   });
 
   it('known available date shows four menu forecast cards on chef route', () => {
-    vi.spyOn(datesModule, 'getTomorrowIsoDate').mockReturnValue(MENU_DATES.runtimeWednesday);
+    vi.spyOn(operationalCalendarModule, 'resolveChefForecastServiceDate').mockReturnValue(
+      MENU_DATES.runtimeWednesday,
+    );
     setHash('#/chef');
     const slots = resolveMealSlotsForDate(MENU_DATES.runtimeWednesday)!;
     render(<AppRouter />);

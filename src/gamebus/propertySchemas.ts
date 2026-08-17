@@ -241,6 +241,115 @@ export const CHEF_FORECAST_PROPERTY_SCHEMAS = {
   },
 } as const;
 
+/** Proposed JSON Schemas for wasteMeasurement property templates (service closeout). */
+export const WASTE_MEASUREMENT_PROPERTY_SCHEMAS = {
+  serviceDate: {
+    reference: 'serviceDate',
+    displayName: 'Service date',
+    activityLinkRequired: true,
+    schema: { type: 'string', format: 'date' },
+    example: { value: '2026-08-17' },
+  },
+  actualCustomers: {
+    reference: 'actualCustomers',
+    displayName: 'Actual customers',
+    activityLinkRequired: true,
+    schema: INTEGER_SCHEMA_0_1000,
+    example: { value: 110 },
+  },
+  mainItemId: {
+    reference: 'mainItemId',
+    displayName: 'Main dish id',
+    activityLinkRequired: true,
+    schema: ITEM_ID_SCHEMA,
+    example: { value: 'coq-au-vin-with-rice' },
+  },
+  preparedMainQuantity: {
+    reference: 'preparedMainQuantity',
+    displayName: 'Prepared main quantity',
+    activityLinkRequired: true,
+    schema: INTEGER_SCHEMA_0_1000,
+    example: { value: 44 },
+  },
+  vegetarianItemId: {
+    reference: 'vegetarianItemId',
+    displayName: 'Vegetarian dish id',
+    activityLinkRequired: true,
+    schema: ITEM_ID_SCHEMA,
+    example: { value: 'cajun-soy-strip-stew-with-rice' },
+  },
+  preparedVegetarianQuantity: {
+    reference: 'preparedVegetarianQuantity',
+    displayName: 'Prepared vegetarian quantity',
+    activityLinkRequired: true,
+    schema: INTEGER_SCHEMA_0_1000,
+    example: { value: 33 },
+  },
+  soupItemId: {
+    reference: 'soupItemId',
+    displayName: 'Soup id',
+    activityLinkRequired: true,
+    schema: ITEM_ID_SCHEMA,
+    example: { value: 'creamy-sweet-potato-soup' },
+  },
+  preparedSoupQuantity: {
+    reference: 'preparedSoupQuantity',
+    displayName: 'Prepared soup quantity',
+    activityLinkRequired: true,
+    schema: INTEGER_SCHEMA_0_1000,
+    example: { value: 33 },
+  },
+  dessertItemId: {
+    reference: 'dessertItemId',
+    displayName: 'Dessert id',
+    activityLinkRequired: true,
+    schema: ITEM_ID_SCHEMA,
+    example: { value: 'blueberry-soup' },
+  },
+  preparedDessertQuantity: {
+    reference: 'preparedDessertQuantity',
+    displayName: 'Prepared dessert quantity',
+    activityLinkRequired: true,
+    schema: INTEGER_SCHEMA_0_1000,
+    example: { value: 333 },
+  },
+  overproductionMeatKg: {
+    reference: 'overproductionMeatKg',
+    displayName: 'Overproduction meat (kg)',
+    activityLinkRequired: true,
+    schema: { type: 'number', minimum: 0 },
+    example: { value: 0.85 },
+  },
+  overproductionVegetarianKg: {
+    reference: 'overproductionVegetarianKg',
+    displayName: 'Overproduction vegetarian (kg)',
+    activityLinkRequired: true,
+    schema: { type: 'number', minimum: 0 },
+    example: { value: 0.36 },
+  },
+  overproductionSoupKg: {
+    reference: 'overproductionSoupKg',
+    displayName: 'Overproduction soup (kg)',
+    activityLinkRequired: true,
+    schema: { type: 'number', minimum: 0 },
+    example: { value: 0.5 },
+  },
+  overproductionDessertKg: {
+    reference: 'overproductionDessertKg',
+    displayName: 'Overproduction dessert (kg)',
+    activityLinkRequired: true,
+    schema: { type: 'number', minimum: 0 },
+    example: { value: 0.1 },
+  },
+  submittedAt: {
+    reference: 'submittedAt',
+    displayName: 'Submitted at',
+    activityLinkRequired: true,
+    schema: { type: 'string', format: 'date-time' },
+    example: { value: '2026-08-17T14:00:00.000Z' },
+  },
+} as const;
+
 /** Admin migration from live seven-property chefForecast to final fourteen-link template. */
 export const CHEF_FORECAST_ADMIN_MIGRATION = [
   { current: 'targetDate', action: 'reuse', final: 'targetDate' },

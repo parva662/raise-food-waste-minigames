@@ -69,7 +69,7 @@ export type CloseoutChefForecastResolution =
   | { status: 'standalone'; forecast: null }
   | { status: 'pending'; forecast: null }
   | { status: 'no_forecast'; forecast: null; message: string }
-  | { status: 'matched'; forecast: GameBusChefForecast };
+  | { status: 'matched'; forecast: GameBusChefForecast; isSynthetic?: boolean };
 
 export const NO_CLOSEOUT_FORECAST_MESSAGE =
   'No submitted forecast was found for this service date.';

@@ -1,7 +1,10 @@
 import { useReducer, useCallback, useMemo, useEffect, useState } from 'react';
 import { resolveMenuForDate } from '../services/menuResolver';
 import { resolveMealSlotsForDate } from '../services/mealSlots';
-import { getTomorrowIsoDate } from '../utils/dates';
+import {
+  resolveChefForecastServiceDate,
+  OperationalCalendarError,
+} from '../services/operationalServiceCalendar';
 import { isGameBusEmbed, tryPostChefActivity, useGameBusEmbed } from '../gamebus';
 import { gamebusDevLog } from '../gamebus/devLog';
 import {
@@ -121,9 +124,36 @@ function chefReducer(state: ChefForecastState, action: ChefAction): ChefForecast
 export function useChefForecast(clock: Clock = systemClock) {
   const [state, dispatch] = useReducer(chefReducer, undefined, createInitialState);
   const [now, setNow] = useState(() => clock());
-  const serviceDate = useMemo(() => getTomorrowIsoDate(now), [now]);
-  const menuAvailability = useMemo(() => resolveMenuForDate(serviceDate), [serviceDate]);
-  const mealSlots = useMemo(() => resolveMealSlotsForDate(serviceDate), [serviceDate]);
+  const serviceDateResolution = useMemo(() => {
+    try {
+      return {
+        status: 'resolved' as const,
+        serviceDate: resolveChefForecastServiceDate(now),
+      };
+    } catch (error) {
+      return {
+        status: 'calendar_error' as const,
+        message:
+          error instanceof OperationalCalendarError
+            ? error.message
+            : 'Could not resolve the next service date.',
+      };
+    }
+  }, [now]);
+
+  const serviceDate =
+    serviceDateResolution.status === 'resolved' ? serviceDateResolution.serviceDate : '';
+  const menuAvailability = useMemo(
+    () =>
+      serviceDateResolution.status === 'resolved'
+        ? resolveMenuForDate(serviceDate)
+        : { status: 'unavailable' as const },
+    [serviceDate, serviceDateResolution.status],
+  );
+  const mealSlots = useMemo(
+    () => (serviceDateResolution.status === 'resolved' ? resolveMealSlotsForDate(serviceDate) : null),
+    [serviceDate, serviceDateResolution.status],
+  );
   const embedded = isGameBusEmbed();
   const { taskReady, hasPosted: gameBusPosted } = useGameBusEmbed();
 
@@ -251,6 +281,8 @@ export function useChefForecast(clock: Clock = systemClock) {
     draft: state.draft,
     initialized: true,
     serviceDate,
+    calendarError:
+      serviceDateResolution.status === 'calendar_error' ? serviceDateResolution.message : null,
     menuAvailability,
     mealSlots,
     submissionWindow,

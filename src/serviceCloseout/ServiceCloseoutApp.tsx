@@ -71,7 +71,10 @@ export function ServiceCloseoutApp({ clock, serviceDate }: ServiceCloseoutAppPro
           )}
 
           {chefForecastState.status === 'matched' && (
-            <ServiceCloseoutSubmittedForecast forecast={chefForecastState.forecast} />
+            <ServiceCloseoutSubmittedForecast
+              forecast={chefForecastState.forecast}
+              isSynthetic={chefForecastState.isSynthetic}
+            />
           )}
 
           {chefForecastState.status === 'no_forecast' && (

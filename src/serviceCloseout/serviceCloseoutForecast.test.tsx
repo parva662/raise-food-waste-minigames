@@ -109,6 +109,22 @@ describe('service closeout forecast UI', () => {
     expect(getPreparedInput('Dessert')).toHaveValue('');
   });
 
+  it('shows synthetic test banner when forecast is synthetic', () => {
+    const forecast = parseGameBusChefForecastActivities([
+      buildAnonymizedChefForecastActivity(),
+    ]).valid[0]!;
+    useCloseoutChefForecastMock.mockReturnValue({
+      status: 'matched',
+      forecast,
+      isSynthetic: true,
+    });
+
+    render(<ServiceCloseoutApp />);
+    expect(screen.getByTestId('closeout-synthetic-forecast-banner')).toHaveTextContent(
+      'TEST DATA — synthetic forecast',
+    );
+  });
+
   it('allows actual prepared to differ from forecast after entry', async () => {
     const user = userEvent.setup();
     useCloseoutChefForecastMock.mockReturnValue(matchedForecastResolution());

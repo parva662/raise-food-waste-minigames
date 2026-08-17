@@ -15,6 +15,19 @@ export function parseCloseoutDevDateOverride(): string | null {
   return date;
 }
 
+/** Opt-in `#/service-closeout?testForecast=1` synthetic forecast fallback for testing. */
+export function parseCloseoutTestForecastFlag(): boolean {
+  if (typeof window === 'undefined') return false;
+
+  const hash = window.location.hash;
+  if (!hash.startsWith('#/service-closeout')) return false;
+
+  const queryIndex = hash.indexOf('?');
+  if (queryIndex === -1) return false;
+
+  return new URLSearchParams(hash.slice(queryIndex + 1)).get('testForecast') === '1';
+}
+
 export function resolveCloseoutServiceDate(explicitServiceDate?: string, now?: Date): string {
   if (explicitServiceDate) return explicitServiceDate;
   const devOverride = parseCloseoutDevDateOverride();

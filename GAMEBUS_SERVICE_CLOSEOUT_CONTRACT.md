@@ -43,20 +43,20 @@
 | `serviceDate` | `targetDate` | ISO date |
 | `actualCustomers` | `actualCustomers` | integer |
 | `mainItemId` | resolved Main menu item ID | not derived from labels |
-| `mainQuantity` | Main prepared portions | actual prepared |
+| `preparedMainQuantity` | Main prepared portions | actual kitchen prepared |
 | `vegetarianItemId` | resolved Vegetarian menu item ID | |
-| `vegetarianQuantity` | Vegetarian prepared portions | |
+| `preparedVegetarianQuantity` | Vegetarian prepared portions | |
 | `soupItemId` | resolved Soup menu item ID | |
-| `soupQuantity` | Soup prepared portions | |
+| `preparedSoupQuantity` | Soup prepared portions | |
 | `dessertItemId` | resolved Dessert menu item ID | |
-| `dessertQuantity` | Dessert prepared portions | |
+| `preparedDessertQuantity` | Dessert prepared portions | |
 | `overproductionMeatKg` | Main overproduction (grams → kg) | `grams / 1000` at mapper boundary |
 | `overproductionVegetarianKg` | Vegetarian overproduction (grams → kg) | |
 | `overproductionSoupKg` | Soup overproduction (grams → kg) | |
 | `overproductionDessertKg` | Dessert overproduction (grams → kg) | |
 | `submittedAt` | finalization timestamp | ISO date-time |
 
-Quantity properties (`mainQuantity`, `vegetarianQuantity`, `soupQuantity`, `dessertQuantity`) are **reused** in this activity context for actual prepared portions.
+Prepared quantity properties (`preparedMainQuantity`, `preparedVegetarianQuantity`, `preparedSoupQuantity`, `preparedDessertQuantity`) are dedicated **wasteMeasurement** properties for actual kitchen prepared portions (integer 0–1000). They are **not** the student `mainQuantity` / `vegetarianQuantity` / `soupQuantity` / `dessertQuantity` properties (individual student selections, max 6).
 
 ### 3.2 Unit conversion
 

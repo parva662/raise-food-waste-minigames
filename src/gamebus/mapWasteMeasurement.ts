@@ -6,13 +6,13 @@ export const WASTE_MEASUREMENT_REQUIRED_REFS = [
   'serviceDate',
   'actualCustomers',
   'mainItemId',
-  'mainQuantity',
+  'preparedMainQuantity',
   'vegetarianItemId',
-  'vegetarianQuantity',
+  'preparedVegetarianQuantity',
   'soupItemId',
-  'soupQuantity',
+  'preparedSoupQuantity',
   'dessertItemId',
-  'dessertQuantity',
+  'preparedDessertQuantity',
   'overproductionMeatKg',
   'overproductionVegetarianKg',
   'overproductionSoupKg',
@@ -26,13 +26,13 @@ export type WasteMeasurementValueMap = {
   serviceDate: { value: string };
   actualCustomers: { value: number };
   mainItemId: { value: string };
-  mainQuantity: { value: number };
+  preparedMainQuantity: { value: number };
   vegetarianItemId: { value: string };
-  vegetarianQuantity: { value: number };
+  preparedVegetarianQuantity: { value: number };
   soupItemId: { value: string };
-  soupQuantity: { value: number };
+  preparedSoupQuantity: { value: number };
   dessertItemId: { value: string };
-  dessertQuantity: { value: number };
+  preparedDessertQuantity: { value: number };
   overproductionMeatKg: { value: number };
   overproductionVegetarianKg: { value: number };
   overproductionSoupKg: { value: number };
@@ -50,13 +50,13 @@ export function mapWasteMeasurement(closeout: ServiceCloseout): WasteMeasurement
     serviceDate: { value: closeout.targetDate },
     actualCustomers: { value: closeout.actualCustomers },
     mainItemId: { value: closeout.main.itemId },
-    mainQuantity: { value: closeout.main.preparedQuantity },
+    preparedMainQuantity: { value: closeout.main.preparedQuantity },
     vegetarianItemId: { value: closeout.vegetarian.itemId },
-    vegetarianQuantity: { value: closeout.vegetarian.preparedQuantity },
+    preparedVegetarianQuantity: { value: closeout.vegetarian.preparedQuantity },
     soupItemId: { value: closeout.soup.itemId },
-    soupQuantity: { value: closeout.soup.preparedQuantity },
+    preparedSoupQuantity: { value: closeout.soup.preparedQuantity },
     dessertItemId: { value: closeout.dessert.itemId },
-    dessertQuantity: { value: closeout.dessert.preparedQuantity },
+    preparedDessertQuantity: { value: closeout.dessert.preparedQuantity },
     overproductionMeatKg: { value: gramsToKilograms(closeout.main.overproductionGrams) },
     overproductionVegetarianKg: {
       value: gramsToKilograms(closeout.vegetarian.overproductionGrams),

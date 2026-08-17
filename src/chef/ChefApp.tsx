@@ -31,6 +31,7 @@ export function ChefApp({ clock }: ChefAppProps = {}) {
     formComplete,
     isSubmitDisabled,
     hasSubmitted,
+    calendarError,
     setExpectedCustomers,
     setMainQuantity,
     setVegetarianQuantity,
@@ -68,6 +69,12 @@ export function ChefApp({ clock }: ChefAppProps = {}) {
 
       <main className="app-main chef-main">
         <div className="chef-shell">
+          {calendarError && (
+            <MenuStatusBanner
+              message="Could not resolve the next service date."
+              reason={calendarError}
+            />
+          )}
           {menuAvailability.status === 'closed' && (
             <MenuStatusBanner
               message="The canteen is closed on this date."

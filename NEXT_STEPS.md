@@ -52,7 +52,7 @@ Chef embed URL: `https://parva662.github.io/raise-food-waste-minigames/#/chef`
 | GameBus ACTIVITY output | **Complete** — one `wasteMeasurement` per Finalize (fifteen required properties) |
 | Embed behaviour | One Finalize → one ACTIVITY → iframe closes via normal GameBus behaviour |
 | Waste units | UI grams; GameBus persistence kg (`grams / 1000` at mapper boundary) |
-| Quantity properties | `mainQuantity`, `vegetarianQuantity`, `soupQuantity`, `dessertQuantity` = actual prepared portions |
+| Quantity properties | `preparedMainQuantity`, `preparedVegetarianQuantity`, `preparedSoupQuantity`, `preparedDessertQuantity` = actual kitchen prepared portions |
 | Portion weights | Reference/calculation data in app only — **not** posted to GameBus |
 | Actor identity | Authenticated GameBus user (`activity.actor`) — no separate head-chef property on ACTIVITY |
 | Daily result calculation | **Implemented** — `#/chef-results` (fixture-backed simulation engine) |
@@ -70,13 +70,13 @@ Closeout embed URL: `https://parva662.github.io/raise-food-waste-minigames/#/ser
 | `serviceDate` | closeout `targetDate` |
 | `actualCustomers` | actual customers entered |
 | `mainItemId` | resolved Main menu item ID |
-| `mainQuantity` | Main prepared portions |
+| `preparedMainQuantity` | Main prepared portions |
 | `vegetarianItemId` | resolved Vegetarian menu item ID |
-| `vegetarianQuantity` | Vegetarian prepared portions |
+| `preparedVegetarianQuantity` | Vegetarian prepared portions |
 | `soupItemId` | resolved Soup menu item ID |
-| `soupQuantity` | Soup prepared portions |
+| `preparedSoupQuantity` | Soup prepared portions |
 | `dessertItemId` | resolved Dessert menu item ID |
-| `dessertQuantity` | Dessert prepared portions |
+| `preparedDessertQuantity` | Dessert prepared portions |
 | `overproductionMeatKg` | Main waste grams ÷ 1000 |
 | `overproductionVegetarianKg` | Vegetarian waste grams ÷ 1000 |
 | `overproductionSoupKg` | Soup waste grams ÷ 1000 |

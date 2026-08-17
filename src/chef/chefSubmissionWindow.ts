@@ -1,6 +1,9 @@
-import { parseISO, subDays, format } from 'date-fns';
 import { fromZonedTime } from 'date-fns-tz';
 import { CHEF_CONFIG } from '../config/chef';
+import {
+  OperationalCalendarError,
+  resolvePreviousOperationalDay,
+} from '../services/operationalServiceCalendar';
 import type { SubmissionPhase, SubmissionWindowStatus, TimingStatus } from '../types/declaration';
 import type { Clock } from '../services/submissionWindow';
 import type { ChefForecastSubmission } from './types';
@@ -9,8 +12,15 @@ function pad(value: number): string {
   return String(value).padStart(2, '0');
 }
 
-function getSubmissionDateIso(serviceDate: string): string {
-  return format(subDays(parseISO(serviceDate), 1), 'yyyy-MM-dd');
+function getSubmissionDateIso(serviceDate: string): string | null {
+  try {
+    return resolvePreviousOperationalDay(serviceDate);
+  } catch (error) {
+    if (error instanceof OperationalCalendarError) {
+      return null;
+    }
+    throw error;
+  }
 }
 
 function helsinkiInstant(dateIso: string, hour: number, minute: number, second: number): Date {
@@ -24,6 +34,10 @@ function serviceDayStart(serviceDate: string): Date {
 
 export function getChefSubmissionPhase(now: Date, serviceDate: string): SubmissionPhase {
   const submissionDateIso = getSubmissionDateIso(serviceDate);
+  if (submissionDateIso === null) {
+    return 'closed';
+  }
+
   const onTimeEnd = helsinkiInstant(
     submissionDateIso,
     CHEF_CONFIG.onTimeDeadlineHour,
@@ -62,6 +76,16 @@ export function getChefSubmissionWindowStatus(
 ): SubmissionWindowStatus {
   const phase = getChefSubmissionPhase(now, serviceDate);
   const submissionDateIso = getSubmissionDateIso(serviceDate);
+
+  if (submissionDateIso === null) {
+    return {
+      phase: 'closed',
+      countdownTargetIso: null,
+      totalPointsIfSubmittedNow: null,
+      message: 'Forecast closed',
+      detailLines: ['The forecast window could not be resolved for this service date.'],
+    };
+  }
 
   if (phase === 'on-time') {
     return {

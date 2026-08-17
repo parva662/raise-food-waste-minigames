@@ -2077,6 +2077,18 @@ ul {
   border-radius: var(--radius-md);
 }
 
+.closeout-submitted-forecast__test-banner {
+  margin: 0 0 var(--spacing-sm);
+  padding: 0.35rem 0.6rem;
+  border-radius: var(--radius-sm);
+  background: #fff4d6;
+  color: #7a4b00;
+  font-size: var(--font-size-xs);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
 .closeout-submitted-forecast__title {
   margin: 0 0 var(--spacing-sm);
   font-size: var(--font-size-md);

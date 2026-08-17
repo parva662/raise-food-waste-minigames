@@ -103,32 +103,61 @@ describe('mapWasteMeasurement / buildWasteMeasurementActivityMessage', () => {
     expect(mapWasteMeasurement(closeout).mainItemId).toEqual({ value: 'meatballs' });
   });
 
-  it('maps Main actual prepared quantity to mainQuantity', () => {
-    expect(mapWasteMeasurement(closeout).mainQuantity).toEqual({ value: 110 });
+  it('maps Main actual prepared quantity to preparedMainQuantity', () => {
+    expect(mapWasteMeasurement(closeout).preparedMainQuantity).toEqual({ value: 110 });
   });
 
   it('maps Vegetarian item ID correctly', () => {
     expect(mapWasteMeasurement(closeout).vegetarianItemId).toEqual({ value: 'pasta-primavera' });
   });
 
-  it('maps Vegetarian actual prepared quantity to vegetarianQuantity', () => {
-    expect(mapWasteMeasurement(closeout).vegetarianQuantity).toEqual({ value: 52 });
+  it('maps Vegetarian actual prepared quantity to preparedVegetarianQuantity', () => {
+    expect(mapWasteMeasurement(closeout).preparedVegetarianQuantity).toEqual({ value: 52 });
   });
 
   it('maps Soup item ID correctly', () => {
     expect(mapWasteMeasurement(closeout).soupItemId).toEqual({ value: 'tomato-soup' });
   });
 
-  it('maps Soup actual prepared quantity to soupQuantity', () => {
-    expect(mapWasteMeasurement(closeout).soupQuantity).toEqual({ value: 40 });
+  it('maps Soup actual prepared quantity to preparedSoupQuantity', () => {
+    expect(mapWasteMeasurement(closeout).preparedSoupQuantity).toEqual({ value: 40 });
   });
 
   it('maps Dessert item ID correctly', () => {
     expect(mapWasteMeasurement(closeout).dessertItemId).toEqual({ value: 'yogurt-berries' });
   });
 
-  it('maps Dessert actual prepared quantity to dessertQuantity', () => {
-    expect(mapWasteMeasurement(closeout).dessertQuantity).toEqual({ value: 35 });
+  it('maps Dessert actual prepared quantity to preparedDessertQuantity', () => {
+    expect(mapWasteMeasurement(closeout).preparedDessertQuantity).toEqual({ value: 35 });
+  });
+
+  it('maps kitchen-scale prepared quantities above the student range', () => {
+    const kitchenScaleCloseout: ServiceCloseout = {
+      ...closeout,
+      main: { ...closeout.main, preparedQuantity: 44 },
+      vegetarian: { ...closeout.vegetarian, preparedQuantity: 33 },
+      soup: { ...closeout.soup, preparedQuantity: 33 },
+      dessert: { ...closeout.dessert, preparedQuantity: 333 },
+    };
+    const msg = buildWasteMeasurementActivityMessage(
+      pariWasteMeasurementTaskFixture,
+      kitchenScaleCloseout,
+    );
+    const props = propertyMap(msg);
+
+    expect(props.preparedMainQuantity).toEqual({ value: 44 });
+    expect(props.preparedVegetarianQuantity).toEqual({ value: 33 });
+    expect(props.preparedSoupQuantity).toEqual({ value: 33 });
+    expect(props.preparedDessertQuantity).toEqual({ value: 333 });
+  });
+
+  it('does not emit student quantity property refs on wasteMeasurement', () => {
+    const msg = buildWasteMeasurementActivityMessage(pariWasteMeasurementTaskFixture, closeout);
+    const templates = msg.data.properties.map((p) => p.template);
+    expect(templates).not.toContain('mainQuantity');
+    expect(templates).not.toContain('vegetarianQuantity');
+    expect(templates).not.toContain('soupQuantity');
+    expect(templates).not.toContain('dessertQuantity');
   });
 
   it('maps Main 850 g waste to 0.85 overproductionMeatKg', () => {
@@ -324,5 +353,25 @@ describe('student and chef behaviour remain independent', () => {
     expect(selectActivityTemplate(pariChefForecastTaskFixture, 'chefForecast').reference).toBe(
       'chefForecast',
     );
+  });
+
+  it('studentLunchCheckin still emits student quantity refs', () => {
+    const templates = pariStudentLunchTaskFixture.activityTemplates[0]?.linkedProperties?.map(
+      (property) => property.ref,
+    );
+    expect(templates).toContain('mainQuantity');
+    expect(templates).toContain('vegetarianQuantity');
+    expect(templates).toContain('soupQuantity');
+    expect(templates).toContain('dessertQuantity');
+  });
+
+  it('chefForecast still uses forecast quantity refs', () => {
+    const templates = pariChefForecastTaskFixture.activityTemplates[0]?.linkedProperties?.map(
+      (property) => property.ref,
+    );
+    expect(templates).toContain('forecastMeat');
+    expect(templates).toContain('forecastVegetarian');
+    expect(templates).toContain('forecastSoup');
+    expect(templates).toContain('forecastDessert');
   });
 });
