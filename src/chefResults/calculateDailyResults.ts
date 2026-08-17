@@ -29,7 +29,6 @@ function buildObservedServiceReality(closeout: CloseoutForCalculation): Observed
   return {
     serviceDate: closeout.targetDate,
     actualCustomers: closeout.actualCustomers,
-    headChefUserId: closeout.headChefUserId,
     main: calculateObservedCategory(closeout.main),
     vegetarian: calculateObservedCategory(closeout.vegetarian),
     soup: calculateObservedCategory(closeout.soup),
@@ -47,7 +46,6 @@ function sumCategoryGrams(
 function evaluateStaffForecast(
   observed: ObservedServiceReality,
   forecast: ChefForecastForCalculation,
-  isHeadChef: boolean,
 ): StaffDailyResult {
   const categories = Object.fromEntries(
     RESULT_CATEGORY_KEYS.map((key) => [
@@ -60,7 +58,6 @@ function evaluateStaffForecast(
     serviceDate: observed.serviceDate,
     userId: forecast.userId,
     userName: forecast.userName,
-    isHeadChef,
     forecastCustomers: forecast.forecastTotalCustomers,
     actualCustomers: observed.actualCustomers,
     customerForecastDifference: calculateCustomerForecastDifference(
@@ -80,7 +77,10 @@ function evaluateStaffForecast(
     staffResult,
     'simulatedOverproductionGrams',
   );
-  staffResult.totalSimulatedShortageGrams = sumCategoryGrams(staffResult, 'simulatedShortageGrams');
+  staffResult.totalSimulatedShortageGrams = sumCategoryGrams(
+    staffResult,
+    'simulatedShortageGrams',
+  );
 
   return staffResult;
 }
@@ -102,13 +102,7 @@ export function calculateDailyServiceResults(
       (forecast) =>
         forecast.targetDate === closeout.targetDate && participantSet.has(forecast.userId),
     )
-    .map((forecast) =>
-      evaluateStaffForecast(
-        observed,
-        forecast,
-        forecast.userId === participation.headChefUserId,
-      ),
-    )
+    .map((forecast) => evaluateStaffForecast(observed, forecast))
     .sort((a, b) => a.userName.localeCompare(b.userName));
 
   return {

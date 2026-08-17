@@ -7,7 +7,6 @@ import type { NormalizedServiceCloseout } from '../operationalRecord';
 export const FIXTURE_NORMALIZED_CLOSEOUTS: readonly NormalizedServiceCloseout[] = [
   {
     targetDate: '2026-07-27',
-    headChefUserId: 'fixture-user-a',
     actualCustomers: 176,
     main: {
       itemId: 'thai-pork-meatballs-with-rice',
@@ -41,7 +40,6 @@ export const FIXTURE_NORMALIZED_CLOSEOUTS: readonly NormalizedServiceCloseout[] 
   },
   {
     targetDate: '2026-07-28',
-    headChefUserId: 'fixture-user-c',
     actualCustomers: 188,
     main: {
       itemId: 'sausage-stroganoff-with-mashed-potatoes',
@@ -75,7 +73,6 @@ export const FIXTURE_NORMALIZED_CLOSEOUTS: readonly NormalizedServiceCloseout[] 
   },
   {
     targetDate: '2026-07-29',
-    headChefUserId: 'fixture-user-e',
     actualCustomers: 182,
     main: {
       itemId: 'chicken-steak-with-pesto-sauce-and-pasta',
@@ -109,7 +106,6 @@ export const FIXTURE_NORMALIZED_CLOSEOUTS: readonly NormalizedServiceCloseout[] 
   },
   {
     targetDate: '2026-07-30',
-    headChefUserId: 'fixture-user-b',
     actualCustomers: 194,
     main: {
       itemId: 'roasted-rainbow-trout-with-lemon-sauce-and-potatoes',
@@ -143,7 +139,6 @@ export const FIXTURE_NORMALIZED_CLOSEOUTS: readonly NormalizedServiceCloseout[] 
   },
   {
     targetDate: '2026-07-31',
-    headChefUserId: 'fixture-user-d',
     actualCustomers: 179,
     main: {
       itemId: 'minced-meat-lasagne',

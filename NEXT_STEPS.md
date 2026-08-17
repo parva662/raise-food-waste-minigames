@@ -46,7 +46,7 @@ Chef embed URL: `https://parva662.github.io/raise-food-waste-minigames/#/chef`
 | Route `#/service-closeout` | **Complete** |
 | Input Collection canonical key | `serviceCloseoutInput` |
 | Legacy plural key | `serviceCloseoutInputs` — temporarily accepted for backwards compatibility |
-| **chefForecast retrieval** | **Complete** — `serviceCloseoutInput.chefForecasts` (`/api/me/activities`, authenticated user) |
+| **chefForecast retrieval** | **Complete** — `kitchenGroupInput.activities` (`GET /groups/activities`, group kitchen forecasts) |
 | `GameBusChefForecast` read model | Parsed from inbound activities; read-only in closeout UI |
 | Forecast selection | Exact `targetDate` match; duplicate testing activities → latest valid submission |
 | GameBus ACTIVITY output | **Complete** — one `wasteMeasurement` per Finalize (fifteen required properties) |
@@ -83,7 +83,7 @@ Closeout embed URL: `https://parva662.github.io/raise-food-waste-minigames/#/ser
 | `overproductionDessertKg` | Dessert waste grams ÷ 1000 |
 | `submittedAt` | finalization timestamp |
 
-**Not posted:** portion weights, `headChefUserId`, forecast fields, `actualServiceData`, `wasteReflection`, `productionPlan`, `kitchenServiceCloseout`.
+**Not posted:** portion weights, recorder/user name fields, forecast fields, `actualServiceData`, `wasteReflection`, `productionPlan`, `kitchenServiceCloseout`.
 
 ---
 
@@ -151,7 +151,7 @@ Full JSON Schemas and examples: `src/gamebus/propertySchemas.ts`.
 
 **Participant (`#/chef-results`):** summary cards, category diverging visual, anonymous “How you compare”, weekly trend, lightweight “Kitchen progress”. No coworker names/IDs.
 
-**Admin (`#/chef-results-admin`):** preserves prior all-staff research table — names, head chef, full calculation detail, weekly raw aggregation.
+**Admin (`#/chef-results-admin`):** all-staff research table with real actor names when embedded; full calculation detail, weekly raw aggregation.
 
 **Confirmed (GameBus identity):**
 

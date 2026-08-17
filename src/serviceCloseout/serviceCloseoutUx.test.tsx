@@ -27,7 +27,6 @@ function getWasteInput(category: string) {
 
 async function fillCloseoutForm(user: ReturnType<typeof userEvent.setup>) {
   await user.type(screen.getByLabelText('Actual customers'), '150');
-  await user.selectOptions(screen.getByLabelText('Head chef today'), 'fixture-user-e');
   await user.type(getPreparedInput('Main'), '110');
   await user.type(getWasteInput('Main'), '850');
   await user.type(getPreparedInput('Vegetarian'), '52');
@@ -110,7 +109,7 @@ describe('service closeout UX', () => {
   it('starts required fields blank and disables finalize', () => {
     render(<ServiceCloseoutApp />);
     expect(screen.getByLabelText('Actual customers')).toHaveValue('');
-    expect(screen.getByLabelText('Head chef today')).toHaveValue('');
+    expect(screen.getByTestId('closeout-recorded-by')).toHaveTextContent('—');
     expect(getPreparedInput('Main')).toHaveValue('');
     expect(getWasteInput('Main')).toHaveValue('');
     expect(screen.getByRole('button', { name: 'Finalize service' })).toBeDisabled();
@@ -121,7 +120,6 @@ describe('service closeout UX', () => {
     const user = userEvent.setup();
     render(<ServiceCloseoutApp />);
     await user.type(screen.getByLabelText('Actual customers'), '0');
-    await user.selectOptions(screen.getByLabelText('Head chef today'), 'fixture-user-a');
     for (const category of ['Main', 'Vegetarian', 'Soup', 'Dessert']) {
       await user.type(getPreparedInput(category), '0');
       await user.type(getWasteInput(category), '0');

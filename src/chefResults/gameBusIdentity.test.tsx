@@ -3,6 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, render, screen } from '@testing-library/react';
 import { ChefResultsParticipantApp } from './ChefResultsParticipantApp';
 import { DEFAULT_FIXTURE_CURRENT_USER_ID, getFixtureCurrentUserId } from './currentUserContext';
+import * as detectEmbedModule from '../gamebus/detectEmbed';
 import {
   ingestInputCollectionsForTests,
   resetGameBusBridgeForTests,
@@ -28,6 +29,7 @@ describe('GameBus authenticated user on chef results', () => {
 
   beforeEach(() => {
     resetGameBusBridgeForTests();
+    vi.spyOn(detectEmbedModule, 'isGameBusEmbed').mockReturnValue(true);
     window.sessionStorage.clear();
     window.location.hash = '#/chef-results?gamebusDebug=1';
     originalParent = window.parent;
@@ -154,7 +156,8 @@ describe('GameBus authenticated user on chef results', () => {
     expect(screen.getByTestId('gamebus-user-id')).not.toHaveTextContent(
       DEFAULT_FIXTURE_CURRENT_USER_ID,
     );
-    expect(screen.getByTestId('participant-summary-cards')).toBeInTheDocument();
+    expect(screen.queryByTestId('fixture-current-user-selector')).not.toBeInTheDocument();
+    expect(screen.getByTestId('chef-results-unavailable')).toBeInTheDocument();
   });
 
   it('logs authenticated user when gamebusDebug=1', () => {

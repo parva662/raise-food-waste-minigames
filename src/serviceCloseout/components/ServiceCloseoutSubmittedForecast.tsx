@@ -1,14 +1,19 @@
 import type { GameBusChefForecast } from '../forecast/gameBusChefForecastTypes';
 
 interface ServiceCloseoutSubmittedForecastProps {
-  forecast: GameBusChefForecast;
+  forecasts: readonly GameBusChefForecast[];
   isSynthetic?: boolean;
 }
 
 export function ServiceCloseoutSubmittedForecast({
-  forecast,
+  forecasts,
   isSynthetic = false,
 }: ServiceCloseoutSubmittedForecastProps) {
+  const chefNames = forecasts.map((forecast) => forecast.actorName).join(', ');
+  const customerForecasts = forecasts
+    .map((forecast) => `${forecast.actorName} — ${forecast.forecastTotalCustomers}`)
+    .join('\n');
+
   return (
     <section
       className="closeout-submitted-forecast"
@@ -23,12 +28,14 @@ export function ServiceCloseoutSubmittedForecast({
       <h2 className="closeout-submitted-forecast__title">Submitted forecast</h2>
       <dl className="closeout-submitted-forecast__facts">
         <div>
-          <dt>Chef</dt>
-          <dd data-testid="closeout-forecast-chef">{forecast.actorName}</dd>
+          <dt>Chef{forecasts.length > 1 ? 's' : ''}</dt>
+          <dd data-testid="closeout-forecast-chef">{chefNames}</dd>
         </div>
         <div>
           <dt>Expected customers</dt>
-          <dd data-testid="closeout-forecast-customers">{forecast.forecastTotalCustomers}</dd>
+          <dd data-testid="closeout-forecast-customers" className="closeout-submitted-forecast__multiline">
+            {customerForecasts}
+          </dd>
         </div>
       </dl>
     </section>

@@ -20,7 +20,6 @@ import type {
 
 const baseCloseout: CloseoutForCalculation = {
   targetDate: '2026-07-27',
-  headChefUserId: 'fixture-user-a',
   actualCustomers: 176,
   main: {
     itemId: 'main-item',
@@ -51,7 +50,6 @@ const baseCloseout: CloseoutForCalculation = {
 const participation: ServiceDayParticipation = {
   targetDate: '2026-07-27',
   participantUserIds: ['fixture-user-a', 'fixture-user-b'],
-  headChefUserId: 'fixture-user-a',
 };
 
 function forecastFor(
@@ -154,15 +152,15 @@ describe('chef results calculation engine', () => {
     expect(daily.staffResults[1].actualCustomers).toBe(176);
   });
 
-  it('evaluates rotating head chef with the same method as other staff', () => {
+  it('evaluates each participating staff member independently', () => {
     const daily = calculateDailyServiceResults(baseCloseout, participation, [
       forecastFor('fixture-user-a', 'Aino Virtanen'),
       forecastFor('fixture-user-b', 'Boris Lindström'),
     ]);
-    const headChef = daily.staffResults.find((result) => result.isHeadChef);
-    const other = daily.staffResults.find((result) => !result.isHeadChef);
-    expect(headChef?.userId).toBe('fixture-user-a');
-    expect(headChef?.main.observedDemandWeightGrams).toBe(other?.main.observedDemandWeightGrams);
+    expect(daily.staffResults).toHaveLength(2);
+    expect(daily.staffResults[0].main.observedDemandWeightGrams).toBe(
+      daily.staffResults[1].main.observedDemandWeightGrams,
+    );
   });
 
   it('does not evaluate staff absent on the service date', () => {
@@ -178,7 +176,6 @@ describe('chef results calculation engine', () => {
         serviceDate: '2026-07-27',
         userId: 'fixture-user-a',
         userName: 'Aino Virtanen',
-        isHeadChef: true,
         forecastCustomers: 180,
         actualCustomers: 176,
         customerForecastDifference: 4,
@@ -194,7 +191,6 @@ describe('chef results calculation engine', () => {
         serviceDate: '2026-07-28',
         userId: 'fixture-user-a',
         userName: 'Aino Virtanen',
-        isHeadChef: false,
         forecastCustomers: 175,
         actualCustomers: 182,
         customerForecastDifference: -7,
@@ -210,7 +206,6 @@ describe('chef results calculation engine', () => {
         serviceDate: '2026-07-28',
         userId: 'fixture-user-b',
         userName: 'Boris Lindström',
-        isHeadChef: false,
         forecastCustomers: 190,
         actualCustomers: 182,
         customerForecastDifference: 8,

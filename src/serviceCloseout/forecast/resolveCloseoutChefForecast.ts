@@ -1,27 +1,42 @@
-import { getRawChefForecastsInput } from '../../gamebus/inputCollections';
+import {
+  extractGroupActivities,
+  filterActivitiesByTemplateReference,
+  getRawKitchenGroupActivitiesInput,
+} from '../../gamebus/groupActivities';
 import type { GameBusInputCollectionsPayload } from '../../gamebus/types';
 import type { CloseoutChefForecastResolution } from './gameBusChefForecastTypes';
 import { NO_CLOSEOUT_FORECAST_MESSAGE } from './gameBusChefForecastTypes';
 import { parseGameBusChefForecastActivities } from './parseGameBusChefForecast';
-import { selectLatestForecastForDate } from './selectCloseoutForecast';
+import { selectForecastsForDate } from './selectCloseoutForecast';
 import { buildSyntheticCloseoutChefForecast } from './syntheticCloseoutChefForecast';
 
+const CHEF_FORECAST_TEMPLATE = 'chefForecast';
+
+function parseChefForecastsFromGroupActivities(rawActivities: unknown) {
+  const activities = extractGroupActivities(rawActivities);
+  const chefForecastActivities = filterActivitiesByTemplateReference(
+    activities,
+    CHEF_FORECAST_TEMPLATE,
+  );
+  return parseGameBusChefForecastActivities(chefForecastActivities);
+}
+
 export function resolveCloseoutChefForecast(
-  rawChefForecasts: unknown,
+  rawGroupActivities: unknown,
   closeoutDate: string,
 ): CloseoutChefForecastResolution {
-  const { valid } = parseGameBusChefForecastActivities(rawChefForecasts);
-  const forecast = selectLatestForecastForDate(valid, closeoutDate);
+  const { valid } = parseChefForecastsFromGroupActivities(rawGroupActivities);
+  const forecasts = selectForecastsForDate(valid, closeoutDate);
 
-  if (!forecast) {
+  if (forecasts.length === 0) {
     return {
       status: 'no_forecast',
-      forecast: null,
+      forecasts: [],
       message: NO_CLOSEOUT_FORECAST_MESSAGE,
     };
   }
 
-  return { status: 'matched', forecast, isSynthetic: false };
+  return { status: 'matched', forecasts, isSynthetic: false };
 }
 
 export interface ResolveCloseoutChefForecastOptions {
@@ -36,14 +51,14 @@ export function resolveCloseoutChefForecastFromInputCollections(
   options: ResolveCloseoutChefForecastOptions = {},
 ): CloseoutChefForecastResolution {
   if (!embedded) {
-    return { status: 'standalone', forecast: null };
+    return { status: 'standalone', forecasts: [] };
   }
 
   if (!inputCollectionsReady) {
-    return { status: 'pending', forecast: null };
+    return { status: 'pending', forecasts: [] };
   }
 
-  const raw = getRawChefForecastsInput(inputCollections);
+  const raw = getRawKitchenGroupActivitiesInput(inputCollections);
   const realResolution = resolveCloseoutChefForecast(raw, closeoutDate);
   if (realResolution.status === 'matched') {
     return realResolution;
@@ -52,7 +67,7 @@ export function resolveCloseoutChefForecastFromInputCollections(
   if (options.syntheticForecastFallback) {
     return {
       status: 'matched',
-      forecast: buildSyntheticCloseoutChefForecast(closeoutDate),
+      forecasts: [buildSyntheticCloseoutChefForecast(closeoutDate)],
       isSynthetic: true,
     };
   }

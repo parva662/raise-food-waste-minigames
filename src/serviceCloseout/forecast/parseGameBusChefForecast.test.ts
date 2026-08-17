@@ -169,7 +169,7 @@ describe('selectCloseoutForecast', () => {
   it('returns no-forecast state when no date matches', () => {
     const resolution = resolveCloseoutChefForecast([], closeoutDate);
     expect(resolution.status).toBe('no_forecast');
-    expect(resolution.forecast).toBeNull();
+    expect(resolution.forecasts).toHaveLength(0);
   });
 
   it('selects latest duplicate by submittedAt', () => {
@@ -234,8 +234,8 @@ describe('resolveCloseoutChefForecastFromInputCollections', () => {
   it('does not substitute fixtures in embed mode when no match exists', () => {
     const resolution = resolveCloseoutChefForecastFromInputCollections(
       {
-        serviceCloseoutInput: {
-          chefForecasts: [buildAnonymizedChefForecastActivity()],
+        kitchenGroupInput: {
+          activities: [buildAnonymizedChefForecastActivity()],
         },
       },
       '2026-01-01',

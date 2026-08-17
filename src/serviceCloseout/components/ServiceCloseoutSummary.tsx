@@ -6,29 +6,24 @@ import {
   type ServiceCloseout,
   type ServiceCloseoutDraft,
 } from '../types';
-import { getStaffMemberById } from '../fixtures/staffRotation';
 
 interface ServiceCloseoutSummaryProps {
   draft: ServiceCloseoutDraft;
   finalizedCloseout: ServiceCloseout | null;
+  recordedByName: string | null;
 }
 
 function formatOptional(value: number | null): string {
   return value === null ? CLOSEOUT_NOT_ENTERED_LABEL : String(value);
 }
 
-function headChefLabel(userId: string | null): string {
-  if (!userId) return CLOSEOUT_NOT_ENTERED_LABEL;
-  return getStaffMemberById(userId)?.displayName ?? userId;
-}
-
 export function ServiceCloseoutSummary({
   draft,
   finalizedCloseout,
+  recordedByName,
 }: ServiceCloseoutSummaryProps) {
   const source = finalizedCloseout;
   const actualCustomers = source?.actualCustomers ?? draft.actualCustomers;
-  const headChefUserId = source?.headChefUserId ?? draft.headChefUserId;
 
   return (
     <aside className="closeout-summary" aria-label="Service summary">
@@ -39,8 +34,8 @@ export function ServiceCloseoutSummary({
           <dd>{formatOptional(actualCustomers)}</dd>
         </div>
         <div className="closeout-summary__row">
-          <dt>Head chef</dt>
-          <dd>{headChefLabel(headChefUserId)}</dd>
+          <dt>Recorded by</dt>
+          <dd>{recordedByName ?? CLOSEOUT_NOT_ENTERED_LABEL}</dd>
         </div>
       </dl>
       <h3 className="closeout-summary__section">Prepared / waste</h3>

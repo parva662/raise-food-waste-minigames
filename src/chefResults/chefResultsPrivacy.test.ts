@@ -19,11 +19,11 @@ describe('team comparison privacy utilities', () => {
     );
   });
 
-  it('does not expose head chef separately in comparison insights', () => {
+  it('does not expose privileged role labels in comparison insights', () => {
     const daily = buildFixtureDailyServiceResults('2026-07-27');
-    const headChef = daily!.staffResults.find((result) => result.isHeadChef)!;
+    const participant = daily!.staffResults[0]!;
     const benchmark = buildAnonymousTeamBenchmark(daily!.staffResults);
-    const insights = buildParticipantComparisonInsights(headChef, benchmark);
+    const insights = buildParticipantComparisonInsights(participant, benchmark);
     expect(insights.overproductionMessage).not.toMatch(/head chef/i);
     expect(insights.shortageMessage).not.toMatch(/head chef/i);
   });

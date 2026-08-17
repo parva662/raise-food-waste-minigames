@@ -33,7 +33,6 @@ export type CloseoutCategoryActuals = {
 export type ServiceCloseout = {
   /** Service date (ISO date). */
   targetDate: string;
-  headChefUserId: string;
   actualCustomers: number;
   main: CloseoutCategoryActuals;
   vegetarian: CloseoutCategoryActuals;
@@ -52,7 +51,6 @@ export type CloseoutCategoryDraft = {
 
 export type ServiceCloseoutDraft = {
   actualCustomers: number | null;
-  headChefUserId: string | null;
   main: CloseoutCategoryDraft;
   vegetarian: CloseoutCategoryDraft;
   soup: CloseoutCategoryDraft;
@@ -64,7 +62,7 @@ export type CloseoutFormStatus = 'draft' | 'ready' | 'finalized';
 export const CLOSEOUT_NOT_ENTERED_LABEL = 'Not entered';
 
 export const CLOSEOUT_INCOMPLETE_MESSAGE =
-  'Enter actual customers, head chef, and all prepared and overproduction values to continue.';
+  'Enter actual customers and all prepared and overproduction values to continue.';
 
 export function createEmptyCloseoutDraft(): ServiceCloseoutDraft {
   const emptyCategory = (): CloseoutCategoryDraft => ({
@@ -73,7 +71,6 @@ export function createEmptyCloseoutDraft(): ServiceCloseoutDraft {
   });
   return {
     actualCustomers: null,
-    headChefUserId: null,
     main: emptyCategory(),
     vegetarian: emptyCategory(),
     soup: emptyCategory(),
@@ -84,8 +81,6 @@ export function createEmptyCloseoutDraft(): ServiceCloseoutDraft {
 export function isCloseoutDraftComplete(draft: ServiceCloseoutDraft): boolean {
   return (
     draft.actualCustomers !== null &&
-    draft.headChefUserId !== null &&
-    draft.headChefUserId.length > 0 &&
     CLOSEOUT_CATEGORY_KEYS.every(
       (key) =>
         draft[key].preparedQuantity !== null && draft[key].overproductionGrams !== null,

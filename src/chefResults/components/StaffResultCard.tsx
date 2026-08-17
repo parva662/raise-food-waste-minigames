@@ -21,17 +21,9 @@ function CategoryRow({ label, category }: { label: string; category: StaffCatego
 
 export function StaffResultCard({ result }: StaffResultCardProps) {
   return (
-    <article
-      className={`chef-results-staff-card${result.isHeadChef ? ' chef-results-staff-card--head-chef' : ''}`}
-      data-testid={`staff-result-${result.userId}`}
-    >
+    <article className="chef-results-staff-card" data-testid={`staff-result-${result.userId}`}>
       <header className="chef-results-staff-card__header">
-        <h3 className="chef-results-staff-card__name">
-          {result.userName}
-          {result.isHeadChef ? (
-            <span className="chef-results-staff-card__badge">Head chef this service</span>
-          ) : null}
-        </h3>
+        <h3 className="chef-results-staff-card__name">{result.userName}</h3>
         <p className="chef-results-staff-card__note">
           Simulated outcome if this forecast had been used as the production plan, based on the
           observed service demand.

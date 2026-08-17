@@ -12,7 +12,6 @@ export type CloseoutCategoryWithKg = ServiceCloseout['main'] & {
  */
 export type NormalizedServiceCloseout = {
   targetDate: string;
-  headChefUserId: string;
   actualCustomers: number;
   main: CloseoutCategoryWithKg;
   vegetarian: CloseoutCategoryWithKg;
@@ -32,7 +31,6 @@ function withKg(category: ServiceCloseout['main']): CloseoutCategoryWithKg {
 export function normalizeCloseoutKg(closeout: ServiceCloseout): NormalizedServiceCloseout {
   return {
     targetDate: closeout.targetDate,
-    headChefUserId: closeout.headChefUserId,
     actualCustomers: closeout.actualCustomers,
     main: withKg(closeout.main),
     vegetarian: withKg(closeout.vegetarian),

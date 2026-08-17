@@ -5,7 +5,6 @@ import { resolveMenuForDate } from '../services/menuResolver';
 import { resolveMealSlotsForDate } from '../services/mealSlots';
 import type { CloseoutAccessPolicy } from './accessPolicy';
 import { developmentCloseoutAccessPolicy } from './accessPolicyDevelopment';
-import { getHeadChefOptionsForDate } from './fixtures/staffRotation';
 import { resolveCloseoutServiceDate } from './closeoutServiceDate';
 import { normalizeServiceCloseout } from './normalize';
 import { normalizeCloseoutKg, type NormalizedServiceCloseout } from './operationalRecord';
@@ -46,7 +45,6 @@ type CategoryErrorField = 'prepared' | 'waste';
 
 type CloseoutAction =
   | { type: 'SET_ACTUAL_CUSTOMERS'; value: number | null }
-  | { type: 'SET_HEAD_CHEF'; value: string | null }
   | { type: 'SET_PREPARED'; category: CloseoutCategoryKey; value: number | null }
   | { type: 'SET_WASTE'; category: CloseoutCategoryKey; value: number | null }
   | { type: 'SET_CUSTOMERS_ERROR'; error: string | null }
@@ -78,12 +76,6 @@ function closeoutReducer(state: ServiceCloseoutState, action: CloseoutAction): S
       return {
         ...state,
         draft: { ...state.draft, actualCustomers: action.value },
-        finalizeError: null,
-      };
-    case 'SET_HEAD_CHEF':
-      return {
-        ...state,
-        draft: { ...state.draft, headChefUserId: action.value },
         finalizeError: null,
       };
     case 'SET_PREPARED':
@@ -161,7 +153,6 @@ export function useServiceCloseout(options: UseServiceCloseoutOptions = {}) {
 
   const menuAvailability = useMemo(() => resolveMenuForDate(serviceDate), [serviceDate]);
   const mealSlots = useMemo(() => resolveMealSlotsForDate(serviceDate), [serviceDate]);
-  const headChefOptions = useMemo(() => getHeadChefOptionsForDate(serviceDate), [serviceDate]);
 
   const [state, dispatch] = useReducer(closeoutReducer, undefined, createInitialState);
   const embedded = isGameBusEmbed();
@@ -215,10 +206,6 @@ export function useServiceCloseout(options: UseServiceCloseoutOptions = {}) {
 
   const setCustomersError = useCallback((error: string | null) => {
     dispatch({ type: 'SET_CUSTOMERS_ERROR', error });
-  }, []);
-
-  const setHeadChefUserId = useCallback((value: string | null) => {
-    dispatch({ type: 'SET_HEAD_CHEF', value });
   }, []);
 
   const setPreparedQuantity = useCallback((category: CloseoutCategoryKey, value: number | null) => {
@@ -314,7 +301,6 @@ export function useServiceCloseout(options: UseServiceCloseoutOptions = {}) {
     serviceDate,
     menuAvailability,
     mealSlots,
-    headChefOptions,
     formComplete,
     formStatus,
     hasValidationErrors,
@@ -326,7 +312,6 @@ export function useServiceCloseout(options: UseServiceCloseoutOptions = {}) {
     finalizeError: state.finalizeError,
     setActualCustomers,
     setCustomersError,
-    setHeadChefUserId,
     setPreparedQuantity,
     setOverproductionGrams,
     setPreparedError,

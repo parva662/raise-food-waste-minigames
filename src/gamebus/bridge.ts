@@ -6,7 +6,7 @@ import { isGameBusEmbed } from './detectEmbed';
 import { gamebusDevLog } from './devLog';
 import {
   getInputCollectionKeys,
-  getRawChefForecastsInput,
+  getRawKitchenGroupActivitiesInput,
 } from './inputCollections';
 import { logTaskStructureSanitized } from './logTaskStructure';
 import { selectActivityTemplate } from './selectActivityTemplate';
@@ -110,7 +110,7 @@ function acceptInputCollectionsFromParent(data: GameBusInputCollectionsPayload):
   const keys = [...getInputCollectionKeys(data)];
   gamebusDevLog('INPUT_COLLECTIONS received', {
     collectionKeys: keys,
-    chefForecasts: getRawChefForecastsInput(data),
+    kitchenGroupActivities: getRawKitchenGroupActivitiesInput(data),
   });
   inputCollectionsListener?.(inputCollectionsData);
 }

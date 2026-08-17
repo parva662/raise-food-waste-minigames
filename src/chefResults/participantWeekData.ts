@@ -1,5 +1,7 @@
+import type { GameBusInputCollectionsPayload } from '../gamebus/types';
 import { buildAllFixtureDailyServiceResults } from './adapters/fixtureCalculationSource';
-import type { StaffDailyResult } from './types';
+import { buildAllGroupDailyServiceResults } from './adapters/groupCalculationSource';
+import type { DailyServiceResults, StaffDailyResult } from './types';
 
 export type ParticipantWeekPoint = {
   serviceDate: string;
@@ -16,10 +18,10 @@ export type ParticipantWeekSummary = {
   points: readonly ParticipantWeekPoint[];
 };
 
-export function buildParticipantWeekSummary(userId: string): ParticipantWeekSummary {
+function buildSummaryFromDays(userId: string, days: readonly DailyServiceResults[]): ParticipantWeekSummary {
   const points: ParticipantWeekPoint[] = [];
 
-  for (const day of buildAllFixtureDailyServiceResults()) {
+  for (const day of days) {
     const own = day.staffResults.find((result) => result.userId === userId);
     if (!own) continue;
     points.push({
@@ -56,10 +58,26 @@ export function buildParticipantWeekSummary(userId: string): ParticipantWeekSumm
   };
 }
 
+export function buildParticipantWeekSummary(
+  userId: string,
+  inputCollections?: GameBusInputCollectionsPayload | null,
+): ParticipantWeekSummary {
+  const days =
+    inputCollections !== undefined
+      ? buildAllGroupDailyServiceResults(inputCollections)
+      : buildAllFixtureDailyServiceResults();
+  return buildSummaryFromDays(userId, days);
+}
+
 export function findParticipantDailyResult(
   userId: string,
   serviceDate: string,
+  dailyResults?: DailyServiceResults | null,
 ): StaffDailyResult | null {
+  if (dailyResults) {
+    return dailyResults.staffResults.find((result) => result.userId === userId) ?? null;
+  }
+
   const day = buildAllFixtureDailyServiceResults().find((entry) => entry.serviceDate === serviceDate);
   return day?.staffResults.find((result) => result.userId === userId) ?? null;
 }

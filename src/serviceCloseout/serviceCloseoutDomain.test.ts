@@ -26,7 +26,6 @@ const portionWeights = createDevelopmentPortionWeightProvider();
 function completeDraft(overrides: Partial<ServiceCloseoutDraft> = {}): ServiceCloseoutDraft {
   return {
     actualCustomers: 150,
-    headChefUserId: 'fixture-user-e',
     main: { preparedQuantity: 110, overproductionGrams: 850 },
     vegetarian: { preparedQuantity: 52, overproductionGrams: 360 },
     soup: { preparedQuantity: 40, overproductionGrams: 500 },
@@ -39,7 +38,6 @@ describe('service closeout domain', () => {
   it('starts with blank draft fields', () => {
     const draft = createEmptyCloseoutDraft();
     expect(draft.actualCustomers).toBeNull();
-    expect(draft.headChefUserId).toBeNull();
     expect(draft.main.preparedQuantity).toBeNull();
     expect(draft.main.overproductionGrams).toBeNull();
     expect(isCloseoutDraftComplete(draft)).toBe(false);
@@ -94,7 +92,6 @@ describe('service closeout domain', () => {
     );
 
     expect(closeout.targetDate).toBe(MENU_DATES.runtimeWednesday);
-    expect(closeout.headChefUserId).toBe('fixture-user-e');
     expect(closeout.actualCustomers).toBe(150);
     expect(closeout.main.itemId).toBe(slots.main.id);
     expect(closeout.main.preparedQuantity).toBe(110);

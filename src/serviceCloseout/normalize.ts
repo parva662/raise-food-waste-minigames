@@ -44,7 +44,6 @@ export function normalizeServiceCloseout(
 
   return {
     targetDate,
-    headChefUserId: draft.headChefUserId as string,
     actualCustomers: draft.actualCustomers as number,
     ...categories,
     submittedAt,

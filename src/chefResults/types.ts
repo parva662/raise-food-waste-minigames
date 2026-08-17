@@ -30,7 +30,6 @@ export type ObservedCategoryReality = {
 export type ObservedServiceReality = {
   serviceDate: string;
   actualCustomers: number;
-  headChefUserId: string;
   main: ObservedCategoryReality;
   vegetarian: ObservedCategoryReality;
   soup: ObservedCategoryReality;
@@ -55,7 +54,6 @@ export type StaffDailyResult = {
   serviceDate: string;
   userId: string;
   userName: string;
-  isHeadChef: boolean;
   forecastCustomers: number;
   actualCustomers: number;
   customerForecastDifference: number;
@@ -100,7 +98,6 @@ export type CloseoutCategoryForCalculation = {
 
 export type CloseoutForCalculation = {
   targetDate: string;
-  headChefUserId: string;
   actualCustomers: number;
   main: CloseoutCategoryForCalculation;
   vegetarian: CloseoutCategoryForCalculation;
@@ -111,7 +108,6 @@ export type CloseoutForCalculation = {
 export type ServiceDayParticipation = {
   targetDate: string;
   participantUserIds: readonly string[];
-  headChefUserId: string;
 };
 
 export type StaffWeeklySummary = {

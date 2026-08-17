@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { formatServiceDateShort } from './displayFormat';
 import { CategoryDetailPanel } from './components/participant/CategoryDetailPanel';
 import { CategoryOutcomeVisual } from './components/participant/CategoryOutcomeVisual';
@@ -9,34 +9,60 @@ import { ParticipantHeader } from './components/participant/ParticipantHeader';
 import { SummaryCards } from './components/participant/SummaryCards';
 import { TeamComparisonSection } from './components/participant/TeamComparisonSection';
 import { YourWeekSection } from './components/participant/YourWeekSection';
+import { getParticipantGroupResultServiceDates } from './adapters/groupCalculationSource';
 import { getFixtureCurrentUserId } from './currentUserContext';
 import { buildParticipantWeekSummary, findParticipantDailyResult } from './participantWeekData';
 import {
-  getLatestParticipantResultDate,
   getParticipantResultServiceDates,
 } from './participantResultDates';
 import {
   buildAnonymousTeamBenchmark,
   buildParticipantComparisonInsights,
 } from './teamComparison';
-import { useChefResultsFixtureData } from './useChefResultsData';
+import { useGameBusAuthenticatedUser } from './useGameBusAuthenticatedUser';
+import { useChefResultsData } from './useChefResultsData';
+import { useGameBusEmbed } from '../gamebus/useGameBusEmbed';
 
 /**
  * Participant-safe results view — own identifiable data + anonymous team comparison.
  * Route: #/chef-results (GameBus participant menu target).
  */
 export function ChefResultsParticipantApp() {
-  const currentUserId = getFixtureCurrentUserId();
-  const serviceDates = useMemo(
-    () => getParticipantResultServiceDates(currentUserId),
-    [currentUserId],
+  const { embedded, inputCollections, inputCollectionsReady } = useGameBusEmbed();
+  const { user: authenticatedUser } = useGameBusAuthenticatedUser();
+  const fixtureUserId = getFixtureCurrentUserId();
+  const currentUserId = embedded && authenticatedUser ? authenticatedUser.id : fixtureUserId;
+
+  const serviceDates = useMemo(() => {
+    if (embedded && inputCollectionsReady) {
+      return getParticipantGroupResultServiceDates(inputCollections, currentUserId);
+    }
+    return getParticipantResultServiceDates(currentUserId);
+  }, [currentUserId, embedded, inputCollections, inputCollectionsReady]);
+
+  const [selectedDate, setSelectedDate] = useState<string>('');
+
+  useEffect(() => {
+    if (serviceDates.length === 0) {
+      setSelectedDate('');
+      return;
+    }
+    if (!selectedDate || !serviceDates.includes(selectedDate)) {
+      setSelectedDate(serviceDates[serviceDates.length - 1]!);
+    }
+  }, [selectedDate, serviceDates]);
+
+  const resultsState = useChefResultsData(selectedDate);
+  const dailyResults = resultsState.status === 'ready' ? resultsState.dailyResults : null;
+  const ownResult = findParticipantDailyResult(currentUserId, selectedDate, dailyResults);
+  const weekSummary = useMemo(
+    () =>
+      buildParticipantWeekSummary(
+        currentUserId,
+        embedded && inputCollectionsReady ? inputCollections : undefined,
+      ),
+    [currentUserId, embedded, inputCollections, inputCollectionsReady],
   );
-  const [selectedDate, setSelectedDate] = useState<string>(
-    () => getLatestParticipantResultDate(getFixtureCurrentUserId()) ?? '',
-  );
-  const { dailyResults } = useChefResultsFixtureData(selectedDate);
-  const ownResult = findParticipantDailyResult(currentUserId, selectedDate);
-  const weekSummary = useMemo(() => buildParticipantWeekSummary(currentUserId), [currentUserId]);
 
   const teamBenchmark =
     dailyResults && dailyResults.staffResults.length > 0
@@ -53,7 +79,13 @@ export function ChefResultsParticipantApp() {
       data-testid="chef-results-participant-page"
     >
       <GameBusUserDiagnostic />
-      <FixtureCurrentUserSelector />
+      {!embedded ? <FixtureCurrentUserSelector /> : null}
+
+      {resultsState.status === 'pending' ? (
+        <p className="chef-results-empty" data-testid="chef-results-pending">
+          Loading kitchen results…
+        </p>
+      ) : null}
 
       <div className="chef-results-toolbar">
         <label className="chef-results-date-picker">
@@ -62,6 +94,7 @@ export function ChefResultsParticipantApp() {
             value={selectedDate}
             onChange={(event) => setSelectedDate(event.target.value)}
             data-testid="chef-results-date-select"
+            disabled={serviceDates.length === 0}
           >
             {serviceDates.map((date) => (
               <option key={date} value={date}>
@@ -72,13 +105,21 @@ export function ChefResultsParticipantApp() {
         </label>
       </div>
 
-      <ParticipantHeader serviceDate={selectedDate} />
+      {selectedDate ? <ParticipantHeader serviceDate={selectedDate} /> : null}
 
-      {!ownResult ? (
-        <p className="chef-results-empty" data-testid="participant-no-result">
-          You did not participate in a forecast for this service date.
+      {resultsState.status === 'ready' && !dailyResults ? (
+        <p className="chef-results-empty" data-testid="chef-results-unavailable">
+          Results are not available yet for this service date.
         </p>
-      ) : (
+      ) : null}
+
+      {resultsState.status === 'ready' && dailyResults && !ownResult ? (
+        <p className="chef-results-empty" data-testid="participant-no-result">
+          You did not submit a forecast for this service date.
+        </p>
+      ) : null}
+
+      {ownResult ? (
         <>
           <SummaryCards result={ownResult} />
           <CategoryOutcomeVisual result={ownResult} />
@@ -91,7 +132,7 @@ export function ChefResultsParticipantApp() {
             />
           ) : null}
         </>
-      )}
+      ) : null}
 
       <YourWeekSection week={weekSummary} />
       <KitchenProgressSection />

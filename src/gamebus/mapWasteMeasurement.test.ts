@@ -29,7 +29,6 @@ import type { GameBusInputCollectionsPayload } from './types';
 
 const closeout: ServiceCloseout = {
   targetDate: '2026-07-29',
-  headChefUserId: 'fixture-user-e',
   actualCustomers: 150,
   main: {
     itemId: 'meatballs',

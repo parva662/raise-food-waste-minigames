@@ -5,10 +5,7 @@ import { useGameBusEmbed } from '../gamebus/useGameBusEmbed';
 
 /**
  * Real authenticated GameBus identity from `inputCollectionPari.me`.
- * Separate from fixture calculation user selection.
- *
- * Chef-results calculation lookup remains fixture-backed until Raoul's future
- * cross-user GameBus endpoint can retrieve all kitchen staff forecasts.
+ * Separate from fixture calculation user selection in standalone development.
  */
 export function useGameBusAuthenticatedUser() {
   const { embedded, inputCollections, inputCollectionsReady } = useGameBusEmbed();

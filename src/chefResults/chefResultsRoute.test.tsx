@@ -137,8 +137,8 @@ describe('admin preservation', () => {
     expect(screen.getByTestId('weekly-summary-panel')).toBeInTheDocument();
   });
 
-  it('marks head chef on admin page', () => {
+  it('shows real staff names on admin page', () => {
     render(<AppRouter />);
-    expect(screen.getByText('Head chef this service')).toBeInTheDocument();
+    expect(screen.getByTestId('staff-result-fixture-user-a')).toHaveTextContent('Aino Virtanen');
   });
 });

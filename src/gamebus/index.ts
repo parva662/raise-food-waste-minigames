@@ -13,6 +13,7 @@ export {
 export {
   getInputCollectionKeys,
   getRawChefForecastsInput,
+  getRawKitchenGroupActivitiesInput,
   getRawAuthenticatedMeInput,
   getAuthenticatedGameBusUser,
   SERVICE_CLOSEOUT_CHEF_FORECASTS_REQUEST_KEY,
@@ -21,6 +22,8 @@ export {
   SERVICE_CLOSEOUT_INPUTS_COLLECTION_KEY_LEGACY,
   INPUT_COLLECTION_PARI_KEY,
   INPUT_COLLECTION_PARI_ME_REQUEST_KEY,
+  KITCHEN_GROUP_INPUT_COLLECTION_KEY,
+  KITCHEN_GROUP_ACTIVITIES_REQUEST_KEY,
 } from './inputCollections';
 export { parseGameBusAuthenticatedUser, type GameBusAuthenticatedUser } from './authenticatedUser';
 export { buildActivityMessage } from './buildActivityMessage';

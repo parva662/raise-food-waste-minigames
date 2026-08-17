@@ -1,7 +1,9 @@
 import { MenuStatusBanner } from '../components/MenuStatusBanner';
+import { getAuthenticatedGameBusUser } from '../gamebus/inputCollections';
+import { useGameBusEmbed } from '../gamebus/useGameBusEmbed';
 import { CLOSEOUT_CATEGORY_KEYS } from './types';
 import { NO_CLOSEOUT_FORECAST_MESSAGE } from './forecast/gameBusChefForecastTypes';
-import { forecastCategoryQuantity } from './forecast/parseGameBusChefForecast';
+import { buildStaffForecastEntries } from './forecast/formatStaffForecasts';
 import { CloseoutIntegerInput } from './components/CloseoutIntegerInput';
 import { ServiceCloseoutHeader } from './components/ServiceCloseoutHeader';
 import { ServiceCloseoutCategoryRow } from './components/ServiceCloseoutCategoryRow';
@@ -23,7 +25,6 @@ export function ServiceCloseoutApp({ clock, serviceDate }: ServiceCloseoutAppPro
     serviceDate: resolvedDate,
     menuAvailability,
     mealSlots,
-    headChefOptions,
     formComplete,
     hasValidationErrors,
     formInteractive,
@@ -34,7 +35,6 @@ export function ServiceCloseoutApp({ clock, serviceDate }: ServiceCloseoutAppPro
     state,
     setActualCustomers,
     setCustomersError,
-    setHeadChefUserId,
     setPreparedQuantity,
     setOverproductionGrams,
     setPreparedError,
@@ -42,9 +42,13 @@ export function ServiceCloseoutApp({ clock, serviceDate }: ServiceCloseoutAppPro
     finalize,
   } = useServiceCloseout({ clock, serviceDate });
 
+  const { inputCollections } = useGameBusEmbed();
+  const authenticatedUser = getAuthenticatedGameBusUser(inputCollections);
+  const recordedByName = authenticatedUser?.name ?? null;
+
   const chefForecastState = useCloseoutChefForecast(resolvedDate);
-  const matchedForecast =
-    chefForecastState.status === 'matched' ? chefForecastState.forecast : null;
+  const matchedForecasts =
+    chefForecastState.status === 'matched' ? chefForecastState.forecasts : [];
 
   const finalized = state.status === 'finalized';
 
@@ -72,7 +76,7 @@ export function ServiceCloseoutApp({ clock, serviceDate }: ServiceCloseoutAppPro
 
           {chefForecastState.status === 'matched' && (
             <ServiceCloseoutSubmittedForecast
-              forecast={chefForecastState.forecast}
+              forecasts={matchedForecasts}
               isSynthetic={chefForecastState.isSynthetic}
             />
           )}
@@ -116,26 +120,13 @@ export function ServiceCloseoutApp({ clock, serviceDate }: ServiceCloseoutAppPro
                   </div>
 
                   <div className="closeout-service-row">
-                    <label className="closeout-service-row__label" htmlFor="closeout-head-chef">
-                      Head chef today
-                    </label>
-                    <select
-                      id="closeout-head-chef"
-                      className="closeout-service-row__select"
-                      disabled={!formInteractive}
-                      value={draft.headChefUserId ?? ''}
-                      onChange={(event) => {
-                        const value = event.target.value;
-                        setHeadChefUserId(value.length > 0 ? value : null);
-                      }}
+                    <span className="closeout-service-row__label">Recorded by</span>
+                    <p
+                      className="closeout-service-row__recorded-by"
+                      data-testid="closeout-recorded-by"
                     >
-                      <option value="">Select head chef…</option>
-                      {headChefOptions.map((member) => (
-                        <option key={member.userId} value={member.userId}>
-                          {member.displayName}
-                        </option>
-                      ))}
-                    </select>
+                      {recordedByName ?? '—'}
+                    </p>
                   </div>
                 </section>
 
@@ -156,9 +147,7 @@ export function ServiceCloseoutApp({ clock, serviceDate }: ServiceCloseoutAppPro
                       itemId={mealSlots[key].id}
                       preparedQuantity={draft[key].preparedQuantity}
                       overproductionGrams={draft[key].overproductionGrams}
-                      forecastQuantity={
-                        matchedForecast ? forecastCategoryQuantity(matchedForecast, key) : undefined
-                      }
+                      forecastEntries={buildStaffForecastEntries(matchedForecasts, key)}
                       preparedError={state.categoryErrors[key].prepared}
                       wasteError={state.categoryErrors[key].waste}
                       disabled={!formInteractive}
@@ -172,7 +161,11 @@ export function ServiceCloseoutApp({ clock, serviceDate }: ServiceCloseoutAppPro
               </div>
 
               <div className="closeout-review-column">
-                <ServiceCloseoutSummary draft={draft} finalizedCloseout={finalizedCloseout} />
+                <ServiceCloseoutSummary
+                  draft={draft}
+                  finalizedCloseout={finalizedCloseout}
+                  recordedByName={recordedByName}
+                />
 
                 <ServiceCloseoutFinalizePanel
                   disabled={isFinalizeDisabled}

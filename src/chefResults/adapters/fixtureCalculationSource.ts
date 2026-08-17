@@ -52,7 +52,6 @@ function participationFromFixture(targetDate: string): ServiceDayParticipation |
   return {
     targetDate: day.targetDate,
     participantUserIds: day.participantUserIds,
-    headChefUserId: day.headChefUserId,
   };
 }
 

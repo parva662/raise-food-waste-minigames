@@ -11,9 +11,9 @@
 |------|-------|
 | Product / page name | **Service Closeout** |
 | Route | `#/service-closeout` |
-| Input Collection key (canonical) | `serviceCloseoutInput` |
-| Legacy Input Collection key | `serviceCloseoutInputs` (backwards compatibility only) |
-| Input Collection request (read-only) | `chefForecasts` → authenticated `/api/me/activities` (`chefForecast` template) |
+| Input Collection key (kitchen group activities) | `kitchenGroupInput` |
+| Input Collection request (read-only, group) | `activities` → `GET /groups/activities` |
+| Authenticated current user | `inputCollectionPari.me` |
 | Output activity template | **`wasteMeasurement`** |
 | Local constant | `SERVICE_CLOSEOUT_ACTIVITY_REF = 'wasteMeasurement'` (`src/gamebus/appMode.ts`) |
 
@@ -23,12 +23,17 @@
 
 ---
 
-## 2. Inbound forecast (unchanged)
+## 2. Inbound forecast
 
-- Input Collection `serviceCloseoutInput.chefForecasts` retrieves the logged-in user's prior `chefForecast` activities (`serviceCloseoutInputs` accepted as legacy alias).
-- Parsed into `GameBusChefForecast`; matched by exact `targetDate`.
+- Input Collection `kitchenGroupInput.activities` retrieves group kitchen activities (`GET /groups/activities`).
+- Service Closeout filters **only** `chefForecast` template activities; `wasteMeasurement` and unrelated templates are ignored.
+- Parsed into `GameBusChefForecast`; matched by exact `targetDate` only (no cross-date fallback).
+- Multiple kitchen staff may submit forecasts for the same service date — all exact-date forecasts are shown read-only (one row per actor per category).
+- When `SERVICE_CLOSEOUT_CONFIG.syntheticForecastFallbackEnabled` is true and no real exact-date forecast exists, a labelled synthetic test forecast is shown (never posted).
 - Displayed **read-only** in the closeout UI.
 - Forecast values are **not** copied into `wasteMeasurement`.
+
+Authenticated recorder identity: read-only **Recorded by** from `inputCollectionPari.me`. The GameBus `activity.actor` on finalize remains authoritative for persistence. The former **Head chef today** selector is removed.
 
 `chefForecast` remains a separate activity (forecast before service). `wasteMeasurement` is final observed service data after service.
 
@@ -69,7 +74,7 @@ Prepared quantity properties (`preparedMainQuantity`, `preparedVegetarianQuantit
 | Field | Reason |
 |-------|--------|
 | Standard portion weights | Reference/calculation data in app only |
-| `headChefUserId` | Submitting user identified via GameBus `activity.actor` |
+| Recorder / user name fields | Submitting user identified via GameBus `activity.actor` |
 | Chef forecast fields | Separate `chefForecast` activity |
 
 ---
@@ -83,7 +88,8 @@ Prepared quantity properties (`preparedMainQuantity`, `preparedVegetarianQuantit
 | `src/gamebus/resolveWasteMeasurementProperties.ts` | Canonical fifteen refs |
 | `src/gamebus/bridge.ts` → `tryPostCloseoutActivity` | postMessage via existing bridge |
 | `src/serviceCloseout/useServiceCloseout.ts` | Finalize → map → post (embed mode) |
-| `src/gamebus/inputCollections.ts` | Read-only `serviceCloseoutInput.chefForecasts` (legacy plural alias) |
+| `src/gamebus/groupActivities.ts` | Read `kitchenGroupInput.activities`; filter by template reference |
+| `src/gamebus/inputCollections.ts` | Authenticated `inputCollectionPari.me` |
 
 ---
 

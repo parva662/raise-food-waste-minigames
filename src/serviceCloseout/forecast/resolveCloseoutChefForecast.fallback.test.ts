@@ -1,6 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import { MENU_DATES } from '../../test/fixtures/dates';
 import {
+  KITCHEN_GROUP_ACTIVITIES_REQUEST_KEY,
+  KITCHEN_GROUP_INPUT_COLLECTION_KEY,
+} from '../../gamebus/groupActivities';
+import {
   buildAnonymizedChefForecastActivity,
   TOMORROW_CHEF_FORECAST_ACTIVITY,
 } from './fixtures/gameBusChefForecastActivities';
@@ -12,14 +16,20 @@ import { SYNTHETIC_CLOSEOUT_FORECAST_VALUES } from './syntheticCloseoutChefForec
 
 const closeoutDate = MENU_DATES.runtimeWednesday;
 
+function groupInputCollections(activities: unknown) {
+  return {
+    [KITCHEN_GROUP_INPUT_COLLECTION_KEY]: {
+      [KITCHEN_GROUP_ACTIVITIES_REQUEST_KEY]: activities,
+    },
+  };
+}
+
 describe('resolveCloseoutChefForecast synthetic fallback', () => {
   it('keeps exact real targetDate match when fallback is enabled', () => {
     const resolution = resolveCloseoutChefForecastFromInputCollections(
-      {
-        serviceCloseoutInput: {
-          chefForecasts: [buildAnonymizedChefForecastActivity({ targetDate: closeoutDate })],
-        },
-      },
+      groupInputCollections([
+        buildAnonymizedChefForecastActivity({ targetDate: closeoutDate }),
+      ]),
       closeoutDate,
       true,
       true,
@@ -29,18 +39,15 @@ describe('resolveCloseoutChefForecast synthetic fallback', () => {
     expect(resolution.status).toBe('matched');
     if (resolution.status === 'matched') {
       expect(resolution.isSynthetic).toBe(false);
-      expect(resolution.forecast.targetDate).toBe(closeoutDate);
-      expect(resolution.forecast.forecastMain).toBe(100);
+      expect(resolution.forecasts).toHaveLength(1);
+      expect(resolution.forecasts[0]!.targetDate).toBe(closeoutDate);
+      expect(resolution.forecasts[0]!.forecastMain).toBe(100);
     }
   });
 
   it('returns no forecast when fallback is disabled and no exact match exists', () => {
     const resolution = resolveCloseoutChefForecastFromInputCollections(
-      {
-        serviceCloseoutInput: {
-          chefForecasts: [TOMORROW_CHEF_FORECAST_ACTIVITY],
-        },
-      },
+      groupInputCollections([TOMORROW_CHEF_FORECAST_ACTIVITY]),
       closeoutDate,
       true,
       true,
@@ -60,11 +67,7 @@ describe('resolveCloseoutChefForecast synthetic fallback', () => {
 
   it('returns synthetic forecast when fallback is enabled and no exact match exists', () => {
     const resolution = resolveCloseoutChefForecastFromInputCollections(
-      {
-        serviceCloseoutInput: {
-          chefForecasts: [TOMORROW_CHEF_FORECAST_ACTIVITY],
-        },
-      },
+      groupInputCollections([TOMORROW_CHEF_FORECAST_ACTIVITY]),
       closeoutDate,
       true,
       true,
@@ -74,11 +77,11 @@ describe('resolveCloseoutChefForecast synthetic fallback', () => {
     expect(resolution.status).toBe('matched');
     if (resolution.status === 'matched') {
       expect(resolution.isSynthetic).toBe(true);
-      expect(resolution.forecast.targetDate).toBe(closeoutDate);
-      expect(resolution.forecast.forecastTotalCustomers).toBe(
+      expect(resolution.forecasts[0]!.targetDate).toBe(closeoutDate);
+      expect(resolution.forecasts[0]!.forecastTotalCustomers).toBe(
         SYNTHETIC_CLOSEOUT_FORECAST_VALUES.forecastTotalCustomers,
       );
-      expect(resolution.forecast.forecastMain).toBe(SYNTHETIC_CLOSEOUT_FORECAST_VALUES.forecastMain);
+      expect(resolution.forecasts[0]!.forecastMain).toBe(SYNTHETIC_CLOSEOUT_FORECAST_VALUES.forecastMain);
     }
   });
 

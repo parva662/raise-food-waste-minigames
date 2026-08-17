@@ -31,7 +31,7 @@ function matchedForecastResolution(): CloseoutChefForecastResolution {
     }),
   ]).valid[0]!;
 
-  return { status: 'matched', forecast };
+  return { status: 'matched', forecasts: [forecast] };
 }
 
 function getPreparedInput(category: string) {
@@ -42,7 +42,7 @@ function getPreparedInput(category: string) {
 describe('service closeout forecast UI', () => {
   beforeEach(() => {
     vi.spyOn(datesModule, 'getTodayIsoDate').mockReturnValue(MENU_DATES.runtimeWednesday);
-    useCloseoutChefForecastMock.mockReturnValue({ status: 'standalone', forecast: null });
+    useCloseoutChefForecastMock.mockReturnValue({ status: 'standalone', forecasts: [] });
   });
 
   afterEach(() => {
@@ -53,7 +53,7 @@ describe('service closeout forecast UI', () => {
   it('shows no-forecast message when embed has no matching forecast', () => {
     useCloseoutChefForecastMock.mockReturnValue({
       status: 'no_forecast',
-      forecast: null,
+      forecasts: [],
       message: NO_CLOSEOUT_FORECAST_MESSAGE,
     });
 
@@ -93,7 +93,7 @@ describe('service closeout forecast UI', () => {
     const forecast = parseGameBusChefForecastActivities([
       buildAnonymizedChefForecastActivity(),
     ]).valid[0]!;
-    useCloseoutChefForecastMock.mockReturnValue({ status: 'matched', forecast });
+    useCloseoutChefForecastMock.mockReturnValue({ status: 'matched', forecasts: [forecast] });
 
     render(<ServiceCloseoutApp />);
     expect(screen.getByTestId('closeout-forecast-dessert')).toHaveTextContent('—');
@@ -115,7 +115,7 @@ describe('service closeout forecast UI', () => {
     ]).valid[0]!;
     useCloseoutChefForecastMock.mockReturnValue({
       status: 'matched',
-      forecast,
+      forecasts: [forecast],
       isSynthetic: true,
     });
 
@@ -136,7 +136,7 @@ describe('service closeout forecast UI', () => {
   });
 
   it('does not substitute tomorrow forecast in standalone mode', () => {
-    useCloseoutChefForecastMock.mockReturnValue({ status: 'standalone', forecast: null });
+    useCloseoutChefForecastMock.mockReturnValue({ status: 'standalone', forecasts: [] });
 
     render(<ServiceCloseoutApp />);
     expect(screen.queryByTestId('closeout-submitted-forecast')).not.toBeInTheDocument();
@@ -148,7 +148,7 @@ describe('service closeout forecast UI', () => {
     const user = userEvent.setup();
     useCloseoutChefForecastMock.mockReturnValue({
       status: 'no_forecast',
-      forecast: null,
+      forecasts: [],
       message: NO_CLOSEOUT_FORECAST_MESSAGE,
     });
 

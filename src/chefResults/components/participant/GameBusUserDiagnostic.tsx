@@ -32,8 +32,8 @@ export function GameBusUserDiagnostic() {
         </dl>
       )}
       <p className="chef-results-dev-user__note">
-        Real GameBus identity only — fixture calculation results still use development fixtures
-        until the cross-user GameBus endpoint is available.
+        Real GameBus identity from inputCollectionPari.me. Participant results use group kitchen
+        activities when embedded.
       </p>
     </div>
   );

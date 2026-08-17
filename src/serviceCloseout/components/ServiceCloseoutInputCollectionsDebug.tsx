@@ -1,9 +1,9 @@
 import { useState } from 'react';
 import {
   getInputCollectionKeys,
-  getRawChefForecastsInput,
-  SERVICE_CLOSEOUT_CHEF_FORECASTS_REQUEST_KEY,
-  SERVICE_CLOSEOUT_INPUT_COLLECTION_KEY,
+  getRawKitchenGroupActivitiesInput,
+  KITCHEN_GROUP_ACTIVITIES_REQUEST_KEY,
+  KITCHEN_GROUP_INPUT_COLLECTION_KEY,
 } from '../../gamebus/inputCollections';
 import { useGameBusEmbed } from '../../gamebus/useGameBusEmbed';
 
@@ -27,7 +27,7 @@ export function ServiceCloseoutInputCollectionsDebug() {
 
   const { embedded, inputCollectionsReady, inputCollections } = useGameBusEmbed();
   const collectionKeys = getInputCollectionKeys(inputCollections);
-  const rawChefForecasts = getRawChefForecastsInput(inputCollections);
+  const rawGroupActivities = getRawKitchenGroupActivitiesInput(inputCollections);
 
   return (
     <aside className="closeout-input-collections-debug" data-testid="closeout-input-collections-debug">
@@ -58,12 +58,12 @@ export function ServiceCloseoutInputCollectionsDebug() {
             </div>
             <div>
               <dt>
-                Raw <code>{SERVICE_CLOSEOUT_INPUT_COLLECTION_KEY}</code>.
-                <code>{SERVICE_CLOSEOUT_CHEF_FORECASTS_REQUEST_KEY}</code>
+                Raw <code>{KITCHEN_GROUP_INPUT_COLLECTION_KEY}</code>.
+                <code>{KITCHEN_GROUP_ACTIVITIES_REQUEST_KEY}</code>
               </dt>
               <dd>
                 <pre className="closeout-input-collections-debug__raw">
-                  {formatRawJson(rawChefForecasts)}
+                  {formatRawJson(rawGroupActivities)}
                 </pre>
               </dd>
             </div>

@@ -1,6 +1,12 @@
 import type { GameBusInputCollectionsPayload } from './types';
 import { parseGameBusAuthenticatedUser, type GameBusAuthenticatedUser } from './authenticatedUser';
 
+export {
+  KITCHEN_GROUP_INPUT_COLLECTION_KEY,
+  KITCHEN_GROUP_ACTIVITIES_REQUEST_KEY,
+  getRawKitchenGroupActivitiesInput,
+} from './groupActivities';
+
 /** Canonical GameBus Input Collection key (admin configuration). */
 export const SERVICE_CLOSEOUT_INPUT_COLLECTION_KEY = 'serviceCloseoutInput';
 

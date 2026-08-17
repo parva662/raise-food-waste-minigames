@@ -2,6 +2,10 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { renderHook } from '@testing-library/react';
 import { MENU_DATES } from '../test/fixtures/dates';
+import {
+  KITCHEN_GROUP_ACTIVITIES_REQUEST_KEY,
+  KITCHEN_GROUP_INPUT_COLLECTION_KEY,
+} from '../gamebus/groupActivities';
 import { TOMORROW_CHEF_FORECAST_ACTIVITY } from './forecast/fixtures/gameBusChefForecastActivities';
 import { useCloseoutChefForecast } from './useCloseoutChefForecast';
 import * as gameBusEmbedModule from '../gamebus/useGameBusEmbed';
@@ -20,8 +24,8 @@ describe('useCloseoutChefForecast synthetic fallback gating', () => {
       taskReady: true,
       task: null,
       inputCollections: {
-        serviceCloseoutInput: {
-          chefForecasts: [TOMORROW_CHEF_FORECAST_ACTIVITY],
+        [KITCHEN_GROUP_INPUT_COLLECTION_KEY]: {
+          [KITCHEN_GROUP_ACTIVITIES_REQUEST_KEY]: [TOMORROW_CHEF_FORECAST_ACTIVITY],
         },
       },
       inputCollectionsReady: true,
@@ -33,7 +37,7 @@ describe('useCloseoutChefForecast synthetic fallback gating', () => {
     expect(result.current.status).toBe('matched');
     if (result.current.status === 'matched') {
       expect(result.current.isSynthetic).toBe(true);
-      expect(result.current.forecast.targetDate).toBe(closeoutDate);
+      expect(result.current.forecasts[0]!.targetDate).toBe(closeoutDate);
     }
   });
 });

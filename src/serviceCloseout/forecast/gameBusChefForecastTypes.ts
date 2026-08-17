@@ -66,10 +66,10 @@ export type ChefForecastParseBatchResult = {
 };
 
 export type CloseoutChefForecastResolution =
-  | { status: 'standalone'; forecast: null }
-  | { status: 'pending'; forecast: null }
-  | { status: 'no_forecast'; forecast: null; message: string }
-  | { status: 'matched'; forecast: GameBusChefForecast; isSynthetic?: boolean };
+  | { status: 'standalone'; forecasts: readonly GameBusChefForecast[] }
+  | { status: 'pending'; forecasts: readonly GameBusChefForecast[] }
+  | { status: 'no_forecast'; forecasts: readonly GameBusChefForecast[]; message: string }
+  | { status: 'matched'; forecasts: readonly GameBusChefForecast[]; isSynthetic?: boolean };
 
 export const NO_CLOSEOUT_FORECAST_MESSAGE =
   'No submitted forecast was found for this service date.';

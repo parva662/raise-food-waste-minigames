@@ -1,6 +1,8 @@
 import type { CloseoutCategoryKey } from '../types';
 import { CLOSEOUT_CATEGORY_LABELS } from '../types';
 import { getPortionWeightGrams } from '../portionWeight';
+import type { StaffForecastEntry } from '../forecast/formatStaffForecasts';
+import { formatStaffForecastCell } from '../forecast/formatStaffForecasts';
 import { CloseoutIntegerInput } from './CloseoutIntegerInput';
 
 interface ServiceCloseoutCategoryRowProps {
@@ -9,7 +11,7 @@ interface ServiceCloseoutCategoryRowProps {
   itemId: string;
   preparedQuantity: number | null;
   overproductionGrams: number | null;
-  forecastQuantity: number | null | undefined;
+  forecastEntries: readonly StaffForecastEntry[];
   preparedError: string | null;
   wasteError: string | null;
   disabled: boolean;
@@ -19,9 +21,19 @@ interface ServiceCloseoutCategoryRowProps {
   onWasteError: (error: string | null) => void;
 }
 
-function formatForecastQuantity(quantity: number | null | undefined): string {
-  if (quantity === null || quantity === undefined) return '—';
-  return `${quantity} portions`;
+function formatForecastDisplay(entries: readonly StaffForecastEntry[]): string {
+  if (entries.length === 0) return '—';
+  const compact = formatStaffForecastCell(entries);
+  if (entries.length === 1 && entries[0]!.quantity !== null && entries[0]!.quantity !== undefined) {
+    return `${entries[0]!.quantity} portions`;
+  }
+  return compact
+    .split('\n')
+    .map((line) => {
+      const [name, quantity] = line.split(' — ');
+      return quantity === '—' ? `${name} — —` : `${name} — ${quantity} portions`;
+    })
+    .join('\n');
 }
 
 export function ServiceCloseoutCategoryRow({
@@ -30,7 +42,7 @@ export function ServiceCloseoutCategoryRow({
   itemId,
   preparedQuantity,
   overproductionGrams,
-  forecastQuantity,
+  forecastEntries,
   preparedError,
   wasteError,
   disabled,
@@ -56,11 +68,11 @@ export function ServiceCloseoutCategoryRow({
           {label} submitted forecast
         </span>
         <span
-          className="closeout-grid__forecast"
+          className="closeout-grid__forecast closeout-grid__forecast--multiline"
           aria-labelledby={forecastId}
           data-testid={`closeout-forecast-${categoryKey}`}
         >
-          {formatForecastQuantity(forecastQuantity)}
+          {formatForecastDisplay(forecastEntries)}
         </span>
       </div>
       <div className="closeout-grid__cell closeout-grid__cell--prepared">

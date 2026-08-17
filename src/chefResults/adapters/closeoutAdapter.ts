@@ -6,7 +6,6 @@ export function closeoutToCalculationInput(
 ): CloseoutForCalculation {
   return {
     targetDate: closeout.targetDate,
-    headChefUserId: closeout.headChefUserId,
     actualCustomers: closeout.actualCustomers,
     main: {
       itemId: closeout.main.itemId,
