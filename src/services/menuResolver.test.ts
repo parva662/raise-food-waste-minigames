@@ -138,11 +138,19 @@ describe('generated dated menu resolver', () => {
 });
 
 describe('menu overrides with generated catalogue', () => {
-  it('marks a closed-date override as closed', () => {
-    expect(resolveMenuForDate(MENU_DATES.closedOverride)).toEqual({
-      status: 'closed',
-      reason: 'Public holiday',
-    });
+  it('resolves 2026-08-17 from the generated menu without a stale closed override', () => {
+    const menu = resolveMenuForDate('2026-08-17');
+    expect(menu.status).toBe('available');
+    if (menu.status === 'available') {
+      expect(menu.dailyMenuId).toBe('dated-2026-08-17');
+      expect(menu.items.map((item) => item.id)).toEqual([
+        'coq-au-vin-with-rice',
+        'cajun-soy-strip-stew-with-rice',
+        'creamy-sweet-potato-soup',
+        'blueberry-soup',
+      ]);
+    }
+    expect(getOverrideReason('2026-08-17')).toBeUndefined();
   });
 
   it('uses a replacement override instead of the generated daily menu', () => {
@@ -155,10 +163,6 @@ describe('menu overrides with generated catalogue', () => {
       expect(overridden.items.map((item) => item.id)).not.toEqual(normal.items.map((item) => item.id));
       expect(overridden.items[0]?.id).toBe('thai-pork-meatballs-with-rice');
     }
-  });
-
-  it('preserves the optional closure reason', () => {
-    expect(getOverrideReason(MENU_DATES.closedOverride)).toBe('Public holiday');
   });
 });
 

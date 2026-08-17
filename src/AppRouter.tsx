@@ -5,6 +5,7 @@ import { ChefResultsAdminApp } from './chefResults/ChefResultsAdminApp';
 import { ChefResultsParticipantApp } from './chefResults/ChefResultsParticipantApp';
 import { ServiceCloseoutApp } from './serviceCloseout/ServiceCloseoutApp';
 import { getAppMode, type AppMode } from './gamebus/appMode';
+import { applyDocumentTitle } from './routing/documentTitle';
 
 export function AppRouter() {
   const [mode, setMode] = useState<AppMode>(() => getAppMode());
@@ -15,6 +16,10 @@ export function AppRouter() {
     syncMode();
     return () => window.removeEventListener('hashchange', syncMode);
   }, []);
+
+  useEffect(() => {
+    applyDocumentTitle(mode);
+  }, [mode]);
 
   if (mode === 'chef') {
     return <ChefApp />;

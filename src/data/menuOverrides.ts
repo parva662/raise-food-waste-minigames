@@ -18,11 +18,6 @@ export type MenuOverride = MenuOverrideReplace | MenuOverrideClosed;
 /** Date-specific menu overrides take priority over generated dated menus (runtime-shifted dates). */
 export const menuOverrides: MenuOverride[] = [
   {
-    type: 'closed',
-    lunchDate: '2026-08-17',
-    reason: 'Public holiday',
-  },
-  {
     type: 'replace',
     lunchDate: '2026-09-15',
     menu: {

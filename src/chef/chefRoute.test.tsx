@@ -24,6 +24,7 @@ describe('App routing', () => {
 
   it('student root loads student lunch UI', () => {
     render(<AppRouter />);
+    expect(document.title).toBe("Tomorrow's Lunch");
     expect(screen.getByText(/Tomorrow.s lunch/)).toBeInTheDocument();
     expect(screen.queryByText('Tomorrow\'s kitchen forecast')).not.toBeInTheDocument();
   });
@@ -31,8 +32,26 @@ describe('App routing', () => {
   it('chef route loads chef forecast UI without changing student root', () => {
     setHash('#/chef');
     render(<AppRouter />);
+    expect(document.title).toBe('Kitchen Forecast');
     expect(screen.getByText('Tomorrow\'s kitchen forecast')).toBeInTheDocument();
     expect(screen.queryByText(/Tomorrow.s lunch/)).not.toBeInTheDocument();
+  });
+
+  it('updates document title on hash navigation', () => {
+    const { rerender } = render(<AppRouter />);
+    expect(document.title).toBe("Tomorrow's Lunch");
+
+    setHash('#/service-closeout');
+    rerender(<AppRouter />);
+    expect(document.title).toBe('Service Closeout');
+
+    setHash('#/chef-results');
+    rerender(<AppRouter />);
+    expect(document.title).toBe('Chef Results');
+
+    setHash('#/chef-results-admin');
+    rerender(<AppRouter />);
+    expect(document.title).toBe('Chef Results Admin');
   });
 
   it('known available date shows four menu forecast cards on chef route', () => {
