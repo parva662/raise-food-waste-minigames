@@ -1,12 +1,12 @@
 import { useMemo } from 'react';
+import { SERVICE_CLOSEOUT_CONFIG } from '../config/serviceCloseout';
 import { useGameBusEmbed } from '../gamebus/useGameBusEmbed';
-import { parseCloseoutTestForecastFlag } from './closeoutServiceDate';
 import { resolveCloseoutChefForecastFromInputCollections } from './forecast/resolveCloseoutChefForecast';
 import type { CloseoutChefForecastResolution } from './forecast/gameBusChefForecastTypes';
 
 export function useCloseoutChefForecast(serviceDate: string): CloseoutChefForecastResolution {
   const { embedded, inputCollections, inputCollectionsReady } = useGameBusEmbed();
-  const testForecastFallback = parseCloseoutTestForecastFlag();
+  const syntheticForecastFallback = SERVICE_CLOSEOUT_CONFIG.syntheticForecastFallbackEnabled;
 
   return useMemo(
     () =>
@@ -15,8 +15,8 @@ export function useCloseoutChefForecast(serviceDate: string): CloseoutChefForeca
         serviceDate,
         embedded,
         inputCollectionsReady,
-        { testForecastFallback },
+        { syntheticForecastFallback },
       ),
-    [embedded, inputCollections, inputCollectionsReady, serviceDate, testForecastFallback],
+    [embedded, inputCollections, inputCollectionsReady, serviceDate, syntheticForecastFallback],
   );
 }

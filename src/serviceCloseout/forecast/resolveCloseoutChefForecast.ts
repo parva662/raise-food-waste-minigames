@@ -25,7 +25,7 @@ export function resolveCloseoutChefForecast(
 }
 
 export interface ResolveCloseoutChefForecastOptions {
-  testForecastFallback?: boolean;
+  syntheticForecastFallback?: boolean;
 }
 
 export function resolveCloseoutChefForecastFromInputCollections(
@@ -49,7 +49,7 @@ export function resolveCloseoutChefForecastFromInputCollections(
     return realResolution;
   }
 
-  if (options.testForecastFallback) {
+  if (options.syntheticForecastFallback) {
     return {
       status: 'matched',
       forecast: buildSyntheticCloseoutChefForecast(closeoutDate),

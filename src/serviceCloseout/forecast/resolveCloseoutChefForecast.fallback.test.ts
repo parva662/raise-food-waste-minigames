@@ -23,7 +23,7 @@ describe('resolveCloseoutChefForecast synthetic fallback', () => {
       closeoutDate,
       true,
       true,
-      { testForecastFallback: true },
+      { syntheticForecastFallback: true },
     );
 
     expect(resolution.status).toBe('matched');
@@ -44,7 +44,7 @@ describe('resolveCloseoutChefForecast synthetic fallback', () => {
       closeoutDate,
       true,
       true,
-      { testForecastFallback: false },
+      { syntheticForecastFallback: false },
     );
 
     expect(resolution.status).toBe('no_forecast');
@@ -68,7 +68,7 @@ describe('resolveCloseoutChefForecast synthetic fallback', () => {
       closeoutDate,
       true,
       true,
-      { testForecastFallback: true },
+      { syntheticForecastFallback: true },
     );
 
     expect(resolution.status).toBe('matched');
@@ -88,7 +88,7 @@ describe('resolveCloseoutChefForecast synthetic fallback', () => {
       closeoutDate,
       true,
       false,
-      { testForecastFallback: true },
+      { syntheticForecastFallback: true },
     );
 
     expect(resolution.status).toBe('pending');
@@ -100,7 +100,7 @@ describe('resolveCloseoutChefForecast synthetic fallback', () => {
       closeoutDate,
       false,
       true,
-      { testForecastFallback: true },
+      { syntheticForecastFallback: true },
     );
 
     expect(resolution.status).toBe('standalone');
