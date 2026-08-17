@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { RawInputCollectionsDebugPanel, useRawInputCollectionsCapture } from './components/participant/RawInputCollectionsDebugPanel';
 import { startChefResultsRawParentMessageDiagnostic } from './devRawParentMessageDiagnostic';
 import { formatServiceDateShort } from './displayFormat';
 import { CategoryDetailPanel } from './components/participant/CategoryDetailPanel';
@@ -28,6 +29,7 @@ import { useChefResultsFixtureData } from './useChefResultsData';
  */
 export function ChefResultsParticipantApp() {
   useEffect(() => startChefResultsRawParentMessageDiagnostic(), []);
+  const rawInputCollectionsData = useRawInputCollectionsCapture();
 
   const currentUserId = getFixtureCurrentUserId();
   const serviceDates = useMemo(
@@ -55,6 +57,7 @@ export function ChefResultsParticipantApp() {
       className="chef-results-page chef-results-page--participant"
       data-testid="chef-results-participant-page"
     >
+      <RawInputCollectionsDebugPanel data={rawInputCollectionsData} />
       <GameBusUserDiagnostic />
       <FixtureCurrentUserSelector />
 
