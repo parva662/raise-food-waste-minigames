@@ -1,8 +1,10 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import { startChefResultsRawParentMessageDiagnostic } from './devRawParentMessageDiagnostic';
 import { formatServiceDateShort } from './displayFormat';
 import { CategoryDetailPanel } from './components/participant/CategoryDetailPanel';
 import { CategoryOutcomeVisual } from './components/participant/CategoryOutcomeVisual';
 import { FixtureCurrentUserSelector } from './components/participant/FixtureCurrentUserSelector';
+import { GameBusUserDiagnostic } from './components/participant/GameBusUserDiagnostic';
 import { KitchenProgressSection } from './components/participant/KitchenProgressSection';
 import { ParticipantHeader } from './components/participant/ParticipantHeader';
 import { SummaryCards } from './components/participant/SummaryCards';
@@ -25,6 +27,8 @@ import { useChefResultsFixtureData } from './useChefResultsData';
  * Route: #/chef-results (GameBus participant menu target).
  */
 export function ChefResultsParticipantApp() {
+  useEffect(() => startChefResultsRawParentMessageDiagnostic(), []);
+
   const currentUserId = getFixtureCurrentUserId();
   const serviceDates = useMemo(
     () => getParticipantResultServiceDates(currentUserId),
@@ -51,6 +55,7 @@ export function ChefResultsParticipantApp() {
       className="chef-results-page chef-results-page--participant"
       data-testid="chef-results-participant-page"
     >
+      <GameBusUserDiagnostic />
       <FixtureCurrentUserSelector />
 
       <div className="chef-results-toolbar">

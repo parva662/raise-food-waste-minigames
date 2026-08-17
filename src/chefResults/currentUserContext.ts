@@ -11,8 +11,8 @@ export function isDevFixtureToolsEnabled(): boolean {
 }
 
 /**
- * Returns the active fixture user id for participant results.
- * Replace with authenticated GameBus actor id in a future phase.
+ * FIXTURE CALCULATION USER — development-only profile for exercising calculation UI.
+ * Not the authenticated GameBus actor. See useGameBusAuthenticatedUser() for real identity.
  */
 export function getFixtureCurrentUserId(): string {
   if (typeof window === 'undefined') {

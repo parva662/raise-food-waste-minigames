@@ -146,18 +146,24 @@ Full JSON Schemas and examples: `src/gamebus/propertySchemas.ts`.
 | Composite score / ranking | **Not approved** — no score, leaderboard, or winner language |
 | Admin authorization | **Not implemented** — route-level auth required before production |
 | Multi-user GameBus retrieval | **Not implemented** (next major phase) |
-| Fixture current user | Default `fixture-user-c`; dev selector + `sessionStorage` until GameBus actor |
+| Fixture current user | Default `fixture-user-c`; dev selector + `sessionStorage` for calculation testing only |
+| **GameBus authenticated identity** | **Implemented (read path)** — `inputCollectionPari.me` (`/api/me`); DEV diagnostic on `#/chef-results`; not yet used for calculation lookup |
 
 **Participant (`#/chef-results`):** summary cards, category diverging visual, anonymous “How you compare”, weekly trend, lightweight “Kitchen progress”. No coworker names/IDs.
 
 **Admin (`#/chef-results-admin`):** preserves prior all-staff research table — names, head chef, full calculation detail, weekly raw aggregation.
 
+**Proven after manual verification (identity phase):**
+
+- `#/chef-results` can receive the authenticated GameBus user through `inputCollectionPari.me` in embedded mode.
+
 **Unresolved production decisions:**
 
 - Minimum staff count before showing anonymous comparison range/position (code constant `MIN_ANONYMOUS_COMPARISON_PARTICIPANTS = 3`).
 - Authorization for admin results route.
-- Real GameBus current-user identity.
-- Real cross-user forecast retrieval.
+- Retrieval of other staff members' `chefForecast` activities.
+- Group/campaign cross-user visibility.
+- Replacing fixture calculation users with real GameBus actors for results lookup.
 
 **Semantics:** Simulated overproduction / shortage answers: “What would have happened if this staff member’s forecast had been used as the production plan?” — based on observed service demand. This is **not** attributed actual waste per person.
 

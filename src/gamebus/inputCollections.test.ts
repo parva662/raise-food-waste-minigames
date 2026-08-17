@@ -10,8 +10,12 @@ import {
   tryPostActivity,
 } from './bridge';
 import {
+  getAuthenticatedGameBusUser,
   getInputCollectionKeys,
+  getRawAuthenticatedMeInput,
   getRawChefForecastsInput,
+  INPUT_COLLECTION_PARI_KEY,
+  INPUT_COLLECTION_PARI_ME_REQUEST_KEY,
   SERVICE_CLOSEOUT_CHEF_FORECASTS_REQUEST_KEY,
   SERVICE_CLOSEOUT_INPUT_COLLECTION_KEY,
   SERVICE_CLOSEOUT_INPUTS_COLLECTION_KEY_LEGACY,
@@ -291,5 +295,29 @@ describe('inputCollections accessors', () => {
       [SERVICE_CLOSEOUT_CHEF_FORECASTS_REQUEST_KEY]: rawChefForecastsFixture,
     };
     expect(getRawChefForecastsInput(flat)).toEqual(rawChefForecastsFixture);
+  });
+
+  it('reads inputCollectionPari.me for authenticated user profile', () => {
+    const mePayload = { id: 'gb-user-123', name: 'Test Account' };
+    const payload: GameBusInputCollectionsPayload = {
+      [INPUT_COLLECTION_PARI_KEY]: {
+        [INPUT_COLLECTION_PARI_ME_REQUEST_KEY]: mePayload,
+      },
+    };
+    expect(getRawAuthenticatedMeInput(payload)).toEqual(mePayload);
+    expect(getAuthenticatedGameBusUser(payload)).toEqual({
+      id: 'gb-user-123',
+      name: 'Test Account',
+    });
+  });
+
+  it('returns null authenticated user when inputCollectionPari.me is missing', () => {
+    expect(getAuthenticatedGameBusUser(null)).toBeNull();
+    expect(getAuthenticatedGameBusUser({})).toBeNull();
+    expect(
+      getAuthenticatedGameBusUser({
+        [INPUT_COLLECTION_PARI_KEY]: {},
+      }),
+    ).toBeNull();
   });
 });

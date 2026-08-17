@@ -1,4 +1,5 @@
 import type { GameBusInputCollectionsPayload } from './types';
+import { parseGameBusAuthenticatedUser, type GameBusAuthenticatedUser } from './authenticatedUser';
 
 /** Canonical GameBus Input Collection key (admin configuration). */
 export const SERVICE_CLOSEOUT_INPUT_COLLECTION_KEY = 'serviceCloseoutInput';
@@ -14,6 +15,12 @@ export const SERVICE_CLOSEOUT_INPUTS_COLLECTION_KEY = SERVICE_CLOSEOUT_INPUT_COL
 
 /** Input Request key within the service closeout collection (chefForecast activities query). */
 export const SERVICE_CLOSEOUT_CHEF_FORECASTS_REQUEST_KEY = 'chefForecasts';
+
+/** Input Collection key for Pari embed identity (`/api/me`). */
+export const INPUT_COLLECTION_PARI_KEY = 'inputCollectionPari';
+
+/** Input Request key within `inputCollectionPari` for authenticated user profile. */
+export const INPUT_COLLECTION_PARI_ME_REQUEST_KEY = 'me';
 
 const SERVICE_CLOSEOUT_COLLECTION_LOOKUP_KEYS = [
   SERVICE_CLOSEOUT_INPUT_COLLECTION_KEY,
@@ -60,4 +67,40 @@ export function getRawChefForecastsInput(
   }
 
   return payload[SERVICE_CLOSEOUT_CHEF_FORECASTS_REQUEST_KEY];
+}
+
+function getInputCollectionRequest(
+  payload: GameBusInputCollectionsPayload,
+  collectionKey: string,
+  requestKey: string,
+): unknown | undefined {
+  const collection = payload[collectionKey];
+  if (collection === null || typeof collection !== 'object' || Array.isArray(collection)) {
+    return undefined;
+  }
+  const nested = (collection as Record<string, unknown>)[requestKey];
+  return nested === undefined ? undefined : nested;
+}
+
+/**
+ * Raw `/api/me` value from `inputCollectionPari.me` without parsing.
+ */
+export function getRawAuthenticatedMeInput(
+  payload: GameBusInputCollectionsPayload | null,
+): unknown {
+  if (!payload) return undefined;
+  return getInputCollectionRequest(
+    payload,
+    INPUT_COLLECTION_PARI_KEY,
+    INPUT_COLLECTION_PARI_ME_REQUEST_KEY,
+  );
+}
+
+/**
+ * Parsed authenticated GameBus user from `inputCollectionPari.me`.
+ */
+export function getAuthenticatedGameBusUser(
+  payload: GameBusInputCollectionsPayload | null,
+): GameBusAuthenticatedUser | null {
+  return parseGameBusAuthenticatedUser(getRawAuthenticatedMeInput(payload));
 }

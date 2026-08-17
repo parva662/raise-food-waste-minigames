@@ -115,20 +115,21 @@ Result is based on **actual canteen operational data**, not student declarations
   - reads `chefForecast` via Input Collection `serviceCloseoutInput` (legacy `serviceCloseoutInputs` alias);
   - writes one `wasteMeasurement` ACTIVITY per Finalize;
   - manually verified: real menu date, all item IDs, prepared quantities, kg waste conversion, `submittedAt`, authenticated actor, iframe close.
-- **Chef results** — participant view `#/chef-results` (GameBus menu target; own results + anonymous comparison) and admin view `#/chef-results-admin` (all-staff research; authorization TBD). Shared fixture-backed calculation engine; no composite score.
+- **Chef results** — participant view `#/chef-results` (GameBus menu target; own results + anonymous comparison) and admin view `#/chef-results-admin` (all-staff research; authorization TBD). Shared fixture-backed calculation engine; no composite score. Authenticated GameBus identity is read from `inputCollectionPari.me` (DEV diagnostic); fixture profiles still drive calculation UI until real actor linkage.
 - GameBus ACTIVITY mappers for `studentLunchCheckin`, `chefForecast`, and `wasteMeasurement`.
 - Contract: `GAMEBUS_SERVICE_CLOSEOUT_CONTRACT.md`.
 
 **Known non-blocking GameBus issue:** My Activities may display `overproductionDessertKg` with the wrong label (“Overproduction meat (kg)”) while persisting the correct dessert value. GameBus display/configuration investigation — not an application defect.
 
-**Next major phase (not started):** MULTI-USER / GAMEBUS PARTICIPANT ORGANIZATION AND VISIBILITY TESTING — replace fixture inputs with real GameBus multi-user data; replace fixture current-user with authenticated GameBus actor; add admin route authorization.
+**Next major phase (in progress):** MULTI-USER / GAMEBUS PARTICIPANT ORGANIZATION AND VISIBILITY TESTING — authenticated identity via `inputCollectionPari.me` is implemented on `#/chef-results`; next: replace fixture inputs with real GameBus multi-user data and connect calculation lookup to authenticated `user.id`; add admin route authorization.
 
 **Unresolved production decisions (chef results):**
 
 - Minimum staff count before anonymous team comparison range/position display.
 - Authorization mechanism for `#/chef-results-admin`.
-- Real GameBus current-user identity.
-- Real cross-user forecast retrieval.
+- Retrieval of other staff members' `chefForecast` activities.
+- Group/campaign cross-user visibility.
+- Replacing fixture calculation users with real GameBus actors.
 
 **Out of scope (later phases):**
 
