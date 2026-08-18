@@ -3,6 +3,10 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { renderHook } from '@testing-library/react';
 import { MENU_DATES } from '../test/fixtures/dates';
 import {
+  INPUT_COLLECTION_PARI_KEY,
+  INPUT_COLLECTION_PARI_ME_REQUEST_KEY,
+} from '../gamebus/inputCollections';
+import {
   KITCHEN_GROUP_ACTIVITIES_REQUEST_KEY,
   KITCHEN_GROUP_INPUT_COLLECTION_KEY,
 } from '../gamebus/groupActivities';
@@ -26,6 +30,13 @@ describe('useCloseoutChefForecast synthetic fallback gating', () => {
       inputCollections: {
         [KITCHEN_GROUP_INPUT_COLLECTION_KEY]: {
           [KITCHEN_GROUP_ACTIVITIES_REQUEST_KEY]: [TOMORROW_CHEF_FORECAST_ACTIVITY],
+        },
+        [INPUT_COLLECTION_PARI_KEY]: {
+          [INPUT_COLLECTION_PARI_ME_REQUEST_KEY]: {
+            id: 'current-closeout-user',
+            firstName: 'Current',
+            lastName: 'User',
+          },
         },
       },
       inputCollectionsReady: true,

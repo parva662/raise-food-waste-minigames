@@ -33,7 +33,7 @@ describe('resolveCloseoutChefForecast synthetic fallback', () => {
       closeoutDate,
       true,
       true,
-      { syntheticForecastFallback: true },
+      { syntheticForecastFallback: true, authenticatedUserId: 'user-anon-chef-001' },
     );
 
     expect(resolution.status).toBe('matched');
@@ -61,6 +61,7 @@ describe('resolveCloseoutChefForecast synthetic fallback', () => {
     const resolution = resolveCloseoutChefForecast(
       [TOMORROW_CHEF_FORECAST_ACTIVITY],
       closeoutDate,
+      'user-anon-chef-001',
     );
     expect(resolution.status).toBe('no_forecast');
   });
@@ -71,7 +72,7 @@ describe('resolveCloseoutChefForecast synthetic fallback', () => {
       closeoutDate,
       true,
       true,
-      { syntheticForecastFallback: true },
+      { syntheticForecastFallback: true, authenticatedUserId: 'user-anon-chef-001' },
     );
 
     expect(resolution.status).toBe('matched');

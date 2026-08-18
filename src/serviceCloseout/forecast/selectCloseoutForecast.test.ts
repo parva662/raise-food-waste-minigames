@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { parseGameBusChefForecastActivities } from './parseGameBusChefForecast';
 import { buildAnonymizedChefForecastActivity } from './fixtures/gameBusChefForecastActivities';
-import { selectForecastsForDate } from './selectCloseoutForecast';
+import { selectCurrentUserForecastForDate, selectForecastsForDate } from './selectCloseoutForecast';
 
 const serviceDate = '2026-07-29';
 
@@ -62,5 +62,27 @@ describe('selectForecastsForDate', () => {
       buildAnonymizedChefForecastActivity({ targetDate: '2026-07-30' }),
     ]);
     expect(selectForecastsForDate(valid, serviceDate)).toHaveLength(0);
+  });
+});
+
+describe('selectCurrentUserForecastForDate', () => {
+  it('returns only the matching authenticated actor', () => {
+    const { valid } = parseGameBusChefForecastActivities([
+      buildAnonymizedChefForecastActivity({
+        actorId: 'user-a',
+        actorName: 'Staff One',
+        targetDate: serviceDate,
+        forecastMain: 200,
+      }),
+      buildAnonymizedChefForecastActivity({
+        actorId: 'user-b',
+        actorName: 'Staff Two',
+        targetDate: serviceDate,
+        forecastMain: 300,
+      }),
+    ]);
+
+    expect(selectCurrentUserForecastForDate(valid, serviceDate, 'user-b')?.forecastMain).toBe(300);
+    expect(selectCurrentUserForecastForDate(valid, serviceDate, 'user-a')?.actorName).toBe('Staff One');
   });
 });

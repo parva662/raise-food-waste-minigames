@@ -3,7 +3,7 @@ import { getAuthenticatedGameBusUser } from '../gamebus/inputCollections';
 import { useGameBusEmbed } from '../gamebus/useGameBusEmbed';
 import { CLOSEOUT_CATEGORY_KEYS } from './types';
 import { NO_CLOSEOUT_FORECAST_MESSAGE } from './forecast/gameBusChefForecastTypes';
-import { buildStaffForecastEntries } from './forecast/formatStaffForecasts';
+import { forecastCategoryQuantity } from './forecast/parseGameBusChefForecast';
 import { CloseoutIntegerInput } from './components/CloseoutIntegerInput';
 import { ServiceCloseoutHeader } from './components/ServiceCloseoutHeader';
 import { ServiceCloseoutCategoryRow } from './components/ServiceCloseoutCategoryRow';
@@ -47,8 +47,8 @@ export function ServiceCloseoutApp({ clock, serviceDate }: ServiceCloseoutAppPro
   const recordedByName = authenticatedUser?.name ?? null;
 
   const chefForecastState = useCloseoutChefForecast(resolvedDate);
-  const matchedForecasts =
-    chefForecastState.status === 'matched' ? chefForecastState.forecasts : [];
+  const matchedForecast =
+    chefForecastState.status === 'matched' ? chefForecastState.forecasts[0] ?? null : null;
 
   const finalized = state.status === 'finalized';
 
@@ -74,9 +74,9 @@ export function ServiceCloseoutApp({ clock, serviceDate }: ServiceCloseoutAppPro
             </div>
           )}
 
-          {chefForecastState.status === 'matched' && (
+          {chefForecastState.status === 'matched' && matchedForecast && (
             <ServiceCloseoutSubmittedForecast
-              forecasts={matchedForecasts}
+              forecast={matchedForecast}
               isSynthetic={chefForecastState.isSynthetic}
             />
           )}
@@ -147,7 +147,9 @@ export function ServiceCloseoutApp({ clock, serviceDate }: ServiceCloseoutAppPro
                       itemId={mealSlots[key].id}
                       preparedQuantity={draft[key].preparedQuantity}
                       overproductionGrams={draft[key].overproductionGrams}
-                      forecastEntries={buildStaffForecastEntries(matchedForecasts, key)}
+                      forecastQuantity={
+                        matchedForecast ? forecastCategoryQuantity(matchedForecast, key) : undefined
+                      }
                       preparedError={state.categoryErrors[key].prepared}
                       wasteError={state.categoryErrors[key].waste}
                       disabled={!formInteractive}

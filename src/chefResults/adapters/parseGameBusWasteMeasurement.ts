@@ -2,6 +2,8 @@ import { WASTE_MEASUREMENT_REQUIRED_REFS } from '../../gamebus/mapWasteMeasureme
 
 export type GameBusWasteMeasurement = {
   activityId: string;
+  actorId: string;
+  actorName: string;
   serviceDate: string;
   actualCustomers: number;
   mainItemId: string;
@@ -44,6 +46,7 @@ type RawProperty = {
 type RawWasteMeasurementActivity = {
   id?: string;
   createdAt?: string;
+  actor?: { id?: string; name?: string };
   template?: { reference?: string; name?: string };
   properties?: RawProperty[];
 };
@@ -192,6 +195,8 @@ export function parseGameBusWasteMeasurementActivity(
     ok: true,
     measurement: {
       activityId: typeof raw.id === 'string' ? raw.id : '',
+      actorId: readString(raw.actor?.id) ?? '',
+      actorName: readString(raw.actor?.name) ?? '',
       serviceDate,
       actualCustomers,
       mainItemId,

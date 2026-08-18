@@ -9,7 +9,7 @@ import {
   resolveCloseoutChefForecastFromInputCollections,
 } from '../../serviceCloseout/forecast/resolveCloseoutChefForecast';
 import { buildGroupDailyServiceResults } from './groupCalculationSource';
-import { parseGameBusWasteMeasurementActivities } from './parseGameBusWasteMeasurement';
+import { parseGameBusWasteMeasurementActivities, selectWasteMeasurementForDate } from './parseGameBusWasteMeasurement';
 import { gameBusWasteMeasurementToCalculationInput } from './wasteMeasurementAdapter';
 
 const serviceDate = '2026-07-29';
@@ -47,7 +47,7 @@ describe('group kitchen activities integration', () => {
       { id: 'student-1', template: { reference: 'studentLunchCheckin' }, properties: [] },
     ];
 
-    const resolution = resolveCloseoutChefForecast(activities, serviceDate);
+    const resolution = resolveCloseoutChefForecast(activities, serviceDate, 'user-anon-chef-001');
     expect(resolution.status).toBe('matched');
     if (resolution.status === 'matched') {
       expect(resolution.forecasts).toHaveLength(1);
@@ -79,6 +79,66 @@ describe('group kitchen activities integration', () => {
     const closeout = gameBusWasteMeasurementToCalculationInput(valid[0]!);
     expect(closeout.main.overproductionGrams).toBe(850);
     expect(closeout.vegetarian.overproductionGrams).toBe(360);
+  });
+
+  it('preserves wasteMeasurement actor identity from the activity envelope', () => {
+    const { valid } = parseGameBusWasteMeasurementActivities([
+      wasteMeasurementActivity({
+        actor: { id: 'recorder-user-1', name: 'Closeout Recorder' },
+      }),
+    ]);
+    expect(valid[0]!.actorId).toBe('recorder-user-1');
+    expect(valid[0]!.actorName).toBe('Closeout Recorder');
+  });
+
+  it('keeps the recorder identity on the latest wasteMeasurement for a service date', () => {
+    const older = wasteMeasurementActivity({
+      id: 'wm-old',
+      actor: { id: 'older-user', name: 'Older Recorder' },
+      properties: [
+        { template: { reference: 'serviceDate' }, value: { value: serviceDate } },
+        { template: { reference: 'actualCustomers' }, value: { value: 140 } },
+        { template: { reference: 'mainItemId' }, value: { value: 'meatballs' } },
+        { template: { reference: 'preparedMainQuantity' }, value: { value: 100 } },
+        { template: { reference: 'vegetarianItemId' }, value: { value: 'quorn' } },
+        { template: { reference: 'preparedVegetarianQuantity' }, value: { value: 50 } },
+        { template: { reference: 'soupItemId' }, value: { value: 'pumpkin-soup' } },
+        { template: { reference: 'preparedSoupQuantity' }, value: { value: 38 } },
+        { template: { reference: 'dessertItemId' }, value: { value: 'apple-compote' } },
+        { template: { reference: 'preparedDessertQuantity' }, value: { value: 30 } },
+        { template: { reference: 'overproductionMeatKg' }, value: { value: 0.5 } },
+        { template: { reference: 'overproductionVegetarianKg' }, value: { value: 0.2 } },
+        { template: { reference: 'overproductionSoupKg' }, value: { value: 0.3 } },
+        { template: { reference: 'overproductionDessertKg' }, value: { value: 0.1 } },
+        { template: { reference: 'submittedAt' }, value: { value: '2026-07-29T12:00:00.000Z' } },
+      ],
+    });
+    const newer = wasteMeasurementActivity({
+      id: 'wm-new',
+      actor: { id: 'latest-user', name: 'Latest Recorder' },
+      properties: [
+        { template: { reference: 'serviceDate' }, value: { value: serviceDate } },
+        { template: { reference: 'actualCustomers' }, value: { value: 150 } },
+        { template: { reference: 'mainItemId' }, value: { value: 'meatballs' } },
+        { template: { reference: 'preparedMainQuantity' }, value: { value: 110 } },
+        { template: { reference: 'vegetarianItemId' }, value: { value: 'quorn' } },
+        { template: { reference: 'preparedVegetarianQuantity' }, value: { value: 52 } },
+        { template: { reference: 'soupItemId' }, value: { value: 'pumpkin-soup' } },
+        { template: { reference: 'preparedSoupQuantity' }, value: { value: 40 } },
+        { template: { reference: 'dessertItemId' }, value: { value: 'apple-compote' } },
+        { template: { reference: 'preparedDessertQuantity' }, value: { value: 35 } },
+        { template: { reference: 'overproductionMeatKg' }, value: { value: 0.85 } },
+        { template: { reference: 'overproductionVegetarianKg' }, value: { value: 0.36 } },
+        { template: { reference: 'overproductionSoupKg' }, value: { value: 0.5 } },
+        { template: { reference: 'overproductionDessertKg' }, value: { value: 0.18 } },
+        { template: { reference: 'submittedAt' }, value: { value: '2026-07-29T15:00:00.000Z' } },
+      ],
+    });
+
+    const { valid } = parseGameBusWasteMeasurementActivities([older, newer]);
+    const selected = selectWasteMeasurementForDate(valid, serviceDate);
+    expect(selected?.actorId).toBe('latest-user');
+    expect(selected?.actorName).toBe('Latest Recorder');
   });
 
   it('returns null chef results when closeout is missing', () => {

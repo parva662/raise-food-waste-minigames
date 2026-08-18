@@ -162,12 +162,13 @@ describe('selectCloseoutForecast', () => {
     const resolution = resolveCloseoutChefForecast(
       [TOMORROW_CHEF_FORECAST_ACTIVITY],
       closeoutDate,
+      'user-anon-chef-001',
     );
     expect(resolution.status).toBe('no_forecast');
   });
 
   it('returns no-forecast state when no date matches', () => {
-    const resolution = resolveCloseoutChefForecast([], closeoutDate);
+    const resolution = resolveCloseoutChefForecast([], closeoutDate, 'user-anon-chef-001');
     expect(resolution.status).toBe('no_forecast');
     expect(resolution.forecasts).toHaveLength(0);
   });

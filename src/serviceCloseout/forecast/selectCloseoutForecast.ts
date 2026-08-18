@@ -35,6 +35,24 @@ export function selectForecastsForDate(
   );
 }
 
+/** Latest exact-date forecast for one authenticated kitchen staff member. */
+export function selectCurrentUserForecastForDate(
+  forecasts: readonly GameBusChefForecast[],
+  closeoutDate: string,
+  authenticatedUserId: string,
+): GameBusChefForecast | null {
+  const matching = forecasts.filter(
+    (forecast) =>
+      forecast.targetDate === closeoutDate && forecast.actorId === authenticatedUserId,
+  );
+  if (matching.length === 0) return null;
+  if (matching.length === 1) return matching[0]!;
+
+  return [...matching].sort((left, right) =>
+    submissionSortKey(left).localeCompare(submissionSortKey(right)),
+  )[matching.length - 1]!;
+}
+
 /** @deprecated Prefer {@link selectForecastsForDate} for multi-staff closeout display. */
 export function selectLatestForecastForDate(
   forecasts: readonly GameBusChefForecast[],

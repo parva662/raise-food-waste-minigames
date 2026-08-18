@@ -9,6 +9,7 @@ import { buildAnonymizedChefForecastActivity } from './forecast/fixtures/gameBus
 import type { CloseoutChefForecastResolution } from './forecast/gameBusChefForecastTypes';
 import { NO_CLOSEOUT_FORECAST_MESSAGE } from './forecast/gameBusChefForecastTypes';
 import { parseGameBusChefForecastActivities } from './forecast/parseGameBusChefForecast';
+import { buildSyntheticCloseoutChefForecast } from './forecast/syntheticCloseoutChefForecast';
 
 const { useCloseoutChefForecastMock } = vi.hoisted(() => ({
   useCloseoutChefForecastMock: vi.fn<() => CloseoutChefForecastResolution>(),
@@ -110,9 +111,10 @@ describe('service closeout forecast UI', () => {
   });
 
   it('shows synthetic test banner when forecast is synthetic', () => {
-    const forecast = parseGameBusChefForecastActivities([
-      buildAnonymizedChefForecastActivity(),
-    ]).valid[0]!;
+    const forecast = buildSyntheticCloseoutChefForecast(MENU_DATES.runtimeWednesday, {
+      id: 'staff2-user-id',
+      name: 'staff2 Chef',
+    });
     useCloseoutChefForecastMock.mockReturnValue({
       status: 'matched',
       forecasts: [forecast],
@@ -123,6 +125,9 @@ describe('service closeout forecast UI', () => {
     expect(screen.getByTestId('closeout-synthetic-forecast-banner')).toHaveTextContent(
       'TEST DATA — synthetic forecast',
     );
+    expect(screen.getByTestId('closeout-forecast-chef')).toHaveTextContent('staff2 Chef');
+    expect(screen.queryByText('Staff Two')).not.toBeInTheDocument();
+    expect(screen.queryByText('Synthetic Test Chef')).not.toBeInTheDocument();
   });
 
   it('allows actual prepared to differ from forecast after entry', async () => {
