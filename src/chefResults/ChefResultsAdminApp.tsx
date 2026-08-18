@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { getGroupResultServiceDates } from './adapters/groupCalculationSource';
 import { getFixtureServiceDates } from './adapters/fixtureCalculationSource';
 import { ObservedServicePanel } from './components/ObservedServicePanel';
@@ -20,7 +20,18 @@ export function ChefResultsAdminApp() {
   }, [embedded, inputCollections, inputCollectionsReady]);
 
   const serviceDates = embedded && inputCollectionsReady ? groupDates : fixtureDates;
-  const [selectedDate, setSelectedDate] = useState<string>(() => serviceDates[0] ?? '');
+  const [selectedDate, setSelectedDate] = useState<string>('');
+
+  useEffect(() => {
+    if (serviceDates.length === 0) {
+      setSelectedDate('');
+      return;
+    }
+    setSelectedDate((current) =>
+      current && serviceDates.includes(current) ? current : serviceDates[serviceDates.length - 1]!,
+    );
+  }, [serviceDates]);
+
   const resultsState = useChefResultsData(selectedDate);
   const dailyResults = resultsState.status === 'ready' ? resultsState.dailyResults : null;
   const weeklySummaries = resultsState.status === 'ready' ? resultsState.weeklySummaries : [];

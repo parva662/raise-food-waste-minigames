@@ -132,13 +132,16 @@ describe('admin preservation', () => {
     render(<AppRouter />);
     expect(screen.getByTestId('observed-service-panel')).toBeInTheDocument();
     expect(screen.getByText('Staff simulations')).toBeInTheDocument();
-    expect(screen.getByTestId('staff-result-fixture-user-a')).toBeInTheDocument();
+    const select = screen.getByTestId('chef-results-admin-date-select') as HTMLSelectElement;
+    expect(select.value).toBe('2026-07-31');
     expect(screen.getByTestId('staff-result-fixture-user-b')).toBeInTheDocument();
+    expect(screen.getByTestId('staff-result-fixture-user-c')).toBeInTheDocument();
+    expect(screen.getByTestId('staff-result-fixture-user-d')).toBeInTheDocument();
     expect(screen.getByTestId('weekly-summary-panel')).toBeInTheDocument();
   });
 
   it('shows real staff names on admin page', () => {
     render(<AppRouter />);
-    expect(screen.getByTestId('staff-result-fixture-user-a')).toHaveTextContent('Aino Virtanen');
+    expect(screen.getByTestId('staff-result-fixture-user-b')).toHaveTextContent('Boris Lindström');
   });
 });

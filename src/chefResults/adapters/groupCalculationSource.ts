@@ -139,12 +139,108 @@ export function buildGroupWeeklySummaries(
   return aggregateWeeklyResults(dailyStaffResults);
 }
 
-export function getParticipantGroupResultServiceDates(
+export type KitchenProgressSummary = {
+  servicesCompletedCount: number;
+  anonymousTeamAverageOverproductionGrams: number;
+};
+
+export function buildGroupKitchenProgress(
   inputCollections: GameBusInputCollectionsPayload | null,
-  userId: string,
-): readonly string[] {
-  return buildAllGroupDailyServiceResults(inputCollections)
-    .filter((day) => day.staffResults.some((result) => result.userId === userId))
-    .map((day) => day.serviceDate)
-    .sort();
+): KitchenProgressSummary {
+  const days = buildAllGroupDailyServiceResults(inputCollections);
+  if (days.length === 0) {
+    return { servicesCompletedCount: 0, anonymousTeamAverageOverproductionGrams: 0 };
+  }
+
+  const anonymousTeamAverageOverproductionGrams =
+    days.reduce((sum, day) => {
+      const teamTotal = day.staffResults.reduce(
+        (inner, result) => inner + result.totalSimulatedOverproductionGrams,
+        0,
+      );
+      return sum + teamTotal / Math.max(1, day.staffResults.length);
+    }, 0) / days.length;
+
+  return {
+    servicesCompletedCount: days.length,
+    anonymousTeamAverageOverproductionGrams,
+  };
+}
+
+export type GroupKitchenDiagnostics = {
+  totalActivities: number;
+  chefForecastActivityCount: number;
+  validChefForecastCount: number;
+  rejectedChefForecastCount: number;
+  rejectedChefForecasts: readonly {
+    activityId: string | null;
+    reason: string;
+    detail?: string;
+  }[];
+  wasteMeasurementActivityCount: number;
+  validWasteMeasurementCount: number;
+  rejectedWasteMeasurementCount: number;
+  rejectedWasteMeasurements: readonly {
+    activityId: string | null;
+    reason: string;
+    detail?: string;
+  }[];
+  forecastTargetDates: readonly string[];
+  wasteServiceDates: readonly string[];
+  calculableResultDates: readonly string[];
+};
+
+function formatRejectedDetail(
+  reason: string,
+  missingRefs?: readonly string[],
+  invalidRefs?: readonly string[],
+): string | undefined {
+  if (missingRefs?.length) return `missing ${missingRefs.join(', ')}`;
+  if (invalidRefs?.length) return `invalid ${invalidRefs.join(', ')}`;
+  return reason;
+}
+
+export function buildGroupKitchenDiagnostics(
+  inputCollections: GameBusInputCollectionsPayload | null,
+): GroupKitchenDiagnostics {
+  const raw = getRawKitchenGroupActivitiesInput(inputCollections);
+  const activities = extractGroupActivities(raw);
+  const chefForecastActivities = filterActivitiesByTemplateReference(
+    activities,
+    CHEF_FORECAST_TEMPLATE,
+  );
+  const wasteMeasurementActivities = filterActivitiesByTemplateReference(
+    activities,
+    WASTE_MEASUREMENT_TEMPLATE,
+  );
+
+  const chefParse = parseGameBusChefForecastActivities(chefForecastActivities);
+  const wasteParse = parseGameBusWasteMeasurementActivities(wasteMeasurementActivities);
+
+  const forecastTargetDates = [...new Set(chefParse.valid.map((forecast) => forecast.targetDate))].sort();
+  const wasteServiceDates = [...new Set(wasteParse.valid.map((entry) => entry.serviceDate))].sort();
+  const calculableResultDates = getGroupResultServiceDates(inputCollections);
+
+  return {
+    totalActivities: activities.length,
+    chefForecastActivityCount: chefForecastActivities.length,
+    validChefForecastCount: chefParse.valid.length,
+    rejectedChefForecastCount: chefParse.rejected.length,
+    rejectedChefForecasts: chefParse.rejected.map((entry) => ({
+      activityId: entry.activityId,
+      reason: entry.reason,
+      detail: formatRejectedDetail(entry.reason, entry.missingRefs, entry.invalidRefs),
+    })),
+    wasteMeasurementActivityCount: wasteMeasurementActivities.length,
+    validWasteMeasurementCount: wasteParse.valid.length,
+    rejectedWasteMeasurementCount: wasteParse.rejected.length,
+    rejectedWasteMeasurements: wasteParse.rejected.map((entry) => ({
+      activityId: entry.activityId,
+      reason: entry.reason,
+      detail: formatRejectedDetail(entry.reason, entry.missingRefs, entry.invalidRefs),
+    })),
+    forecastTargetDates,
+    wasteServiceDates,
+    calculableResultDates,
+  };
 }

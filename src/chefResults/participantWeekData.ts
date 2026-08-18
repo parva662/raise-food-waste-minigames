@@ -74,8 +74,8 @@ export function findParticipantDailyResult(
   serviceDate: string,
   dailyResults?: DailyServiceResults | null,
 ): StaffDailyResult | null {
-  if (dailyResults) {
-    return dailyResults.staffResults.find((result) => result.userId === userId) ?? null;
+  if (dailyResults !== undefined) {
+    return dailyResults?.staffResults.find((result) => result.userId === userId) ?? null;
   }
 
   const day = buildAllFixtureDailyServiceResults().find((entry) => entry.serviceDate === serviceDate);

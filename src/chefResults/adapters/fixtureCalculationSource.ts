@@ -90,3 +90,29 @@ export function buildFixtureWeeklySummaries(): StaffWeeklySummary[] {
   );
   return aggregateWeeklyResults(dailyStaffResults);
 }
+
+export type KitchenProgressSummary = {
+  servicesCompletedCount: number;
+  anonymousTeamAverageOverproductionGrams: number;
+};
+
+export function buildFixtureKitchenProgress(): KitchenProgressSummary {
+  const days = buildAllFixtureDailyServiceResults();
+  if (days.length === 0) {
+    return { servicesCompletedCount: 0, anonymousTeamAverageOverproductionGrams: 0 };
+  }
+
+  const anonymousTeamAverageOverproductionGrams =
+    days.reduce((sum, day) => {
+      const teamTotal = day.staffResults.reduce(
+        (inner, result) => inner + result.totalSimulatedOverproductionGrams,
+        0,
+      );
+      return sum + teamTotal / Math.max(1, day.staffResults.length);
+    }, 0) / days.length;
+
+  return {
+    servicesCompletedCount: days.length,
+    anonymousTeamAverageOverproductionGrams,
+  };
+}

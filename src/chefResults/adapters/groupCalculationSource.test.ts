@@ -8,9 +8,17 @@ import {
   resolveCloseoutChefForecast,
   resolveCloseoutChefForecastFromInputCollections,
 } from '../../serviceCloseout/forecast/resolveCloseoutChefForecast';
-import { buildGroupDailyServiceResults } from './groupCalculationSource';
+import {
+  buildAllGroupDailyServiceResults,
+  buildGroupDailyServiceResults,
+  buildGroupKitchenDiagnostics,
+  buildGroupKitchenProgress,
+  getGroupResultServiceDates,
+} from './groupCalculationSource';
 import { parseGameBusWasteMeasurementActivities, selectWasteMeasurementForDate } from './parseGameBusWasteMeasurement';
 import { gameBusWasteMeasurementToCalculationInput } from './wasteMeasurementAdapter';
+import { buildParticipantWeekSummary, findParticipantDailyResult } from '../participantWeekData';
+import { buildFixtureKitchenProgress } from './fixtureCalculationSource';
 
 const serviceDate = '2026-07-29';
 
@@ -179,5 +187,143 @@ describe('group kitchen activities integration', () => {
       'Aino Virtanen',
       'Kitchen Staff 2',
     ]);
+  });
+
+  it('creates calculable service dates when forecast and wasteMeasurement match', () => {
+    const inputCollections = {
+      [KITCHEN_GROUP_INPUT_COLLECTION_KEY]: {
+        [KITCHEN_GROUP_ACTIVITIES_REQUEST_KEY]: [
+          buildAnonymizedChefForecastActivity({ targetDate: serviceDate }),
+          wasteMeasurementActivity(),
+        ],
+      },
+    };
+
+    expect(getGroupResultServiceDates(inputCollections)).toEqual([serviceDate]);
+    expect(buildAllGroupDailyServiceResults(inputCollections)).toHaveLength(1);
+  });
+
+  it('keeps the latest duplicate forecast per actor for the same targetDate', () => {
+    const inputCollections = {
+      [KITCHEN_GROUP_INPUT_COLLECTION_KEY]: {
+        [KITCHEN_GROUP_ACTIVITIES_REQUEST_KEY]: [
+          buildAnonymizedChefForecastActivity({
+            id: 'f-old',
+            actorId: 'user-a',
+            actorName: 'Older Forecast',
+            targetDate: serviceDate,
+            submittedAt: '2026-07-28T10:00:00.000Z',
+            forecastTotalCustomers: 100,
+          }),
+          buildAnonymizedChefForecastActivity({
+            id: 'f-new',
+            actorId: 'user-a',
+            actorName: 'Latest Forecast',
+            targetDate: serviceDate,
+            submittedAt: '2026-07-28T16:00:00.000Z',
+            forecastTotalCustomers: 120,
+          }),
+          wasteMeasurementActivity(),
+        ],
+      },
+    };
+
+    const daily = buildGroupDailyServiceResults(inputCollections, serviceDate);
+    expect(daily?.staffResults).toHaveLength(1);
+    expect(daily?.staffResults[0]?.userName).toBe('Latest Forecast');
+    expect(daily?.staffResults[0]?.forecastCustomers).toBe(120);
+  });
+
+  it('selects the current user result by authenticated user id', () => {
+    const inputCollections = {
+      [KITCHEN_GROUP_INPUT_COLLECTION_KEY]: {
+        [KITCHEN_GROUP_ACTIVITIES_REQUEST_KEY]: [
+          buildAnonymizedChefForecastActivity({
+            actorId: 'me-user',
+            actorName: 'Test Account',
+            targetDate: serviceDate,
+          }),
+          buildAnonymizedChefForecastActivity({
+            id: 'f-2',
+            actorId: 'coworker',
+            actorName: 'Coworker',
+            targetDate: serviceDate,
+          }),
+          wasteMeasurementActivity(),
+        ],
+      },
+    };
+
+    const daily = buildGroupDailyServiceResults(inputCollections, serviceDate);
+    const own = findParticipantDailyResult('me-user', serviceDate, daily);
+    expect(own?.userId).toBe('me-user');
+    expect(own?.userName).toBe('Test Account');
+  });
+
+  it('builds participant week summary from real group results only', () => {
+    const inputCollections = {
+      [KITCHEN_GROUP_INPUT_COLLECTION_KEY]: {
+        [KITCHEN_GROUP_ACTIVITIES_REQUEST_KEY]: [
+          buildAnonymizedChefForecastActivity({
+            actorId: 'me-user',
+            actorName: 'Test Account',
+            targetDate: serviceDate,
+          }),
+          wasteMeasurementActivity(),
+        ],
+      },
+    };
+
+    const week = buildParticipantWeekSummary('me-user', inputCollections);
+    expect(week.participatedServiceCount).toBe(1);
+    expect(week.points).toHaveLength(1);
+    expect(week.points[0]?.serviceDate).toBe(serviceDate);
+  });
+
+  it('derives kitchen progress from real group results', () => {
+    const inputCollections = {
+      [KITCHEN_GROUP_INPUT_COLLECTION_KEY]: {
+        [KITCHEN_GROUP_ACTIVITIES_REQUEST_KEY]: [
+          buildAnonymizedChefForecastActivity({
+            actorId: 'user-a',
+            actorName: 'A',
+            targetDate: serviceDate,
+          }),
+          buildAnonymizedChefForecastActivity({
+            id: 'f-2',
+            actorId: 'user-b',
+            actorName: 'B',
+            targetDate: serviceDate,
+          }),
+          wasteMeasurementActivity(),
+        ],
+      },
+    };
+
+    const progress = buildGroupKitchenProgress(inputCollections);
+    const fixtureProgress = buildFixtureKitchenProgress();
+    expect(progress.servicesCompletedCount).toBe(1);
+    expect(progress.servicesCompletedCount).not.toBe(fixtureProgress.servicesCompletedCount);
+  });
+
+  it('reports parser diagnostics for group kitchen activities', () => {
+    const inputCollections = {
+      [KITCHEN_GROUP_INPUT_COLLECTION_KEY]: {
+        [KITCHEN_GROUP_ACTIVITIES_REQUEST_KEY]: [
+          buildAnonymizedChefForecastActivity({ targetDate: serviceDate }),
+          wasteMeasurementActivity(),
+          { id: 'bad-forecast', template: { reference: 'chefForecast' }, properties: [] },
+        ],
+      },
+    };
+
+    const diagnostics = buildGroupKitchenDiagnostics(inputCollections);
+    expect(diagnostics.totalActivities).toBe(3);
+    expect(diagnostics.validChefForecastCount).toBe(1);
+    expect(diagnostics.rejectedChefForecastCount).toBe(1);
+    expect(diagnostics.validWasteMeasurementCount).toBe(1);
+    expect(diagnostics.calculableResultDates).toEqual([serviceDate]);
+    expect(diagnostics.forecastTargetDates).toEqual([serviceDate]);
+    expect(diagnostics.wasteServiceDates).toEqual([serviceDate]);
   });
 });

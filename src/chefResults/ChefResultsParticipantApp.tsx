@@ -9,12 +9,14 @@ import { ParticipantHeader } from './components/participant/ParticipantHeader';
 import { SummaryCards } from './components/participant/SummaryCards';
 import { TeamComparisonSection } from './components/participant/TeamComparisonSection';
 import { YourWeekSection } from './components/participant/YourWeekSection';
-import { getParticipantGroupResultServiceDates } from './adapters/groupCalculationSource';
+import { buildFixtureKitchenProgress } from './adapters/fixtureCalculationSource';
+import {
+  buildGroupKitchenProgress,
+  getGroupResultServiceDates,
+} from './adapters/groupCalculationSource';
 import { getFixtureCurrentUserId } from './currentUserContext';
 import { buildParticipantWeekSummary, findParticipantDailyResult } from './participantWeekData';
-import {
-  getParticipantResultServiceDates,
-} from './participantResultDates';
+import { getParticipantResultServiceDates } from './participantResultDates';
 import {
   buildAnonymousTeamBenchmark,
   buildParticipantComparisonInsights,
@@ -35,7 +37,7 @@ export function ChefResultsParticipantApp() {
 
   const serviceDates = useMemo(() => {
     if (embedded && inputCollectionsReady) {
-      return getParticipantGroupResultServiceDates(inputCollections, currentUserId);
+      return getGroupResultServiceDates(inputCollections);
     }
     return getParticipantResultServiceDates(currentUserId);
   }, [currentUserId, embedded, inputCollections, inputCollectionsReady]);
@@ -47,10 +49,10 @@ export function ChefResultsParticipantApp() {
       setSelectedDate('');
       return;
     }
-    if (!selectedDate || !serviceDates.includes(selectedDate)) {
-      setSelectedDate(serviceDates[serviceDates.length - 1]!);
-    }
-  }, [selectedDate, serviceDates]);
+    setSelectedDate((current) =>
+      current && serviceDates.includes(current) ? current : serviceDates[serviceDates.length - 1]!,
+    );
+  }, [serviceDates]);
 
   const resultsState = useChefResultsData(selectedDate);
   const dailyResults = resultsState.status === 'ready' ? resultsState.dailyResults : null;
@@ -63,6 +65,12 @@ export function ChefResultsParticipantApp() {
       ),
     [currentUserId, embedded, inputCollections, inputCollectionsReady],
   );
+  const kitchenProgress = useMemo(() => {
+    if (embedded && inputCollectionsReady) {
+      return buildGroupKitchenProgress(inputCollections);
+    }
+    return buildFixtureKitchenProgress();
+  }, [embedded, inputCollections, inputCollectionsReady]);
 
   const teamBenchmark =
     dailyResults && dailyResults.staffResults.length > 0
@@ -78,7 +86,11 @@ export function ChefResultsParticipantApp() {
       className="chef-results-page chef-results-page--participant"
       data-testid="chef-results-participant-page"
     >
-      <GameBusUserDiagnostic />
+      <GameBusUserDiagnostic
+        selectedDate={selectedDate}
+        currentUserId={currentUserId}
+        hasOwnResult={ownResult !== null}
+      />
       {!embedded ? <FixtureCurrentUserSelector /> : null}
 
       {resultsState.status === 'pending' ? (
@@ -135,7 +147,7 @@ export function ChefResultsParticipantApp() {
       ) : null}
 
       <YourWeekSection week={weekSummary} />
-      <KitchenProgressSection />
+      <KitchenProgressSection progress={kitchenProgress} />
     </div>
   );
 }
