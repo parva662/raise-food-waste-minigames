@@ -3,6 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, render, screen } from '@testing-library/react';
 import { ChefResultsParticipantApp } from './ChefResultsParticipantApp';
 import { ChefResultsAdminApp } from './ChefResultsAdminApp';
+import { DEFAULT_FIXTURE_CURRENT_USER_ID } from './currentUserContext';
 import {
   KITCHEN_GROUP_ACTIVITIES_REQUEST_KEY,
   KITCHEN_GROUP_INPUT_COLLECTION_KEY,
@@ -186,5 +187,97 @@ describe('embedded chef results UI', () => {
     render(<ChefResultsParticipantApp />);
 
     expect(screen.queryByTestId('gamebus-kitchen-diagnostics')).not.toBeInTheDocument();
+  });
+});
+
+describe('embedded chef results loading boundary', () => {
+  let originalParent: Window;
+
+  beforeEach(() => {
+    resetGameBusBridgeForTests();
+    vi.spyOn(detectEmbedModule, 'isGameBusEmbed').mockReturnValue(true);
+    window.sessionStorage.clear();
+    window.location.hash = '#/chef-results';
+    originalParent = window.parent;
+    Object.defineProperty(window, 'parent', {
+      configurable: true,
+      value: { postMessage: vi.fn() },
+    });
+  });
+
+  afterEach(() => {
+    cleanup();
+    resetGameBusBridgeForTests();
+    window.sessionStorage.clear();
+    window.location.hash = '';
+    Object.defineProperty(window, 'parent', {
+      configurable: true,
+      value: originalParent,
+    });
+    vi.restoreAllMocks();
+    vi.unstubAllEnvs();
+  });
+
+  it('does not render fixture result cards while INPUT_COLLECTIONS is pending', () => {
+    render(<ChefResultsParticipantApp />);
+
+    expect(screen.getByTestId('chef-results-pending')).toHaveTextContent('Loading kitchen results…');
+    expect(screen.queryByTestId('participant-summary-cards')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('category-outcome-visual')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('team-comparison-section')).not.toBeInTheDocument();
+  });
+
+  it('keeps the service-date dropdown empty while INPUT_COLLECTIONS is pending', () => {
+    render(<ChefResultsParticipantApp />);
+
+    const select = screen.getByTestId('chef-results-date-select') as HTMLSelectElement;
+    expect(select.options).toHaveLength(0);
+    expect(select.value).toBe('');
+    expect(select.disabled).toBe(true);
+  });
+
+  it('does not render fixture kitchen progress while INPUT_COLLECTIONS is pending', () => {
+    render(<ChefResultsParticipantApp />);
+
+    expect(screen.queryByTestId('kitchen-progress-section')).not.toBeInTheDocument();
+    expect(screen.queryByText('5')).not.toBeInTheDocument();
+    expect(screen.queryByText('4.12 kg')).not.toBeInTheDocument();
+  });
+
+  it('does not render fixture your week history while INPUT_COLLECTIONS is pending', () => {
+    render(<ChefResultsParticipantApp />);
+
+    expect(screen.queryByTestId('your-week-section')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('week-trend-over')).not.toBeInTheDocument();
+  });
+});
+
+describe('standalone chef results fixtures', () => {
+  beforeEach(() => {
+    resetGameBusBridgeForTests();
+    vi.spyOn(detectEmbedModule, 'isGameBusEmbed').mockReturnValue(false);
+    window.sessionStorage.clear();
+    window.sessionStorage.setItem(
+      'chef-results-fixture-current-user-id',
+      DEFAULT_FIXTURE_CURRENT_USER_ID,
+    );
+  });
+
+  afterEach(() => {
+    cleanup();
+    resetGameBusBridgeForTests();
+    window.sessionStorage.clear();
+    vi.restoreAllMocks();
+  });
+
+  it('still renders fixture participant results in standalone mode', () => {
+    render(<ChefResultsParticipantApp />);
+
+    expect(screen.queryByTestId('chef-results-pending')).not.toBeInTheDocument();
+    expect(screen.getByTestId('participant-summary-cards')).toBeInTheDocument();
+    expect(screen.getByTestId('your-week-section')).toBeInTheDocument();
+    expect(screen.getByTestId('kitchen-progress-section')).toBeInTheDocument();
+    const select = screen.getByTestId('chef-results-date-select') as HTMLSelectElement;
+    expect(select.options.length).toBeGreaterThan(0);
   });
 });

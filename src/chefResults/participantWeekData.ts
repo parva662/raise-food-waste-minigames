@@ -18,6 +18,14 @@ export type ParticipantWeekSummary = {
   points: readonly ParticipantWeekPoint[];
 };
 
+export const EMPTY_PARTICIPANT_WEEK_SUMMARY: ParticipantWeekSummary = {
+  participatedServiceCount: 0,
+  totalSimulatedOverproductionGrams: 0,
+  totalSimulatedShortageGrams: 0,
+  meanAbsoluteCustomerForecastError: 0,
+  points: [],
+};
+
 function buildSummaryFromDays(userId: string, days: readonly DailyServiceResults[]): ParticipantWeekSummary {
   const points: ParticipantWeekPoint[] = [];
 

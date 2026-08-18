@@ -144,6 +144,11 @@ export type KitchenProgressSummary = {
   anonymousTeamAverageOverproductionGrams: number;
 };
 
+export const EMPTY_KITCHEN_PROGRESS: KitchenProgressSummary = {
+  servicesCompletedCount: 0,
+  anonymousTeamAverageOverproductionGrams: 0,
+};
+
 export function buildGroupKitchenProgress(
   inputCollections: GameBusInputCollectionsPayload | null,
 ): KitchenProgressSummary {

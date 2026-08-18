@@ -12,10 +12,15 @@ import { YourWeekSection } from './components/participant/YourWeekSection';
 import { buildFixtureKitchenProgress } from './adapters/fixtureCalculationSource';
 import {
   buildGroupKitchenProgress,
+  EMPTY_KITCHEN_PROGRESS,
   getGroupResultServiceDates,
 } from './adapters/groupCalculationSource';
 import { getFixtureCurrentUserId } from './currentUserContext';
-import { buildParticipantWeekSummary, findParticipantDailyResult } from './participantWeekData';
+import {
+  buildParticipantWeekSummary,
+  EMPTY_PARTICIPANT_WEEK_SUMMARY,
+  findParticipantDailyResult,
+} from './participantWeekData';
 import { getParticipantResultServiceDates } from './participantResultDates';
 import {
   buildAnonymousTeamBenchmark,
@@ -32,15 +37,19 @@ import { useGameBusEmbed } from '../gamebus/useGameBusEmbed';
 export function ChefResultsParticipantApp() {
   const { embedded, inputCollections, inputCollectionsReady } = useGameBusEmbed();
   const { user: authenticatedUser } = useGameBusAuthenticatedUser();
+  const isEmbeddedLoading = embedded && !inputCollectionsReady;
   const fixtureUserId = getFixtureCurrentUserId();
-  const currentUserId = embedded && authenticatedUser ? authenticatedUser.id : fixtureUserId;
+  const currentUserId = embedded
+    ? authenticatedUser?.id ?? ''
+    : fixtureUserId;
 
   const serviceDates = useMemo(() => {
+    if (isEmbeddedLoading) return [];
     if (embedded && inputCollectionsReady) {
       return getGroupResultServiceDates(inputCollections);
     }
-    return getParticipantResultServiceDates(currentUserId);
-  }, [currentUserId, embedded, inputCollections, inputCollectionsReady]);
+    return getParticipantResultServiceDates(fixtureUserId);
+  }, [embedded, fixtureUserId, inputCollections, inputCollectionsReady, isEmbeddedLoading]);
 
   const [selectedDate, setSelectedDate] = useState<string>('');
 
@@ -56,21 +65,30 @@ export function ChefResultsParticipantApp() {
 
   const resultsState = useChefResultsData(selectedDate);
   const dailyResults = resultsState.status === 'ready' ? resultsState.dailyResults : null;
-  const ownResult = findParticipantDailyResult(currentUserId, selectedDate, dailyResults);
-  const weekSummary = useMemo(
-    () =>
-      buildParticipantWeekSummary(
-        currentUserId,
-        embedded && inputCollectionsReady ? inputCollections : undefined,
-      ),
-    [currentUserId, embedded, inputCollections, inputCollectionsReady],
-  );
+  const ownResult = isEmbeddedLoading
+    ? null
+    : findParticipantDailyResult(currentUserId, selectedDate, dailyResults);
+  const weekSummary = useMemo(() => {
+    if (isEmbeddedLoading) return EMPTY_PARTICIPANT_WEEK_SUMMARY;
+    if (embedded && inputCollectionsReady) {
+      return buildParticipantWeekSummary(currentUserId, inputCollections);
+    }
+    return buildParticipantWeekSummary(fixtureUserId);
+  }, [
+    currentUserId,
+    embedded,
+    fixtureUserId,
+    inputCollections,
+    inputCollectionsReady,
+    isEmbeddedLoading,
+  ]);
   const kitchenProgress = useMemo(() => {
+    if (isEmbeddedLoading) return EMPTY_KITCHEN_PROGRESS;
     if (embedded && inputCollectionsReady) {
       return buildGroupKitchenProgress(inputCollections);
     }
     return buildFixtureKitchenProgress();
-  }, [embedded, inputCollections, inputCollectionsReady]);
+  }, [embedded, inputCollections, inputCollectionsReady, isEmbeddedLoading]);
 
   const teamBenchmark =
     dailyResults && dailyResults.staffResults.length > 0
@@ -80,6 +98,7 @@ export function ChefResultsParticipantApp() {
     ownResult && teamBenchmark
       ? buildParticipantComparisonInsights(ownResult, teamBenchmark)
       : null;
+  const showResultContent = !isEmbeddedLoading && resultsState.status === 'ready';
 
   return (
     <div
@@ -93,7 +112,7 @@ export function ChefResultsParticipantApp() {
       />
       {!embedded ? <FixtureCurrentUserSelector /> : null}
 
-      {resultsState.status === 'pending' ? (
+      {isEmbeddedLoading ? (
         <p className="chef-results-empty" data-testid="chef-results-pending">
           Loading kitchen results…
         </p>
@@ -119,19 +138,19 @@ export function ChefResultsParticipantApp() {
 
       {selectedDate ? <ParticipantHeader serviceDate={selectedDate} /> : null}
 
-      {resultsState.status === 'ready' && !dailyResults ? (
+      {showResultContent && !dailyResults ? (
         <p className="chef-results-empty" data-testid="chef-results-unavailable">
           Results are not available yet for this service date.
         </p>
       ) : null}
 
-      {resultsState.status === 'ready' && dailyResults && !ownResult ? (
+      {showResultContent && dailyResults && !ownResult ? (
         <p className="chef-results-empty" data-testid="participant-no-result">
           You did not submit a forecast for this service date.
         </p>
       ) : null}
 
-      {ownResult ? (
+      {showResultContent && ownResult ? (
         <>
           <SummaryCards result={ownResult} />
           <CategoryOutcomeVisual result={ownResult} />
@@ -146,8 +165,8 @@ export function ChefResultsParticipantApp() {
         </>
       ) : null}
 
-      <YourWeekSection week={weekSummary} />
-      <KitchenProgressSection progress={kitchenProgress} />
+      {!isEmbeddedLoading ? <YourWeekSection week={weekSummary} /> : null}
+      {!isEmbeddedLoading ? <KitchenProgressSection progress={kitchenProgress} /> : null}
     </div>
   );
 }
