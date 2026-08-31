@@ -31,9 +31,13 @@ export function ChefForecastHeader({
       <div className="chef-header__bar">
         <div className="chef-header__title-block">
           <p className="chef-header__eyebrow">Tomorrow&apos;s kitchen forecast</p>
-          <time className="chef-header__date" dateTime={serviceDate}>
-            {formatDisplayDate(serviceDate)}
-          </time>
+          {serviceDate ? (
+            <time className="chef-header__date" dateTime={serviceDate}>
+              {formatDisplayDate(serviceDate)}
+            </time>
+          ) : (
+            <p className="chef-header__date">Service date unavailable</p>
+          )}
         </div>
         {countdown !== null && submissionWindow.phase !== 'closed' && (
           <div className="chef-header__countdown" aria-live="polite">

@@ -31,13 +31,13 @@ export type GeneratedMenuMeta = {
   dateRange: { start: string; end: string };
   dailyMenuCount: number;
   catalogueItemCount: number;
-  dateShift?: {
-    workbookStartDate: string;
+  runtimeSchedule?: {
+    strategy: 'continuous-weekday-remap';
     runtimeStartDate: string;
-    dateOffsetDays: number;
-    workbookDateRange: { start: string; end: string };
-    runtimeDateRange: { start: string; end: string };
+    sourceMenuDayCount: number;
+    runtimeMenuDayCount: number;
     runtimeEndDate: string;
+    sourceWorkbookDateRange: { start: string; end: string };
   };
 };
 

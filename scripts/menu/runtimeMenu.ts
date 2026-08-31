@@ -1,7 +1,7 @@
 import { existsSync, mkdirSync, readdirSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import type { MenuConversionResult } from './types.ts';
-import type { DateShiftMetadata } from './dateShift.ts';
+import type { ContinuousRuntimeScheduleMetadata } from './dateShift.ts';
 import { dedicatedMenuItemImagePath, categoryPlaceholderImagePath } from './imagePaths.ts';
 
 export type MissingImageReportEntry = {
@@ -57,7 +57,7 @@ export function buildImageManifest(dedicatedIds: Set<string>, catalogueIds: stri
 export function writeRuntimeMenuOutputs(
   repoRoot: string,
   result: MenuConversionResult,
-  shift?: DateShiftMetadata,
+  schedule?: ContinuousRuntimeScheduleMetadata,
 ): {
   missingImages: MissingImageReportEntry[];
   meta: {
@@ -67,6 +67,7 @@ export function writeRuntimeMenuOutputs(
     dateRange: { start: string; end: string };
     dailyMenuCount: number;
     catalogueItemCount: number;
+    runtimeSchedule?: ContinuousRuntimeScheduleMetadata;
   };
 } {
   const publicRoot = join(repoRoot, 'public');
@@ -82,16 +83,7 @@ export function writeRuntimeMenuOutputs(
     dateRange,
     dailyMenuCount: result.dailyMenus.length,
     catalogueItemCount: result.foodCatalogue.length,
-    dateShift: shift
-      ? {
-          workbookStartDate: shift.workbookStartDate,
-          runtimeStartDate: shift.runtimeStartDate,
-          dateOffsetDays: shift.dateOffsetDays,
-          workbookDateRange: shift.workbookDateRange,
-          runtimeDateRange: shift.runtimeDateRange,
-          runtimeEndDate: shift.runtimeEndDate,
-        }
-      : undefined,
+    runtimeSchedule: schedule,
   };
 
   const missingImages = buildMissingImagesReport(result, dedicatedIds);
@@ -120,7 +112,7 @@ export function writeRuntimeMenuOutputs(
         catalogueItemCount: result.foodCatalogue.length,
         dateRange,
         menuVersion,
-        dateShift: shift ?? undefined,
+        runtimeSchedule: schedule ?? undefined,
       },
       null,
       2,

@@ -11,7 +11,7 @@ import { buildActivityMessage } from '../gamebus/buildActivityMessage';
 import { pariStudentLunchTaskFixture } from '../gamebus/taskFixtures';
 import { MENU_DATES } from '../test/fixtures/dates';
 import { foodCatalogue } from '../data/foodCatalogue';
-import { getAllGeneratedDailyMenus } from '../data/generatedMenuData';
+import { getAllGeneratedDailyMenus, getGeneratedMenuMeta } from '../data/generatedMenuData';
 
 describe('generated dated menu resolver', () => {
   it('resolves Monday 2026-07-27 as the runtime menu start', () => {
@@ -81,7 +81,7 @@ describe('generated dated menu resolver', () => {
   it('returns unavailable before and after the generated date range', () => {
     const range = getGeneratedMenuDateRange();
     expect(range.start).toBe(MENU_DATES.runtimeMonday);
-    expect(range.end).toBe('2026-11-20');
+    expect(range.end).toBe('2026-11-06');
     expect(resolveMenuForDate(MENU_DATES.beforeRange)).toEqual({ status: 'unavailable' });
     expect(resolveMenuForDate(MENU_DATES.afterRange)).toEqual({ status: 'unavailable' });
   });
@@ -169,5 +169,23 @@ describe('menu overrides with generated catalogue', () => {
 describe('generated daily menu integrity', () => {
   it('defines one record per workbook lunch day', () => {
     expect(getAllGeneratedDailyMenus().length).toBeGreaterThan(0);
+  });
+
+  it('exposes continuous runtime schedule metadata', () => {
+    const meta = getGeneratedMenuMeta();
+    expect(meta.runtimeSchedule).toEqual({
+      strategy: 'continuous-weekday-remap',
+      runtimeStartDate: MENU_DATES.runtimeMonday,
+      sourceMenuDayCount: 75,
+      runtimeMenuDayCount: 75,
+      runtimeEndDate: '2026-11-06',
+      sourceWorkbookDateRange: { start: '2026-02-02', end: '2026-05-29' },
+    });
+    expect(meta.dateRange).toEqual({ start: MENU_DATES.runtimeMonday, end: '2026-11-06' });
+    expect(meta.dailyMenuCount).toBe(75);
+  });
+
+  it('makes 2026-09-01 available in the runtime calendar', () => {
+    expect(resolveMenuForDate('2026-09-01').status).toBe('available');
   });
 });

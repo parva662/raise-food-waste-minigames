@@ -29,13 +29,13 @@ export const MENU_DATES = {
   runtimeThursday: '2026-07-30',
   runtimeFriday: '2026-07-31',
   missingFromWorkbook: '2026-01-07',
-  closedWorkbookDay: '2026-09-25',
+  closedWorkbookDay: '2026-09-11',
   beforeRange: '2026-07-26',
-  afterRange: '2026-11-21',
+  afterRange: '2026-11-09',
   weekend: '2026-08-01',
   closedOverride: '2026-08-17',
   replaceOverride: '2026-09-15',
-  replaceOverrideNormalDay: '2026-09-14',
+  replaceOverrideNormalDay: '2026-09-10',
   replaceOverrideAfterDay: '2026-09-16',
 } as const;
 

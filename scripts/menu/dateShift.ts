@@ -1,50 +1,82 @@
 import { addDays, format, parseISO } from 'date-fns';
+import { toZonedTime } from 'date-fns-tz';
 import type { MenuConversionResult } from './types.ts';
-import { MENU_DATE_SHIFT, menuDateOffsetDays } from './menuConfig.ts';
+import { MENU_RUNTIME_SCHEDULE } from './menuConfig.ts';
 
-export type DateShiftMetadata = {
-  workbookStartDate: string;
+const TIMEZONE = 'Europe/Helsinki';
+
+export type ContinuousRuntimeScheduleMetadata = {
+  strategy: 'continuous-weekday-remap';
   runtimeStartDate: string;
-  dateOffsetDays: number;
-  workbookDateRange: { start: string; end: string };
-  runtimeDateRange: { start: string; end: string };
+  sourceMenuDayCount: number;
+  runtimeMenuDayCount: number;
   runtimeEndDate: string;
+  sourceWorkbookDateRange: { start: string; end: string };
 };
 
-export function shiftIsoDate(isoDate: string, offsetDays: number): string {
-  return format(addDays(parseISO(isoDate), offsetDays), 'yyyy-MM-dd');
+function isWeekend(isoDate: string): boolean {
+  const zoned = toZonedTime(parseISO(isoDate), TIMEZONE);
+  const dayIndex = zoned.getDay();
+  return dayIndex === 0 || dayIndex === 6;
 }
 
-export function applyRuntimeDateShift(result: MenuConversionResult): {
+export function nextRuntimeWeekday(isoDate: string): string {
+  let candidate = addDays(parseISO(isoDate), 1);
+  while (isWeekend(format(candidate, 'yyyy-MM-dd'))) {
+    candidate = addDays(candidate, 1);
+  }
+  return format(candidate, 'yyyy-MM-dd');
+}
+
+export function listRuntimeWeekdaysBetween(startIso: string, endIso: string): string[] {
+  const dates: string[] = [];
+  let current = startIso;
+
+  while (current <= endIso) {
+    if (!isWeekend(current)) {
+      dates.push(current);
+    }
+    current = format(addDays(parseISO(current), 1), 'yyyy-MM-dd');
+  }
+
+  return dates;
+}
+
+/**
+ * Remaps workbook menu days to a continuous Monday-Friday runtime schedule.
+ * Source workbook dates determine ordering only; calendar gaps are not preserved.
+ */
+export function applyContinuousRuntimeSchedule(result: MenuConversionResult): {
   result: MenuConversionResult;
-  shift: DateShiftMetadata;
+  schedule: ContinuousRuntimeScheduleMetadata;
 } {
-  const offsetDays = menuDateOffsetDays();
-  const sortedWorkbookDates = [...result.dailyMenus].map((day) => day.date).sort();
-  const workbookDateRange = {
-    start: sortedWorkbookDates[0] ?? MENU_DATE_SHIFT.workbookStartDate,
-    end: sortedWorkbookDates[sortedWorkbookDates.length - 1] ?? MENU_DATE_SHIFT.workbookStartDate,
-  };
+  const sorted = [...result.dailyMenus].sort(
+    (left, right) => left.date.localeCompare(right.date) || left.sheetWeek - right.sheetWeek,
+  );
+  const runtimeStartDate = MENU_RUNTIME_SCHEDULE.runtimeStartDate;
+  let currentRuntimeDate = runtimeStartDate;
 
-  const dailyMenus = result.dailyMenus
-    .map((day) => ({
+  const dailyMenus = sorted.map((day, index) => {
+    const mapped = {
       ...day,
-      date: shiftIsoDate(day.date, offsetDays),
-    }))
-    .sort((a, b) => a.date.localeCompare(b.date) || a.sheetWeek - b.sheetWeek);
+      date: currentRuntimeDate,
+    };
+    if (index < sorted.length - 1) {
+      currentRuntimeDate = nextRuntimeWeekday(currentRuntimeDate);
+    }
+    return mapped;
+  });
 
-  const runtimeDateRange = {
-    start: shiftIsoDate(workbookDateRange.start, offsetDays),
-    end: shiftIsoDate(workbookDateRange.end, offsetDays),
-  };
-
-  const shift: DateShiftMetadata = {
-    workbookStartDate: MENU_DATE_SHIFT.workbookStartDate,
-    runtimeStartDate: MENU_DATE_SHIFT.runtimeStartDate,
-    dateOffsetDays: offsetDays,
-    workbookDateRange,
-    runtimeDateRange,
-    runtimeEndDate: runtimeDateRange.end,
+  const schedule: ContinuousRuntimeScheduleMetadata = {
+    strategy: 'continuous-weekday-remap',
+    runtimeStartDate,
+    sourceMenuDayCount: sorted.length,
+    runtimeMenuDayCount: dailyMenus.length,
+    runtimeEndDate: dailyMenus[dailyMenus.length - 1]?.date ?? runtimeStartDate,
+    sourceWorkbookDateRange: {
+      start: sorted[0]?.date ?? runtimeStartDate,
+      end: sorted[sorted.length - 1]?.date ?? runtimeStartDate,
+    },
   };
 
   return {
@@ -52,6 +84,9 @@ export function applyRuntimeDateShift(result: MenuConversionResult): {
       ...result,
       dailyMenus,
     },
-    shift,
+    schedule,
   };
 }
+
+/** @deprecated Use {@link applyContinuousRuntimeSchedule}. */
+export const applyRuntimeDateShift = applyContinuousRuntimeSchedule;

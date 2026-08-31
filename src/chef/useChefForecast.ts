@@ -162,10 +162,22 @@ export function useChefForecast(clock: Clock = systemClock) {
     return () => window.clearInterval(interval);
   }, [clock]);
 
-  const submissionWindow = useMemo(
-    () => getChefSubmissionWindowStatus(now, serviceDate),
-    [now, serviceDate],
-  );
+  const submissionWindow = useMemo(() => {
+    if (serviceDateResolution.status !== 'resolved') {
+      return {
+        phase: 'closed' as const,
+        countdownTargetIso: null,
+        totalPointsIfSubmittedNow: null,
+        message: 'Forecast closed',
+        detailLines: [
+          serviceDateResolution.status === 'calendar_error'
+            ? serviceDateResolution.message
+            : 'The forecast window could not be resolved for this service date.',
+        ],
+      };
+    }
+    return getChefSubmissionWindowStatus(now, serviceDate);
+  }, [now, serviceDate, serviceDateResolution]);
 
   const formComplete = isChefForecastComplete(state.draft);
 
@@ -174,7 +186,8 @@ export function useChefForecast(clock: Clock = systemClock) {
     state.notesError !== null ||
     Object.values(state.fieldErrors).some((e) => e !== null && e !== undefined);
 
-  const submissionOpen = isChefSubmissionAllowed(now, serviceDate);
+  const submissionOpen =
+    serviceDateResolution.status === 'resolved' && isChefSubmissionAllowed(now, serviceDate);
   const hasSubmitted = state.submitted || gameBusPosted;
 
   const formInteractive =

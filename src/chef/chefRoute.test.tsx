@@ -14,6 +14,9 @@ function setHash(hash: string) {
 describe('App routing', () => {
   beforeEach(() => {
     setHash('');
+    vi.spyOn(operationalCalendarModule, 'resolveChefForecastServiceDate').mockReturnValue(
+      MENU_DATES.runtimeWednesday,
+    );
   });
 
   afterEach(() => {
