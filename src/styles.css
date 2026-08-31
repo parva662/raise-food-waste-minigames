@@ -1709,7 +1709,8 @@ ul {
   color: var(--color-text-secondary);
 }
 
-.closeout-header__dev-date {
+.closeout-header__dev-date,
+.closeout-header__test-date-override {
   margin: var(--spacing-xs) 0 0;
   font-size: var(--font-size-xs);
   font-weight: 700;

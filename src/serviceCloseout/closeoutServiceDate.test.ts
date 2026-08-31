@@ -2,8 +2,11 @@
 import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest';
 import {
   isCloseoutDevDateOverrideActive,
+  isCloseoutTestServiceDateOverrideActive,
   parseCloseoutDevDateOverride,
+  parseCloseoutTestServiceDateOverride,
   resolveCloseoutServiceDate,
+  resolveServiceCloseoutRouteServiceDate,
 } from './closeoutServiceDate';
 import * as datesModule from '../utils/dates';
 import { MENU_DATES } from '../test/fixtures/dates';
@@ -49,5 +52,32 @@ describe('closeoutServiceDate', () => {
     const selected = selectLatestForecastForDate(forecast, '2026-08-12');
     expect(selected?.targetDate).toBe('2026-08-12');
     expect(selected?.activityId).toBe('activity-forecast-anon-001');
+  });
+
+  it('parses test service date override only with gamebusDebug=1 on service-closeout', () => {
+    window.location.hash = '#/service-closeout?gamebusDebug=1&testServiceDate=2026-09-01';
+    expect(parseCloseoutTestServiceDateOverride()).toBe('2026-09-01');
+    expect(resolveServiceCloseoutRouteServiceDate()).toBe('2026-09-01');
+    expect(resolveCloseoutServiceDate('2026-09-01')).toBe('2026-09-01');
+    expect(isCloseoutTestServiceDateOverrideActive('2026-09-01')).toBe(true);
+  });
+
+  it('ignores testServiceDate without gamebusDebug=1', () => {
+    window.location.hash = '#/service-closeout?testServiceDate=2026-09-01';
+    expect(parseCloseoutTestServiceDateOverride()).toBeNull();
+    expect(resolveServiceCloseoutRouteServiceDate()).toBeUndefined();
+    expect(resolveCloseoutServiceDate()).toBe(MENU_DATES.runtimeWednesday);
+  });
+
+  it('ignores invalid testServiceDate even with gamebusDebug=1', () => {
+    window.location.hash = '#/service-closeout?gamebusDebug=1&testServiceDate=2026-13-40';
+    expect(parseCloseoutTestServiceDateOverride()).toBeNull();
+    expect(resolveServiceCloseoutRouteServiceDate()).toBeUndefined();
+    expect(resolveCloseoutServiceDate()).toBe(MENU_DATES.runtimeWednesday);
+  });
+
+  it('ignores test service date override outside service-closeout route', () => {
+    window.location.hash = '#/chef?gamebusDebug=1&testServiceDate=2026-09-01';
+    expect(parseCloseoutTestServiceDateOverride()).toBeNull();
   });
 });

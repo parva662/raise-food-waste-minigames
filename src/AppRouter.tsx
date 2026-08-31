@@ -4,6 +4,7 @@ import { ChefApp } from './chef/ChefApp';
 import { ChefResultsAdminApp } from './chefResults/ChefResultsAdminApp';
 import { ChefResultsParticipantApp } from './chefResults/ChefResultsParticipantApp';
 import { ServiceCloseoutApp } from './serviceCloseout/ServiceCloseoutApp';
+import { resolveServiceCloseoutRouteServiceDate } from './serviceCloseout/closeoutServiceDate';
 import { getAppMode, type AppMode } from './gamebus/appMode';
 import { applyDocumentTitle } from './routing/documentTitle';
 
@@ -34,7 +35,7 @@ export function AppRouter() {
   }
 
   if (mode === 'service-closeout') {
-    return <ServiceCloseoutApp />;
+    return <ServiceCloseoutApp serviceDate={resolveServiceCloseoutRouteServiceDate()} />;
   }
 
   return <App />;
