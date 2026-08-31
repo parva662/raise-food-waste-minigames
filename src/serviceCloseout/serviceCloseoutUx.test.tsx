@@ -86,15 +86,14 @@ describe('service closeout routing', () => {
   });
 });
 
-describe('service closeout test service date override', () => {
-  const operationalToday = '2026-08-31';
-  const testServiceDate = '2026-09-01';
+describe('service closeout live test service date', () => {
+  const liveTestServiceDate = '2026-09-01';
 
   beforeEach(() => {
-    vi.spyOn(datesModule, 'getTodayIsoDate').mockReturnValue(operationalToday);
     vi.spyOn(operationalCalendarModule, 'resolveChefForecastServiceDate').mockReturnValue(
       MENU_DATES.runtimeWednesday,
     );
+    setHash('#/service-closeout');
   });
 
   afterEach(() => {
@@ -103,45 +102,24 @@ describe('service closeout test service date override', () => {
     vi.restoreAllMocks();
   });
 
-  it('uses operational today on normal service-closeout route', () => {
-    setHash('#/service-closeout');
-    render(<AppRouter />);
-    expect(screen.queryByTestId('closeout-test-date-override')).not.toBeInTheDocument();
-    expect(screen.getByRole('time')).toHaveTextContent(formatDisplayDate(operationalToday));
-  });
-
-  it('ignores testServiceDate without gamebusDebug=1', () => {
-    setHash(`#/service-closeout?testServiceDate=${testServiceDate}`);
-    render(<AppRouter />);
-    expect(screen.queryByTestId('closeout-test-date-override')).not.toBeInTheDocument();
-    expect(screen.getByRole('time')).toHaveTextContent(formatDisplayDate(operationalToday));
-  });
-
-  it('uses testServiceDate when gamebusDebug=1 and date is valid', () => {
-    setHash(`#/service-closeout?gamebusDebug=1&testServiceDate=${testServiceDate}`);
-    const slots = resolveMealSlotsForDate(testServiceDate)!;
+  it('renders Sep 1 menu and override banner on normal service-closeout route', () => {
+    const slots = resolveMealSlotsForDate(liveTestServiceDate)!;
     render(<AppRouter />);
     expect(screen.getByTestId('closeout-test-date-override')).toHaveTextContent(
       'TEST DATE OVERRIDE — Service date: 1 September 2026',
     );
-    expect(screen.getByRole('time')).toHaveTextContent(formatDisplayDate(testServiceDate));
+    expect(screen.getByRole('time')).toHaveTextContent(formatDisplayDate(liveTestServiceDate));
     expect(screen.getByText(slots.main.name)).toBeInTheDocument();
+    expect(screen.getByText(slots.dessert.name)).toBeInTheDocument();
   });
 
-  it('ignores invalid testServiceDate with gamebusDebug=1', () => {
-    setHash('#/service-closeout?gamebusDebug=1&testServiceDate=not-a-date');
+  it('finalizes closeout using Sep 1 as service date', async () => {
+    const user = userEvent.setup();
     render(<AppRouter />);
-    expect(screen.queryByTestId('closeout-test-date-override')).not.toBeInTheDocument();
-    expect(screen.getByRole('time')).toHaveTextContent(formatDisplayDate(operationalToday));
-  });
-
-  it('keeps student root routing unchanged with debug query params', () => {
-    setHash(`#/service-closeout?gamebusDebug=1&testServiceDate=${testServiceDate}`);
-    cleanup();
-    setHash('');
-    render(<AppRouter />);
-    expect(screen.getByText(/Tomorrow.s lunch/)).toBeInTheDocument();
-    expect(screen.queryByTestId('closeout-test-date-override')).not.toBeInTheDocument();
+    await fillCloseoutForm(user);
+    await user.click(screen.getByRole('button', { name: 'Finalize service' }));
+    expect(screen.getByText(/Service closeout finalized/i)).toBeInTheDocument();
+    expect(screen.getByRole('time')).toHaveAttribute('dateTime', liveTestServiceDate);
   });
 });
 
