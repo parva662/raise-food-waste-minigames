@@ -1,3 +1,4 @@
+import { readGameBusSlug } from '../../gamebus/gameBusSlug';
 import type { GameBusInputCollectionsPayload } from '../../gamebus/types';
 import {
   extractGroupActivities,
@@ -21,7 +22,7 @@ export type RawWasteMeasurementDebug = {
   createdAt: string | null;
   propertyCount: number;
   propertyRefs: readonly string[];
-  propertyEntries: readonly { reference: string; displayValue: string }[];
+  propertyEntries: readonly { slug: string; displayValue: string }[];
   missingRequiredRefs: readonly string[];
 };
 
@@ -103,31 +104,31 @@ function readPropertyRefs(activity: unknown): string[] {
     if (!isRecord(property)) continue;
     const template = property.template;
     if (!isRecord(template)) continue;
-    const ref = template.reference;
-    if (typeof ref === 'string' && ref.length > 0) refs.push(ref);
+    const ref = readGameBusSlug(template);
+    if (ref) refs.push(ref);
   }
   return refs;
 }
 
-function readPropertyEntries(activity: unknown): { reference: string; value: unknown }[] {
+function readPropertyEntries(activity: unknown): { slug: string; value: unknown }[] {
   if (!isRecord(activity) || !Array.isArray(activity.properties)) return [];
-  const entries: { reference: string; value: unknown }[] = [];
+  const entries: { slug: string; value: unknown }[] = [];
   for (const property of activity.properties) {
     if (!isRecord(property)) continue;
     const template = property.template;
     if (!isRecord(template)) continue;
-    const ref = template.reference;
-    if (typeof ref !== 'string' || ref.length === 0) continue;
+    const ref = readGameBusSlug(template);
+    if (!ref) continue;
     const valueWrapper = property.value;
     const value =
       isRecord(valueWrapper) && 'value' in valueWrapper ? valueWrapper.value : undefined;
-    entries.push({ reference: ref, value });
+    entries.push({ slug: ref, value });
   }
   return entries;
 }
 
 function readStringProperty(activity: unknown, ref: string): string | null {
-  const entry = readPropertyEntries(activity).find((property) => property.reference === ref);
+  const entry = readPropertyEntries(activity).find((property) => property.slug === ref);
   if (!entry) return null;
   if (typeof entry.value === 'string') return entry.value;
   if (entry.value === null || entry.value === undefined) return null;
@@ -156,8 +157,8 @@ export function formatDebugPropertyValue(value: unknown): string {
 function buildNewestWasteMeasurementDebug(activity: unknown): RawWasteMeasurementDebug {
   const actor = readActor(activity);
   const propertyRefs = readPropertyRefs(activity);
-  const propertyEntries = readPropertyEntries(activity).map(({ reference, value }) => ({
-    reference,
+  const propertyEntries = readPropertyEntries(activity).map(({ slug, value }) => ({
+    slug,
     displayValue: formatDebugPropertyValue(value),
   }));
 

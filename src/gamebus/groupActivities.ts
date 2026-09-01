@@ -1,3 +1,4 @@
+import { readGameBusSlug } from './gameBusSlug';
 import type { GameBusInputCollectionsPayload } from './types';
 
 /** Canonical GameBus Input Collection key for kitchen group activities. */
@@ -39,8 +40,7 @@ export function getActivityTemplateReference(activity: unknown): string | null {
   if (!isRecord(activity)) return null;
   const template = activity.template;
   if (!isRecord(template)) return null;
-  const reference = template.reference;
-  return typeof reference === 'string' && reference.length > 0 ? reference : null;
+  return readGameBusSlug(template) ?? null;
 }
 
 export function filterActivitiesByTemplateReference(

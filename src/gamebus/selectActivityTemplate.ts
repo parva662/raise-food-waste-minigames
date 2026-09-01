@@ -13,13 +13,13 @@ export function selectActivityTemplate(
     throw new Error('TASK has no activityTemplates');
   }
 
-  const activity = templates.find((t) => t.reference === expectedRef);
+  const activity = templates.find((t) => t.slug === expectedRef);
   if (!activity) {
-    const found = templates.map((t) => t.reference).join(', ');
+    const found = templates.map((t) => t.slug).join(', ');
     throw new Error(
       `TASK has no supported activity template (expected ${expectedRef}). Found: ${found || '(none)'}`,
     );
   }
 
-  return { reference: activity.reference, name: activity.name };
+  return { reference: activity.slug, name: activity.name };
 }

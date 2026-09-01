@@ -22,24 +22,24 @@ export const SYNTHETIC_CLOSEOUT_FORECAST_VALUES = {
 
 type SyntheticChefForecastProperty = {
   value: { value: unknown };
-  template: { reference: string; name: string };
+  template: { slug: string; name: string };
 };
 
 type SyntheticChefForecastActivity = {
   id: string;
   actor: { id: string; name: string; image: null };
   createdAt: string;
-  template: { reference: 'chefForecast'; name: string };
+  template: { slug: 'chefForecast'; name: string };
   properties: SyntheticChefForecastProperty[];
 };
 
 function syntheticProperty(
-  reference: string,
+  slug: string,
   name: string,
   value: unknown,
 ): SyntheticChefForecastProperty {
   return {
-    template: { reference, name },
+    template: { slug, name },
     value: { value },
   };
 }
@@ -59,7 +59,7 @@ function buildSyntheticChefForecastActivity(
       image: null,
     },
     createdAt: SYNTHETIC_FORECAST_CREATED_AT,
-    template: { reference: 'chefForecast', name: 'Chef forecast' },
+    template: { slug: 'chefForecast', name: 'Chef forecast' },
     properties: [
       syntheticProperty('targetDate', 'Target date', serviceDate),
       syntheticProperty(

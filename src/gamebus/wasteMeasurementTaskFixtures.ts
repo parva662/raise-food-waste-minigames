@@ -17,7 +17,7 @@ export const pariWasteMeasurementTaskFixture: TaskData = {
   activityTemplates: [
     {
       id: '019f9404-8905-7f97-8f8b-00aa160da479',
-      reference: 'wasteMeasurement',
+      slug: 'wasteMeasurement',
       name: 'Waste measurement',
       providers: [],
       linkedProperties: WASTE_MEASUREMENT_REQUIRED_REFS.map((ref, index) => ({

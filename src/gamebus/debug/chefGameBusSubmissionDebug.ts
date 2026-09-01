@@ -36,9 +36,9 @@ export function logChefTaskBeforeSubmission(task: TaskData): void {
 
   console.log(`${CHEF_GAMEBUS_DEBUG_LOG_PREFIX} task`, {
     taskId: task.id,
-    activityTemplateReference: selected.reference,
+    activityTemplateSlug: selected.reference,
     activityTemplateName: selected.name,
-    taskPropertyTemplateRefs: (task.propertyTemplates ?? []).map((entry) => entry.reference),
+    taskPropertyTemplateSlugs: (task.propertyTemplates ?? []).map((entry) => entry.slug),
     activityLinkedPropertyRefs: activityTemplate ? resolveLinkedPropertyRefs(activityTemplate) : [],
   });
 }

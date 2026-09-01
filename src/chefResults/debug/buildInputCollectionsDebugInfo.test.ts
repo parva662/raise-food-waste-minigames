@@ -24,23 +24,23 @@ function wasteMeasurementActivity(
   propertyOverrides: Record<string, unknown> = {},
 ) {
   const properties = [
-    { template: { reference: 'serviceDate' }, value: { value: serviceDate } },
-    { template: { reference: 'actualCustomers' }, value: { value: 150 } },
-    { template: { reference: 'mainItemId' }, value: { value: 'meatballs' } },
-    { template: { reference: 'preparedMainQuantity' }, value: { value: 110 } },
-    { template: { reference: 'vegetarianItemId' }, value: { value: 'quorn' } },
-    { template: { reference: 'preparedVegetarianQuantity' }, value: { value: 52 } },
-    { template: { reference: 'soupItemId' }, value: { value: 'pumpkin-soup' } },
-    { template: { reference: 'preparedSoupQuantity' }, value: { value: 40 } },
-    { template: { reference: 'dessertItemId' }, value: { value: 'apple-compote' } },
-    { template: { reference: 'preparedDessertQuantity' }, value: { value: 35 } },
-    { template: { reference: 'overproductionMeatKg' }, value: { value: 0.85 } },
-    { template: { reference: 'overproductionVegetarianKg' }, value: { value: 0.36 } },
-    { template: { reference: 'overproductionSoupKg' }, value: { value: 0.5 } },
-    { template: { reference: 'overproductionDessertKg' }, value: { value: 0.18 } },
-    { template: { reference: 'submittedAt' }, value: { value: '2026-07-29T15:00:00.000Z' } },
+    { template: { slug: 'serviceDate' }, value: { value: serviceDate } },
+    { template: { slug: 'actualCustomers' }, value: { value: 150 } },
+    { template: { slug: 'mainItemId' }, value: { value: 'meatballs' } },
+    { template: { slug: 'preparedMainQuantity' }, value: { value: 110 } },
+    { template: { slug: 'vegetarianItemId' }, value: { value: 'quorn' } },
+    { template: { slug: 'preparedVegetarianQuantity' }, value: { value: 52 } },
+    { template: { slug: 'soupItemId' }, value: { value: 'pumpkin-soup' } },
+    { template: { slug: 'preparedSoupQuantity' }, value: { value: 40 } },
+    { template: { slug: 'dessertItemId' }, value: { value: 'apple-compote' } },
+    { template: { slug: 'preparedDessertQuantity' }, value: { value: 35 } },
+    { template: { slug: 'overproductionMeatKg' }, value: { value: 0.85 } },
+    { template: { slug: 'overproductionVegetarianKg' }, value: { value: 0.36 } },
+    { template: { slug: 'overproductionSoupKg' }, value: { value: 0.5 } },
+    { template: { slug: 'overproductionDessertKg' }, value: { value: 0.18 } },
+    { template: { slug: 'submittedAt' }, value: { value: '2026-07-29T15:00:00.000Z' } },
   ].map((property) => {
-    const ref = property.template.reference;
+    const ref = property.template.slug;
     if (propertyOverrides[ref] !== undefined) {
       return { ...property, value: { value: propertyOverrides[ref] } };
     }
@@ -49,7 +49,7 @@ function wasteMeasurementActivity(
 
   return {
     id: 'wm-1',
-    template: { reference: 'wasteMeasurement', name: 'Waste measurement' },
+    template: { slug: 'wasteMeasurement', name: 'Waste measurement' },
     createdAt: '2026-07-29T15:00:00.000Z',
     actor: { id: 'recorder-1', name: 'Recorder One' },
     properties,
@@ -81,7 +81,7 @@ describe('buildInputCollectionsDebugInfo', () => {
           buildAnonymizedChefForecastActivity({ id: 'f-1', actorId: 'chef-1' }),
           buildAnonymizedChefForecastActivity({ id: 'f-2', actorId: 'chef-2' }),
           wasteMeasurementActivity(),
-          { id: 'student-1', template: { reference: 'studentLunchCheckin' }, properties: [] },
+          { id: 'student-1', template: { slug: 'studentLunchCheckin' }, properties: [] },
         ],
       },
     };
@@ -151,19 +151,19 @@ describe('buildInputCollectionsDebugInfo', () => {
     expect(debug?.newestWasteMeasurement?.propertyRefs).toContain('submittedAt');
     expect(debug?.newestWasteMeasurement?.propertyEntries).toEqual(
       expect.arrayContaining([
-        { reference: 'serviceDate', displayValue: serviceDate },
-        { reference: 'actualCustomers', displayValue: '150' },
+        { slug: 'serviceDate', displayValue: serviceDate },
+        { slug: 'actualCustomers', displayValue: '150' },
       ]),
     );
   });
 
   it('compares missing required refs before parser validation', () => {
     const incomplete = wasteMeasurementActivity({}, { submittedAt: undefined });
-    const properties = (incomplete as { properties: { template: { reference: string } }[] }).properties
-      .filter((property) => property.template.reference !== 'submittedAt');
+    const properties = (incomplete as { properties: { template: { slug: string } }[] }).properties
+      .filter((property) => property.template.slug !== 'submittedAt');
     const activity = { ...incomplete, properties };
 
-    const propertyRefs = properties.map((property) => property.template.reference);
+    const propertyRefs = properties.map((property) => property.template.slug);
     expect(findMissingRequiredWasteMeasurementRefs(propertyRefs)).toEqual(['submittedAt']);
 
     const debug = buildInputCollectionsDebugInfo({

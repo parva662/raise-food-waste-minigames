@@ -1,3 +1,4 @@
+import { readGameBusSlug } from '../../gamebus/gameBusSlug';
 import { WASTE_MEASUREMENT_REQUIRED_REFS } from '../../gamebus/mapWasteMeasurement';
 
 export type GameBusWasteMeasurement = {
@@ -40,14 +41,14 @@ export type WasteMeasurementParseBatchResult = {
 
 type RawProperty = {
   value?: { value?: unknown };
-  template?: { reference?: string; name?: string };
+  template?: { slug?: string; name?: string };
 };
 
 type RawWasteMeasurementActivity = {
   id?: string;
   createdAt?: string;
   actor?: { id?: string; name?: string };
-  template?: { reference?: string; name?: string };
+  template?: { slug?: string; name?: string };
   properties?: RawProperty[];
 };
 
@@ -60,7 +61,7 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 function readPropertyMap(activity: RawWasteMeasurementActivity): Map<string, unknown> {
   const map = new Map<string, unknown>();
   for (const property of activity.properties ?? []) {
-    const ref = property.template?.reference;
+    const ref = readGameBusSlug(property.template);
     if (!ref || typeof ref !== 'string') continue;
     map.set(ref, property.value?.value);
   }
@@ -115,7 +116,7 @@ export function parseGameBusWasteMeasurementActivity(
   }
 
   const raw = activity as RawWasteMeasurementActivity;
-  const templateRef = raw.template?.reference;
+  const templateRef = readGameBusSlug(raw.template);
   if (templateRef !== 'wasteMeasurement') {
     return {
       ok: false,

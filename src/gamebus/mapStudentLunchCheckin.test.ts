@@ -291,7 +291,7 @@ describe('mapStudentLunchCheckin / buildActivityMessage', () => {
       activityTemplates: [
         {
           id: 'v2',
-          reference: 'studentLunchCheckinV2',
+          slug: 'studentLunchCheckinV2',
           name: 'V2',
           providers: [],
         },
@@ -306,7 +306,7 @@ describe('mapStudentLunchCheckin / buildActivityMessage', () => {
       activityTemplates: [
         {
           id: 'other',
-          reference: 'otherActivity',
+          slug: 'otherActivity',
           name: 'Other',
           providers: [],
         },

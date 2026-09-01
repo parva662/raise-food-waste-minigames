@@ -20,7 +20,7 @@ function minimalStudentLunchTask(
     activityTemplates: [
       {
         id: '019f9404-88ec-7f31-89d6-8b2cbfbcab4f',
-        reference: STUDENT_LUNCH_CHECKIN_REF,
+        slug: STUDENT_LUNCH_CHECKIN_REF,
         name: 'Student lunch check-in',
         providers: [],
         ...activityOverrides,
@@ -29,7 +29,7 @@ function minimalStudentLunchTask(
     propertyTemplates: [
       {
         id: 'partial-only-targetDate',
-        reference: 'targetDate',
+        slug: 'targetDate',
         name: 'Target date',
         schema: {},
         defaultVisibility: 'public',
@@ -80,7 +80,7 @@ describe('resolveActivityProperties', () => {
       activityTemplates: [
         {
           id: 'other',
-          reference: 'otherActivity',
+          slug: 'otherActivity',
           name: 'Other',
           providers: [],
         },

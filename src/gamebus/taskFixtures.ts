@@ -34,7 +34,7 @@ export const pariStudentLunchTaskFixture: TaskData = {
   activityTemplates: [
     {
       id: '019f9404-88ec-7f31-89d6-8b2cbfbcab4f',
-      reference: 'studentLunchCheckin',
+      slug: 'studentLunchCheckin',
       name: 'Student lunch check-in',
       providers: [],
       linkedProperties: FINAL_LINKED_REFS.map((ref, index) => ({
@@ -49,7 +49,7 @@ export const pariStudentLunchTaskFixture: TaskData = {
   propertyTemplates: [
     {
       id: 'partial-only-targetDate',
-      reference: 'targetDate',
+      slug: 'targetDate',
       name: 'Target date',
       schema: {},
       defaultVisibility: 'public',

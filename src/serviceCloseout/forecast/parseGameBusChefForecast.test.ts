@@ -54,7 +54,7 @@ describe('parseGameBusChefForecast', () => {
     }
   });
 
-  it('maps properties by template.reference', () => {
+  it('maps properties by template.slug', () => {
     const parsed = parseGameBusChefForecastActivity(buildAnonymizedChefForecastActivity());
     expect(parsed.ok).toBe(true);
     if (parsed.ok) {
@@ -98,7 +98,7 @@ describe('parseGameBusChefForecast', () => {
   it('ignores unknown properties safely', () => {
     const activity = buildAnonymizedChefForecastActivity({ includeItemIds: false });
     activity.properties.push({
-      template: { reference: 'unexpectedField', name: 'Unexpected' },
+      template: { slug: 'unexpectedField', name: 'Unexpected' },
       value: { value: 'ignored' },
     });
     const parsed = parseGameBusChefForecastActivity(activity);
@@ -200,7 +200,7 @@ describe('selectCloseoutForecast', () => {
       propertyOrder: [...baseOrder],
       includeItemIds: false,
     });
-    older.properties = older.properties.filter((p) => p.template.reference !== 'submittedAt');
+    older.properties = older.properties.filter((p) => p.template.slug !== 'submittedAt');
 
     const newer = buildAnonymizedChefForecastActivity({
       id: 'newer-created-at',
@@ -209,7 +209,7 @@ describe('selectCloseoutForecast', () => {
       propertyOrder: [...baseOrder],
       includeItemIds: false,
     });
-    newer.properties = newer.properties.filter((p) => p.template.reference !== 'submittedAt');
+    newer.properties = newer.properties.filter((p) => p.template.slug !== 'submittedAt');
 
     const valid = parseGameBusChefForecastActivities([older, newer]).valid;
     const selected = selectLatestForecastForDate(valid, closeoutDate);

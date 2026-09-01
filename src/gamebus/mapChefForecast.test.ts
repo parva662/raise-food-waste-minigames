@@ -180,7 +180,7 @@ describe('mapChefForecast / buildChefActivityMessage', () => {
       activityTemplates: [
         {
           id: 'other',
-          reference: 'otherActivity',
+          slug: 'otherActivity',
           name: 'Other',
           providers: [],
         },
@@ -195,13 +195,13 @@ describe('mapChefForecast / buildChefActivityMessage', () => {
       activityTemplates: [
         {
           id: 'student',
-          reference: 'studentLunchCheckin',
+          slug: 'studentLunchCheckin',
           name: 'Student',
           providers: [],
         },
         {
           id: 'chef',
-          reference: 'chefForecast',
+          slug: 'chefForecast',
           name: 'Chef',
           providers: [],
         },

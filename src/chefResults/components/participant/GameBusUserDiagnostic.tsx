@@ -158,8 +158,8 @@ export function GameBusUserDiagnostic({
               <p className="chef-results-dev-user__hint">Property values</p>
               <ul data-testid="debug-waste-property-values">
                 {inputCollectionsDebug.newestWasteMeasurement.propertyEntries.map((entry) => (
-                  <li key={entry.reference}>
-                    {entry.reference} = {entry.displayValue}
+                  <li key={entry.slug}>
+                    {entry.slug} = {entry.displayValue}
                   </li>
                 ))}
               </ul>

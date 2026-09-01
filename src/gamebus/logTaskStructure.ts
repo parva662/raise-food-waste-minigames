@@ -1,4 +1,5 @@
 import { gamebusDevLog } from './devLog';
+import { readGameBusLinkedPropertySlug, readGameBusSlug } from './gameBusSlug';
 import {
   findActivityTemplate,
   resolveLinkedPropertyRefs,
@@ -10,12 +11,7 @@ function linkedPropertyIds(activity: TaskActivityTemplate | undefined): { ref: s
   if (!activity?.linkedProperties?.length) return [];
   const out: { ref: string; id?: string }[] = [];
   for (const item of activity.linkedProperties) {
-    const ref =
-      typeof item.ref === 'string' && item.ref
-        ? item.ref
-        : typeof item.reference === 'string' && item.reference
-          ? item.reference
-          : '';
+    const ref = readGameBusLinkedPropertySlug(item);
     if (!ref) continue;
     out.push({ ref, id: typeof item.id === 'string' ? item.id : undefined });
   }
@@ -24,13 +20,14 @@ function linkedPropertyIds(activity: TaskActivityTemplate | undefined): { ref: s
 
 function embeddedPropertyIds(
   activity: TaskActivityTemplate | undefined,
-): { reference: string; id?: string }[] {
+): { slug: string; id?: string }[] {
   if (!activity?.properties?.length) return [];
-  const out: { reference: string; id?: string }[] = [];
+  const out: { slug: string; id?: string }[] = [];
   for (const item of activity.properties) {
-    if (typeof item.reference !== 'string' || !item.reference) continue;
+    const slug = readGameBusSlug(item);
+    if (!slug) continue;
     out.push({
-      reference: item.reference,
+      slug,
       id: typeof item.id === 'string' ? item.id : undefined,
     });
   }
@@ -47,13 +44,13 @@ export function logTaskStructureSanitized(task: TaskData): void {
   gamebusDevLog('TASK structure', {
     dataKeys,
     activityTemplateCount: activityTemplates.length,
-    activityTemplateRefs: activityTemplates.map((t) => t.reference),
+    activityTemplateSlugs: activityTemplates.map((t) => t.slug),
     taskLevelPropertyTemplateCount: task.propertyTemplates?.length ?? 0,
-    taskLevelPropertyRefs: (task.propertyTemplates ?? []).map((p) => ({
-      reference: p.reference,
+    taskLevelPropertySlugs: (task.propertyTemplates ?? []).map((p) => ({
+      slug: p.slug,
       id: p.id,
     })),
-    selectedActivityReference: selected?.reference ?? null,
+    selectedActivitySlug: selected?.slug ?? null,
     selectedActivityKeys: selected ? Object.keys(selected) : [],
     linkedPropertyRefs: selected ? resolveLinkedPropertyRefs(selected) : [],
     linkedPropertyIds: linkedPropertyIds(selected),

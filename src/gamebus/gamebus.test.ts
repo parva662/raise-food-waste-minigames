@@ -100,7 +100,7 @@ describe('buildActivityMessage integration', () => {
     };
     const taskWithPartialTopLevel = {
       ...pariStudentLunchTaskFixture,
-      propertyTemplates: [{ id: 'x', reference: 'targetDate', name: 'x', schema: {}, defaultVisibility: 'public' }],
+      propertyTemplates: [{ id: 'x', slug: 'targetDate', name: 'x', schema: {}, defaultVisibility: 'public' }],
     };
     const message = buildActivityMessage(taskWithPartialTopLevel, baseDeclaration(), draft, slots);
     expect(message.data.properties.map((p) => p.template)).toContain('mealType');

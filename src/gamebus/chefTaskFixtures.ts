@@ -20,7 +20,7 @@ export const pariChefForecastTaskFixture: TaskData = {
   activityTemplates: [
     {
       id: '019f9404-88f4-742a-9846-f9097610bae7',
-      reference: 'chefForecast',
+      slug: 'chefForecast',
       name: 'Chef forecast',
       providers: [],
       linkedProperties: [

@@ -1,3 +1,4 @@
+import { readGameBusSlug } from '../../gamebus/gameBusSlug';
 import type {
   ChefForecastParseBatchResult,
   ChefForecastParseDiagnostic,
@@ -9,14 +10,14 @@ import { USABLE_CHEF_FORECAST_REQUIRED_REFS as REQUIRED_REFS } from './gameBusCh
 
 type RawProperty = {
   value?: { value?: unknown };
-  template?: { reference?: string; name?: string };
+  template?: { slug?: string; name?: string };
 };
 
 type RawChefForecastActivity = {
   id?: string;
   actor?: { id?: string; name?: string; image?: string };
   createdAt?: string;
-  template?: { reference?: string; name?: string };
+  template?: { slug?: string; name?: string };
   properties?: RawProperty[];
 };
 
@@ -44,7 +45,7 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 function readPropertyMap(activity: RawChefForecastActivity): Map<string, unknown> {
   const map = new Map<string, unknown>();
   for (const property of activity.properties ?? []) {
-    const ref = property.template?.reference;
+    const ref = readGameBusSlug(property.template);
     if (!ref || typeof ref !== 'string') continue;
     map.set(ref, property.value?.value);
   }
@@ -112,7 +113,7 @@ export function parseGameBusChefForecastActivity(raw: unknown): ParsedChefForeca
 
   const activity = raw as RawChefForecastActivity;
   const activityId = readString(activity.id);
-  const templateRef = activity.template?.reference;
+  const templateRef = readGameBusSlug(activity.template);
 
   if (templateRef !== undefined && templateRef !== 'chefForecast') {
     return {

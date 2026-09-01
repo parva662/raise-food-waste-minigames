@@ -28,28 +28,28 @@ export type TaskLinkedProperty = {
   name?: string | null;
   required?: boolean;
   ref?: string;
-  reference?: string;
+  slug?: string;
 };
 
 export type TaskEmbeddedPropertyTemplate = {
   id?: string;
-  reference: string;
+  slug: string;
   name?: string | null;
   schema?: unknown;
 };
 
 export type TaskActivityTemplate = {
   id: string;
-  reference: string;
+  slug: string;
   name: string | null;
-  providers: { reference: string; origins: unknown }[];
+  providers: { slug: string; origins: unknown }[];
   linkedProperties?: TaskLinkedProperty[];
   properties?: TaskEmbeddedPropertyTemplate[];
 };
 
 export type TaskPropertyTemplate = {
   id: string;
-  reference: string;
+  slug: string;
   name: string | null;
   schema: unknown;
   defaultVisibility: string;

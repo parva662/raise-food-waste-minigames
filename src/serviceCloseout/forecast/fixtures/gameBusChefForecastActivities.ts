@@ -2,24 +2,24 @@ import { MENU_DATES } from '../../../test/fixtures/dates';
 
 type RawGameBusProperty = {
   value: { value: unknown };
-  template: { reference: string; name: string };
+  template: { slug: string; name: string };
 };
 
 export type RawGameBusChefForecastActivity = {
   id: string;
   actor: { id: string; name: string; image?: string | null };
   createdAt: string;
-  template: { reference: 'chefForecast'; name: string };
+  template: { slug: 'chefForecast'; name: string };
   properties: RawGameBusProperty[];
 };
 
 function property(
-  reference: string,
+  slug: string,
   name: string,
   value: unknown,
 ): RawGameBusProperty {
   return {
-    template: { reference, name },
+    template: { slug, name },
     value: { value },
   };
 }
@@ -115,7 +115,7 @@ export function buildAnonymizedChefForecastActivity(
       image: null,
     },
     createdAt: overrides.createdAt ?? '2026-07-28T16:05:01.000Z',
-    template: { reference: 'chefForecast', name: 'Chef forecast' },
+    template: { slug: 'chefForecast', name: 'Chef forecast' },
     properties,
   };
 }
@@ -125,7 +125,7 @@ export const EMPTY_PROPERTIES_CHEF_FORECAST_ACTIVITY: RawGameBusChefForecastActi
   id: 'activity-forecast-empty',
   actor: { id: 'user-anon-chef-002', name: 'Chef B. Example' },
   createdAt: '2026-07-27T10:00:00.000Z',
-  template: { reference: 'chefForecast', name: 'Chef forecast' },
+  template: { slug: 'chefForecast', name: 'Chef forecast' },
   properties: [],
 };
 
