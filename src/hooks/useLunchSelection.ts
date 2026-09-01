@@ -30,6 +30,7 @@ import type { SelectionEntry } from '../types/menu';
 import type { MealSummaryLine } from '../utils/mealChoice';
 import { isGameBusEmbed, tryPostActivity, useGameBusEmbed } from '../gamebus';
 import { gamebusDevLog } from '../gamebus/devLog';
+import { logStudentTryPostActivityResult } from '../gamebus/debug/studentGameBusSubmissionDebug';
 
 export interface LunchSelectionState {
   draft: DraftSnapshot;
@@ -249,6 +250,7 @@ export function useLunchSelection(clock: Clock = systemClock) {
 
     if (embedded) {
       const result = tryPostActivity(declaration, state.draft, mealSlots);
+      logStudentTryPostActivityResult(result);
       if (!result.ok) {
         gamebusDevLog('ACTIVITY not sent', { reason: result.reason });
         return;

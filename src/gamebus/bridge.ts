@@ -29,6 +29,12 @@ import {
   logChefTaskBeforeSubmission,
   resetChefParentMessageDiagnosticForTests,
 } from './debug/chefGameBusSubmissionDebug';
+import {
+  logStudentActivityBeforePostMessage,
+  logStudentPostMessageReturned,
+  logStudentSubmissionException,
+  logStudentTaskBeforeSubmission,
+} from './debug/studentGameBusSubmissionDebug';
 
 const HANDSHAKE_RETRY_MS = 875;
 
@@ -267,8 +273,11 @@ export function tryPostActivity(
 
   submissionInFlight = true;
   try {
+    logStudentTaskBeforeSubmission(taskData);
     const message = buildActivityMessage(taskData, declaration, draft, slots);
+    logStudentActivityBeforePostMessage(message);
     window.parent.postMessage(message, '*');
+    logStudentPostMessageReturned();
     hasPostedActivity = true;
     gamebusDevLog('ACTIVITY sent', {
       type: message.type,
@@ -277,6 +286,7 @@ export function tryPostActivity(
     });
     return { ok: true, message };
   } catch (error) {
+    logStudentSubmissionException(error);
     return {
       ok: false,
       reason: error instanceof Error ? error.message : 'build_failed',
