@@ -6,6 +6,7 @@ import {
   OperationalCalendarError,
 } from '../services/operationalServiceCalendar';
 import { isGameBusEmbed, tryPostChefActivity, useGameBusEmbed } from '../gamebus';
+import { logChefTryPostActivityResult } from '../gamebus/debug/chefGameBusSubmissionDebug';
 import { gamebusDevLog } from '../gamebus/devLog';
 import {
   getChefSubmissionWindowStatus,
@@ -253,6 +254,7 @@ export function useChefForecast(clock: Clock = systemClock) {
 
     if (embedded) {
       const result = tryPostChefActivity(submission, state.draft, mealSlots);
+      logChefTryPostActivityResult(result);
       if (!result.ok) {
         gamebusDevLog('ACTIVITY not sent', { reason: result.reason });
         dispatch({

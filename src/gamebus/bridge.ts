@@ -21,6 +21,14 @@ import type { ActiveDeclaration } from '../types/declaration';
 import type { DailyMealSlots, MealDraft } from '../types/mealChoice';
 import type { ChefForecastDraft, ChefForecastSubmission } from '../chef/types';
 import type { ServiceCloseout } from '../serviceCloseout/types';
+import {
+  armChefParentMessageDiagnostic,
+  logChefActivityBeforePostMessage,
+  logChefPostMessageReturned,
+  logChefSubmissionException,
+  logChefTaskBeforeSubmission,
+  resetChefParentMessageDiagnosticForTests,
+} from './debug/chefGameBusSubmissionDebug';
 
 const HANDSHAKE_RETRY_MS = 875;
 
@@ -297,11 +305,15 @@ export function tryPostChefActivity(
 
   submissionInFlight = true;
   try {
+    logChefTaskBeforeSubmission(taskData);
     const message = buildChefActivityMessage(taskData, submission, draft, slots);
     if (import.meta.env.DEV) {
       console.info('[gamebus] chefForecast ACTIVITY payload', message);
     }
+    armChefParentMessageDiagnostic();
+    logChefActivityBeforePostMessage(message);
     window.parent.postMessage(message, '*');
+    logChefPostMessageReturned();
     hasPostedActivity = true;
     gamebusDevLog('ACTIVITY sent', {
       type: message.type,
@@ -310,6 +322,7 @@ export function tryPostChefActivity(
     });
     return { ok: true, message };
   } catch (error) {
+    logChefSubmissionException(error);
     return {
       ok: false,
       reason: error instanceof Error ? error.message : 'build_failed',
@@ -362,6 +375,7 @@ export function tryPostCloseoutActivity(
 export function resetGameBusBridgeForTests(): void {
   stopHandshakeRetry();
   detachMessageListener();
+  resetChefParentMessageDiagnosticForTests();
   taskData = null;
   inputCollectionsData = null;
   hasPostedActivity = false;
