@@ -137,6 +137,8 @@ describe('embedded chef results UI', () => {
     ingestInputCollectionsForTests(embeddedKitchenPayload());
     render(<ChefResultsParticipantApp />);
 
+    expect(screen.getByTestId('actual-kitchen-outcome-section')).toBeInTheDocument();
+    expect(screen.getByTestId('forecast-impact-section')).toBeInTheDocument();
     expect(screen.getByTestId('participant-summary-cards')).toBeInTheDocument();
     expect(screen.queryByText('Coworker Chef')).not.toBeInTheDocument();
     expect(screen.queryByText('coworker-user')).not.toBeInTheDocument();
@@ -274,6 +276,8 @@ describe('standalone chef results fixtures', () => {
     render(<ChefResultsParticipantApp />);
 
     expect(screen.queryByTestId('chef-results-pending')).not.toBeInTheDocument();
+    expect(screen.getByTestId('actual-kitchen-outcome-section')).toBeInTheDocument();
+    expect(screen.getByTestId('forecast-impact-section')).toBeInTheDocument();
     expect(screen.getByTestId('participant-summary-cards')).toBeInTheDocument();
     expect(screen.getByTestId('your-week-section')).toBeInTheDocument();
     expect(screen.getByTestId('kitchen-progress-section')).toBeInTheDocument();

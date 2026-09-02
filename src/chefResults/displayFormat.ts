@@ -22,6 +22,12 @@ function calendarUtcInstant(isoDate: string): Date {
   return new Date(Date.UTC(year, month - 1, day, 12, 0, 0));
 }
 
+/** Service Closeout measured overproduction — always grams, no kg conversion. */
+export function formatMeasuredGrams(grams: number): string {
+  const rounded = Math.round(grams);
+  return `${rounded.toLocaleString('en-GB')} g`;
+}
+
 /** e.g. Monday, 27 July 2026 */
 export function formatServiceDateLong(isoDate: string): string {
   return new Intl.DateTimeFormat('en-GB', LONG_DATE_FORMAT).format(calendarUtcInstant(isoDate));

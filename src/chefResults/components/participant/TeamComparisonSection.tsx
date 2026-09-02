@@ -30,11 +30,15 @@ export function TeamComparisonSection({
   );
 
   return (
-    <section className="chef-results-team-compare" data-testid="team-comparison-section">
-      <h2 className="chef-results-section-title">How you compare</h2>
+    <section
+      className="chef-results-dashboard-section chef-results-team-compare"
+      data-testid="team-comparison-section"
+    >
+      <h2 className="chef-results-section-title">How your forecast compares with the team</h2>
       <p className="chef-results-section-intro">
-        Anonymous team benchmarks from today&apos;s participating forecasts. No names or individual
-        coworker values are shown.
+        Compares your forecast performance against anonymous participating staff. Everyone shares
+        the same actual kitchen outcome for this service date. No names or individual coworker
+        values are shown.
       </p>
 
       <ul className="chef-results-insight-list">

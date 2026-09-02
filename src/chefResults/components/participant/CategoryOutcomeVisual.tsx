@@ -21,11 +21,11 @@ export function CategoryOutcomeVisual({ result }: CategoryOutcomeVisualProps) {
   );
 
   return (
-    <section className="chef-results-category-visual" data-testid="category-outcome-visual">
-      <h2 className="chef-results-section-title">What would your forecast have produced?</h2>
-      <p className="chef-results-section-intro">
-        Each bar shows simulated shortage (left), close match (centre), or simulated overproduction
-        (right). Values are not actual waste.
+    <div className="chef-results-category-visual" data-testid="category-outcome-visual">
+      <h3 className="chef-results-subsection-title">Category simulation</h3>
+      <p className="chef-results-subsection-intro">
+        Each bar shows simulated shortage (left), close match (centre), or simulated
+        overproduction (right).
       </p>
 
       <div className="chef-results-diverging-list">
@@ -85,6 +85,6 @@ export function CategoryOutcomeVisual({ result }: CategoryOutcomeVisualProps) {
           );
         })}
       </div>
-    </section>
+    </div>
   );
 }

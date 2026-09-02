@@ -1,12 +1,11 @@
 import { useEffect, useMemo, useState } from 'react';
 import { formatServiceDateShort } from './displayFormat';
-import { CategoryDetailPanel } from './components/participant/CategoryDetailPanel';
-import { CategoryOutcomeVisual } from './components/participant/CategoryOutcomeVisual';
+import { ActualKitchenOutcomeSection } from './components/participant/ActualKitchenOutcomeSection';
 import { FixtureCurrentUserSelector } from './components/participant/FixtureCurrentUserSelector';
+import { ForecastImpactSection } from './components/participant/ForecastImpactSection';
 import { GameBusUserDiagnostic } from './components/participant/GameBusUserDiagnostic';
 import { KitchenProgressSection } from './components/participant/KitchenProgressSection';
 import { ParticipantHeader } from './components/participant/ParticipantHeader';
-import { SummaryCards } from './components/participant/SummaryCards';
 import { TeamComparisonSection } from './components/participant/TeamComparisonSection';
 import { YourWeekSection } from './components/participant/YourWeekSection';
 import { buildFixtureKitchenProgress } from './adapters/fixtureCalculationSource';
@@ -150,11 +149,10 @@ export function ChefResultsParticipantApp() {
         </p>
       ) : null}
 
-      {showResultContent && ownResult ? (
+      {showResultContent && ownResult && dailyResults ? (
         <>
-          <SummaryCards result={ownResult} />
-          <CategoryOutcomeVisual result={ownResult} />
-          <CategoryDetailPanel result={ownResult} />
+          <ActualKitchenOutcomeSection observed={dailyResults.observed} />
+          <ForecastImpactSection result={ownResult} />
           {teamBenchmark && comparisonInsights ? (
             <TeamComparisonSection
               participant={ownResult}

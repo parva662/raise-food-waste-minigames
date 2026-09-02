@@ -60,6 +60,8 @@ describe('participant privacy', () => {
 
   it('displays only current fixture user identifiable summary data', () => {
     render(<AppRouter />);
+    expect(screen.getByTestId('actual-kitchen-outcome-section')).toBeInTheDocument();
+    expect(screen.getByTestId('forecast-impact-section')).toBeInTheDocument();
     expect(screen.getByTestId('participant-summary-cards')).toBeInTheDocument();
     expect(screen.getByTestId('category-outcome-visual')).toBeInTheDocument();
     expect(screen.queryByTestId('staff-result-fixture-user-a')).not.toBeInTheDocument();

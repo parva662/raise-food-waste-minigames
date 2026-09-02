@@ -2440,6 +2440,85 @@ ul {
   color: var(--color-text-secondary);
 }
 
+.chef-results-dashboard-section {
+  margin-bottom: var(--spacing-xl);
+  padding: var(--spacing-lg);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border);
+  background: var(--color-surface-elevated, var(--color-surface));
+}
+
+.chef-results-actual-kitchen__total {
+  margin-bottom: var(--spacing-lg);
+  padding: var(--spacing-md) var(--spacing-lg);
+  border-radius: var(--radius-md);
+  background: linear-gradient(160deg, rgba(13, 148, 136, 0.12), rgba(13, 148, 136, 0.03));
+  border: 1px solid rgba(13, 148, 136, 0.25);
+}
+
+.chef-results-actual-kitchen__total-label {
+  margin: 0 0 var(--spacing-xs);
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+}
+
+.chef-results-actual-kitchen__total-value {
+  margin: 0;
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--chef-results-neutral);
+}
+
+.chef-results-actual-kitchen__categories {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: var(--spacing-md);
+  margin: 0;
+}
+
+.chef-results-actual-kitchen__category {
+  padding: var(--spacing-sm) var(--spacing-md);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+}
+
+.chef-results-actual-kitchen__category dt {
+  margin: 0 0 var(--spacing-xs);
+  font-size: 0.8125rem;
+  color: var(--color-text-secondary);
+}
+
+.chef-results-actual-kitchen__category dd {
+  margin: 0;
+  font-size: 1.125rem;
+  font-weight: 700;
+}
+
+.chef-results-subsection-title {
+  margin: var(--spacing-lg) 0 var(--spacing-xs);
+  font-size: 1.0625rem;
+}
+
+.chef-results-subsection-intro {
+  margin: 0 0 var(--spacing-md);
+  font-size: 0.875rem;
+  color: var(--color-text-secondary);
+}
+
+.chef-results-forecast-impact .chef-results-summary-cards {
+  margin-bottom: var(--spacing-lg);
+}
+
+.chef-results-forecast-impact .chef-results-category-visual,
+.chef-results-forecast-impact .chef-results-category-detail {
+  margin-bottom: var(--spacing-md);
+  padding: 0;
+  border: none;
+  background: transparent;
+}
+
 .chef-results-summary-cards {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
@@ -2509,11 +2588,8 @@ ul {
   border-color: rgba(124, 58, 237, 0.25);
 }
 
-.chef-results-category-visual,
-.chef-results-team-compare,
 .chef-results-your-week,
-.chef-results-kitchen-progress,
-.chef-results-category-detail {
+.chef-results-kitchen-progress {
   margin-bottom: var(--spacing-xl);
   padding: var(--spacing-lg);
   border-radius: var(--radius-md);
