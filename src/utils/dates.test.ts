@@ -69,7 +69,7 @@ describe('operational dates (Europe/Helsinki)', () => {
   });
 
   it('preserves existing submission-window Helsinki behavior', () => {
-    expect(getSubmissionPhase(SUBMISSION_TIMES.onTimeExact, FIXTURE_LUNCH_DATE)).toBe('on-time');
+    expect(getSubmissionPhase(SUBMISSION_TIMES.onTimeExact, FIXTURE_LUNCH_DATE)).toBe('open');
     expect(getSubmissionPhase(SUBMISSION_TIMES.closedJustAfter, FIXTURE_LUNCH_DATE)).toBe(
       'closed',
     );

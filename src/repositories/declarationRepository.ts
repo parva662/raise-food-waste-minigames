@@ -1,7 +1,5 @@
-import { CANTEEN_CONFIG } from '../config/canteen';
-import type { ActiveDeclaration, TimingStatus } from '../types/declaration';
+import type { ActiveDeclaration } from '../types/declaration';
 import type { MealChoice } from '../types/mealChoice';
-import { calculatePointsForTimingStatus } from '../utils/points';
 
 export interface DeclarationRepository {
   getDeclaration(studentId: string, lunchDate: string): ActiveDeclaration | null;
@@ -14,16 +12,6 @@ export function buildStorageKey(studentId: string, lunchDate: string): string {
   return `${STORAGE_PREFIX}${studentId}-${lunchDate}`;
 }
 
-function inferTimingStatusFromLegacyPoints(legacyPoints: unknown): TimingStatus {
-  if (legacyPoints === CANTEEN_CONFIG.onTimeBonus || legacyPoints === 5) {
-    return 'on-time';
-  }
-  if (legacyPoints === CANTEEN_CONFIG.latePenalty || legacyPoints === -5) {
-    return 'late';
-  }
-  return 'on-time';
-}
-
 export function normalizeDeclarationRecord(parsed: Record<string, unknown>): ActiveDeclaration | null {
   const studentId = parsed.studentId;
   const lunchDate = parsed.lunchDate;
@@ -31,30 +19,20 @@ export function normalizeDeclarationRecord(parsed: Record<string, unknown>): Act
     return null;
   }
 
-  const hasNewScoring =
-    typeof parsed.basePoints === 'number' &&
-    typeof parsed.timingAdjustment === 'number' &&
-    typeof parsed.totalPoints === 'number';
+  const {
+    timingStatus: _timingStatus,
+    basePoints: _basePoints,
+    timingAdjustment: _timingAdjustment,
+    totalPoints: _totalPoints,
+    points: _legacyPoints,
+    ...rest
+  } = parsed;
 
-  if (hasNewScoring) {
-    return parsed as unknown as ActiveDeclaration;
+  if (typeof rest.submittedAt !== 'string' || typeof rest.updatedAt !== 'string') {
+    return null;
   }
 
-  const timingStatus =
-    parsed.timingStatus === 'on-time' || parsed.timingStatus === 'late'
-      ? parsed.timingStatus
-      : inferTimingStatusFromLegacyPoints(parsed.points);
-
-  const breakdown = calculatePointsForTimingStatus(timingStatus);
-  const { points: _legacyPoints, ...rest } = parsed;
-
-  return {
-    ...(rest as Omit<ActiveDeclaration, 'timingStatus' | 'basePoints' | 'timingAdjustment' | 'totalPoints'>),
-    timingStatus,
-    basePoints: breakdown.basePoints,
-    timingAdjustment: breakdown.timingAdjustment,
-    totalPoints: breakdown.totalPoints,
-  };
+  return rest as unknown as ActiveDeclaration;
 }
 
 function withDefaultMealChoice(declaration: ActiveDeclaration): ActiveDeclaration {
@@ -83,7 +61,8 @@ export class LocalStorageDeclarationRepository implements DeclarationRepository 
       if (!normalized || normalized.studentId !== studentId || normalized.lunchDate !== lunchDate) {
         return null;
       }
-      return withDefaultMealChoice(normalized);    } catch {
+      return withDefaultMealChoice(normalized);
+    } catch {
       return null;
     }
   }

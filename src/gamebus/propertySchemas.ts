@@ -73,13 +73,6 @@ export const STUDENT_LUNCH_CHECKIN_PROPERTY_SCHEMAS = {
     schema: { type: 'integer', minimum: 0, maximum: 6 },
     example: { value: 0 },
   },
-  timingStatus: {
-    reference: 'timingStatus',
-    displayName: 'Timing status',
-    activityLinkRequired: true,
-    schema: { type: 'string', enum: ['on-time', 'late'] },
-    example: { value: 'on-time' },
-  },
   submittedAt: {
     reference: 'submittedAt',
     displayName: 'Submitted at',
@@ -385,5 +378,4 @@ export const STUDENT_LUNCH_CHECKIN_ADMIN_MIGRATION = [
     action: 'replace',
     final: 'dessertItemId + dessertQuantity',
   },
-  { current: null, action: 'add', final: 'timingStatus' },
 ] as const;

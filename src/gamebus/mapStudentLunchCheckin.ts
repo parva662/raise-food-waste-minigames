@@ -8,7 +8,6 @@ export const STUDENT_LUNCH_CHECKIN_REQUIRED_REFS = [
   'vegetarianQuantity',
   'soupQuantity',
   'dessertQuantity',
-  'timingStatus',
   'submittedAt',
 ] as const;
 
@@ -30,7 +29,6 @@ export type StudentLunchValueMap = {
   vegetarianQuantity: { value: number };
   soupQuantity: { value: number };
   dessertQuantity: { value: number };
-  timingStatus: { value: ActiveDeclaration['timingStatus'] };
   submittedAt: { value: string };
   mainItemId?: { value: string };
   vegetarianItemId?: { value: string };
@@ -75,7 +73,7 @@ export function orderedPropertyRefsForDraft(draft: MealDraft): StudentLunchPrope
     );
   }
 
-  refs.push('timingStatus', 'submittedAt');
+  refs.push('submittedAt');
   return refs;
 }
 
@@ -95,7 +93,6 @@ export function mapStudentLunchCheckin(
     vegetarianQuantity: { value: draft.vegetarianQuantity },
     soupQuantity: { value: draft.soupQuantity },
     dessertQuantity: { value: draft.dessertQuantity },
-    timingStatus: { value: declaration.timingStatus },
     submittedAt: { value: declaration.submittedAt },
   };
 

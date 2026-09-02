@@ -29,10 +29,6 @@ export function createFixtureDeclaration(
     regularVegetarianSelected: false,
     noLunch: false,
     selections,
-    timingStatus: 'on-time',
-    basePoints: 20,
-    timingAdjustment: 5,
-    totalPoints: 25,
     submittedAt: SUBMISSION_TIMES.midday.toISOString(),
     updatedAt: SUBMISSION_TIMES.midday.toISOString(),
     includeInForecast: true,
@@ -45,8 +41,9 @@ export function createLegacyFixtureDeclaration(): Record<string, unknown> {
   return {
     ...declaration,
     points: 5,
-    basePoints: undefined,
-    timingAdjustment: undefined,
-    totalPoints: undefined,
+    timingStatus: 'on-time',
+    basePoints: 20,
+    timingAdjustment: 5,
+    totalPoints: 25,
   };
 }

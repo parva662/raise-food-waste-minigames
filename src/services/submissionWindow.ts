@@ -1,17 +1,7 @@
 import { parseISO, subDays, format } from 'date-fns';
 import { fromZonedTime, toZonedTime } from 'date-fns-tz';
 import { CANTEEN_CONFIG } from '../config/canteen';
-import type {
-  SubmissionPhase,
-  SubmissionWindowStatus,
-  TimingStatus,
-} from '../types/declaration';
-import {
-  calculatePointsForTimingStatus,
-  formatPointsBreakdown,
-  getLateTotalPoints,
-  getOnTimeTotalPoints,
-} from '../utils/points';
+import type { SubmissionPhase, SubmissionWindowStatus } from '../types/declaration';
 
 export type Clock = () => Date;
 
@@ -34,96 +24,51 @@ function lunchDayStart(lunchDate: string): Date {
   return helsinkiInstant(lunchDate, 0, 0, 0);
 }
 
-export function getSubmissionPhase(now: Date, lunchDate: string): SubmissionPhase {
+function submissionDeadlineInstant(lunchDate: string): Date {
   const submissionDateIso = getSubmissionDateIso(lunchDate);
-  const onTimeEnd = helsinkiInstant(
+  return helsinkiInstant(
     submissionDateIso,
-    CANTEEN_CONFIG.onTimeDeadlineHour,
-    CANTEEN_CONFIG.onTimeDeadlineMinute,
-    CANTEEN_CONFIG.onTimeDeadlineSecond,
+    CANTEEN_CONFIG.submissionDeadlineHour,
+    CANTEEN_CONFIG.submissionDeadlineMinute,
+    CANTEEN_CONFIG.submissionDeadlineSecond,
   );
-  const lateEnd = helsinkiInstant(
-    submissionDateIso,
-    CANTEEN_CONFIG.lateDeadlineHour,
-    CANTEEN_CONFIG.lateDeadlineMinute,
-    CANTEEN_CONFIG.lateDeadlineSecond,
-  );
+}
+
+export function getSubmissionPhase(now: Date, lunchDate: string): SubmissionPhase {
+  const deadlineEnd = submissionDeadlineInstant(lunchDate);
   const lunchStart = lunchDayStart(lunchDate);
   const nowMs = now.getTime();
 
-  if (nowMs > lateEnd.getTime() || nowMs >= lunchStart.getTime()) {
+  if (nowMs > deadlineEnd.getTime() || nowMs >= lunchStart.getTime()) {
     return 'closed';
   }
-  if (nowMs > onTimeEnd.getTime()) {
-    return 'late';
-  }
-  return 'on-time';
-}
-
-export function getTimingStatusForInstant(instant: Date, lunchDate: string): TimingStatus {
-  return getSubmissionPhase(instant, lunchDate) === 'late' ? 'late' : 'on-time';
-}
-
-export function getPointsBreakdownForInstant(instant: Date, lunchDate: string) {
-  const phase = getSubmissionPhase(instant, lunchDate);
-  if (phase === 'closed') return null;
-  return calculatePointsForTimingStatus(phase === 'late' ? 'late' : 'on-time');
+  return 'open';
 }
 
 export function getSubmissionWindowStatus(now: Date, lunchDate: string): SubmissionWindowStatus {
   const phase = getSubmissionPhase(now, lunchDate);
-  const submissionDateIso = getSubmissionDateIso(lunchDate);
+  const deadline = submissionDeadlineInstant(lunchDate);
+  const deadlineLabel = `${pad(CANTEEN_CONFIG.submissionDeadlineHour)}:${pad(CANTEEN_CONFIG.submissionDeadlineMinute)}`;
 
-  if (phase === 'on-time') {
-    const breakdown = calculatePointsForTimingStatus('on-time');
+  if (phase === 'open') {
     return {
       phase,
-      countdownTargetIso: helsinkiInstant(
-        submissionDateIso,
-        CANTEEN_CONFIG.onTimeDeadlineHour,
-        CANTEEN_CONFIG.onTimeDeadlineMinute,
-        CANTEEN_CONFIG.onTimeDeadlineSecond,
-      ).toISOString(),
-      totalPointsIfSubmittedNow: getOnTimeTotalPoints(),
-      message: 'On-time submission',
-      detailLines: [
-        `Submit by 18:00 to receive ${breakdown.totalPoints} points.`,
-        formatPointsBreakdown(breakdown),
-      ],
-    };
-  }
-
-  if (phase === 'late') {
-    const breakdown = calculatePointsForTimingStatus('late');
-    return {
-      phase,
-      countdownTargetIso: helsinkiInstant(
-        submissionDateIso,
-        CANTEEN_CONFIG.lateDeadlineHour,
-        CANTEEN_CONFIG.lateDeadlineMinute,
-        CANTEEN_CONFIG.lateDeadlineSecond,
-      ).toISOString(),
-      totalPointsIfSubmittedNow: getLateTotalPoints(),
-      message: 'Late submission period',
-      detailLines: [
-        `You can still submit until 23:00 and receive ${breakdown.totalPoints} points.`,
-        formatPointsBreakdown(breakdown),
-        'Your selection will still be included in the canteen estimate.',
-      ],
+      countdownTargetIso: deadline.toISOString(),
+      message: 'Submission open',
+      detailLines: [`Submit by ${deadlineLabel}`],
     };
   }
 
   return {
     phase,
     countdownTargetIso: null,
-    totalPointsIfSubmittedNow: null,
     message: 'Submission closed',
     detailLines: ['Lunch selection is closed for this date.'],
   };
 }
 
 export function isSubmissionAllowed(now: Date, lunchDate: string): boolean {
-  return getSubmissionPhase(now, lunchDate) !== 'closed';
+  return getSubmissionPhase(now, lunchDate) === 'open';
 }
 
 export function formatCountdown(now: Date, targetIso: string): string {

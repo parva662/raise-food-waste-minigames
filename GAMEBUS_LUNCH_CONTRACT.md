@@ -24,10 +24,6 @@ Defined in `src/types/declaration.ts`. Created by `createDeclarationFromDraft` i
 | `regularVegetarianSelected` | `boolean` \| `undefined` | Set when `mealChoice === 'regular'`: `vegetarianQuantity > 0` |
 | `noLunch` | `boolean` | `true` when `mealChoice === 'no_lunch'` |
 | `selections` | `SelectionEntry[]` | Non-empty lines for selected items (see below); `[]` for no lunch |
-| `timingStatus` | `'on-time' \| 'late'` | From Helsinki submission window at submit instant |
-| `basePoints` | `number` | Always `20` |
-| `timingAdjustment` | `5 \| -5` | `+5` on-time, `-5` late |
-| `totalPoints` | `number` | `25` or `15` |
 | `submittedAt` | `string` | ISO timestamp (first and only submit) |
 | `updatedAt` | `string` | Same as `submittedAt` (no updates in product) |
 | `includeInForecast` | `true` | Literal; no UI consumer |
@@ -65,9 +61,8 @@ One main (classic), one vegetarian, one soup, one dessert per lunch day (`resolv
 
 | Data | Category |
 |------|----------|
-| `mealChoice`, quantities, `selections`, `lunchDate` | **Product / domain** — required for GameBus activity |
+| `mealChoice`, quantities, `selections`, `lunchDate`, `submittedAt` | **Product / domain** — required for GameBus activity |
 | `mealSlots.*.id`, `mealSlots.*.name` | **Domain** — map to GameBus item id/name properties |
-| `timingStatus`, `basePoints`, `timingAdjustment`, `totalPoints`, `submittedAt` | **Domain + scoring** — required for GameBus audit/replay |
 | `studentId` | **Local identity** — optional on GameBus if platform knows actor; include in contract for parity |
 | `menuCycleWeek`, `menuVersion`, `includeInForecast` | **Local / forecast metadata** — not required for GameBus v1 |
 | `regularMainSelected`, `regularVegetarianSelected` | **Redundant** with quantities — derivable; optional on GameBus |
@@ -84,7 +79,7 @@ One main (classic), one vegetarian, one soup, one dessert per lunch day (`resolv
 | **Reference** | `studentLunchCheckin` (retain) |
 | **Label** | Student lunch check-in |
 | **Admin ID (test)** | `019f9404-88ec-7f31-89d6-8b2cbfbcab4f` |
-| **Purpose** | One-shot student declaration for tomorrow’s canteen meal (regular, soup, or no lunch) with portion quantities and scoring |
+| **Purpose** | One-shot student declaration for tomorrow’s canteen meal (regular, soup, or no lunch) with portion quantities |
 
 **Modify vs replace:** **Modify** the existing template in GameBus admin by **replacing linked property templates** with the set in section C. Keep the reference `studentLunchCheckin` so Pari’s embedded task (`embedded-task-Pari`, URL in test config) does not need re-linking once the task’s `+1` activity is confirmed as this template.
 
@@ -110,10 +105,9 @@ All numeric quantity schemas: **integer**, **minimum 0**, **maximum** = per-slot
 | `soupQuantity` | Soup quantity | yes | `integer`, `minimum: 0`, `maximum: 6` | `soupQuantity` | `1` |
 | `dessertItemId` | Dessert id | optional link | `string`, `minLength: 1` | `mealSlots.dessert.id` when `dessertQuantity > 0` | `"yogurt-berries"` |
 | `dessertQuantity` | Dessert quantity | yes | `integer`, `minimum: 0`, `maximum: 6` | `dessertQuantity` | `0` |
-| `timingStatus` | Timing status | yes | `string`, `enum`: `on-time`, `late` | `timingStatus` | `"on-time"` |
 | `submittedAt` | Submitted at | yes | `string`, `format: date-time` | `submittedAt` | `"2026-07-27T15:30:00.000Z"` |
 
-\* **Item ids:** Include only when the corresponding quantity is **> 0**. Omit the property entirely when not selected. No sentinels (`noMain`, `noVeg`, etc.). Scoring fields remain in `ActiveDeclaration` locally but are **not** sent on ACTIVITY.
+\* **Item ids:** Include only when the corresponding quantity is **> 0**. Omit the property entirely when not selected. No sentinels (`noMain`, `noVeg`, etc.). Local scoring fields are **not** used by the React app and are **not** sent on ACTIVITY.
 
 **Justification:** Replaces sentinel strings (`noVeg`, `noSoup`, `noDessert`) and ambiguous `comingStatus` with explicit `mealType` + numeric quantities. Matches the React model directly.
 
@@ -130,7 +124,7 @@ All numeric quantity schemas: **integer**, **minimum 0**, **maximum** = per-slot
 | `selectedSoupOrNoSoup` | **Remove** → `soupItemId` + `soupQuantity` | No `noSoup` sentinel |
 | `selectedDessertOrNoDessert` | **Remove** → `dessertItemId` + `dessertQuantity` | No `noDessert` sentinel |
 | `submittedAt` | **Retain** | Same |
-| — | **Add** `mealType`, four quantities, `timingStatus`, optional item ids | Align with React quantity model |
+| — | **Add** `mealType`, four quantities, optional item ids | Align with React quantity model |
 
 Until admin templates are updated, **live ingest will not match** the repository mapper. The React app targets the final twelve-property set only.
 
@@ -180,7 +174,6 @@ Assume lunch date **2026-07-28**, slots: main `meatballs`, vegetarian `pasta-pri
       { "template": "vegetarianQuantity", "obj": { "value": 0 } },
       { "template": "soupQuantity", "obj": { "value": 0 } },
       { "template": "dessertQuantity", "obj": { "value": 0 } },
-      { "template": "timingStatus", "obj": { "value": "on-time" } },
       { "template": "submittedAt", "obj": { "value": "2026-07-27T16:00:00.000Z" } }
     ]
   }
@@ -227,15 +220,11 @@ Same as (1) with `"mainQuantity": { "value": 0 }`, `"vegetarianQuantity": { "val
       { "template": "vegetarianQuantity", "obj": { "value": 0 } },
       { "template": "soupQuantity", "obj": { "value": 0 } },
       { "template": "dessertQuantity", "obj": { "value": 0 } },
-      { "template": "timingStatus", "obj": { "value": "on-time" } },
       { "template": "submittedAt", "obj": { "value": "2026-07-27T16:00:00.000Z" } }
     ]
   }
 }
 ```
-
-**Late submit:** same payloads with `timingStatus` `late` (scoring stays local only; not on ACTIVITY).
-
 ---
 
 ## F. One-shot submission architecture

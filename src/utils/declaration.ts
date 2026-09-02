@@ -1,9 +1,5 @@
 import { CANTEEN_CONFIG } from '../config/canteen';
-import {
-  getPointsBreakdownForInstant,
-  type Clock,
-  systemClock,
-} from '../services/submissionWindow';
+import { isSubmissionAllowed, type Clock, systemClock } from '../services/submissionWindow';
 import type { ActiveDeclaration } from '../types/declaration';
 import type { DailyMealSlots, MealDraft } from '../types/mealChoice';
 import { declarationRepository } from '../repositories/declarationRepository';
@@ -19,10 +15,6 @@ export type DraftSnapshot = MealDraft;
 export interface SavedSnapshot extends MealDraft {
   submittedAt: string;
   updatedAt: string;
-  timingStatus: ActiveDeclaration['timingStatus'];
-  basePoints: number;
-  timingAdjustment: ActiveDeclaration['timingAdjustment'];
-  totalPoints: number;
   menuVersion: string;
   menuCycleWeek: number;
 }
@@ -46,10 +38,6 @@ export function snapshotFromDeclaration(
     ...draft,
     submittedAt: declaration.submittedAt,
     updatedAt: declaration.updatedAt,
-    timingStatus: declaration.timingStatus,
-    basePoints: declaration.basePoints,
-    timingAdjustment: declaration.timingAdjustment,
-    totalPoints: declaration.totalPoints,
     menuVersion: declaration.menuVersion,
     menuCycleWeek: declaration.menuCycleWeek,
   };
@@ -66,8 +54,7 @@ export function createDeclarationFromDraft(
   if (draft.mealChoice === null) return null;
 
   const now = clock();
-  const pointsBreakdown = getPointsBreakdownForInstant(now, lunchDate);
-  if (pointsBreakdown === null) return null;
+  if (!isSubmissionAllowed(now, lunchDate)) return null;
 
   const noLunch = draft.mealChoice === 'no_lunch';
   const selections = noLunch ? [] : buildSelectionsFromMealDraft(draft, slots);
@@ -84,10 +71,6 @@ export function createDeclarationFromDraft(
       draft.mealChoice === 'regular' ? draft.vegetarianQuantity > 0 : undefined,
     noLunch,
     selections,
-    timingStatus: pointsBreakdown.timingStatus,
-    basePoints: pointsBreakdown.basePoints,
-    timingAdjustment: pointsBreakdown.timingAdjustment,
-    totalPoints: pointsBreakdown.totalPoints,
     submittedAt: now.toISOString(),
     updatedAt: now.toISOString(),
     includeInForecast: true,

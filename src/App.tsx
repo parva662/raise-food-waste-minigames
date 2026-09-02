@@ -16,7 +16,6 @@ function App() {
     summaryLines,
     hasSavedDeclaration,
     isSubmitDisabled,
-    savedScoring,
     initialized,
     menuAvailability,
     mealSlots,
@@ -123,7 +122,6 @@ function App() {
               summaryLines={summaryLines}
               hasSavedDeclaration={hasSavedDeclaration}
               updatedAt={state.savedSnapshot?.updatedAt ?? null}
-              savedScoring={savedScoring}
               isSubmitDisabled={isSubmitDisabled}
               submissionWindow={submissionWindow}
               menuInteractive={menuInteractive}
@@ -137,7 +135,6 @@ function App() {
 
       <SubmissionMessage
         message={state.successMessage}
-        pointsMessage={state.successPointsMessage}
         onDismiss={clearSuccess}
       />
 

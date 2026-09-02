@@ -4,9 +4,9 @@ import {
   OperationalCalendarError,
   resolvePreviousOperationalDay,
 } from '../services/operationalServiceCalendar';
-import type { SubmissionPhase, SubmissionWindowStatus, TimingStatus } from '../types/declaration';
+import type { TimingStatus } from '../types/declaration';
 import type { Clock } from '../services/submissionWindow';
-import type { ChefForecastSubmission } from './types';
+import type { ChefForecastSubmission, ChefSubmissionPhase, ChefSubmissionWindowStatus } from './types';
 
 function pad(value: number): string {
   return String(value).padStart(2, '0');
@@ -32,7 +32,7 @@ function serviceDayStart(serviceDate: string): Date {
   return helsinkiInstant(serviceDate, 0, 0, 0);
 }
 
-export function getChefSubmissionPhase(now: Date, serviceDate: string): SubmissionPhase {
+export function getChefSubmissionPhase(now: Date, serviceDate: string): ChefSubmissionPhase {
   const submissionDateIso = getSubmissionDateIso(serviceDate);
   if (submissionDateIso === null) {
     return 'closed';
@@ -73,7 +73,7 @@ export function isChefSubmissionAllowed(now: Date, serviceDate: string): boolean
 export function getChefSubmissionWindowStatus(
   now: Date,
   serviceDate: string,
-): SubmissionWindowStatus {
+): ChefSubmissionWindowStatus {
   const phase = getChefSubmissionPhase(now, serviceDate);
   const submissionDateIso = getSubmissionDateIso(serviceDate);
 
@@ -81,7 +81,6 @@ export function getChefSubmissionWindowStatus(
     return {
       phase: 'closed',
       countdownTargetIso: null,
-      totalPointsIfSubmittedNow: null,
       message: 'Forecast closed',
       detailLines: ['The forecast window could not be resolved for this service date.'],
     };
@@ -96,7 +95,6 @@ export function getChefSubmissionWindowStatus(
         CHEF_CONFIG.onTimeDeadlineMinute,
         CHEF_CONFIG.onTimeDeadlineSecond,
       ).toISOString(),
-      totalPointsIfSubmittedNow: null,
       message: 'Forecast open — on-time period',
       detailLines: [
         `Submit by ${pad(CHEF_CONFIG.onTimeDeadlineHour)}:${pad(CHEF_CONFIG.onTimeDeadlineMinute)} for on-time status.`,
@@ -114,7 +112,6 @@ export function getChefSubmissionWindowStatus(
         CHEF_CONFIG.lateDeadlineMinute,
         CHEF_CONFIG.lateDeadlineSecond,
       ).toISOString(),
-      totalPointsIfSubmittedNow: null,
       message: 'Late forecast period',
       detailLines: [
         `Submit before ${pad(CHEF_CONFIG.lateDeadlineHour)}:${pad(CHEF_CONFIG.lateDeadlineMinute)} tonight.`,
@@ -125,7 +122,6 @@ export function getChefSubmissionWindowStatus(
   return {
     phase,
     countdownTargetIso: null,
-    totalPointsIfSubmittedNow: null,
     message: 'Forecast closed',
     detailLines: ['The forecast window has closed for this service date.'],
   };

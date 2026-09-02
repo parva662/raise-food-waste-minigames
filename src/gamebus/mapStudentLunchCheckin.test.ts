@@ -59,10 +59,6 @@ function baseDeclaration(overrides: Partial<ActiveDeclaration> = {}): ActiveDecl
     regularVegetarianSelected: false,
     noLunch: false,
     selections: [],
-    timingStatus: 'on-time',
-    basePoints: 20,
-    timingAdjustment: 5,
-    totalPoints: 25,
     submittedAt: '2026-07-28T12:00:00.000Z',
     updatedAt: '2026-07-28T12:00:00.000Z',
     includeInForecast: true,
@@ -125,7 +121,6 @@ describe('mapStudentLunchCheckin / buildActivityMessage', () => {
       'vegetarianQuantity',
       'soupQuantity',
       'dessertQuantity',
-      'timingStatus',
       'submittedAt',
     ]);
   });
@@ -352,6 +347,28 @@ describe('mapStudentLunchCheckin / buildActivityMessage', () => {
     expect(keys).not.toContain('basePoints');
     expect(keys).not.toContain('timingAdjustment');
     expect(keys).not.toContain('totalPoints');
+    expect(keys).not.toContain('timingStatus');
+  });
+
+  it('includes all seven canonical required studentLunchCheckin fields', () => {
+    const draft: MealDraft = {
+      mealChoice: 'no_lunch',
+      mainQuantity: 0,
+      vegetarianQuantity: 0,
+      soupQuantity: 0,
+      dessertQuantity: 0,
+    };
+    const msg = buildActivityMessage(taskFixture, baseDeclaration(), draft, slots);
+    const keys = msg.data.properties.map((p) => p.template);
+    expect(keys).toEqual([
+      'targetDate',
+      'mealType',
+      'mainQuantity',
+      'vegetarianQuantity',
+      'soupQuantity',
+      'dessertQuantity',
+      'submittedAt',
+    ]);
   });
 
   it('uses GameBus JSON object shape { template, obj: { value } }', () => {

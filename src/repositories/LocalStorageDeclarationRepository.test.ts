@@ -128,14 +128,19 @@ describe('LocalStorageDeclarationRepository', () => {
     );
   });
 
-  it('keeps includeInForecast true for late declarations', () => {
+  it('keeps includeInForecast true for submissions before the cutoff', () => {
     repo.upsertDeclaration(
       createFromDraft(
         { mealChoice: 'regular', mainQuantity: 1, vegetarianQuantity: 0, soupQuantity: 0, dessertQuantity: 0 },
         SUBMISSION_TIMES.lateEvening,
       ),
     );
-    expect(repo.getDeclaration(CANTEEN_CONFIG.studentId, FIXTURE_LUNCH_DATE)?.totalPoints).toBe(15);
+    expect(repo.getDeclaration(CANTEEN_CONFIG.studentId, FIXTURE_LUNCH_DATE)?.includeInForecast).toBe(
+      true,
+    );
+    expect(repo.getDeclaration(CANTEEN_CONFIG.studentId, FIXTURE_LUNCH_DATE)).not.toHaveProperty(
+      'totalPoints',
+    );
   });
 
   it('restores the latest saved declaration on reload', () => {
@@ -154,14 +159,15 @@ describe('LocalStorageDeclarationRepository', () => {
     expect(storage.size).toBe(1);
   });
 
-  it('normalizes legacy records on read', () => {
+  it('normalizes legacy records on read without scoring fields', () => {
     storage.set(
       buildStorageKey(CANTEEN_CONFIG.studentId, FIXTURE_LUNCH_DATE),
       JSON.stringify(createLegacyFixtureDeclaration()),
     );
     const restored = repo.getDeclaration(CANTEEN_CONFIG.studentId, FIXTURE_LUNCH_DATE)!;
-    expect(restored.basePoints).toBe(20);
-    expect(restored.totalPoints).toBe(25);
+    expect(restored).not.toHaveProperty('basePoints');
+    expect(restored).not.toHaveProperty('totalPoints');
+    expect(restored).not.toHaveProperty('timingStatus');
     expect(restored.mealChoice).toBe('regular');
   });
 

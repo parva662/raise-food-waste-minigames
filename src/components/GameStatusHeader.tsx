@@ -8,12 +8,17 @@ interface GameStatusHeaderProps {
   now: Date;
 }
 
+function pad(value: number): string {
+  return String(value).padStart(2, '0');
+}
+
 export function GameStatusHeader({ submissionWindow, now }: GameStatusHeaderProps) {
   const tomorrowIso = getTomorrowIsoDate(now);
   const countdown =
     submissionWindow.countdownTargetIso !== null
       ? formatCountdown(now, submissionWindow.countdownTargetIso)
       : null;
+  const deadlineLabel = `${pad(CANTEEN_CONFIG.submissionDeadlineHour)}:${pad(CANTEEN_CONFIG.submissionDeadlineMinute)}`;
 
   return (
     <header className="game-status-header">
@@ -24,7 +29,7 @@ export function GameStatusHeader({ submissionWindow, now }: GameStatusHeaderProp
             {formatDisplayDate(tomorrowIso)}
           </time>
         </div>
-        {countdown !== null && submissionWindow.phase !== 'closed' && (
+        {countdown !== null && submissionWindow.phase === 'open' && (
           <div className="game-status-header__countdown" aria-live="polite">
             <span className="game-status-header__countdown-label">Time left</span>
             <span className="game-status-header__countdown-value">{countdown}</span>
@@ -32,30 +37,15 @@ export function GameStatusHeader({ submissionWindow, now }: GameStatusHeaderProp
         )}
       </div>
 
-      <div className="game-status-header__badges" role="list" aria-label="Scoring">
-        <span className="points-badge points-badge--base" role="listitem">
-          {CANTEEN_CONFIG.basePoints} base
-        </span>
-        <span className="points-badge points-badge--bonus" role="listitem">
-          +{CANTEEN_CONFIG.onTimeBonus} on-time
-        </span>
-        <span className="points-badge points-badge--penalty" role="listitem">
-          {CANTEEN_CONFIG.latePenalty} late
-        </span>
-        <span className="points-badge points-badge--deadline" role="listitem">
-          Submit by {CANTEEN_CONFIG.onTimeDeadlineHour}:00
-        </span>
-      </div>
-
-      <p className="game-status-header__phase" role="status">
-        {submissionWindow.message}
-        {submissionWindow.totalPointsIfSubmittedNow !== null && (
-          <strong className="game-status-header__now-points">
-            {' '}
-            → {submissionWindow.totalPointsIfSubmittedNow} pts now
-          </strong>
-        )}
-      </p>
+      {submissionWindow.phase === 'open' ? (
+        <p className="game-status-header__deadline" role="status">
+          Submit by {deadlineLabel}
+        </p>
+      ) : (
+        <p className="game-status-header__phase" role="status">
+          {submissionWindow.message}
+        </p>
+      )}
     </header>
   );
 }

@@ -168,7 +168,6 @@ export function useChefForecast(clock: Clock = systemClock) {
       return {
         phase: 'closed' as const,
         countdownTargetIso: null,
-        totalPointsIfSubmittedNow: null,
         message: 'Forecast closed',
         detailLines: [
           serviceDateResolution.status === 'calendar_error'

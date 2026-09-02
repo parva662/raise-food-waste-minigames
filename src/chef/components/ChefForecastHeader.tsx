@@ -1,11 +1,11 @@
 import { CHEF_CONFIG } from '../../config/chef';
-import type { SubmissionWindowStatus } from '../../types/declaration';
+import type { ChefSubmissionWindowStatus } from '../types';
 import { formatCountdown } from '../../services/submissionWindow';
 import { formatDisplayDate } from '../../utils/dates';
 
 interface ChefForecastHeaderProps {
   serviceDate: string;
-  submissionWindow: SubmissionWindowStatus;
+  submissionWindow: ChefSubmissionWindowStatus;
   now: Date;
 }
 

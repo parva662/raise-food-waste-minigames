@@ -69,7 +69,6 @@ describe('resolveActivityProperties', () => {
       'vegetarianQuantity',
       'soupQuantity',
       'dessertQuantity',
-      'timingStatus',
       'submittedAt',
     ]);
   });
@@ -113,10 +112,6 @@ describe('buildActivityMessage sparse TASK.data.propertyTemplates', () => {
       regularVegetarianSelected: false,
       noLunch: false,
       selections: [],
-      timingStatus: 'on-time' as const,
-      basePoints: 20,
-      timingAdjustment: 5 as const,
-      totalPoints: 25,
       submittedAt: '2026-07-28T12:00:00.000Z',
       updatedAt: '2026-07-28T12:00:00.000Z',
       includeInForecast: true as const,

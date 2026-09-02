@@ -1,8 +1,8 @@
 import type { SelectionEntry } from './menu';
 import type { MealChoice } from './mealChoice';
 
+/** Chef Forecast timing classification — not used by Student Lunch. */
 export type TimingStatus = 'on-time' | 'late';
-export type TimingAdjustment = 5 | -5;
 
 export interface ActiveDeclaration {
   studentId: string;
@@ -14,21 +14,16 @@ export interface ActiveDeclaration {
   regularVegetarianSelected?: boolean;
   noLunch: boolean;
   selections: SelectionEntry[];
-  timingStatus: TimingStatus;
-  basePoints: number;
-  timingAdjustment: TimingAdjustment;
-  totalPoints: number;
   submittedAt: string;
   updatedAt: string;
   includeInForecast: true;
 }
 
-export type SubmissionPhase = 'on-time' | 'late' | 'closed';
+export type SubmissionPhase = 'open' | 'closed';
 
 export interface SubmissionWindowStatus {
   phase: SubmissionPhase;
   countdownTargetIso: string | null;
-  totalPointsIfSubmittedNow: number | null;
   message: string;
   detailLines: string[];
 }

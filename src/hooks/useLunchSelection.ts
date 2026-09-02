@@ -24,7 +24,6 @@ import {
   type Clock,
 } from '../services/submissionWindow';
 import { getTomorrowIsoDate, formatDisplayDate } from '../utils/dates';
-import { formatToastPointsMessage } from '../utils/points';
 import type { MealChoice } from '../types/mealChoice';
 import type { SelectionEntry } from '../types/menu';
 import type { MealSummaryLine } from '../utils/mealChoice';
@@ -36,14 +35,13 @@ export interface LunchSelectionState {
   draft: DraftSnapshot;
   savedSnapshot: SavedSnapshot | null;
   successMessage: string | null;
-  successPointsMessage: string | null;
 }
 
 type LunchAction =
   | { type: 'ACTIVATE_MEAL_CHOICE'; choice: MealChoice }
   | { type: 'ADJUST_PORTION'; field: PortionField; delta: number; maxQuantity: number }
   | { type: 'RESET_DRAFT' }
-  | { type: 'SUBMIT_SUCCESS'; savedSnapshot: SavedSnapshot; message: string; pointsMessage: string }
+  | { type: 'SUBMIT_SUCCESS'; savedSnapshot: SavedSnapshot; message: string }
   | { type: 'RESTORE'; savedSnapshot: SavedSnapshot; draft: DraftSnapshot }
   | { type: 'CLEAR_SUCCESS' };
 
@@ -52,7 +50,6 @@ function createInitialState(): LunchSelectionState {
     draft: createEmptyDraft(),
     savedSnapshot: null,
     successMessage: null,
-    successPointsMessage: null,
   };
 }
 
@@ -65,7 +62,6 @@ function lunchReducer(state: LunchSelectionState, action: LunchAction): LunchSel
         ...state,
         draft,
         successMessage: null,
-        successPointsMessage: null,
       };
     }
     case 'ADJUST_PORTION': {
@@ -80,7 +76,6 @@ function lunchReducer(state: LunchSelectionState, action: LunchAction): LunchSel
         ...state,
         draft,
         successMessage: null,
-        successPointsMessage: null,
       };
     }
     case 'RESET_DRAFT':
@@ -88,7 +83,6 @@ function lunchReducer(state: LunchSelectionState, action: LunchAction): LunchSel
         ...state,
         draft: createEmptyDraft(),
         successMessage: null,
-        successPointsMessage: null,
       };
     case 'SUBMIT_SUCCESS':
       return {
@@ -102,17 +96,15 @@ function lunchReducer(state: LunchSelectionState, action: LunchAction): LunchSel
         },
         savedSnapshot: action.savedSnapshot,
         successMessage: action.message,
-        successPointsMessage: action.pointsMessage,
       };
     case 'RESTORE':
       return {
         draft: { ...action.draft },
         savedSnapshot: action.savedSnapshot,
         successMessage: null,
-        successPointsMessage: null,
       };
     case 'CLEAR_SUCCESS':
-      return { ...state, successMessage: null, successPointsMessage: null };
+      return { ...state, successMessage: null };
     default:
       return state;
   }
@@ -198,16 +190,6 @@ export function useLunchSelection(clock: Clock = systemClock) {
     menuAvailability.status !== 'available' ||
     (embedded && !taskReady);
 
-  const savedScoring = useMemo(() => {
-    if (!state.savedSnapshot) return null;
-    return {
-      basePoints: state.savedSnapshot.basePoints,
-      timingAdjustment: state.savedSnapshot.timingAdjustment,
-      totalPoints: state.savedSnapshot.totalPoints,
-      timingStatus: state.savedSnapshot.timingStatus,
-    };
-  }, [state.savedSnapshot]);
-
   const activateMealChoice = useCallback((choice: MealChoice) => {
     dispatch({ type: 'ACTIVATE_MEAL_CHOICE', choice });
   }, []);
@@ -260,7 +242,6 @@ export function useLunchSelection(clock: Clock = systemClock) {
         type: 'SUBMIT_SUCCESS',
         savedSnapshot,
         message: '',
-        pointsMessage: '',
       });
       return;
     }
@@ -271,12 +252,6 @@ export function useLunchSelection(clock: Clock = systemClock) {
       type: 'SUBMIT_SUCCESS',
       savedSnapshot,
       message: `Your lunch declaration for ${formatDisplayDate(lunchDate)} is final.`,
-      pointsMessage: formatToastPointsMessage({
-        basePoints: declaration.basePoints,
-        timingAdjustment: declaration.timingAdjustment,
-        totalPoints: declaration.totalPoints,
-        timingStatus: declaration.timingStatus,
-      }),
     });
   }, [
     isSubmitDisabled,
@@ -300,7 +275,6 @@ export function useLunchSelection(clock: Clock = systemClock) {
     summaryLines,
     hasSavedDeclaration,
     isSubmitDisabled,
-    savedScoring,
     initialized,
     lunchDate,
     menuAvailability,

@@ -1,5 +1,14 @@
 import type { TimingStatus } from '../types/declaration';
 
+export type ChefSubmissionPhase = 'on-time' | 'late' | 'closed';
+
+export type ChefSubmissionWindowStatus = {
+  phase: ChefSubmissionPhase;
+  countdownTargetIso: string | null;
+  message: string;
+  detailLines: string[];
+};
+
 export type ChefForecastDraft = {
   /** null = unanswered; explicit number includes intentional zero */
   expectedCustomers: number | null;

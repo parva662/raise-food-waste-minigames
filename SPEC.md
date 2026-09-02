@@ -8,7 +8,7 @@
 
 ## 1. Purpose
 
-Students declare tomorrow’s canteen lunch using one of three mutually exclusive options: **Regular lunch**, **Soup lunch**, or **No lunch**. Submission is **final** (one submit per lunch date). Scoring uses Europe/Helsinki deadlines (18:00 on-time, 23:00 late close).
+Students declare tomorrow’s canteen lunch using one of three mutually exclusive options: **Regular lunch**, **Soup lunch**, or **No lunch**. Submission is **final** (one submit per lunch date). The submission window closes at **23:00** Europe/Helsinki on the day before lunch.
 
 ---
 
@@ -16,7 +16,7 @@ Students declare tomorrow’s canteen lunch using one of three mutually exclusiv
 
 ### 2.1 Layout
 
-- **GameStatusHeader** — deadline / points guidance.
+- **GameStatusHeader** — deadline / time-left guidance.
 - **Three vertical sections** (always visible):
   1. **Regular lunch** — main + vegetarian portion cards.
   2. **Soup lunch** — soup + dessert portion cards.
@@ -71,7 +71,6 @@ One resolved main (classic), vegetarian, soup, dessert per lunch date (`resolveM
 - Menu metadata: `menuCycleWeek`, `menuVersion`
 - Choice: `mealChoice`, `noLunch`, optional `regularMainSelected` / `regularVegetarianSelected`
 - `selections`: `SelectionEntry[]` built from draft + slots (`buildSelectionsFromMealDraft`)
-- Scoring: `timingStatus`, `basePoints` (20), `timingAdjustment` (±5), `totalPoints` (25 or 15)
 - Timestamps: `submittedAt`, `updatedAt` (equal on first submit)
 - `includeInForecast`: always `true`
 
@@ -79,9 +78,10 @@ One resolved main (classic), vegetarian, soup, dessert per lunch date (`resolveM
 
 `src/services/submissionWindow.ts` — day before lunch, **Europe/Helsinki**:
 
-- `now <= 18:00:00` → on-time (25 points)
-- `18:00:00 < now <= 23:00:00` → late (15 points)
-- After 23:00:00 on submission day, or from lunch-day midnight → closed (`createDeclarationFromDraft` returns `null`)
+- `now <= 23:00:00` on submission day → **open**
+- After `23:00:00` on submission day, or from lunch-day midnight → **closed** (`createDeclarationFromDraft` returns `null`)
+
+There is **no** on-time/late distinction and **no** local points scoring in the Student Lunch app.
 
 Lunch date: **tomorrow** via `getTomorrowIsoDate()` (`src/utils/dates.ts`) — browser local calendar.
 

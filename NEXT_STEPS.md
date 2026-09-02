@@ -89,6 +89,11 @@ Closeout embed URL: `https://parva662.github.io/raise-food-waste-minigames/#/ser
 
 ## Student `studentLunchCheckin` — repo mapper ready
 
+**Required ACTIVITY properties:** `targetDate`, `mealType`, four quantities, `submittedAt`.  
+**Conditional item IDs** when quantity > 0. **No** `timingStatus` or local scoring fields on ACTIVITY.
+
+**Excluded from ACTIVITY:** `studentId`, `actors`, `provider`, legacy sentinels (`noMain`, `noVeg`, etc.).
+
 | Property | Activity link | JSON Schema (`obj.value`) |
 |----------|---------------|---------------------------|
 | `targetDate` | required | `string`, `format: date` |

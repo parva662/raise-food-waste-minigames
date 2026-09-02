@@ -12,7 +12,6 @@ const FINAL_LINKED_REFS = [
   'soupQuantity',
   'dessertItemId',
   'dessertQuantity',
-  'timingStatus',
   'submittedAt',
 ] as const;
 
