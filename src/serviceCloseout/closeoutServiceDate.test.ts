@@ -1,12 +1,9 @@
 // @vitest-environment jsdom
 import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest';
 import {
-  getServiceCloseoutRouteServiceDate,
   isCloseoutDevDateOverrideActive,
-  isServiceCloseoutLiveTestServiceDateActive,
   parseCloseoutDevDateOverride,
   resolveCloseoutServiceDate,
-  SERVICE_CLOSEOUT_LIVE_TEST_SERVICE_DATE,
 } from './closeoutServiceDate';
 import * as datesModule from '../utils/dates';
 import { MENU_DATES } from '../test/fixtures/dates';
@@ -42,15 +39,8 @@ describe('closeoutServiceDate', () => {
     vi.restoreAllMocks();
   });
 
-  it('routes service closeout to the live test service date', () => {
-    expect(getServiceCloseoutRouteServiceDate()).toBe(SERVICE_CLOSEOUT_LIVE_TEST_SERVICE_DATE);
-    expect(isServiceCloseoutLiveTestServiceDateActive(SERVICE_CLOSEOUT_LIVE_TEST_SERVICE_DATE)).toBe(
-      true,
-    );
-  });
-
-  it('maps finalized closeout from route date to wasteMeasurement serviceDate', () => {
-    const serviceDate = getServiceCloseoutRouteServiceDate();
+  it('maps finalized closeout serviceDate to wasteMeasurement', () => {
+    const serviceDate = MENU_DATES.runtimeWednesday;
     const mealSlots = resolveMealSlotsForDate(serviceDate)!;
     const closeout = normalizeServiceCloseout(
       completeDraft(),
@@ -60,8 +50,10 @@ describe('closeoutServiceDate', () => {
       '2026-08-31T14:00:00.000Z',
     );
 
-    expect(closeout.targetDate).toBe('2026-09-01');
-    expect(mapWasteMeasurement(closeout).serviceDate).toEqual({ value: '2026-09-01' });
+    expect(closeout.targetDate).toBe(MENU_DATES.runtimeWednesday);
+    expect(mapWasteMeasurement(closeout).serviceDate).toEqual({
+      value: MENU_DATES.runtimeWednesday,
+    });
   });
 
   it('parses dev date override from hash query', () => {

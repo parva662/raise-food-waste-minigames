@@ -10,7 +10,6 @@ import * as datesModule from '../utils/dates';
 import * as operationalCalendarModule from '../services/operationalServiceCalendar';
 import { CLOSEOUT_OVERPRODUCTION_EXCEEDS_PREPARED_ERROR } from './validation';
 import { CLOSEOUT_INCOMPLETE_MESSAGE } from './types';
-import { formatDisplayDate } from '../utils/dates';
 
 function setHash(hash: string) {
   window.location.hash = hash;
@@ -83,43 +82,6 @@ describe('service closeout routing', () => {
     setHash('');
     render(<AppRouter />);
     expect(screen.queryByTestId('closeout-input-collections-debug')).not.toBeInTheDocument();
-  });
-});
-
-describe('service closeout live test service date', () => {
-  const liveTestServiceDate = '2026-09-01';
-
-  beforeEach(() => {
-    vi.spyOn(operationalCalendarModule, 'resolveChefForecastServiceDate').mockReturnValue(
-      MENU_DATES.runtimeWednesday,
-    );
-    setHash('#/service-closeout');
-  });
-
-  afterEach(() => {
-    cleanup();
-    setHash('');
-    vi.restoreAllMocks();
-  });
-
-  it('renders Sep 1 menu and override banner on normal service-closeout route', () => {
-    const slots = resolveMealSlotsForDate(liveTestServiceDate)!;
-    render(<AppRouter />);
-    expect(screen.getByTestId('closeout-test-date-override')).toHaveTextContent(
-      'TEST DATE OVERRIDE — Service date: 1 September 2026',
-    );
-    expect(screen.getByRole('time')).toHaveTextContent(formatDisplayDate(liveTestServiceDate));
-    expect(screen.getByText(slots.main.name)).toBeInTheDocument();
-    expect(screen.getByText(slots.dessert.name)).toBeInTheDocument();
-  });
-
-  it('finalizes closeout using Sep 1 as service date', async () => {
-    const user = userEvent.setup();
-    render(<AppRouter />);
-    await fillCloseoutForm(user);
-    await user.click(screen.getByRole('button', { name: 'Finalize service' }));
-    expect(screen.getByText(/Service closeout finalized/i)).toBeInTheDocument();
-    expect(screen.getByRole('time')).toHaveAttribute('dateTime', liveTestServiceDate);
   });
 });
 

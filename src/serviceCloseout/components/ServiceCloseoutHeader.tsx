@@ -1,9 +1,5 @@
 import { formatDisplayDate } from '../../utils/dates';
-import {
-  formatCloseoutServiceDateLabel,
-  isCloseoutDevDateOverrideActive,
-  isServiceCloseoutLiveTestServiceDateActive,
-} from '../closeoutServiceDate';
+import { isCloseoutDevDateOverrideActive } from '../closeoutServiceDate';
 
 interface ServiceCloseoutHeaderProps {
   serviceDate: string;
@@ -11,7 +7,6 @@ interface ServiceCloseoutHeaderProps {
 
 export function ServiceCloseoutHeader({ serviceDate }: ServiceCloseoutHeaderProps) {
   const devOverrideActive = isCloseoutDevDateOverrideActive(serviceDate);
-  const liveTestDateActive = isServiceCloseoutLiveTestServiceDateActive(serviceDate);
 
   return (
     <header className="closeout-header">
@@ -20,15 +15,6 @@ export function ServiceCloseoutHeader({ serviceDate }: ServiceCloseoutHeaderProp
         <time className="closeout-header__date" dateTime={serviceDate}>
           {formatDisplayDate(serviceDate)}
         </time>
-        {liveTestDateActive && (
-          <p
-            className="closeout-header__test-date-override"
-            data-testid="closeout-test-date-override"
-            role="status"
-          >
-            TEST DATE OVERRIDE — Service date: {formatCloseoutServiceDateLabel(serviceDate)}
-          </p>
-        )}
         {devOverrideActive && (
           <p className="closeout-header__dev-date" data-testid="closeout-dev-date-label">
             Test service date: {formatDisplayDate(serviceDate)}
