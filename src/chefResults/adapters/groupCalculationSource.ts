@@ -152,6 +152,14 @@ export function buildGroupDailyServiceResults(
   return calculateDailyServiceResults(closeout, participation, forecasts);
 }
 
+export function hasGroupCloseoutForDate(
+  inputCollections: GameBusInputCollectionsPayload | null,
+  serviceDate: string,
+): boolean {
+  const { wasteMeasurements } = parseGroupKitchenActivities(inputCollections);
+  return selectWasteMeasurementForDate(wasteMeasurements, serviceDate) !== null;
+}
+
 export function buildAllGroupDailyServiceResults(
   inputCollections: GameBusInputCollectionsPayload | null,
 ): DailyServiceResults[] {

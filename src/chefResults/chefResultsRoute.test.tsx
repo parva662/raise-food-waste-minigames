@@ -3,6 +3,7 @@ import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { cleanup, render, screen } from '@testing-library/react';
 import { AppRouter } from '../AppRouter';
 import { DEFAULT_FIXTURE_CURRENT_USER_ID } from './currentUserContext';
+import * as operationalCalendarModule from '../services/operationalServiceCalendar';
 
 function setHash(hash: string) {
   window.location.hash = hash;
@@ -11,6 +12,7 @@ function setHash(hash: string) {
 
 describe('chef results routes', () => {
   beforeEach(() => {
+    vi.spyOn(operationalCalendarModule, 'resolveChefResultsServiceDate').mockReturnValue('2026-07-31');
     setHash('');
     window.sessionStorage.clear();
     window.sessionStorage.setItem('chef-results-fixture-current-user-id', DEFAULT_FIXTURE_CURRENT_USER_ID);
@@ -47,6 +49,7 @@ describe('chef results routes', () => {
 
 describe('participant privacy', () => {
   beforeEach(() => {
+    vi.spyOn(operationalCalendarModule, 'resolveChefResultsServiceDate').mockReturnValue('2026-07-31');
     setHash('#/chef-results');
     window.sessionStorage.clear();
     window.sessionStorage.setItem('chef-results-fixture-current-user-id', 'fixture-user-c');
@@ -87,11 +90,10 @@ describe('participant privacy', () => {
     expect(screen.queryByText(/winner|loser|best employee|worst employee/i)).not.toBeInTheDocument();
   });
 
-  it('defaults to the latest available result date for the current fixture user', () => {
+  it('shows the canonical service date in the participant header', () => {
     setHash('#/chef-results');
     render(<AppRouter />);
-    const select = screen.getByTestId('chef-results-date-select') as HTMLSelectElement;
-    expect(select.value).toBe('2026-07-31');
+    expect(screen.queryByTestId('chef-results-date-select')).not.toBeInTheDocument();
     expect(screen.getByText(/Friday, 31 July 2026/)).toBeInTheDocument();
   });
 

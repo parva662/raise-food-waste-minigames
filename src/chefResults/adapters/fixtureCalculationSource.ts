@@ -78,6 +78,10 @@ export function buildFixtureDailyServiceResults(serviceDate: string): DailyServi
   );
 }
 
+export function hasFixtureCloseoutForDate(serviceDate: string): boolean {
+  return FIXTURE_NORMALIZED_CLOSEOUTS.some((entry) => entry.targetDate === serviceDate);
+}
+
 export function buildAllFixtureDailyServiceResults(): DailyServiceResults[] {
   return getFixtureServiceDates()
     .map((date) => buildFixtureDailyServiceResults(date))

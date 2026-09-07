@@ -16,6 +16,7 @@ import {
   buildParticipantKitchenProgress,
   getGroupResultServiceDates,
   getParticipantGroupResultServiceDates,
+  hasGroupCloseoutForDate,
 } from './groupCalculationSource';
 import { parseGameBusWasteMeasurementActivities, selectWasteMeasurementForDate } from './parseGameBusWasteMeasurement';
 import { gameBusWasteMeasurementToCalculationInput } from './wasteMeasurementAdapter';
@@ -524,5 +525,16 @@ describe('group kitchen activities integration', () => {
 
     expect(buildParticipantKitchenProgress(inputCollections, 'staff1').servicesCompletedCount).toBe(0);
     expect(buildGroupKitchenProgress(inputCollections).servicesCompletedCount).toBe(1);
+  });
+
+  it('detects whether a group closeout exists for a service date', () => {
+    const inputCollections = {
+      [KITCHEN_GROUP_INPUT_COLLECTION_KEY]: {
+        [KITCHEN_GROUP_ACTIVITIES_REQUEST_KEY]: [wasteMeasurementActivity()],
+      },
+    };
+
+    expect(hasGroupCloseoutForDate(inputCollections, serviceDate)).toBe(true);
+    expect(hasGroupCloseoutForDate(inputCollections, '2026-01-01')).toBe(false);
   });
 });

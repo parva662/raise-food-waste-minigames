@@ -9,6 +9,7 @@ import {
   KITCHEN_GROUP_INPUT_COLLECTION_KEY,
 } from '../gamebus/groupActivities';
 import * as detectEmbedModule from '../gamebus/detectEmbed';
+import * as operationalCalendarModule from '../services/operationalServiceCalendar';
 import {
   ingestInputCollectionsForTests,
   resetGameBusBridgeForTests,
@@ -102,6 +103,7 @@ describe('embedded chef results UI', () => {
   beforeEach(() => {
     resetGameBusBridgeForTests();
     vi.spyOn(detectEmbedModule, 'isGameBusEmbed').mockReturnValue(true);
+    vi.spyOn(operationalCalendarModule, 'resolveChefResultsServiceDate').mockReturnValue(serviceDate);
     window.sessionStorage.clear();
     window.location.hash = '#/chef-results';
     originalParent = window.parent;
@@ -124,13 +126,12 @@ describe('embedded chef results UI', () => {
     vi.unstubAllEnvs();
   });
 
-  it('shows participant-completed service dates in the participant dropdown', () => {
+  it('shows the canonical service date in the participant header without a date picker', () => {
     ingestInputCollectionsForTests(embeddedKitchenPayload());
     render(<ChefResultsParticipantApp />);
 
-    const select = screen.getByTestId('chef-results-date-select') as HTMLSelectElement;
-    expect(select.options).toHaveLength(1);
-    expect(select.value).toBe(serviceDate);
+    expect(screen.queryByTestId('chef-results-date-select')).not.toBeInTheDocument();
+    expect(screen.getByText(/Service date: Wednesday, 29 July 2026/)).toBeInTheDocument();
   });
 
   it('shows only the authenticated user result on the participant page', () => {
@@ -144,19 +145,18 @@ describe('embedded chef results UI', () => {
     expect(screen.queryByText('coworker-user')).not.toBeInTheDocument();
   });
 
-  it('shows empty state when the current user has no completed personal results', () => {
+  it('shows no forecast state when the current user has no forecast for the canonical date', () => {
     ingestInputCollectionsForTests(
       embeddedKitchenPayload({ includeCurrentUserForecast: false, includeCoworkerForecast: true }),
     );
     render(<ChefResultsParticipantApp />);
 
     expect(screen.queryByTestId('chef-results-date-select')).not.toBeInTheDocument();
-    expect(screen.getByTestId('participant-no-completed-results')).toHaveTextContent(
-      'No completed forecast results yet.',
+    expect(screen.getByTestId('participant-no-forecast-result')).toHaveTextContent(
+      'You did not submit a valid forecast for this service date.',
     );
     expect(screen.queryByTestId('kitchen-progress-section')).not.toBeInTheDocument();
     expect(screen.queryByTestId('your-week-section')).not.toBeInTheDocument();
-    expect(screen.queryByText('You did not submit a forecast for this service date.')).not.toBeInTheDocument();
   });
 
   it('uses real embedded kitchen progress instead of fixture leakage', () => {
@@ -207,6 +207,7 @@ describe('embedded chef results loading boundary', () => {
   beforeEach(() => {
     resetGameBusBridgeForTests();
     vi.spyOn(detectEmbedModule, 'isGameBusEmbed').mockReturnValue(true);
+    vi.spyOn(operationalCalendarModule, 'resolveChefResultsServiceDate').mockReturnValue(serviceDate);
     window.sessionStorage.clear();
     window.location.hash = '#/chef-results';
     originalParent = window.parent;
@@ -264,6 +265,7 @@ describe('standalone chef results fixtures', () => {
   beforeEach(() => {
     resetGameBusBridgeForTests();
     vi.spyOn(detectEmbedModule, 'isGameBusEmbed').mockReturnValue(false);
+    vi.spyOn(operationalCalendarModule, 'resolveChefResultsServiceDate').mockReturnValue('2026-07-31');
     window.sessionStorage.clear();
     window.sessionStorage.setItem(
       'chef-results-fixture-current-user-id',
@@ -287,7 +289,7 @@ describe('standalone chef results fixtures', () => {
     expect(screen.getByTestId('participant-summary-cards')).toBeInTheDocument();
     expect(screen.getByTestId('your-week-section')).toBeInTheDocument();
     expect(screen.getByTestId('kitchen-progress-section')).toBeInTheDocument();
-    const select = screen.getByTestId('chef-results-date-select') as HTMLSelectElement;
-    expect(select.options.length).toBeGreaterThan(0);
+    expect(screen.queryByTestId('chef-results-date-select')).not.toBeInTheDocument();
+    expect(screen.getByText(/Service date: Friday, 31 July 2026/)).toBeInTheDocument();
   });
 });

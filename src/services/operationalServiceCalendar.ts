@@ -115,3 +115,12 @@ export function resolveChefForecastServiceDate(now: Date = new Date()): string {
 
   return resolveNextServiceDate(today);
 }
+
+/**
+ * Canonical Chef Results service date — the operational day immediately before the
+ * service currently being forecast.
+ */
+export function resolveChefResultsServiceDate(now: Date = new Date()): string {
+  const forecastTargetDate = resolveChefForecastServiceDate(now);
+  return resolvePreviousOperationalDay(forecastTargetDate);
+}
