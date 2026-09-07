@@ -11,7 +11,7 @@
 The on-duty chef (personal GameBus account) submits **one forecast per service day** for **tomorrow’s published menu**:
 
 - expected total customers (headcount forecast);
-- main, vegetarian, soup, and dessert portion forecasts (independent category forecasts);
+- main, vegetarian, soup, and dessert portion forecasts (main and vegetarian are independent; soup and dessert share one soup-menu quantity);
 - four menu item IDs from the generated catalogue;
 - `timingStatus` and `submittedAt`;
 - optionally `confidence` and `notes` when the chef enters values.
@@ -22,7 +22,7 @@ No `chefId`, `actors`, `provider`, `result`, `waste`, `points`, or `badge` field
 
 Participant association: **authenticated GameBus user** (chef on duty).
 
-**Forecast semantics:** Expected customers and each menu-item quantity are separate forecasts. One customer may consume multiple portions or categories. The chef interface does not compare or require equality between them. Later analysis compares each forecast property with its matching actual value; waste is a separate operational outcome.
+**Forecast semantics:** Expected customers and each menu-item quantity are separate forecasts, except soup and dessert which operationally form one soup menu. The chef UI enters soup quantity once and derives `forecastDessert` from `forecastSoup`; both properties are still submitted for GameBus compatibility. Main and vegetarian remain independent. One customer may consume multiple portions or categories. Later analysis compares each forecast property with its matching actual value; waste is a separate operational outcome.
 
 ---
 
@@ -245,7 +245,7 @@ required:
 additionalProperties: false
 ```
 
-Example `obj.value`: `25`
+Example `obj.value`: `40` (must match `forecastSoup` for chef-submitted forecasts)
 
 #### `timingStatus` — reuse global template, add activity link
 
@@ -341,7 +341,7 @@ Twelve required properties only:
       { "template": "soupItemId", "obj": { "value": "minced-meat-and-bean-soup" } },
       { "template": "forecastSoup", "obj": { "value": 40 } },
       { "template": "dessertItemId", "obj": { "value": "chocolate-mousse" } },
-      { "template": "forecastDessert", "obj": { "value": 25 } },
+      { "template": "forecastDessert", "obj": { "value": 40 } },
       { "template": "timingStatus", "obj": { "value": "on-time" } },
       { "template": "submittedAt", "obj": { "value": "2026-07-28T12:00:00.000Z" } }
     ]

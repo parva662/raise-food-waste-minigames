@@ -37,7 +37,6 @@ export function ChefApp({ clock }: ChefAppProps = {}) {
     setMainQuantity,
     setVegetarianQuantity,
     setSoupQuantity,
-    setDessertQuantity,
     setFieldError,
     setCustomersError,
     setConfidence,
@@ -141,14 +140,16 @@ export function ChefApp({ clock }: ChefAppProps = {}) {
                     categoryLabel="Dessert"
                     quantity={draft.dessertQuantity}
                     disabled={!formInteractive}
-                    error={state.fieldErrors.dessert ?? null}
-                    onQuantityChange={setDessertQuantity}
-                    onValidationError={(error) => setFieldError('dessert', error)}
+                    readOnly
+                    helperText="Matches soup menu"
+                    error={null}
+                    onQuantityChange={() => {}}
+                    onValidationError={() => {}}
                   />
                 </div>
                 <p id="chef-customers-support" className="chef-customers-field__support">
-                  Enter the expected customer count and the quantity you plan to prepare for each
-                  menu item. These values are independent and do not need to match.
+                  Enter expected customers and planned portions. Dessert is included with the soup
+                  menu and follows the soup quantity automatically.
                 </p>
               </div>
 

@@ -57,6 +57,8 @@
 
 **Participant:** Chef identity comes from the **authenticated GameBus user** — no `chefId` on ACTIVITY.
 
+**Soup menu rule:** Soup and dessert operationally form one soup menu. The chef UI derives `forecastDessert` from `forecastSoup`; both properties remain required on the ACTIVITY for compatibility and are expected to be equal for new submissions.
+
 ---
 
 ## A. Final chefForecast property table
@@ -309,7 +311,7 @@ additionalProperties: false
 Example payload entry:
 
 ```json
-{ "template": "forecastDessert", "obj": { "value": 25 } }
+{ "template": "forecastDessert", "obj": { "value": 40 } }
 ```
 
 ---
@@ -568,7 +570,7 @@ Ensure the provider origin allowlist includes the GitHub Pages host if required 
       { "template": "soupItemId", "obj": { "value": "minced-meat-and-bean-soup" } },
       { "template": "forecastSoup", "obj": { "value": 40 } },
       { "template": "dessertItemId", "obj": { "value": "chocolate-mousse" } },
-      { "template": "forecastDessert", "obj": { "value": 25 } },
+      { "template": "forecastDessert", "obj": { "value": 40 } },
       { "template": "timingStatus", "obj": { "value": "on-time" } },
       { "template": "submittedAt", "obj": { "value": "2026-07-28T12:00:00.000Z" } }
     ]
@@ -595,7 +597,7 @@ With optional values entered:
       { "template": "soupItemId", "obj": { "value": "minced-meat-and-bean-soup" } },
       { "template": "forecastSoup", "obj": { "value": 40 } },
       { "template": "dessertItemId", "obj": { "value": "chocolate-mousse" } },
-      { "template": "forecastDessert", "obj": { "value": 25 } },
+      { "template": "forecastDessert", "obj": { "value": 40 } },
       { "template": "timingStatus", "obj": { "value": "on-time" } },
       { "template": "submittedAt", "obj": { "value": "2026-07-28T12:00:00.000Z" } },
       { "template": "confidence", "obj": { "value": 0.75 } },

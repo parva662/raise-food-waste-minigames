@@ -1305,6 +1305,14 @@ ul {
   color: var(--color-text);
 }
 
+.chef-forecast-row__helper {
+  display: block;
+  margin-top: 0.2rem;
+  font-size: 0.78rem;
+  color: var(--color-text-muted);
+  font-style: italic;
+}
+
 .chef-forecast-row__quantity {
   display: flex;
   align-items: center;

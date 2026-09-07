@@ -43,14 +43,12 @@ async function fillAllForecastFields(
     main: string;
     vegetarian: string;
     soup: string;
-    dessert: string;
   },
 ) {
   await user.type(getExpectedCustomersInput(), values.customers);
   await user.type(getCategoryInput('Main'), values.main);
   await user.type(getCategoryInput('Vegetarian'), values.vegetarian);
   await user.type(getCategoryInput('Soup'), values.soup);
-  await user.type(getCategoryInput('Dessert'), values.dessert);
 }
 
 describe('chef forecast UX', () => {
@@ -77,11 +75,11 @@ describe('chef forecast UX', () => {
     expect(within(form).getByText('customers')).toBeInTheDocument();
   });
 
-  it('shows independent forecast form instruction', () => {
+  it('shows soup-menu forecast form instruction', () => {
     renderChef();
     expect(
       screen.getByText(
-        'Enter the expected customer count and the quantity you plan to prepare for each menu item. These values are independent and do not need to match.',
+        'Enter expected customers and planned portions. Dessert is included with the soup menu and follows the soup quantity automatically.',
       ),
     ).toBeInTheDocument();
   });
@@ -131,7 +129,6 @@ describe('chef forecast UX', () => {
       main: '0',
       vegetarian: '0',
       soup: '0',
-      dessert: '0',
     });
 
     expect(screen.getByRole('button', { name: 'Submit forecast' })).not.toBeDisabled();
@@ -197,7 +194,6 @@ describe('chef forecast UX', () => {
       main: '100',
       vegetarian: '100',
       soup: '50',
-      dessert: '50',
     });
 
     const overview = getForecastOverview();
@@ -216,7 +212,6 @@ describe('chef forecast UX', () => {
       main: '100',
       vegetarian: '100',
       soup: '50',
-      dessert: '50',
     });
 
     expect(screen.queryByText(/meal portions minus/i)).not.toBeInTheDocument();
@@ -258,7 +253,6 @@ describe('chef forecast UX', () => {
       main: '56',
       vegetarian: '2',
       soup: '67',
-      dessert: '65',
     });
 
     expect(submitBtn).not.toBeDisabled();
@@ -280,7 +274,6 @@ describe('chef forecast UX', () => {
       main: '80',
       vegetarian: '0',
       soup: '0',
-      dessert: '0',
     });
 
     const overview = getForecastOverview();
@@ -299,7 +292,6 @@ describe('chef forecast UX', () => {
       main: '120',
       vegetarian: '0',
       soup: '0',
-      dessert: '0',
     });
 
     const submitBtn = screen.getByRole('button', { name: 'Submit forecast' });
@@ -317,7 +309,6 @@ describe('chef forecast UX', () => {
       main: '0',
       vegetarian: '0',
       soup: '0',
-      dessert: '0',
     });
     await user.click(screen.getByRole('button', { name: 'Submit forecast' }));
 
@@ -334,7 +325,6 @@ describe('chef forecast UX', () => {
       main: '0',
       vegetarian: '0',
       soup: '0',
-      dessert: '0',
     });
     await user.click(screen.getByRole('button', { name: 'Submit forecast' }));
     await user.click(screen.getByRole('button', { name: 'Yes, submit zero forecast' }));

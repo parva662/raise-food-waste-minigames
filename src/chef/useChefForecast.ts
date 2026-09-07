@@ -6,7 +6,8 @@ import {
   OperationalCalendarError,
 } from '../services/operationalServiceCalendar';
 import { isGameBusEmbed, tryPostChefActivity, useGameBusEmbed } from '../gamebus';
-import { hasGameBusPostedChefForecastForDate } from '../gamebus/bridge';import { logChefTryPostActivityResult } from '../gamebus/debug/chefGameBusSubmissionDebug';
+import { hasGameBusPostedChefForecastForDate } from '../gamebus/bridge';
+import { logChefTryPostActivityResult } from '../gamebus/debug/chefGameBusSubmissionDebug';
 import { gamebusDevLog } from '../gamebus/devLog';
 import {
   getChefSubmissionWindowStatus,
@@ -82,7 +83,19 @@ function chefReducer(state: ChefForecastState, action: ChefAction): ChefForecast
         submitError: null,
       };
     case 'SET_SOUP':
-      return { ...state, draft: { ...state.draft, soupQuantity: action.value }, submitError: null };
+      return {
+        ...state,
+        draft: {
+          ...state.draft,
+          soupQuantity: action.value,
+          dessertQuantity: action.value,
+        },
+        fieldErrors: {
+          ...state.fieldErrors,
+          dessert: undefined,
+        },
+        submitError: null,
+      };
     case 'SET_DESSERT':
       return {
         ...state,
@@ -237,10 +250,6 @@ export function useChefForecast(clock: Clock = systemClock) {
     dispatch({ type: 'SET_SOUP', value });
   }, []);
 
-  const setDessertQuantity = useCallback((value: number | null) => {
-    dispatch({ type: 'SET_DESSERT', value });
-  }, []);
-
   const setConfidence = useCallback((value: number | null) => {
     dispatch({ type: 'SET_CONFIDENCE', value });
   }, []);
@@ -324,7 +333,6 @@ export function useChefForecast(clock: Clock = systemClock) {
     setMainQuantity,
     setVegetarianQuantity,
     setSoupQuantity,
-    setDessertQuantity,
     setFieldError,
     setCustomersError,
     setConfidence,
