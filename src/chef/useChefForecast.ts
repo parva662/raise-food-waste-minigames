@@ -1,4 +1,4 @@
-import { useReducer, useCallback, useMemo, useEffect, useState } from 'react';
+import { useReducer, useCallback, useMemo, useEffect, useState, useRef } from 'react';
 import { resolveMenuForDate } from '../services/menuResolver';
 import { resolveMealSlotsForDate } from '../services/mealSlots';
 import {
@@ -6,7 +6,7 @@ import {
   OperationalCalendarError,
 } from '../services/operationalServiceCalendar';
 import { isGameBusEmbed, tryPostChefActivity, useGameBusEmbed } from '../gamebus';
-import { logChefTryPostActivityResult } from '../gamebus/debug/chefGameBusSubmissionDebug';
+import { hasGameBusPostedChefForecastForDate } from '../gamebus/bridge';import { logChefTryPostActivityResult } from '../gamebus/debug/chefGameBusSubmissionDebug';
 import { gamebusDevLog } from '../gamebus/devLog';
 import {
   getChefSubmissionWindowStatus,
@@ -50,7 +50,8 @@ type ChefAction =
   | { type: 'SHOW_ZERO_CONFIRM' }
   | { type: 'HIDE_ZERO_CONFIRM' }
   | { type: 'SUBMIT_SUCCESS' }
-  | { type: 'SUBMIT_ERROR'; error: string };
+  | { type: 'SUBMIT_ERROR'; error: string }
+  | { type: 'RESET_FOR_SERVICE_DATE' };
 
 function createInitialState(): ChefForecastState {
   return {
@@ -117,6 +118,8 @@ function chefReducer(state: ChefForecastState, action: ChefAction): ChefForecast
       return { ...state, submitted: true, submitError: null, zeroConfirmOpen: false };
     case 'SUBMIT_ERROR':
       return { ...state, submitError: action.error, zeroConfirmOpen: false };
+    case 'RESET_FOR_SERVICE_DATE':
+      return createInitialState();
     default:
       return state;
   }
@@ -125,11 +128,18 @@ function chefReducer(state: ChefForecastState, action: ChefAction): ChefForecast
 export function useChefForecast(clock: Clock = systemClock) {
   const [state, dispatch] = useReducer(chefReducer, undefined, createInitialState);
   const [now, setNow] = useState(() => clock());
-  const [serviceDateResolution] = useState(() => {
+  const previousServiceDateRef = useRef<string | undefined>(undefined);
+
+  useEffect(() => {
+    const interval = window.setInterval(() => setNow(clock()), 30_000);
+    return () => window.clearInterval(interval);
+  }, [clock]);
+
+  const serviceDateResolution = useMemo(() => {
     try {
       return {
         status: 'resolved' as const,
-        serviceDate: resolveChefForecastServiceDate(clock()),
+        serviceDate: resolveChefForecastServiceDate(now),
       };
     } catch (error) {
       return {
@@ -140,11 +150,22 @@ export function useChefForecast(clock: Clock = systemClock) {
             : 'Could not resolve the kitchen forecast service date.',
       };
     }
-  });
+  }, [now]);
 
   const serviceDate =
     serviceDateResolution.status === 'resolved' ? serviceDateResolution.serviceDate : '';
-  const menuAvailability = useMemo(
+
+  useEffect(() => {
+    if (serviceDateResolution.status !== 'resolved') return;
+    const nextDate = serviceDateResolution.serviceDate;
+    if (
+      previousServiceDateRef.current !== undefined &&
+      previousServiceDateRef.current !== nextDate
+    ) {
+      dispatch({ type: 'RESET_FOR_SERVICE_DATE' });
+    }
+    previousServiceDateRef.current = nextDate;
+  }, [serviceDateResolution]);  const menuAvailability = useMemo(
     () =>
       serviceDateResolution.status === 'resolved'
         ? resolveMenuForDate(serviceDate)
@@ -156,15 +177,9 @@ export function useChefForecast(clock: Clock = systemClock) {
     [serviceDate, serviceDateResolution.status],
   );
   const embedded = isGameBusEmbed();
-  const { taskReady, hasPosted: gameBusPosted } = useGameBusEmbed();
+  const { taskReady } = useGameBusEmbed();
 
-  useEffect(() => {
-    const interval = window.setInterval(() => setNow(clock()), 30_000);
-    return () => window.clearInterval(interval);
-  }, [clock]);
-
-  const submissionWindow = useMemo(() => {
-    if (serviceDateResolution.status !== 'resolved') {
+  const submissionWindow = useMemo(() => {    if (serviceDateResolution.status !== 'resolved') {
       return {
         phase: 'closed' as const,
         countdownTargetIso: null,
@@ -188,8 +203,9 @@ export function useChefForecast(clock: Clock = systemClock) {
 
   const submissionOpen =
     serviceDateResolution.status === 'resolved' && isChefSubmissionAllowed(now, serviceDate);
-  const hasSubmitted = state.submitted || gameBusPosted;
-
+  const gameBusPostedForServiceDate =
+    serviceDate !== '' && hasGameBusPostedChefForecastForDate(serviceDate);
+  const hasSubmitted = state.submitted || gameBusPostedForServiceDate;
   const formInteractive =
     menuAvailability.status === 'available' &&
     submissionOpen &&

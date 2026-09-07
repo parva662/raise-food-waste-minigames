@@ -310,6 +310,35 @@ describe('mapChefForecast / buildChefActivityMessage', () => {
     expect(parentPostMessage).toHaveBeenCalledTimes(1);
     expect(parentPostMessage.mock.calls[0][0].type).toBe('ACTIVITY');
   });
+
+  it('allows posting a forecast for a new target date after an earlier date was posted', () => {
+    resetGameBusBridgeForTests();
+    window.location.hash = '#/chef';
+    ingestTaskForTests(taskFixture);
+    const parentPostMessage = vi.fn();
+    const originalParent = window.parent;
+    Object.defineProperty(window, 'parent', {
+      configurable: true,
+      value: { postMessage: parentPostMessage },
+    });
+
+    const mondaySubmission = { ...submission, targetDate: '2026-08-17' };
+    const tuesdaySubmission = { ...submission, targetDate: '2026-08-18' };
+
+    const mondayResult = tryPostChefActivity(mondaySubmission, draft, slots);
+    const tuesdayResult = tryPostChefActivity(tuesdaySubmission, draft, slots);
+
+    Object.defineProperty(window, 'parent', {
+      configurable: true,
+      value: originalParent,
+    });
+    resetGameBusBridgeForTests();
+    window.location.hash = '';
+
+    expect(mondayResult.ok).toBe(true);
+    expect(tuesdayResult.ok).toBe(true);
+    expect(parentPostMessage).toHaveBeenCalledTimes(2);
+  });
 });
 
 describe('chefForecast optional properties', () => {

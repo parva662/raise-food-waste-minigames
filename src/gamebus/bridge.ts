@@ -44,6 +44,7 @@ type InputCollectionsListener = (data: GameBusInputCollectionsPayload | null) =>
 let taskData: TaskData | null = null;
 let inputCollectionsData: GameBusInputCollectionsPayload | null = null;
 let hasPostedActivity = false;
+let chefForecastPostedTargetDate: string | null = null;
 let submissionInFlight = false;
 let taskListener: TaskListener | null = null;
 let inputCollectionsListener: InputCollectionsListener | null = null;
@@ -246,6 +247,10 @@ export function hasGameBusPostedActivity(): boolean {
   return hasPostedActivity;
 }
 
+export function hasGameBusPostedChefForecastForDate(targetDate: string): boolean {
+  return chefForecastPostedTargetDate === targetDate;
+}
+
 export function isGameBusSubmissionInFlight(): boolean {
   return submissionInFlight;
 }
@@ -301,7 +306,7 @@ export function tryPostChefActivity(
   draft: ChefForecastDraft,
   slots: DailyMealSlots,
 ): { ok: true; message: ActivityMessage } | { ok: false; reason: string } {
-  if (hasPostedActivity) {
+  if (chefForecastPostedTargetDate === submission.targetDate) {
     gamebusDevLog('submission blocked as duplicate');
     return { ok: false, reason: 'duplicate' };
   }
@@ -325,6 +330,7 @@ export function tryPostChefActivity(
     window.parent.postMessage(message, '*');
     logChefPostMessageReturned();
     hasPostedActivity = true;
+    chefForecastPostedTargetDate = submission.targetDate;
     gamebusDevLog('ACTIVITY sent', {
       type: message.type,
       template: message.data.template,
@@ -389,6 +395,7 @@ export function resetGameBusBridgeForTests(): void {
   taskData = null;
   inputCollectionsData = null;
   hasPostedActivity = false;
+  chefForecastPostedTargetDate = null;
   submissionInFlight = false;
   taskListener = null;
   inputCollectionsListener = null;

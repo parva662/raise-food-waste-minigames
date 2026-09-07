@@ -36,6 +36,9 @@ describe('kitchen forecast service date', () => {
     expect(resolveChefForecastServiceDate(helsinki(SERVICE_DATES.mondayAug17, '15:00:00'))).toBe(
       SERVICE_DATES.tuesdayAug18,
     );
+    expect(resolveChefForecastServiceDate(helsinki(SERVICE_DATES.mondayAug17, '15:37:00'))).toBe(
+      SERVICE_DATES.tuesdayAug18,
+    );
   });
 
   it('targets Monday when opened Friday afternoon', () => {
