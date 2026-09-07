@@ -4,6 +4,7 @@ import {
   buildParticipantProgressPeriodView,
   formatCustomerError,
   formatGramsPerCustomer,
+  getChartableProgressBuckets,
   type ProgressChartBucket,
   type ProgressPeriodTab,
   type ProgressPeriodView,
@@ -22,10 +23,23 @@ const TABS: { id: ProgressPeriodTab; label: string }[] = [
 ];
 
 function ProgressBarChart({ buckets }: { buckets: readonly ProgressChartBucket[] }) {
-  const rates = buckets
-    .map((bucket) => bucket.overproductionRateGramsPerCustomer)
-    .filter((value): value is number => value !== null);
-  const maxRate = Math.max(1, ...rates, 0);
+  const chartBuckets = getChartableProgressBuckets(buckets);
+
+  if (chartBuckets.length === 0) {
+    return (
+      <figure className="chef-results-progress-chart" data-testid="progress-bar-chart">
+        <figcaption className="chef-results-progress-chart__caption">
+          Simulated overproduction (g/customer)
+        </figcaption>
+        <p className="chef-results-progress-chart__unavailable" data-testid="progress-chart-unavailable">
+          No chartable normalized performance for this period.
+        </p>
+      </figure>
+    );
+  }
+
+  const rates = chartBuckets.map((bucket) => bucket.overproductionRateGramsPerCustomer!);
+  const maxRate = Math.max(...rates, 1);
 
   return (
     <figure className="chef-results-progress-chart" data-testid="progress-bar-chart">
@@ -34,13 +48,13 @@ function ProgressBarChart({ buckets }: { buckets: readonly ProgressChartBucket[]
       </figcaption>
       <svg
         className="chef-results-progress-chart__svg"
-        viewBox={`0 0 ${Math.max(280, buckets.length * 56)} 140`}
+        viewBox={`0 0 ${Math.max(280, chartBuckets.length * 56)} 140`}
         role="img"
         aria-label="Simulated overproduction per customer"
       >
-        {buckets.map((bucket, index) => {
-          const rate = bucket.overproductionRateGramsPerCustomer ?? 0;
-          const barHeight = rate === 0 ? 2 : (rate / maxRate) * 96;
+        {chartBuckets.map((bucket, index) => {
+          const rate = bucket.overproductionRateGramsPerCustomer!;
+          const barHeight = (rate / maxRate) * 96;
           const x = index * 56 + 12;
           const y = 120 - barHeight;
           const title = bucket.serviceDates
@@ -70,9 +84,7 @@ function ProgressBarChart({ buckets }: { buckets: readonly ProgressChartBucket[]
                 y={y - 4}
                 textAnchor="middle"
               >
-                {bucket.overproductionRateGramsPerCustomer === null
-                  ? '—'
-                  : bucket.overproductionRateGramsPerCustomer.toFixed(1)}
+                {rate.toFixed(1)}
               </text>
               <text
                 className="chef-results-progress-chart__label"

@@ -10,6 +10,7 @@ import {
   buildParticipantProgressServicePoints,
   buildProgressPeriodComparison,
   getCalendarWeekRangeContaining,
+  getChartableProgressBuckets,
   getPreviousCalendarMonthRange,
   getPreviousCalendarWeekRange,
   getPreviousCalendarYearRange,
@@ -219,8 +220,16 @@ describe('participant progress calculations', () => {
     expect(week.summary.buckets.some((bucket) => bucket.label === 'Thu')).toBe(false);
   });
 
-  it('aggregates month buckets with customer weighting and month boundaries', () => {
+  it('aggregates month buckets by Monday–Sunday calendar weeks clipped to the month', () => {
     const points = [
+      staffResultToProgressPoint(
+        staffResult({
+          serviceDate: '2026-07-27',
+          actualCustomers: 100,
+          totalSimulatedOverproductionGrams: 1000,
+          customerForecastAbsoluteError: 2,
+        }),
+      ),
       staffResultToProgressPoint(
         staffResult({
           serviceDate: '2026-07-31',
@@ -239,10 +248,54 @@ describe('participant progress calculations', () => {
       ),
     ];
 
+    expect(getCalendarWeekRangeContaining('2026-07-31')).toEqual({
+      start: '2026-07-27',
+      end: '2026-08-02',
+    });
+    expect(getCalendarWeekRangeContaining('2026-08-01')).toEqual({
+      start: '2026-07-27',
+      end: '2026-08-02',
+    });
+
     const july = buildParticipantProgressPeriodView(points, 'month', '2026-07-31');
-    expect(july.summary.servicesCompleted).toBe(1);
+    expect(july.summary.servicesCompleted).toBe(2);
     expect(july.summary.buckets).toHaveLength(1);
-    expect(july.summary.buckets[0]?.label).toBe('Week 5');
+    expect(july.summary.buckets[0]?.label).toBe('Week 1');
+    expect(july.summary.buckets[0]?.serviceDates).toEqual(['2026-07-27', '2026-07-31']);
+    expect(july.summary.overproductionRateGramsPerCustomer).toBe(10);
+
+    const august = buildParticipantProgressPeriodView(points, 'month', '2026-08-01');
+    expect(august.summary.servicesCompleted).toBe(1);
+    expect(august.summary.buckets).toHaveLength(1);
+    expect(august.summary.buckets[0]?.label).toBe('Week 1');
+    expect(august.summary.buckets[0]?.serviceDates).toEqual(['2026-08-01']);
+    expect(august.summary.overproductionRateGramsPerCustomer).toBe(20);
+  });
+
+  it('excludes invalid normalized values from chartable buckets but keeps completed services', () => {
+    const points = [
+      staffResultToProgressPoint(
+        staffResult({
+          serviceDate: '2026-07-27',
+          actualCustomers: 0,
+          totalSimulatedOverproductionGrams: 500,
+        }),
+      ),
+      staffResultToProgressPoint(
+        staffResult({
+          serviceDate: '2026-07-28',
+          actualCustomers: 100,
+          totalSimulatedOverproductionGrams: 0,
+        }),
+      ),
+    ];
+
+    const week = buildParticipantProgressPeriodView(points, 'week', '2026-07-28');
+    expect(week.summary.servicesCompleted).toBe(2);
+    expect(getChartableProgressBuckets(week.summary.buckets)).toHaveLength(1);
+    expect(getChartableProgressBuckets(week.summary.buckets)[0]?.overproductionRateGramsPerCustomer).toBe(
+      0,
+    );
   });
 
   it('aggregates year buckets by calendar month', () => {
@@ -273,7 +326,7 @@ describe('participant progress calculations', () => {
     expect(noPrevious.noPreviousPeriodMessage).toBe('No previous week to compare yet.');
   });
 
-  it('does not divide by zero when previous normalized rate is zero', () => {
+  it('shows comparison fallback when previous normalized rate is zero', () => {
     const current = aggregateCustomerWeightedRates([
       staffResultToProgressPoint(
         staffResult({ actualCustomers: 100, totalSimulatedOverproductionGrams: 500 }),
@@ -287,6 +340,24 @@ describe('participant progress calculations', () => {
 
     const comparison = buildProgressPeriodComparison(current, previous, 'month');
     expect(comparison.overproductionMessage).toBeNull();
+    expect(comparison.noPreviousPeriodMessage).toBe('No previous month to compare yet.');
+  });
+
+  it('shows comparison fallback when previous services have no valid customer count', () => {
+    const current = aggregateCustomerWeightedRates([
+      staffResultToProgressPoint(
+        staffResult({ actualCustomers: 100, totalSimulatedOverproductionGrams: 500 }),
+      ),
+    ]);
+    const previous = aggregateCustomerWeightedRates([
+      staffResultToProgressPoint(
+        staffResult({ actualCustomers: 0, totalSimulatedOverproductionGrams: 500 }),
+      ),
+    ]);
+
+    const comparison = buildProgressPeriodComparison(current, previous, 'week');
+    expect(comparison.overproductionMessage).toBeNull();
+    expect(comparison.noPreviousPeriodMessage).toBe('No previous week to compare yet.');
   });
 
   it('uses latest duplicate forecast per actor/date from embedded group data', () => {

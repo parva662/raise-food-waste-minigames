@@ -224,10 +224,6 @@ function shortMonthLabel(month: number): string {
   }).format(new Date(Date.UTC(2026, month - 1, 1, 12, 0, 0)));
 }
 
-function monthWeekBucketIndex(dayOfMonth: number): number {
-  return Math.ceil(dayOfMonth / 7);
-}
-
 function buildWeekBuckets(points: readonly ParticipantProgressServicePoint[]): ProgressChartBucket[] {
   return points.map((point) => {
     const aggregate = aggregateCustomerWeightedRates([point]);
@@ -248,24 +244,23 @@ function buildMonthBuckets(
   monthStart: string,
   monthEnd: string,
 ): ProgressChartBucket[] {
-  const grouped = new Map<number, ParticipantProgressServicePoint[]>();
+  const grouped = new Map<string, ParticipantProgressServicePoint[]>();
 
   for (const point of points) {
     if (!isIsoDateWithinRange(point.serviceDate, monthStart, monthEnd)) continue;
-    const { day } = parseIsoParts(point.serviceDate);
-    const bucketIndex = monthWeekBucketIndex(day);
-    const existing = grouped.get(bucketIndex) ?? [];
+    const weekMonday = getCalendarWeekRangeContaining(point.serviceDate).start;
+    const existing = grouped.get(weekMonday) ?? [];
     existing.push(point);
-    grouped.set(bucketIndex, existing);
+    grouped.set(weekMonday, existing);
   }
 
   return [...grouped.entries()]
-    .sort(([left], [right]) => left - right)
-    .map(([bucketIndex, bucketPoints]) => {
+    .sort(([left], [right]) => left.localeCompare(right))
+    .map(([weekMonday, bucketPoints], index) => {
       const aggregate = aggregateCustomerWeightedRates(bucketPoints);
       return {
-        key: `week-${bucketIndex}`,
-        label: `Week ${bucketIndex}`,
+        key: `week-${weekMonday}`,
+        label: `Week ${index + 1}`,
         serviceDates: bucketPoints.map((point) => point.serviceDate),
         overproductionRateGramsPerCustomer: aggregate.overproductionRateGramsPerCustomer,
         shortageRateGramsPerCustomer: aggregate.shortageRateGramsPerCustomer,
@@ -306,16 +301,20 @@ export function buildProgressPeriodComparison(
   previous: ReturnType<typeof aggregateCustomerWeightedRates>,
   periodLabel: 'week' | 'month' | 'year',
 ): ProgressPeriodComparison {
-  const noPreviousPeriodMessage =
-    previous.servicesCompleted === 0
-      ? `No previous ${periodLabel} to compare yet.`
-      : null;
+  const previousRateUnavailable =
+    previous.servicesCompleted === 0 ||
+    previous.overproductionRateGramsPerCustomer === null ||
+    previous.overproductionRateGramsPerCustomer === 0;
+
+  const noPreviousPeriodMessage = previousRateUnavailable
+    ? `No previous ${periodLabel} to compare yet.`
+    : null;
 
   let overproductionMessage: string | null = null;
   if (
-    previous.servicesCompleted > 0 &&
-    previous.overproductionRateGramsPerCustomer !== null &&
+    !previousRateUnavailable &&
     current.overproductionRateGramsPerCustomer !== null &&
+    previous.overproductionRateGramsPerCustomer !== null &&
     previous.overproductionRateGramsPerCustomer > 0
   ) {
     const improvementPercent =
@@ -435,4 +434,11 @@ export function formatGramsPerCustomer(value: number | null): string {
 
 export function formatCustomerError(value: number): string {
   return `${value.toFixed(1)} customers`;
+}
+
+/** Buckets with a valid customer-normalized overproduction rate for chart rendering. */
+export function getChartableProgressBuckets(
+  buckets: readonly ProgressChartBucket[],
+): ProgressChartBucket[] {
+  return buckets.filter((bucket) => bucket.overproductionRateGramsPerCustomer !== null);
 }

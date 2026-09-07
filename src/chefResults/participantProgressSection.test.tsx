@@ -74,6 +74,37 @@ describe('ParticipantProgressSection', () => {
     );
   });
 
+  it('does not render a bar for unavailable normalized values', () => {
+    const points = [
+      {
+        serviceDate: '2026-07-27',
+        actualCustomers: 0,
+        simulatedOverproductionGrams: 500,
+        simulatedShortageGrams: 0,
+        simulatedOverproductionGramsPerCustomer: null,
+        simulatedShortageGramsPerCustomer: null,
+        customerForecastAbsoluteError: 1,
+      },
+      {
+        serviceDate: '2026-07-28',
+        actualCustomers: 100,
+        simulatedOverproductionGrams: 0,
+        simulatedShortageGrams: 0,
+        simulatedOverproductionGramsPerCustomer: 0,
+        simulatedShortageGramsPerCustomer: 0,
+        customerForecastAbsoluteError: 2,
+      },
+    ];
+
+    render(<ParticipantProgressSection servicePoints={points} asOfServiceDate="2026-07-28" />);
+
+    expect(screen.getByTestId('progress-bar-chart')).toBeInTheDocument();
+    expect(screen.queryByTestId('progress-chart-unavailable')).not.toBeInTheDocument();
+    expect(screen.getByText('0.0')).toBeInTheDocument();
+    const bars = document.querySelectorAll('.chef-results-progress-chart__bar');
+    expect(bars).toHaveLength(1);
+  });
+
   it('does not render coworker names', () => {
     const points = buildParticipantProgressServicePoints('fixture-user-c', '2026-07-31');
     const { container } = render(

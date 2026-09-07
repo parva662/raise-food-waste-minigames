@@ -3029,6 +3029,12 @@ ul {
   fill: var(--color-text-secondary);
 }
 
+.chef-results-progress-chart__unavailable {
+  margin: 0;
+  font-size: 0.875rem;
+  color: var(--color-text-secondary);
+}
+
 .chef-results-progress-comparison {
   margin: 0 0 var(--spacing-sm);
   font-weight: 600;
