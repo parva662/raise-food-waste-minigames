@@ -2357,6 +2357,61 @@ ul {
   color: var(--color-text-secondary);
 }
 
+.chef-results-dashboard-intro {
+  margin-bottom: var(--spacing-md);
+}
+
+.chef-results-dashboard-intro__title {
+  margin: 0 0 var(--spacing-xs);
+  font-size: 1.25rem;
+  font-weight: 700;
+}
+
+.chef-results-dashboard-intro__body,
+.chef-results-dashboard-intro__note {
+  margin: 0 0 var(--spacing-xs);
+  color: var(--color-text-secondary);
+  font-size: 0.9375rem;
+  line-height: 1.5;
+}
+
+.chef-results-dashboard-intro__note {
+  font-size: 0.875rem;
+}
+
+.chef-results-empty-state {
+  margin: var(--spacing-md) 0;
+  padding: var(--spacing-md);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: rgba(255, 255, 255, 0.6);
+}
+
+.chef-results-empty-state__title {
+  margin: 0 0 var(--spacing-xs);
+  font-weight: 700;
+}
+
+.chef-results-empty-state__body {
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-size: 0.9375rem;
+}
+
+.chef-results-debug-panel {
+  margin-top: var(--spacing-lg);
+  padding: var(--spacing-sm);
+  border: 1px dashed var(--color-border);
+  border-radius: var(--radius-sm);
+}
+
+.chef-results-debug-panel > summary {
+  cursor: pointer;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+}
+
 /* Participant results — gamified feedback dashboard */
 .chef-results-page--participant {
   --chef-results-shortage: #7c3aed;

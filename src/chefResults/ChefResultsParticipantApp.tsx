@@ -10,10 +10,11 @@ import { TeamComparisonSection } from './components/participant/TeamComparisonSe
 import { YourWeekSection } from './components/participant/YourWeekSection';
 import { buildFixtureKitchenProgress } from './adapters/fixtureCalculationSource';
 import {
-  buildGroupKitchenProgress,
+  buildParticipantKitchenProgress,
   EMPTY_KITCHEN_PROGRESS,
-  getGroupResultServiceDates,
+  getParticipantGroupResultServiceDates,
 } from './adapters/groupCalculationSource';
+import { isChefResultsGameBusDebugMode } from '../gamebus/chefResultsInvestigation';
 import { getFixtureCurrentUserId } from './currentUserContext';
 import {
   buildParticipantWeekSummary,
@@ -38,17 +39,15 @@ export function ChefResultsParticipantApp() {
   const { user: authenticatedUser } = useGameBusAuthenticatedUser();
   const isEmbeddedLoading = embedded && !inputCollectionsReady;
   const fixtureUserId = getFixtureCurrentUserId();
-  const currentUserId = embedded
-    ? authenticatedUser?.id ?? ''
-    : fixtureUserId;
+  const currentUserId = embedded ? authenticatedUser?.id ?? '' : fixtureUserId;
 
   const serviceDates = useMemo(() => {
     if (isEmbeddedLoading) return [];
     if (embedded && inputCollectionsReady) {
-      return getGroupResultServiceDates(inputCollections);
+      return getParticipantGroupResultServiceDates(inputCollections, currentUserId);
     }
     return getParticipantResultServiceDates(fixtureUserId);
-  }, [embedded, fixtureUserId, inputCollections, inputCollectionsReady, isEmbeddedLoading]);
+  }, [embedded, fixtureUserId, inputCollections, inputCollectionsReady, isEmbeddedLoading, currentUserId]);
 
   const [selectedDate, setSelectedDate] = useState<string>('');
 
@@ -67,8 +66,10 @@ export function ChefResultsParticipantApp() {
   const ownResult = isEmbeddedLoading
     ? null
     : findParticipantDailyResult(currentUserId, selectedDate, dailyResults);
+  const hasParticipantResults = serviceDates.length > 0;
+
   const weekSummary = useMemo(() => {
-    if (isEmbeddedLoading) return EMPTY_PARTICIPANT_WEEK_SUMMARY;
+    if (isEmbeddedLoading || !hasParticipantResults) return EMPTY_PARTICIPANT_WEEK_SUMMARY;
     if (embedded && inputCollectionsReady) {
       return buildParticipantWeekSummary(currentUserId, inputCollections);
     }
@@ -77,17 +78,26 @@ export function ChefResultsParticipantApp() {
     currentUserId,
     embedded,
     fixtureUserId,
+    hasParticipantResults,
     inputCollections,
     inputCollectionsReady,
     isEmbeddedLoading,
   ]);
+
   const kitchenProgress = useMemo(() => {
-    if (isEmbeddedLoading) return EMPTY_KITCHEN_PROGRESS;
+    if (isEmbeddedLoading || !hasParticipantResults) return EMPTY_KITCHEN_PROGRESS;
     if (embedded && inputCollectionsReady) {
-      return buildGroupKitchenProgress(inputCollections);
+      return buildParticipantKitchenProgress(inputCollections, currentUserId);
     }
     return buildFixtureKitchenProgress();
-  }, [embedded, inputCollections, inputCollectionsReady, isEmbeddedLoading]);
+  }, [
+    currentUserId,
+    embedded,
+    hasParticipantResults,
+    inputCollections,
+    inputCollectionsReady,
+    isEmbeddedLoading,
+  ]);
 
   const teamBenchmark =
     dailyResults && dailyResults.staffResults.length > 0
@@ -97,19 +107,28 @@ export function ChefResultsParticipantApp() {
     ownResult && teamBenchmark
       ? buildParticipantComparisonInsights(ownResult, teamBenchmark)
       : null;
-  const showResultContent = !isEmbeddedLoading && resultsState.status === 'ready';
+  const showResultContent = !isEmbeddedLoading && resultsState.status === 'ready' && hasParticipantResults;
+  const showEmptyState = !isEmbeddedLoading && embedded && !hasParticipantResults;
 
   return (
     <div
       className="chef-results-page chef-results-page--participant"
       data-testid="chef-results-participant-page"
     >
-      <GameBusUserDiagnostic
-        selectedDate={selectedDate}
-        currentUserId={currentUserId}
-        hasOwnResult={ownResult !== null}
-      />
       {!embedded ? <FixtureCurrentUserSelector /> : null}
+
+      <header className="chef-results-dashboard-intro" data-testid="participant-dashboard-intro">
+        <h1 className="chef-results-dashboard-intro__title">Kitchen Staff Dashboard</h1>
+        <p className="chef-results-dashboard-intro__body">
+          After each service is closed, this dashboard compares your forecast with the actual kitchen
+          outcome for the same service date. You can see the real kitchen overproduction, what your
+          forecast would have produced, and how your result compares anonymously with other
+          participating staff.
+        </p>
+        <p className="chef-results-dashboard-intro__note">
+          Results appear only when both your forecast and the service closeout are available.
+        </p>
+      </header>
 
       {isEmbeddedLoading ? (
         <p className="chef-results-empty" data-testid="chef-results-pending">
@@ -117,35 +136,41 @@ export function ChefResultsParticipantApp() {
         </p>
       ) : null}
 
-      <div className="chef-results-toolbar">
-        <label className="chef-results-date-picker">
-          <span>Service date</span>
-          <select
-            value={selectedDate}
-            onChange={(event) => setSelectedDate(event.target.value)}
-            data-testid="chef-results-date-select"
-            disabled={serviceDates.length === 0}
-          >
-            {serviceDates.map((date) => (
-              <option key={date} value={date}>
-                {formatServiceDateShort(date)}
-              </option>
-            ))}
-          </select>
-        </label>
-      </div>
+      {showEmptyState ? (
+        <div className="chef-results-empty-state" data-testid="participant-no-completed-results">
+          <p className="chef-results-empty-state__title">No completed forecast results yet.</p>
+          <p className="chef-results-empty-state__body">
+            Your result will appear after the service you forecast has been closed.
+          </p>
+        </div>
+      ) : null}
 
-      {selectedDate ? <ParticipantHeader serviceDate={selectedDate} /> : null}
+      {hasParticipantResults ? (
+        <div className="chef-results-toolbar">
+          <label className="chef-results-date-picker">
+            <span>Service date</span>
+            <select
+              value={selectedDate}
+              onChange={(event) => setSelectedDate(event.target.value)}
+              data-testid="chef-results-date-select"
+            >
+              {serviceDates.map((date) => (
+                <option key={date} value={date}>
+                  {formatServiceDateShort(date)}
+                </option>
+              ))}
+            </select>
+          </label>
+        </div>
+      ) : null}
+
+      {selectedDate && hasParticipantResults ? (
+        <ParticipantHeader serviceDate={selectedDate} />
+      ) : null}
 
       {showResultContent && !dailyResults ? (
         <p className="chef-results-empty" data-testid="chef-results-unavailable">
           Results are not available yet for this service date.
-        </p>
-      ) : null}
-
-      {showResultContent && dailyResults && !ownResult ? (
-        <p className="chef-results-empty" data-testid="participant-no-result">
-          You did not submit a forecast for this service date.
         </p>
       ) : null}
 
@@ -163,8 +188,19 @@ export function ChefResultsParticipantApp() {
         </>
       ) : null}
 
-      {!isEmbeddedLoading ? <YourWeekSection week={weekSummary} /> : null}
-      {!isEmbeddedLoading ? <KitchenProgressSection progress={kitchenProgress} /> : null}
+      {hasParticipantResults ? <YourWeekSection week={weekSummary} /> : null}
+      {hasParticipantResults ? <KitchenProgressSection progress={kitchenProgress} /> : null}
+
+      {isChefResultsGameBusDebugMode() ? (
+        <details className="chef-results-debug-panel" data-testid="chef-results-debug-panel">
+          <summary>GameBus debug</summary>
+          <GameBusUserDiagnostic
+            selectedDate={selectedDate}
+            currentUserId={currentUserId}
+            hasOwnResult={ownResult !== null}
+          />
+        </details>
+      ) : null}
     </div>
   );
 }

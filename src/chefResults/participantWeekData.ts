@@ -1,6 +1,9 @@
 import type { GameBusInputCollectionsPayload } from '../gamebus/types';
 import { buildAllFixtureDailyServiceResults } from './adapters/fixtureCalculationSource';
-import { buildAllGroupDailyServiceResults } from './adapters/groupCalculationSource';
+import {
+  buildGroupDailyServiceResults,
+  getParticipantGroupResultServiceDates,
+} from './adapters/groupCalculationSource';
 import type { DailyServiceResults, StaffDailyResult } from './types';
 
 export type ParticipantWeekPoint = {
@@ -70,11 +73,14 @@ export function buildParticipantWeekSummary(
   userId: string,
   inputCollections?: GameBusInputCollectionsPayload | null,
 ): ParticipantWeekSummary {
-  const days =
-    inputCollections !== undefined
-      ? buildAllGroupDailyServiceResults(inputCollections)
-      : buildAllFixtureDailyServiceResults();
-  return buildSummaryFromDays(userId, days);
+  if (inputCollections !== undefined) {
+    const participantDates = getParticipantGroupResultServiceDates(inputCollections, userId);
+    const days = participantDates
+      .map((date) => buildGroupDailyServiceResults(inputCollections, date))
+      .filter((result): result is DailyServiceResults => result !== null);
+    return buildSummaryFromDays(userId, days);
+  }
+  return buildSummaryFromDays(userId, buildAllFixtureDailyServiceResults());
 }
 
 export function findParticipantDailyResult(

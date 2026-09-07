@@ -102,6 +102,36 @@ export function getGroupResultServiceDates(
   return dates.sort();
 }
 
+/** Service dates where the authenticated participant has a valid forecast and a matching closeout. */
+export function getParticipantGroupResultServiceDates(
+  inputCollections: GameBusInputCollectionsPayload | null,
+  authenticatedUserId: string,
+): readonly string[] {
+  if (!authenticatedUserId) return [];
+
+  const { chefForecasts, wasteMeasurements } = parseGroupKitchenActivities(inputCollections);
+  const closeoutDates = new Set(wasteMeasurements.map((entry) => entry.serviceDate));
+  const dates: string[] = [];
+
+  for (const date of closeoutDates) {
+    const forecastsForDate = selectForecastsForDate(chefForecasts, date);
+    if (forecastsForDate.some((forecast) => forecast.actorId === authenticatedUserId)) {
+      dates.push(date);
+    }
+  }
+
+  return dates.sort();
+}
+
+export function getLatestParticipantGroupResultDate(
+  inputCollections: GameBusInputCollectionsPayload | null,
+  authenticatedUserId: string,
+): string | null {
+  const dates = getParticipantGroupResultServiceDates(inputCollections, authenticatedUserId);
+  if (dates.length === 0) return null;
+  return dates[dates.length - 1]!;
+}
+
 export function buildGroupDailyServiceResults(
   inputCollections: GameBusInputCollectionsPayload | null,
   serviceDate: string,
@@ -153,6 +183,26 @@ export function buildGroupKitchenProgress(
   inputCollections: GameBusInputCollectionsPayload | null,
 ): KitchenProgressSummary {
   const days = buildAllGroupDailyServiceResults(inputCollections);
+  return buildKitchenProgressFromDays(days);
+}
+
+export function buildParticipantKitchenProgress(
+  inputCollections: GameBusInputCollectionsPayload | null,
+  userId: string,
+): KitchenProgressSummary {
+  const participantDates = getParticipantGroupResultServiceDates(inputCollections, userId);
+  if (participantDates.length === 0) {
+    return EMPTY_KITCHEN_PROGRESS;
+  }
+
+  const days = participantDates
+    .map((date) => buildGroupDailyServiceResults(inputCollections, date))
+    .filter((result): result is DailyServiceResults => result !== null);
+
+  return buildKitchenProgressFromDays(days);
+}
+
+function buildKitchenProgressFromDays(days: DailyServiceResults[]): KitchenProgressSummary {
   if (days.length === 0) {
     return { servicesCompletedCount: 0, anonymousTeamAverageOverproductionGrams: 0 };
   }

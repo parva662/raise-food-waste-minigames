@@ -47,8 +47,6 @@ export function GameBusUserDiagnostic({
 
   return (
     <div className="chef-results-dev-user" data-testid="gamebus-user-diagnostic">
-      <h3 className="chef-results-dev-user__title">GameBus debug</h3>
-
       <dl className="chef-results-dev-user__details">
         <div>
           <dt>{frontendDiagnosticId.label}</dt>

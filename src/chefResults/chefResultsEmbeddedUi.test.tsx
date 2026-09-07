@@ -124,7 +124,7 @@ describe('embedded chef results UI', () => {
     vi.unstubAllEnvs();
   });
 
-  it('shows all calculable service dates in the participant dropdown', () => {
+  it('shows participant-completed service dates in the participant dropdown', () => {
     ingestInputCollectionsForTests(embeddedKitchenPayload());
     render(<ChefResultsParticipantApp />);
 
@@ -144,17 +144,19 @@ describe('embedded chef results UI', () => {
     expect(screen.queryByText('coworker-user')).not.toBeInTheDocument();
   });
 
-  it('keeps calculable dates visible when the current user has no forecast', () => {
+  it('shows empty state when the current user has no completed personal results', () => {
     ingestInputCollectionsForTests(
       embeddedKitchenPayload({ includeCurrentUserForecast: false, includeCoworkerForecast: true }),
     );
     render(<ChefResultsParticipantApp />);
 
-    const select = screen.getByTestId('chef-results-date-select') as HTMLSelectElement;
-    expect(select.value).toBe(serviceDate);
-    expect(screen.getByTestId('participant-no-result')).toHaveTextContent(
-      'You did not submit a forecast for this service date.',
+    expect(screen.queryByTestId('chef-results-date-select')).not.toBeInTheDocument();
+    expect(screen.getByTestId('participant-no-completed-results')).toHaveTextContent(
+      'No completed forecast results yet.',
     );
+    expect(screen.queryByTestId('kitchen-progress-section')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('your-week-section')).not.toBeInTheDocument();
+    expect(screen.queryByText('You did not submit a forecast for this service date.')).not.toBeInTheDocument();
   });
 
   it('uses real embedded kitchen progress instead of fixture leakage', () => {
@@ -174,20 +176,27 @@ describe('embedded chef results UI', () => {
     expect(screen.getByTestId('staff-result-coworker-user')).toHaveTextContent('Coworker Chef');
   });
 
-  it('shows parser diagnostics only in debug mode', () => {
+  it('shows parser diagnostics only in debug mode at the bottom', () => {
     window.location.hash = '#/chef-results?gamebusDebug=1';
     ingestInputCollectionsForTests(embeddedKitchenPayload());
     render(<ChefResultsParticipantApp />);
 
+    const debugPanel = screen.getByTestId('chef-results-debug-panel');
+    expect(debugPanel.tagName).toBe('DETAILS');
+    expect(debugPanel).not.toHaveAttribute('open');
     expect(screen.getByTestId('gamebus-kitchen-diagnostics')).toBeInTheDocument();
     expect(screen.getByTestId('debug-calculable-dates')).toHaveTextContent(serviceDate);
     expect(screen.getByTestId('debug-current-user-has-result')).toHaveTextContent('yes');
+
+    const outcome = screen.getByTestId('actual-kitchen-outcome-section');
+    expect(outcome.compareDocumentPosition(debugPanel) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   });
 
   it('hides parser diagnostics in normal participant mode', () => {
     ingestInputCollectionsForTests(embeddedKitchenPayload());
     render(<ChefResultsParticipantApp />);
 
+    expect(screen.queryByTestId('chef-results-debug-panel')).not.toBeInTheDocument();
     expect(screen.queryByTestId('gamebus-kitchen-diagnostics')).not.toBeInTheDocument();
   });
 });
@@ -229,13 +238,10 @@ describe('embedded chef results loading boundary', () => {
     expect(screen.queryByTestId('team-comparison-section')).not.toBeInTheDocument();
   });
 
-  it('keeps the service-date dropdown empty while INPUT_COLLECTIONS is pending', () => {
+  it('does not render the service-date dropdown while INPUT_COLLECTIONS is pending', () => {
     render(<ChefResultsParticipantApp />);
 
-    const select = screen.getByTestId('chef-results-date-select') as HTMLSelectElement;
-    expect(select.options).toHaveLength(0);
-    expect(select.value).toBe('');
-    expect(select.disabled).toBe(true);
+    expect(screen.queryByTestId('chef-results-date-select')).not.toBeInTheDocument();
   });
 
   it('does not render fixture kitchen progress while INPUT_COLLECTIONS is pending', () => {

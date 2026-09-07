@@ -13,7 +13,9 @@ import {
   buildGroupDailyServiceResults,
   buildGroupKitchenDiagnostics,
   buildGroupKitchenProgress,
+  buildParticipantKitchenProgress,
   getGroupResultServiceDates,
+  getParticipantGroupResultServiceDates,
 } from './groupCalculationSource';
 import { parseGameBusWasteMeasurementActivities, selectWasteMeasurementForDate } from './parseGameBusWasteMeasurement';
 import { gameBusWasteMeasurementToCalculationInput } from './wasteMeasurementAdapter';
@@ -325,5 +327,202 @@ describe('group kitchen activities integration', () => {
     expect(diagnostics.calculableResultDates).toEqual([serviceDate]);
     expect(diagnostics.forecastTargetDates).toEqual([serviceDate]);
     expect(diagnostics.wasteServiceDates).toEqual([serviceDate]);
+  });
+
+  it('excludes group result dates where the authenticated user has no forecast', () => {
+    const sep2 = '2026-09-02';
+    const inputCollections = {
+      [KITCHEN_GROUP_INPUT_COLLECTION_KEY]: {
+        [KITCHEN_GROUP_ACTIVITIES_REQUEST_KEY]: [
+          buildAnonymizedChefForecastActivity({
+            actorId: 'coworker',
+            actorName: 'Coworker',
+            targetDate: sep2,
+          }),
+          wasteMeasurementActivity({
+            properties: [
+              { template: { slug: 'serviceDate' }, value: { value: sep2 } },
+              { template: { slug: 'actualCustomers' }, value: { value: 150 } },
+              { template: { slug: 'mainItemId' }, value: { value: 'meatballs' } },
+              { template: { slug: 'preparedMainQuantity' }, value: { value: 110 } },
+              { template: { slug: 'vegetarianItemId' }, value: { value: 'quorn' } },
+              { template: { slug: 'preparedVegetarianQuantity' }, value: { value: 52 } },
+              { template: { slug: 'soupItemId' }, value: { value: 'pumpkin-soup' } },
+              { template: { slug: 'preparedSoupQuantity' }, value: { value: 40 } },
+              { template: { slug: 'dessertItemId' }, value: { value: 'apple-compote' } },
+              { template: { slug: 'preparedDessertQuantity' }, value: { value: 35 } },
+              { template: { slug: 'overproductionMeatKg' }, value: { value: 0.85 } },
+              { template: { slug: 'overproductionVegetarianKg' }, value: { value: 0.36 } },
+              { template: { slug: 'overproductionSoupKg' }, value: { value: 0.5 } },
+              { template: { slug: 'overproductionDessertKg' }, value: { value: 0.18 } },
+              { template: { slug: 'submittedAt' }, value: { value: '2026-09-02T15:00:00.000Z' } },
+            ],
+          }),
+        ],
+      },
+    };
+
+    expect(getGroupResultServiceDates(inputCollections)).toEqual([sep2]);
+    expect(getParticipantGroupResultServiceDates(inputCollections, 'staff1')).toEqual([]);
+  });
+
+  it('returns no participant dates when the user forecast exists but closeout is missing', () => {
+    const sep8 = '2026-09-08';
+    const inputCollections = {
+      [KITCHEN_GROUP_INPUT_COLLECTION_KEY]: {
+        [KITCHEN_GROUP_ACTIVITIES_REQUEST_KEY]: [
+          buildAnonymizedChefForecastActivity({
+            actorId: 'staff1',
+            actorName: 'Staff One',
+            targetDate: sep8,
+          }),
+        ],
+      },
+    };
+
+    expect(getParticipantGroupResultServiceDates(inputCollections, 'staff1')).toEqual([]);
+  });
+
+  it('never pairs forecasts with closeouts from different service dates', () => {
+    const sep7 = '2026-09-07';
+    const sep8 = '2026-09-08';
+    const inputCollections = {
+      [KITCHEN_GROUP_INPUT_COLLECTION_KEY]: {
+        [KITCHEN_GROUP_ACTIVITIES_REQUEST_KEY]: [
+          buildAnonymizedChefForecastActivity({
+            actorId: 'staff1',
+            actorName: 'Staff One',
+            targetDate: sep8,
+          }),
+          wasteMeasurementActivity({
+            properties: [
+              { template: { slug: 'serviceDate' }, value: { value: sep7 } },
+              { template: { slug: 'actualCustomers' }, value: { value: 140 } },
+              { template: { slug: 'mainItemId' }, value: { value: 'meatballs' } },
+              { template: { slug: 'preparedMainQuantity' }, value: { value: 110 } },
+              { template: { slug: 'vegetarianItemId' }, value: { value: 'quorn' } },
+              { template: { slug: 'preparedVegetarianQuantity' }, value: { value: 50 } },
+              { template: { slug: 'soupItemId' }, value: { value: 'pumpkin-soup' } },
+              { template: { slug: 'preparedSoupQuantity' }, value: { value: 40 } },
+              { template: { slug: 'dessertItemId' }, value: { value: 'apple-compote' } },
+              { template: { slug: 'preparedDessertQuantity' }, value: { value: 40 } },
+              { template: { slug: 'overproductionMeatKg' }, value: { value: 0.3 } },
+              { template: { slug: 'overproductionVegetarianKg' }, value: { value: 0.6 } },
+              { template: { slug: 'overproductionSoupKg' }, value: { value: 0.1 } },
+              { template: { slug: 'overproductionDessertKg' }, value: { value: 0.02 } },
+              { template: { slug: 'submittedAt' }, value: { value: '2026-09-07T15:00:00.000Z' } },
+            ],
+          }),
+        ],
+      },
+    };
+
+    expect(getGroupResultServiceDates(inputCollections)).toEqual([]);
+    expect(getParticipantGroupResultServiceDates(inputCollections, 'staff1')).toEqual([]);
+    expect(buildGroupDailyServiceResults(inputCollections, sep8)).toBeNull();
+  });
+
+  it('includes participant dates only when forecast and closeout share the same service date', () => {
+    const sep8 = '2026-09-08';
+    const inputCollections = {
+      [KITCHEN_GROUP_INPUT_COLLECTION_KEY]: {
+        [KITCHEN_GROUP_ACTIVITIES_REQUEST_KEY]: [
+          buildAnonymizedChefForecastActivity({
+            actorId: 'staff1',
+            actorName: 'Staff One',
+            targetDate: sep8,
+          }),
+          wasteMeasurementActivity({
+            properties: [
+              { template: { slug: 'serviceDate' }, value: { value: sep8 } },
+              { template: { slug: 'actualCustomers' }, value: { value: 150 } },
+              { template: { slug: 'mainItemId' }, value: { value: 'meatballs' } },
+              { template: { slug: 'preparedMainQuantity' }, value: { value: 110 } },
+              { template: { slug: 'vegetarianItemId' }, value: { value: 'quorn' } },
+              { template: { slug: 'preparedVegetarianQuantity' }, value: { value: 52 } },
+              { template: { slug: 'soupItemId' }, value: { value: 'pumpkin-soup' } },
+              { template: { slug: 'preparedSoupQuantity' }, value: { value: 40 } },
+              { template: { slug: 'dessertItemId' }, value: { value: 'apple-compote' } },
+              { template: { slug: 'preparedDessertQuantity' }, value: { value: 35 } },
+              { template: { slug: 'overproductionMeatKg' }, value: { value: 0.85 } },
+              { template: { slug: 'overproductionVegetarianKg' }, value: { value: 0.36 } },
+              { template: { slug: 'overproductionSoupKg' }, value: { value: 0.5 } },
+              { template: { slug: 'overproductionDessertKg' }, value: { value: 0.18 } },
+              { template: { slug: 'submittedAt' }, value: { value: '2026-09-08T15:00:00.000Z' } },
+            ],
+          }),
+        ],
+      },
+    };
+
+    expect(getParticipantGroupResultServiceDates(inputCollections, 'staff1')).toEqual([sep8]);
+  });
+
+  it('uses the latest duplicate forecast per actor for participant-visible dates', () => {
+    const inputCollections = {
+      [KITCHEN_GROUP_INPUT_COLLECTION_KEY]: {
+        [KITCHEN_GROUP_ACTIVITIES_REQUEST_KEY]: [
+          buildAnonymizedChefForecastActivity({
+            id: 'f-old',
+            actorId: 'staff1',
+            actorName: 'Older Forecast',
+            targetDate: serviceDate,
+            submittedAt: '2026-07-28T10:00:00.000Z',
+            forecastTotalCustomers: 100,
+          }),
+          buildAnonymizedChefForecastActivity({
+            id: 'f-new',
+            actorId: 'staff1',
+            actorName: 'Latest Forecast',
+            targetDate: serviceDate,
+            submittedAt: '2026-07-28T16:00:00.000Z',
+            forecastTotalCustomers: 120,
+          }),
+          wasteMeasurementActivity(),
+        ],
+      },
+    };
+
+    expect(getParticipantGroupResultServiceDates(inputCollections, 'staff1')).toEqual([serviceDate]);
+    const daily = buildGroupDailyServiceResults(inputCollections, serviceDate);
+    const own = findParticipantDailyResult('staff1', serviceDate, daily);
+    expect(own?.forecastCustomers).toBe(120);
+  });
+
+  it('builds participant kitchen progress only from participant-visible dates', () => {
+    const sep2 = '2026-09-02';
+    const inputCollections = {
+      [KITCHEN_GROUP_INPUT_COLLECTION_KEY]: {
+        [KITCHEN_GROUP_ACTIVITIES_REQUEST_KEY]: [
+          buildAnonymizedChefForecastActivity({
+            actorId: 'coworker',
+            actorName: 'Coworker',
+            targetDate: sep2,
+          }),
+          wasteMeasurementActivity({
+            properties: [
+              { template: { slug: 'serviceDate' }, value: { value: sep2 } },
+              { template: { slug: 'actualCustomers' }, value: { value: 150 } },
+              { template: { slug: 'mainItemId' }, value: { value: 'meatballs' } },
+              { template: { slug: 'preparedMainQuantity' }, value: { value: 110 } },
+              { template: { slug: 'vegetarianItemId' }, value: { value: 'quorn' } },
+              { template: { slug: 'preparedVegetarianQuantity' }, value: { value: 52 } },
+              { template: { slug: 'soupItemId' }, value: { value: 'pumpkin-soup' } },
+              { template: { slug: 'preparedSoupQuantity' }, value: { value: 40 } },
+              { template: { slug: 'dessertItemId' }, value: { value: 'apple-compote' } },
+              { template: { slug: 'preparedDessertQuantity' }, value: { value: 35 } },
+              { template: { slug: 'overproductionMeatKg' }, value: { value: 0.85 } },
+              { template: { slug: 'overproductionVegetarianKg' }, value: { value: 0.36 } },
+              { template: { slug: 'overproductionSoupKg' }, value: { value: 0.5 } },
+              { template: { slug: 'overproductionDessertKg' }, value: { value: 0.18 } },
+              { template: { slug: 'submittedAt' }, value: { value: '2026-09-02T15:00:00.000Z' } },
+            ],
+          }),
+        ],
+      },
+    };
+
+    expect(buildParticipantKitchenProgress(inputCollections, 'staff1').servicesCompletedCount).toBe(0);
+    expect(buildGroupKitchenProgress(inputCollections).servicesCompletedCount).toBe(1);
   });
 });

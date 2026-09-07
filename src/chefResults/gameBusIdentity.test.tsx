@@ -157,7 +157,7 @@ describe('GameBus authenticated user on chef results', () => {
       DEFAULT_FIXTURE_CURRENT_USER_ID,
     );
     expect(screen.queryByTestId('fixture-current-user-selector')).not.toBeInTheDocument();
-    expect(screen.getByTestId('chef-results-unavailable')).toBeInTheDocument();
+    expect(screen.getByTestId('participant-no-completed-results')).toBeInTheDocument();
   });
 
   it('logs authenticated user when gamebusDebug=1', () => {
