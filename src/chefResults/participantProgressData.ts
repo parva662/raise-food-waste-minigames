@@ -224,6 +224,38 @@ function shortMonthLabel(month: number): string {
   }).format(new Date(Date.UTC(2026, month - 1, 1, 12, 0, 0)));
 }
 
+/** Monday starts for each Monday–Sunday week intersecting a calendar month, in order. */
+export function getCalendarWeekMondaysForMonth(
+  monthStart: string,
+  monthEnd: string,
+): readonly string[] {
+  const mondays: string[] = [];
+  let weekMonday = getCalendarWeekRangeContaining(monthStart).start;
+
+  while (true) {
+    const weekEnd = addDaysToIsoDate(weekMonday, 6);
+    if (weekMonday > monthEnd) break;
+    if (weekEnd >= monthStart) {
+      mondays.push(weekMonday);
+    }
+    if (weekEnd >= monthEnd) break;
+    weekMonday = addDaysToIsoDate(weekMonday, 7);
+  }
+
+  return mondays;
+}
+
+function getMonthCalendarWeekLabelMap(
+  monthStart: string,
+  monthEnd: string,
+): ReadonlyMap<string, number> {
+  const labels = new Map<string, number>();
+  for (const [index, weekMonday] of getCalendarWeekMondaysForMonth(monthStart, monthEnd).entries()) {
+    labels.set(weekMonday, index + 1);
+  }
+  return labels;
+}
+
 function buildWeekBuckets(points: readonly ParticipantProgressServicePoint[]): ProgressChartBucket[] {
   return points.map((point) => {
     const aggregate = aggregateCustomerWeightedRates([point]);
@@ -244,6 +276,7 @@ function buildMonthBuckets(
   monthStart: string,
   monthEnd: string,
 ): ProgressChartBucket[] {
+  const weekLabels = getMonthCalendarWeekLabelMap(monthStart, monthEnd);
   const grouped = new Map<string, ParticipantProgressServicePoint[]>();
 
   for (const point of points) {
@@ -256,11 +289,12 @@ function buildMonthBuckets(
 
   return [...grouped.entries()]
     .sort(([left], [right]) => left.localeCompare(right))
-    .map(([weekMonday, bucketPoints], index) => {
+    .map(([weekMonday, bucketPoints]) => {
       const aggregate = aggregateCustomerWeightedRates(bucketPoints);
+      const weekNumber = weekLabels.get(weekMonday);
       return {
         key: `week-${weekMonday}`,
-        label: `Week ${index + 1}`,
+        label: weekNumber ? `Week ${weekNumber}` : `Week ${weekMonday}`,
         serviceDates: bucketPoints.map((point) => point.serviceDate),
         overproductionRateGramsPerCustomer: aggregate.overproductionRateGramsPerCustomer,
         shortageRateGramsPerCustomer: aggregate.shortageRateGramsPerCustomer,

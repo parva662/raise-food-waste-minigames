@@ -10,6 +10,7 @@ import {
   buildParticipantProgressServicePoints,
   buildProgressPeriodComparison,
   getCalendarWeekRangeContaining,
+  getCalendarWeekMondaysForMonth,
   getChartableProgressBuckets,
   getPreviousCalendarMonthRange,
   getPreviousCalendarWeekRange,
@@ -220,6 +221,16 @@ describe('participant progress calculations', () => {
     expect(week.summary.buckets.some((bucket) => bucket.label === 'Thu')).toBe(false);
   });
 
+  it('derives five Monday–Sunday calendar weeks for July 2026', () => {
+    expect(getCalendarWeekMondaysForMonth('2026-07-01', '2026-07-31')).toEqual([
+      '2026-06-29',
+      '2026-07-06',
+      '2026-07-13',
+      '2026-07-20',
+      '2026-07-27',
+    ]);
+  });
+
   it('aggregates month buckets by Monday–Sunday calendar weeks clipped to the month', () => {
     const points = [
       staffResultToProgressPoint(
@@ -260,7 +271,7 @@ describe('participant progress calculations', () => {
     const july = buildParticipantProgressPeriodView(points, 'month', '2026-07-31');
     expect(july.summary.servicesCompleted).toBe(2);
     expect(july.summary.buckets).toHaveLength(1);
-    expect(july.summary.buckets[0]?.label).toBe('Week 1');
+    expect(july.summary.buckets[0]?.label).toBe('Week 5');
     expect(july.summary.buckets[0]?.serviceDates).toEqual(['2026-07-27', '2026-07-31']);
     expect(july.summary.overproductionRateGramsPerCustomer).toBe(10);
 
@@ -270,6 +281,24 @@ describe('participant progress calculations', () => {
     expect(august.summary.buckets[0]?.label).toBe('Week 1');
     expect(august.summary.buckets[0]?.serviceDates).toEqual(['2026-08-01']);
     expect(august.summary.overproductionRateGramsPerCustomer).toBe(20);
+  });
+
+  it('labels a lone July 31 result as Week 5 and does not render empty earlier weeks', () => {
+    const points = [
+      staffResultToProgressPoint(
+        staffResult({
+          serviceDate: '2026-07-31',
+          actualCustomers: 100,
+          totalSimulatedOverproductionGrams: 1000,
+          customerForecastAbsoluteError: 2,
+        }),
+      ),
+    ];
+
+    const july = buildParticipantProgressPeriodView(points, 'month', '2026-07-31');
+    expect(july.summary.buckets).toHaveLength(1);
+    expect(july.summary.buckets[0]?.label).toBe('Week 5');
+    expect(getChartableProgressBuckets(july.summary.buckets)).toHaveLength(1);
   });
 
   it('excludes invalid normalized values from chartable buckets but keeps completed services', () => {
