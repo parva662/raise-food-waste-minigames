@@ -4,6 +4,8 @@ import { act, cleanup, fireEvent, render, screen, within } from '@testing-librar
 import { ChefApp } from './ChefApp';
 import { helsinki } from '../test/fixtures/dates';
 import { resolveMealSlotsForDate } from '../services/mealSlots';
+import { getChefForecastCutoffInstant } from '../services/chefForecastEligibilityPolicy';
+import { getChefSubmissionWindowStatus } from './chefSubmissionWindow';
 
 const SERVICE_DATES = {
   mondayAug17: '2026-08-17',
@@ -22,8 +24,8 @@ describe('kitchen forecast page timing UX', () => {
     vi.restoreAllMocks();
   });
 
-  it('rolls from Monday to Tuesday after 09:00 without remounting', async () => {
-    let currentTime = helsinki(SERVICE_DATES.mondayAug17, '08:59:59');
+  it('rolls from Monday to Tuesday after 08:30 without remounting', async () => {
+    let currentTime = helsinki(SERVICE_DATES.mondayAug17, '08:29:59');
     const clock = () => currentTime;
 
     vi.useFakeTimers();
@@ -36,7 +38,7 @@ describe('kitchen forecast page timing UX', () => {
     expect(screen.getByText(mondaySlots.main.name)).toBeInTheDocument();
     expect(screen.getByText('Forecast open')).toBeInTheDocument();
 
-    currentTime = helsinki(SERVICE_DATES.mondayAug17, '09:00:01');
+    currentTime = helsinki(SERVICE_DATES.mondayAug17, '08:30:01');
     await act(async () => {
       vi.advanceTimersByTime(30_000);
     });
@@ -49,7 +51,7 @@ describe('kitchen forecast page timing UX', () => {
   });
 
   it('clears Monday draft values when the target rolls to Tuesday', async () => {
-    let currentTime = helsinki(SERVICE_DATES.mondayAug17, '08:55:00');
+    let currentTime = helsinki(SERVICE_DATES.mondayAug17, '08:25:00');
     const clock = () => currentTime;
 
     vi.useFakeTimers();
@@ -58,7 +60,7 @@ describe('kitchen forecast page timing UX', () => {
     fireEvent.change(getExpectedCustomersInput(), { target: { value: '120' } });
     expect(getExpectedCustomersInput()).toHaveValue('120');
 
-    currentTime = helsinki(SERVICE_DATES.mondayAug17, '09:05:00');
+    currentTime = helsinki(SERVICE_DATES.mondayAug17, '08:30:01');
     await act(async () => {
       vi.advanceTimersByTime(30_000);
     });
@@ -68,7 +70,7 @@ describe('kitchen forecast page timing UX', () => {
   });
 
   it('does not carry Monday submitted state into Tuesday after cutoff rollover', async () => {
-    let currentTime = helsinki(SERVICE_DATES.mondayAug17, '08:55:00');
+    let currentTime = helsinki(SERVICE_DATES.mondayAug17, '08:25:00');
     const clock = () => currentTime;
 
     vi.useFakeTimers();
@@ -86,7 +88,7 @@ describe('kitchen forecast page timing UX', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Submit forecast' }));
     expect(screen.getByText(/Forecast submitted for/i)).toBeInTheDocument();
 
-    currentTime = helsinki(SERVICE_DATES.mondayAug17, '09:05:00');
+    currentTime = helsinki(SERVICE_DATES.mondayAug17, '08:30:01');
     await act(async () => {
       vi.advanceTimersByTime(30_000);
     });
@@ -105,5 +107,21 @@ describe('kitchen forecast page timing UX', () => {
     expect(screen.getByText(tuesdaySlots.main.name)).toBeInTheDocument();
     expect(screen.getByText('Forecast open')).toBeInTheDocument();
     expect(screen.queryByText('Forecast closed')).not.toBeInTheDocument();
+  });
+
+  it('renders the deadline label from central policy', () => {
+    const clock = () => helsinki(SERVICE_DATES.mondayAug17, '15:37:00');
+    render(<ChefApp clock={clock} />);
+
+    expect(screen.getByText('Deadline 08:30 on service day')).toBeInTheDocument();
+    expect(screen.queryByText('Deadline 09:00 on service day')).not.toBeInTheDocument();
+  });
+
+  it('counts down to Tuesday 08:30 Helsinki when Monday afternoon targets Tuesday', () => {
+    const now = helsinki(SERVICE_DATES.mondayAug17, '15:37:00');
+    const status = getChefSubmissionWindowStatus(now, SERVICE_DATES.tuesdayAug18);
+    expect(status.countdownTargetIso).toBe(
+      getChefForecastCutoffInstant(SERVICE_DATES.tuesdayAug18).toISOString(),
+    );
   });
 });

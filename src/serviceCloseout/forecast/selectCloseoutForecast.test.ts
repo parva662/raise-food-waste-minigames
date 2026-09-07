@@ -78,7 +78,7 @@ describe('selectForecastsForDate', () => {
         actorId: 'user-a',
         actorName: 'Aino Virtanen',
         targetDate: mondayServiceDate,
-        submittedAt: helsinki(mondayServiceDate, '08:30:00'),
+        submittedAt: helsinki(mondayServiceDate, '08:29:59'),
         forecastMain: 44,
       }),
       buildAnonymizedChefForecastActivity({
@@ -86,7 +86,7 @@ describe('selectForecastsForDate', () => {
         actorId: 'user-a',
         actorName: 'Aino Virtanen',
         targetDate: mondayServiceDate,
-        submittedAt: helsinki(mondayServiceDate, '09:05:00'),
+        submittedAt: helsinki(mondayServiceDate, '08:30:00'),
         forecastMain: 99,
       }),
     ]);
@@ -102,7 +102,7 @@ describe('selectForecastsForDate', () => {
         actorId: 'user-a',
         actorName: 'Aino Virtanen',
         targetDate: mondayServiceDate,
-        submittedAt: helsinki(mondayServiceDate, '09:05:00'),
+        submittedAt: helsinki(mondayServiceDate, '08:30:01'),
       }),
     ]);
 

@@ -121,8 +121,8 @@ describe('operational service calendar', () => {
     expect(resolveChefForecastServiceDate(fridayAfternoon)).toBe(SERVICE_CALENDAR_DATES.mondayAug17);
   });
 
-  it('resolves kitchen forecast service date to today before 09:00 on a service day', () => {
-    const mondayMorning = helsinki(SERVICE_CALENDAR_DATES.mondayAug17, '08:30:00');
+  it('resolves kitchen forecast service date to today before 08:30 on a service day', () => {
+    const mondayMorning = helsinki(SERVICE_CALENDAR_DATES.mondayAug17, '08:29:59');
     expect(resolveChefForecastServiceDate(mondayMorning)).toBe(SERVICE_CALENDAR_DATES.mondayAug17);
   });
 });

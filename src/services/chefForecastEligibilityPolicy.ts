@@ -7,7 +7,7 @@ function pad(value: number): string {
   return String(value).padStart(2, '0');
 }
 
-/** 09:00:00 Europe/Helsinki on the target service date — forecasts must be submitted before this instant. */
+/** 08:30:00 Europe/Helsinki on the target service date — forecasts must be submitted before this instant. */
 export function getChefForecastCutoffInstant(targetDate: string): Date {
   const local = `${targetDate} ${pad(CHEF_CONFIG.forecastCutoffHour)}:${pad(CHEF_CONFIG.forecastCutoffMinute)}:${pad(CHEF_CONFIG.forecastCutoffSecond)}`;
   return fromZonedTime(local, CHEF_CONFIG.timezone);

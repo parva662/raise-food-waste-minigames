@@ -20,24 +20,42 @@ describe('kitchen forecast service date', () => {
     vi.restoreAllMocks();
   });
 
-  it('targets Monday when opened Monday at 08:59', () => {
-    expect(resolveChefForecastServiceDate(helsinki(SERVICE_DATES.mondayAug17, '08:59:59'))).toBe(
+  it('targets Monday when opened Monday at 08:29:59', () => {
+    expect(resolveChefForecastServiceDate(helsinki(SERVICE_DATES.mondayAug17, '08:29:59'))).toBe(
       SERVICE_DATES.mondayAug17,
     );
   });
 
-  it('targets Tuesday when opened Monday exactly at 09:00', () => {
-    expect(resolveChefForecastServiceDate(helsinki(SERVICE_DATES.mondayAug17, '09:00:00'))).toBe(
+  it('targets Tuesday when opened Monday exactly at 08:30:00', () => {
+    expect(resolveChefForecastServiceDate(helsinki(SERVICE_DATES.mondayAug17, '08:30:00'))).toBe(
       SERVICE_DATES.tuesdayAug18,
     );
   });
 
-  it('targets Tuesday when opened Monday after 09:00', () => {
+  it('targets Tuesday when opened Monday at 08:30:01', () => {
+    expect(resolveChefForecastServiceDate(helsinki(SERVICE_DATES.mondayAug17, '08:30:01'))).toBe(
+      SERVICE_DATES.tuesdayAug18,
+    );
+  });
+
+  it('targets Tuesday when opened Monday after the cutoff', () => {
     expect(resolveChefForecastServiceDate(helsinki(SERVICE_DATES.mondayAug17, '15:00:00'))).toBe(
       SERVICE_DATES.tuesdayAug18,
     );
     expect(resolveChefForecastServiceDate(helsinki(SERVICE_DATES.mondayAug17, '15:37:00'))).toBe(
       SERVICE_DATES.tuesdayAug18,
+    );
+  });
+
+  it('targets Friday when opened Friday at 08:29:59', () => {
+    expect(resolveChefForecastServiceDate(helsinki(SERVICE_DATES.fridayAug14, '08:29:59'))).toBe(
+      SERVICE_DATES.fridayAug14,
+    );
+  });
+
+  it('targets Monday when opened Friday at 08:30:00', () => {
+    expect(resolveChefForecastServiceDate(helsinki(SERVICE_DATES.fridayAug14, '08:30:00'))).toBe(
+      SERVICE_DATES.mondayAug17,
     );
   });
 
