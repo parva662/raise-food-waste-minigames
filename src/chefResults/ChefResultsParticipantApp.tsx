@@ -7,7 +7,7 @@ import { GameBusUserDiagnostic } from './components/participant/GameBusUserDiagn
 import { KitchenProgressSection } from './components/participant/KitchenProgressSection';
 import { ParticipantHeader } from './components/participant/ParticipantHeader';
 import { TeamComparisonSection } from './components/participant/TeamComparisonSection';
-import { YourWeekSection } from './components/participant/YourWeekSection';
+import { ParticipantProgressSection } from './components/participant/ParticipantProgressSection';
 import {
   buildFixtureKitchenProgress,
   hasFixtureCloseoutForDate,
@@ -20,11 +20,8 @@ import {
 import { isChefResultsGameBusDebugMode } from '../gamebus/chefResultsInvestigation';
 import { resolveChefResultsServiceDate } from '../services/operationalServiceCalendar';
 import { getFixtureCurrentUserId } from './currentUserContext';
-import {
-  buildParticipantWeekSummary,
-  EMPTY_PARTICIPANT_WEEK_SUMMARY,
-  findParticipantDailyResult,
-} from './participantWeekData';
+import { findParticipantDailyResult } from './participantWeekData';
+import { buildParticipantProgressServicePoints } from './participantProgressData';
 import {
   buildAnonymousTeamBenchmark,
   buildParticipantComparisonInsights,
@@ -68,12 +65,16 @@ export function ChefResultsParticipantApp() {
 
   const hasCurrentResult = !isEmbeddedLoading && resultsState.status === 'ready' && ownResult !== null;
 
-  const weekSummary = useMemo(() => {
-    if (!hasCurrentResult) return EMPTY_PARTICIPANT_WEEK_SUMMARY;
+  const progressServicePoints = useMemo(() => {
+    if (!hasCurrentResult) return [];
     if (embedded && inputCollectionsReady) {
-      return buildParticipantWeekSummary(currentUserId, inputCollections);
+      return buildParticipantProgressServicePoints(
+        currentUserId,
+        resultsServiceDate,
+        inputCollections,
+      );
     }
-    return buildParticipantWeekSummary(fixtureUserId);
+    return buildParticipantProgressServicePoints(fixtureUserId, resultsServiceDate);
   }, [
     currentUserId,
     embedded,
@@ -81,6 +82,7 @@ export function ChefResultsParticipantApp() {
     hasCurrentResult,
     inputCollections,
     inputCollectionsReady,
+    resultsServiceDate,
   ]);
 
   const kitchenProgress = useMemo(() => {
@@ -167,7 +169,12 @@ export function ChefResultsParticipantApp() {
         </>
       ) : null}
 
-      {hasCurrentResult ? <YourWeekSection week={weekSummary} /> : null}
+      {hasCurrentResult ? (
+        <ParticipantProgressSection
+          servicePoints={progressServicePoints}
+          asOfServiceDate={resultsServiceDate}
+        />
+      ) : null}
       {hasCurrentResult ? <KitchenProgressSection progress={kitchenProgress} /> : null}
 
       {isChefResultsGameBusDebugMode() ? (

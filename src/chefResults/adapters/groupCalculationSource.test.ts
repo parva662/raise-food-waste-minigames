@@ -20,7 +20,8 @@ import {
 } from './groupCalculationSource';
 import { parseGameBusWasteMeasurementActivities, selectWasteMeasurementForDate } from './parseGameBusWasteMeasurement';
 import { gameBusWasteMeasurementToCalculationInput } from './wasteMeasurementAdapter';
-import { buildParticipantWeekSummary, findParticipantDailyResult } from '../participantWeekData';
+import { buildParticipantProgressServicePoints } from '../participantProgressData';
+import { findParticipantDailyResult } from '../participantWeekData';
 import { buildFixtureKitchenProgress } from './fixtureCalculationSource';
 
 const serviceDate = '2026-07-29';
@@ -277,10 +278,9 @@ describe('group kitchen activities integration', () => {
       },
     };
 
-    const week = buildParticipantWeekSummary('me-user', inputCollections);
-    expect(week.participatedServiceCount).toBe(1);
-    expect(week.points).toHaveLength(1);
-    expect(week.points[0]?.serviceDate).toBe(serviceDate);
+    const points = buildParticipantProgressServicePoints('me-user', serviceDate, inputCollections);
+    expect(points).toHaveLength(1);
+    expect(points[0]?.serviceDate).toBe(serviceDate);
   });
 
   it('derives kitchen progress from real group results', () => {

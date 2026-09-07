@@ -156,7 +156,7 @@ describe('embedded chef results UI', () => {
       'You did not submit a valid forecast for this service date.',
     );
     expect(screen.queryByTestId('kitchen-progress-section')).not.toBeInTheDocument();
-    expect(screen.queryByTestId('your-week-section')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('your-progress-section')).not.toBeInTheDocument();
   });
 
   it('uses real embedded kitchen progress instead of fixture leakage', () => {
@@ -256,7 +256,7 @@ describe('embedded chef results loading boundary', () => {
   it('does not render fixture your week history while INPUT_COLLECTIONS is pending', () => {
     render(<ChefResultsParticipantApp />);
 
-    expect(screen.queryByTestId('your-week-section')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('your-progress-section')).not.toBeInTheDocument();
     expect(screen.queryByTestId('week-trend-over')).not.toBeInTheDocument();
   });
 });
@@ -287,7 +287,7 @@ describe('standalone chef results fixtures', () => {
     expect(screen.getByTestId('actual-kitchen-outcome-section')).toBeInTheDocument();
     expect(screen.getByTestId('forecast-impact-section')).toBeInTheDocument();
     expect(screen.getByTestId('participant-summary-cards')).toBeInTheDocument();
-    expect(screen.getByTestId('your-week-section')).toBeInTheDocument();
+    expect(screen.getByTestId('your-progress-section')).toBeInTheDocument();
     expect(screen.getByTestId('kitchen-progress-section')).toBeInTheDocument();
     expect(screen.queryByTestId('chef-results-date-select')).not.toBeInTheDocument();
     expect(screen.getByText(/Service date: Friday, 31 July 2026/)).toBeInTheDocument();

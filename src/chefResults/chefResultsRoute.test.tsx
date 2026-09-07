@@ -94,15 +94,15 @@ describe('participant privacy', () => {
     setHash('#/chef-results');
     render(<AppRouter />);
     expect(screen.queryByTestId('chef-results-date-select')).not.toBeInTheDocument();
-    expect(screen.getByText(/Friday, 31 July 2026/)).toBeInTheDocument();
+    expect(screen.getByTestId('participant-results-header')).toHaveTextContent(/Friday, 31 July 2026/);
   });
 
-  it('shows weekly section for participated days only', () => {
+  it('shows progress section for participated services', () => {
     render(<AppRouter />);
-    expect(screen.getByTestId('your-week-section')).toBeInTheDocument();
-    expect(screen.getByText(/services you took part in this week/i)).toBeInTheDocument();
-    expect(screen.getAllByTestId('week-trend-over')[0]?.querySelectorAll('circle').length).toBe(4);
-    expect(screen.getAllByTestId('week-trend-short')[0]?.querySelectorAll('circle').length).toBe(4);
+    expect(screen.getByTestId('your-progress-section')).toBeInTheDocument();
+    expect(screen.getByText(/Your progress/i)).toBeInTheDocument();
+    expect(screen.getByRole('tab', { name: 'Week' })).toHaveAttribute('aria-selected', 'true');
+    expect(screen.getByTestId('progress-bar-chart')).toBeInTheDocument();
   });
 
   it('uses participant-facing kitchen progress wording', () => {

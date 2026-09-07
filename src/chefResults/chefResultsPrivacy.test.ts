@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { buildFixtureDailyServiceResults } from './adapters/fixtureCalculationSource';
-import { buildParticipantWeekSummary, findParticipantDailyResult } from './participantWeekData';
+import { buildParticipantProgressServicePoints } from './participantProgressData';
+import { findParticipantDailyResult } from './participantWeekData';
 import {
   buildAnonymousTeamBenchmark,
   buildParticipantComparisonInsights,
@@ -29,11 +30,11 @@ describe('team comparison privacy utilities', () => {
   });
 });
 
-describe('participant week data', () => {
+describe('participant progress data', () => {
   it('includes only days the user participated', () => {
-    const week = buildParticipantWeekSummary('fixture-user-a');
-    expect(week.participatedServiceCount).toBe(3);
-    expect(week.points.map((point) => point.serviceDate)).toEqual([
+    const points = buildParticipantProgressServicePoints('fixture-user-a', '2026-07-31');
+    expect(points).toHaveLength(3);
+    expect(points.map((point) => point.serviceDate)).toEqual([
       '2026-07-27',
       '2026-07-29',
       '2026-07-30',
@@ -41,9 +42,9 @@ describe('participant week data', () => {
   });
 
   it('does not treat absence as zero participation', () => {
-    const week = buildParticipantWeekSummary('fixture-user-a');
-    expect(week.points.some((point) => point.serviceDate === '2026-07-28')).toBe(false);
-    expect(week.points.some((point) => point.serviceDate === '2026-07-31')).toBe(false);
+    const points = buildParticipantProgressServicePoints('fixture-user-a', '2026-07-31');
+    expect(points.some((point) => point.serviceDate === '2026-07-28')).toBe(false);
+    expect(points.some((point) => point.serviceDate === '2026-07-31')).toBe(false);
   });
 });
 
