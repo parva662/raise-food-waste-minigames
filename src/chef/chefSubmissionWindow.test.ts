@@ -6,7 +6,6 @@ import {
   getChefSubmissionPhase,
   isChefSubmissionAllowed,
 } from './chefSubmissionWindow';
-import { helsinki } from '../test/fixtures/dates';
 
 const SERVICE_DATES = {
   fridayAug14: '2026-08-14',
@@ -18,36 +17,33 @@ function chefInstant(dateIso: string, time: string): Date {
   return fromZonedTime(`${dateIso} ${time}`, CHEF_CONFIG.timezone);
 }
 
-describe('chef submission window operational days', () => {
-  it('uses Friday as the submission day for a Monday service date', () => {
-    expect(getChefSubmissionPhase(chefInstant(SERVICE_DATES.fridayAug14, '17:30:00'), SERVICE_DATES.mondayAug17)).toBe(
-      'on-time',
-    );
+describe('chef submission window', () => {
+  it('allows submission before 09:00 on the target service date', () => {
     expect(
-      isChefSubmissionAllowed(chefInstant(SERVICE_DATES.fridayAug14, '22:30:00'), SERVICE_DATES.mondayAug17),
-    ).toBe(true);
-    expect(
-      getChefSubmissionPhase(chefInstant(SERVICE_DATES.fridayAug14, '23:00:01'), SERVICE_DATES.mondayAug17),
-    ).toBe('closed');
-  });
-
-  it('does not treat Sunday as the submission day for Monday service', () => {
-    expect(
-      getChefSubmissionPhase(helsinki('2026-08-16', '12:00:00'), SERVICE_DATES.mondayAug17),
-    ).toBe('closed');
-  });
-
-  it('uses the previous weekday for an ordinary Tuesday service', () => {
-    expect(
-      getChefSubmissionPhase(chefInstant(SERVICE_DATES.mondayAug17, '17:30:00'), SERVICE_DATES.tuesdayAug18),
+      getChefSubmissionPhase(chefInstant(SERVICE_DATES.mondayAug17, '08:59:59'), SERVICE_DATES.mondayAug17),
     ).toBe('on-time');
     expect(
-      getChefSubmissionPhase(chefInstant(SERVICE_DATES.mondayAug17, '23:00:01'), SERVICE_DATES.tuesdayAug18),
-    ).toBe('closed');
+      isChefSubmissionAllowed(chefInstant(SERVICE_DATES.mondayAug17, '08:30:00'), SERVICE_DATES.mondayAug17),
+    ).toBe(true);
   });
 
-  it('creates submissions with the resolved service date as targetDate', () => {
-    const clock = () => chefInstant(SERVICE_DATES.fridayAug14, '12:00:00');
+  it('closes submission at exactly 09:00 on the target service date', () => {
+    expect(
+      getChefSubmissionPhase(chefInstant(SERVICE_DATES.mondayAug17, '09:00:00'), SERVICE_DATES.mondayAug17),
+    ).toBe('closed');
+    expect(
+      isChefSubmissionAllowed(chefInstant(SERVICE_DATES.mondayAug17, '09:00:01'), SERVICE_DATES.mondayAug17),
+    ).toBe(false);
+  });
+
+  it('allows Friday submissions for a Monday service date before Monday 09:00', () => {
+    expect(
+      isChefSubmissionAllowed(chefInstant(SERVICE_DATES.fridayAug14, '15:00:00'), SERVICE_DATES.mondayAug17),
+    ).toBe(true);
+  });
+
+  it('creates submissions with on-time timingStatus before cutoff', () => {
+    const clock = () => chefInstant(SERVICE_DATES.mondayAug17, '08:30:00');
     const submission = createChefForecastSubmission(SERVICE_DATES.mondayAug17, clock);
     expect(submission).toEqual({
       targetDate: SERVICE_DATES.mondayAug17,
@@ -56,15 +52,23 @@ describe('chef submission window operational days', () => {
     });
   });
 
-  it('preserves Helsinki deadline semantics for on-time and late periods', () => {
+  it('refuses ACTIVITY creation at or after cutoff', () => {
+    const clock = () => chefInstant(SERVICE_DATES.mondayAug17, '09:00:00');
+    expect(createChefForecastSubmission(SERVICE_DATES.mondayAug17, clock)).toBeNull();
     expect(
-      getChefSubmissionPhase(chefInstant(SERVICE_DATES.fridayAug14, '18:00:00'), SERVICE_DATES.mondayAug17),
+      createChefForecastSubmission(
+        SERVICE_DATES.mondayAug17,
+        () => chefInstant(SERVICE_DATES.mondayAug17, '09:05:00'),
+      ),
+    ).toBeNull();
+  });
+
+  it('allows submissions on earlier operational days until the service-date cutoff', () => {
+    expect(
+      getChefSubmissionPhase(chefInstant(SERVICE_DATES.fridayAug14, '23:30:00'), SERVICE_DATES.mondayAug17),
     ).toBe('on-time');
     expect(
-      getChefSubmissionPhase(chefInstant(SERVICE_DATES.fridayAug14, '18:00:01'), SERVICE_DATES.mondayAug17),
-    ).toBe('late');
-    expect(
-      getChefSubmissionPhase(chefInstant(SERVICE_DATES.fridayAug14, '22:59:59'), SERVICE_DATES.mondayAug17),
-    ).toBe('late');
+      getChefSubmissionPhase(chefInstant(SERVICE_DATES.mondayAug17, '08:00:00'), SERVICE_DATES.tuesdayAug18),
+    ).toBe('on-time');
   });
 });

@@ -1,11 +1,11 @@
+import {
+  chefForecastSubmissionSortKey,
+  isChefForecastActivityEligible,
+} from '../../services/chefForecastEligibilityPolicy';
 import type { GameBusChefForecast } from './gameBusChefForecastTypes';
 
-function submissionSortKey(forecast: GameBusChefForecast): string {
-  return forecast.submittedAt ?? forecast.createdAt ?? '';
-}
-
 /**
- * When the same actor has duplicate forecasts for one targetDate, keep the latest
+ * When the same actor has duplicate eligible forecasts for one targetDate, keep the latest
  * submission (submittedAt preferred, else createdAt).
  */
 function dedupeForecastsByActor(
@@ -16,7 +16,9 @@ function dedupeForecastsByActor(
     const existing = byActor.get(forecast.actorId);
     if (
       !existing ||
-      submissionSortKey(forecast).localeCompare(submissionSortKey(existing)) > 0
+      chefForecastSubmissionSortKey(forecast).localeCompare(
+        chefForecastSubmissionSortKey(existing),
+      ) > 0
     ) {
       byActor.set(forecast.actorId, forecast);
     }
@@ -24,18 +26,21 @@ function dedupeForecastsByActor(
   return [...byActor.values()];
 }
 
-/** All exact-date staff forecasts, one per actor, sorted by actor name. */
+/** All exact-date staff forecasts submitted before cutoff, one per actor, sorted by actor name. */
 export function selectForecastsForDate(
   forecasts: readonly GameBusChefForecast[],
   closeoutDate: string,
 ): GameBusChefForecast[] {
-  const matching = forecasts.filter((forecast) => forecast.targetDate === closeoutDate);
+  const matching = forecasts.filter(
+    (forecast) =>
+      forecast.targetDate === closeoutDate && isChefForecastActivityEligible(forecast),
+  );
   return dedupeForecastsByActor(matching).sort((left, right) =>
     left.actorName.localeCompare(right.actorName),
   );
 }
 
-/** Latest exact-date forecast for one authenticated kitchen staff member. */
+/** Latest eligible exact-date forecast for one authenticated kitchen staff member. */
 export function selectCurrentUserForecastForDate(
   forecasts: readonly GameBusChefForecast[],
   closeoutDate: string,
@@ -43,13 +48,15 @@ export function selectCurrentUserForecastForDate(
 ): GameBusChefForecast | null {
   const matching = forecasts.filter(
     (forecast) =>
-      forecast.targetDate === closeoutDate && forecast.actorId === authenticatedUserId,
+      forecast.targetDate === closeoutDate &&
+      forecast.actorId === authenticatedUserId &&
+      isChefForecastActivityEligible(forecast),
   );
   if (matching.length === 0) return null;
   if (matching.length === 1) return matching[0]!;
 
   return [...matching].sort((left, right) =>
-    submissionSortKey(left).localeCompare(submissionSortKey(right)),
+    chefForecastSubmissionSortKey(left).localeCompare(chefForecastSubmissionSortKey(right)),
   )[matching.length - 1]!;
 }
 

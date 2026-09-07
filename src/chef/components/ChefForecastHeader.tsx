@@ -1,4 +1,4 @@
-import { CHEF_CONFIG } from '../../config/chef';
+import { formatChefForecastDeadlineLabel } from '../../services/chefForecastEligibilityPolicy';
 import type { ChefSubmissionWindowStatus } from '../types';
 import { formatCountdown } from '../../services/submissionWindow';
 import { formatDisplayDate } from '../../utils/dates';
@@ -20,17 +20,13 @@ export function ChefForecastHeader({
       : null;
 
   const phaseClass =
-    submissionWindow.phase === 'closed'
-      ? 'chef-header--closed'
-      : submissionWindow.phase === 'late'
-        ? 'chef-header--late'
-        : 'chef-header--open';
+    submissionWindow.phase === 'closed' ? 'chef-header--closed' : 'chef-header--open';
 
   return (
     <header className={`chef-header ${phaseClass}`}>
       <div className="chef-header__bar">
         <div className="chef-header__title-block">
-          <p className="chef-header__eyebrow">Tomorrow&apos;s kitchen forecast</p>
+          <p className="chef-header__eyebrow">Kitchen forecast</p>
           {serviceDate ? (
             <time className="chef-header__date" dateTime={serviceDate}>
               {formatDisplayDate(serviceDate)}
@@ -49,10 +45,10 @@ export function ChefForecastHeader({
 
       <div className="chef-header__meta">
         <p className="chef-header__instruction">
-          Enter portions for tomorrow&apos;s menu. One forecast per service day.
+          Enter portions for this service day&apos;s menu. One forecast per service day.
         </p>
         <span className="chef-badge chef-badge--deadline">
-          Deadline {CHEF_CONFIG.lateDeadlineHour}:00 (day before)
+          Deadline {formatChefForecastDeadlineLabel()}
         </span>
         <span className="chef-header__phase" role="status">
           {submissionWindow.message}

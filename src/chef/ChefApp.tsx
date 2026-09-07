@@ -1,4 +1,5 @@
 import { MenuStatusBanner } from '../components/MenuStatusBanner';
+import { formatDisplayDate } from '../utils/dates';
 import { ChefForecastRow } from './components/ChefForecastRow';
 import { ChefForecastHeader } from './components/ChefForecastHeader';
 import { ChefForecastSummary } from './components/ChefForecastSummary';
@@ -71,7 +72,7 @@ export function ChefApp({ clock }: ChefAppProps = {}) {
         <div className="chef-shell">
           {calendarError && (
             <MenuStatusBanner
-              message="Could not resolve the next service date."
+              message="Could not resolve the kitchen forecast service date."
               reason={calendarError}
             />
           )}
@@ -87,7 +88,7 @@ export function ChefApp({ clock }: ChefAppProps = {}) {
 
           {hasSubmitted && (
             <div className="chef-submitted-banner" role="status">
-              Forecast submitted. No further changes allowed for this service day.
+              Forecast submitted for {formatDisplayDate(serviceDate)}.
             </div>
           )}
 

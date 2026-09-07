@@ -29,14 +29,14 @@ describe('App routing', () => {
     render(<AppRouter />);
     expect(document.title).toBe("Tomorrow's Lunch");
     expect(screen.getByText(/Tomorrow.s lunch/)).toBeInTheDocument();
-    expect(screen.queryByText('Tomorrow\'s kitchen forecast')).not.toBeInTheDocument();
+    expect(screen.queryByText('Kitchen forecast')).not.toBeInTheDocument();
   });
 
   it('chef route loads chef forecast UI without changing student root', () => {
     setHash('#/chef');
     render(<AppRouter />);
     expect(document.title).toBe('Kitchen Forecast');
-    expect(screen.getByText('Tomorrow\'s kitchen forecast')).toBeInTheDocument();
+    expect(screen.getByText('Kitchen forecast')).toBeInTheDocument();
     expect(screen.queryByText(/Tomorrow.s lunch/)).not.toBeInTheDocument();
   });
 

@@ -65,7 +65,7 @@ describe('service closeout routing', () => {
   it('chef route remains unchanged', () => {
     setHash('#/chef');
     render(<AppRouter />);
-    expect(screen.getByText("Tomorrow's kitchen forecast")).toBeInTheDocument();
+    expect(screen.getByText('Kitchen forecast')).toBeInTheDocument();
     expect(screen.queryByTestId('closeout-input-collections-debug')).not.toBeInTheDocument();
   });
 

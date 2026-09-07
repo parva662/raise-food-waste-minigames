@@ -39,7 +39,7 @@ describe('ChefApp menu availability', () => {
       throw new OperationalCalendarError('No service date within the menu calendar.');
     });
     render(<ChefApp clock={() => SUBMISSION_TIMES.midday} />);
-    expect(screen.getByText('Could not resolve the next service date.')).toBeInTheDocument();
+    expect(screen.getByText('Could not resolve the kitchen forecast service date.')).toBeInTheDocument();
     expect(screen.getByText('No service date within the menu calendar.')).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Submit forecast' })).not.toBeInTheDocument();
   });

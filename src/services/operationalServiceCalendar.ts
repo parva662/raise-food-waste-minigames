@@ -1,6 +1,7 @@
 import { parseISO } from 'date-fns';
 import { toZonedTime } from 'date-fns-tz';
 import { CANTEEN_CONFIG } from '../config/canteen';
+import { isChefForecastSubmissionInstantEligible } from './chefForecastEligibilityPolicy';
 import { addDaysToIsoDate, getOperationalDateIso } from '../utils/dates';
 import { resolveMenuForDate } from './menuResolver';
 
@@ -94,7 +95,23 @@ export function resolvePreviousOperationalDay(serviceDate: string): string {
   );
 }
 
-/** Chef forecast target date from the current Helsinki operational day. */
+/** Kitchen forecast target date when the page is opened (Helsinki operational day). */
 export function resolveChefForecastServiceDate(now: Date = new Date()): string {
-  return resolveNextServiceDate(getOperationalDateIso(now));
+  const today = getOperationalDateIso(now);
+  const classification = classifyOperationalDate(today);
+
+  if (classification.kind === 'unavailable') {
+    throw new OperationalCalendarError(
+      `Menu unavailable for operational date ${classification.isoDate}; cannot resolve kitchen forecast service date.`,
+    );
+  }
+
+  if (
+    classification.kind === 'service' &&
+    isChefForecastSubmissionInstantEligible(now, classification.isoDate)
+  ) {
+    return classification.isoDate;
+  }
+
+  return resolveNextServiceDate(today);
 }

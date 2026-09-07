@@ -116,9 +116,14 @@ describe('operational service calendar', () => {
     );
   });
 
-  it('resolves chef forecast service date from Helsinki operational Friday to Monday', () => {
-    const fridayNoon = helsinki(SERVICE_CALENDAR_DATES.fridayAug14, '12:00:00');
-    expect(resolveChefForecastServiceDate(fridayNoon)).toBe(SERVICE_CALENDAR_DATES.mondayAug17);
+  it('resolves kitchen forecast service date from Helsinki operational Friday to Monday', () => {
+    const fridayAfternoon = helsinki(SERVICE_CALENDAR_DATES.fridayAug14, '15:00:00');
+    expect(resolveChefForecastServiceDate(fridayAfternoon)).toBe(SERVICE_CALENDAR_DATES.mondayAug17);
+  });
+
+  it('resolves kitchen forecast service date to today before 09:00 on a service day', () => {
+    const mondayMorning = helsinki(SERVICE_CALENDAR_DATES.mondayAug17, '08:30:00');
+    expect(resolveChefForecastServiceDate(mondayMorning)).toBe(SERVICE_CALENDAR_DATES.mondayAug17);
   });
 });
 

@@ -125,11 +125,11 @@ function chefReducer(state: ChefForecastState, action: ChefAction): ChefForecast
 export function useChefForecast(clock: Clock = systemClock) {
   const [state, dispatch] = useReducer(chefReducer, undefined, createInitialState);
   const [now, setNow] = useState(() => clock());
-  const serviceDateResolution = useMemo(() => {
+  const [serviceDateResolution] = useState(() => {
     try {
       return {
         status: 'resolved' as const,
-        serviceDate: resolveChefForecastServiceDate(now),
+        serviceDate: resolveChefForecastServiceDate(clock()),
       };
     } catch (error) {
       return {
@@ -137,10 +137,10 @@ export function useChefForecast(clock: Clock = systemClock) {
         message:
           error instanceof OperationalCalendarError
             ? error.message
-            : 'Could not resolve the next service date.',
+            : 'Could not resolve the kitchen forecast service date.',
       };
     }
-  }, [now]);
+  });
 
   const serviceDate =
     serviceDateResolution.status === 'resolved' ? serviceDateResolution.serviceDate : '';

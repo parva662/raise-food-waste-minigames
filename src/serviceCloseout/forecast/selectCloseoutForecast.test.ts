@@ -1,9 +1,16 @@
 import { describe, expect, it } from 'vitest';
+import { fromZonedTime } from 'date-fns-tz';
+import { CHEF_CONFIG } from '../../config/chef';
 import { parseGameBusChefForecastActivities } from './parseGameBusChefForecast';
 import { buildAnonymizedChefForecastActivity } from './fixtures/gameBusChefForecastActivities';
 import { selectCurrentUserForecastForDate, selectForecastsForDate } from './selectCloseoutForecast';
 
 const serviceDate = '2026-07-29';
+const mondayServiceDate = '2026-08-17';
+
+function helsinki(dateIso: string, time: string): string {
+  return fromZonedTime(`${dateIso} ${time}`, CHEF_CONFIG.timezone).toISOString();
+}
 
 describe('selectForecastsForDate', () => {
   it('keeps two different actors for the same service date', () => {
@@ -62,6 +69,45 @@ describe('selectForecastsForDate', () => {
       buildAnonymizedChefForecastActivity({ targetDate: '2026-07-30' }),
     ]);
     expect(selectForecastsForDate(valid, serviceDate)).toHaveLength(0);
+  });
+
+  it('rejects forecasts submitted at or after the service-date cutoff before deduplication', () => {
+    const { valid } = parseGameBusChefForecastActivities([
+      buildAnonymizedChefForecastActivity({
+        id: 'f-valid',
+        actorId: 'user-a',
+        actorName: 'Aino Virtanen',
+        targetDate: mondayServiceDate,
+        submittedAt: helsinki(mondayServiceDate, '08:30:00'),
+        forecastMain: 44,
+      }),
+      buildAnonymizedChefForecastActivity({
+        id: 'f-late',
+        actorId: 'user-a',
+        actorName: 'Aino Virtanen',
+        targetDate: mondayServiceDate,
+        submittedAt: helsinki(mondayServiceDate, '09:05:00'),
+        forecastMain: 99,
+      }),
+    ]);
+
+    const selected = selectForecastsForDate(valid, mondayServiceDate);
+    expect(selected).toHaveLength(1);
+    expect(selected[0]!.forecastMain).toBe(44);
+  });
+
+  it('returns no forecast when all submissions for an actor are after cutoff', () => {
+    const { valid } = parseGameBusChefForecastActivities([
+      buildAnonymizedChefForecastActivity({
+        actorId: 'user-a',
+        actorName: 'Aino Virtanen',
+        targetDate: mondayServiceDate,
+        submittedAt: helsinki(mondayServiceDate, '09:05:00'),
+      }),
+    ]);
+
+    expect(selectForecastsForDate(valid, mondayServiceDate)).toHaveLength(0);
+    expect(selectCurrentUserForecastForDate(valid, mondayServiceDate, 'user-a')).toBeNull();
   });
 });
 

@@ -1,69 +1,19 @@
-import { fromZonedTime } from 'date-fns-tz';
 import { CHEF_CONFIG } from '../config/chef';
 import {
-  OperationalCalendarError,
-  resolvePreviousOperationalDay,
-} from '../services/operationalServiceCalendar';
+  formatChefForecastDeadlineLabel,
+  getChefForecastCutoffInstant,
+  isChefForecastSubmissionInstantEligible,
+} from '../services/chefForecastEligibilityPolicy';
 import type { TimingStatus } from '../types/declaration';
 import type { Clock } from '../services/submissionWindow';
 import type { ChefForecastSubmission, ChefSubmissionPhase, ChefSubmissionWindowStatus } from './types';
 
-function pad(value: number): string {
-  return String(value).padStart(2, '0');
-}
-
-function getSubmissionDateIso(serviceDate: string): string | null {
-  try {
-    return resolvePreviousOperationalDay(serviceDate);
-  } catch (error) {
-    if (error instanceof OperationalCalendarError) {
-      return null;
-    }
-    throw error;
-  }
-}
-
-function helsinkiInstant(dateIso: string, hour: number, minute: number, second: number): Date {
-  const local = `${dateIso} ${pad(hour)}:${pad(minute)}:${pad(second)}`;
-  return fromZonedTime(local, CHEF_CONFIG.timezone);
-}
-
-function serviceDayStart(serviceDate: string): Date {
-  return helsinkiInstant(serviceDate, 0, 0, 0);
-}
-
 export function getChefSubmissionPhase(now: Date, serviceDate: string): ChefSubmissionPhase {
-  const submissionDateIso = getSubmissionDateIso(serviceDate);
-  if (submissionDateIso === null) {
-    return 'closed';
-  }
-
-  const onTimeEnd = helsinkiInstant(
-    submissionDateIso,
-    CHEF_CONFIG.onTimeDeadlineHour,
-    CHEF_CONFIG.onTimeDeadlineMinute,
-    CHEF_CONFIG.onTimeDeadlineSecond,
-  );
-  const lateEnd = helsinkiInstant(
-    submissionDateIso,
-    CHEF_CONFIG.lateDeadlineHour,
-    CHEF_CONFIG.lateDeadlineMinute,
-    CHEF_CONFIG.lateDeadlineSecond,
-  );
-  const serviceStart = serviceDayStart(serviceDate);
-  const nowMs = now.getTime();
-
-  if (nowMs > lateEnd.getTime() || nowMs >= serviceStart.getTime()) {
-    return 'closed';
-  }
-  if (nowMs > onTimeEnd.getTime()) {
-    return 'late';
-  }
-  return 'on-time';
+  return isChefForecastSubmissionInstantEligible(now, serviceDate) ? 'on-time' : 'closed';
 }
 
-export function getChefTimingStatusForInstant(instant: Date, serviceDate: string): TimingStatus {
-  return getChefSubmissionPhase(instant, serviceDate) === 'late' ? 'late' : 'on-time';
+export function getChefTimingStatusForInstant(_instant: Date, _serviceDate: string): TimingStatus {
+  return 'on-time';
 }
 
 export function isChefSubmissionAllowed(now: Date, serviceDate: string): boolean {
@@ -75,55 +25,25 @@ export function getChefSubmissionWindowStatus(
   serviceDate: string,
 ): ChefSubmissionWindowStatus {
   const phase = getChefSubmissionPhase(now, serviceDate);
-  const submissionDateIso = getSubmissionDateIso(serviceDate);
+  const cutoff = getChefForecastCutoffInstant(serviceDate);
+  const deadlineLabel = formatChefForecastDeadlineLabel();
 
-  if (submissionDateIso === null) {
+  if (phase === 'closed') {
     return {
-      phase: 'closed',
+      phase,
       countdownTargetIso: null,
       message: 'Forecast closed',
-      detailLines: ['The forecast window could not be resolved for this service date.'],
-    };
-  }
-
-  if (phase === 'on-time') {
-    return {
-      phase,
-      countdownTargetIso: helsinkiInstant(
-        submissionDateIso,
-        CHEF_CONFIG.onTimeDeadlineHour,
-        CHEF_CONFIG.onTimeDeadlineMinute,
-        CHEF_CONFIG.onTimeDeadlineSecond,
-      ).toISOString(),
-      message: 'Forecast open — on-time period',
       detailLines: [
-        `Submit by ${pad(CHEF_CONFIG.onTimeDeadlineHour)}:${pad(CHEF_CONFIG.onTimeDeadlineMinute)} for on-time status.`,
-        `Final deadline ${pad(CHEF_CONFIG.lateDeadlineHour)}:${pad(CHEF_CONFIG.lateDeadlineMinute)} on the day before service.`,
-      ],
-    };
-  }
-
-  if (phase === 'late') {
-    return {
-      phase,
-      countdownTargetIso: helsinkiInstant(
-        submissionDateIso,
-        CHEF_CONFIG.lateDeadlineHour,
-        CHEF_CONFIG.lateDeadlineMinute,
-        CHEF_CONFIG.lateDeadlineSecond,
-      ).toISOString(),
-      message: 'Late forecast period',
-      detailLines: [
-        `Submit before ${pad(CHEF_CONFIG.lateDeadlineHour)}:${pad(CHEF_CONFIG.lateDeadlineMinute)} tonight.`,
+        `Forecasts for this service date must be submitted before ${deadlineLabel}.`,
       ],
     };
   }
 
   return {
     phase,
-    countdownTargetIso: null,
-    message: 'Forecast closed',
-    detailLines: ['The forecast window has closed for this service date.'],
+    countdownTargetIso: cutoff.toISOString(),
+    message: 'Forecast open',
+    detailLines: [`Submit before ${deadlineLabel} (${CHEF_CONFIG.timezone}).`],
   };
 }
 
@@ -135,7 +55,7 @@ export function createChefForecastSubmission(
   if (!isChefSubmissionAllowed(now, serviceDate)) return null;
   return {
     targetDate: serviceDate,
-    timingStatus: getChefTimingStatusForInstant(now, serviceDate),
+    timingStatus: 'on-time',
     submittedAt: now.toISOString(),
   };
 }
