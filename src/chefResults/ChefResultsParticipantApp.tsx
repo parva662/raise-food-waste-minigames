@@ -89,12 +89,12 @@ export function ChefResultsParticipantApp() {
   ]);
 
   const kitchenProgress = useMemo(() => {
-    if (!canLoadParticipantData) return EMPTY_KITCHEN_PROGRESS;
+    if (!canLoadProgress) return EMPTY_KITCHEN_PROGRESS;
     if (embedded && inputCollectionsReady) {
       return buildParticipantKitchenProgress(inputCollections, currentUserId);
     }
     return buildFixtureKitchenProgress();
-  }, [canLoadParticipantData, currentUserId, embedded, inputCollections, inputCollectionsReady]);
+  }, [canLoadProgress, currentUserId, embedded, inputCollections, inputCollectionsReady]);
 
   const peerBenchmark =
     dailyResults && ownResult
@@ -172,7 +172,7 @@ export function ChefResultsParticipantApp() {
         />
       ) : null}
 
-      {canLoadParticipantData ? <KitchenProgressSection progress={kitchenProgress} /> : null}
+      {canLoadProgress ? <KitchenProgressSection progress={kitchenProgress} /> : null}
 
       {isChefResultsGameBusDebugMode() ? (
         <details className="chef-results-debug-panel" data-testid="chef-results-debug-panel">

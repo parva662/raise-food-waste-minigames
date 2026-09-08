@@ -222,6 +222,26 @@ describe('progress summary and comparison', () => {
     );
     expect(message).toMatch(/Both estimated surplus and shortage decreased/);
   });
+
+  it('interprets shortage only when previous surplus rate is zero', () => {
+    const message = buildProgressPeriodInterpretation(
+      {
+        overproductionRateGramsPerCustomer: 2,
+        shortageRateGramsPerCustomer: 20,
+        meanCustomerForecastAbsoluteError: 20,
+        servicesCompleted: 4,
+      },
+      {
+        overproductionRateGramsPerCustomer: 0,
+        shortageRateGramsPerCustomer: 140,
+        meanCustomerForecastAbsoluteError: 50,
+        servicesCompleted: 4,
+      },
+      'week',
+    );
+    expect(message).toMatch(/shortage decreased/);
+    expect(message).not.toMatch(/surplus increased/);
+  });
 });
 
 describe('dashboard headings and progress discoverability', () => {

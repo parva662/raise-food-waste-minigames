@@ -37,6 +37,7 @@ export type ProgressComparisonDimension = {
   label: string;
   direction: 'down' | 'up' | 'unchanged' | null;
   displayValue: string;
+  detail?: string | null;
 };
 
 export type ProgressPeriodComparison = {
@@ -379,7 +380,23 @@ function buildSurplusComparisonDimension(
   current: number | null,
   previous: number | null,
 ): ProgressComparisonDimension | null {
-  if (current === null || previous === null || previous === 0) return null;
+  if (previous === null || current === null) {
+    return {
+      label: 'Estimated surplus',
+      direction: null,
+      displayValue: 'No % comparison',
+      detail: 'Previous period surplus could not be normalized per customer.',
+    };
+  }
+  if (previous === 0) {
+    return {
+      label: 'Estimated surplus',
+      direction: null,
+      displayValue: 'No % comparison',
+      detail:
+        'Previous period surplus was 0.0 g/customer, so a percentage change cannot be calculated.',
+    };
+  }
   const improvementPercent = ((previous - current) / previous) * 100;
   if (ratesApproximatelyEqual(current, previous)) {
     return { label: 'Estimated surplus', direction: 'unchanged', displayValue: 'No change' };
@@ -444,54 +461,79 @@ export function buildProgressPeriodInterpretation(
   previous: ReturnType<typeof aggregateCustomerWeightedRates>,
   periodLabel: 'week' | 'month' | 'year',
 ): string | null {
-  if (
-    previous.servicesCompleted === 0 ||
-    previous.overproductionRateGramsPerCustomer === null ||
-    current.overproductionRateGramsPerCustomer === null ||
-    previous.shortageRateGramsPerCustomer === null ||
-    current.shortageRateGramsPerCustomer === null
-  ) {
+  if (previous.servicesCompleted === 0) {
     return null;
   }
 
-  const surplusLower =
-    current.overproductionRateGramsPerCustomer <
-    previous.overproductionRateGramsPerCustomer - PROGRESS_RATE_TOLERANCE;
-  const surplusHigher =
-    current.overproductionRateGramsPerCustomer >
-    previous.overproductionRateGramsPerCustomer + PROGRESS_RATE_TOLERANCE;
-  const shortageLower =
-    current.shortageRateGramsPerCustomer <
-    previous.shortageRateGramsPerCustomer - PROGRESS_RATE_TOLERANCE;
-  const shortageHigher =
-    current.shortageRateGramsPerCustomer >
-    previous.shortageRateGramsPerCustomer + PROGRESS_RATE_TOLERANCE;
+  const surplusComparable =
+    previous.overproductionRateGramsPerCustomer !== null &&
+    current.overproductionRateGramsPerCustomer !== null &&
+    previous.overproductionRateGramsPerCustomer > 0;
 
-  if (!surplusLower && !surplusHigher && !shortageLower && !shortageHigher) {
-    return `Forecast food outcomes were similar to the previous ${periodLabel}.`;
+  const shortageComparable =
+    previous.shortageRateGramsPerCustomer !== null &&
+    current.shortageRateGramsPerCustomer !== null;
+
+  if (!surplusComparable && !shortageComparable) {
+    return null;
   }
-  if (surplusLower && shortageLower) {
-    return `Both estimated surplus and shortage decreased compared with the previous ${periodLabel}.`;
+
+  let surplusLower = false;
+  let surplusHigher = false;
+  if (surplusComparable) {
+    surplusLower =
+      current.overproductionRateGramsPerCustomer! <
+      previous.overproductionRateGramsPerCustomer! - PROGRESS_RATE_TOLERANCE;
+    surplusHigher =
+      current.overproductionRateGramsPerCustomer! >
+      previous.overproductionRateGramsPerCustomer! + PROGRESS_RATE_TOLERANCE;
   }
-  if (surplusLower && shortageHigher) {
-    return 'Estimated surplus decreased, but estimated shortage increased.';
+
+  let shortageLower = false;
+  let shortageHigher = false;
+  if (shortageComparable) {
+    shortageLower =
+      current.shortageRateGramsPerCustomer! <
+      previous.shortageRateGramsPerCustomer! - PROGRESS_RATE_TOLERANCE;
+    shortageHigher =
+      current.shortageRateGramsPerCustomer! >
+      previous.shortageRateGramsPerCustomer! + PROGRESS_RATE_TOLERANCE;
   }
-  if (surplusHigher && shortageLower) {
-    return 'Estimated shortage decreased, but estimated surplus increased.';
+
+  if (surplusComparable) {
+    if (!surplusLower && !surplusHigher && !shortageLower && !shortageHigher) {
+      return `Forecast food outcomes were similar to the previous ${periodLabel}.`;
+    }
+    if (surplusLower && shortageLower) {
+      return `Both estimated surplus and shortage decreased compared with the previous ${periodLabel}.`;
+    }
+    if (surplusLower && shortageHigher) {
+      return 'Estimated surplus decreased, but estimated shortage increased.';
+    }
+    if (surplusHigher && shortageLower) {
+      return 'Estimated shortage decreased, but estimated surplus increased.';
+    }
+    if (surplusHigher && shortageHigher) {
+      return `Both estimated surplus and shortage increased compared with the previous ${periodLabel}.`;
+    }
+    if (surplusLower) {
+      return `Estimated surplus decreased compared with the previous ${periodLabel}.`;
+    }
+    if (surplusHigher) {
+      return `Estimated surplus increased compared with the previous ${periodLabel}.`;
+    }
   }
-  if (surplusHigher && shortageHigher) {
-    return `Both estimated surplus and shortage increased compared with the previous ${periodLabel}.`;
-  }
-  if (surplusLower) {
-    return `Estimated surplus decreased compared with the previous ${periodLabel}.`;
-  }
-  if (surplusHigher) {
-    return `Estimated surplus increased compared with the previous ${periodLabel}.`;
-  }
-  if (shortageLower) {
+
+  if (shortageLower && !shortageHigher) {
     return `Estimated shortage decreased compared with the previous ${periodLabel}.`;
   }
-  return `Estimated shortage increased compared with the previous ${periodLabel}.`;
+  if (shortageHigher && !shortageLower) {
+    return `Estimated shortage increased compared with the previous ${periodLabel}.`;
+  }
+  if (!shortageLower && !shortageHigher) {
+    return `Forecast food outcomes were similar to the previous ${periodLabel}.`;
+  }
+  return null;
 }
 
 function buildProgressCustomerInterpretation(
@@ -511,25 +553,23 @@ export function buildProgressPeriodComparison(
   previous: ReturnType<typeof aggregateCustomerWeightedRates>,
   periodLabel: 'week' | 'month' | 'year',
 ): ProgressPeriodComparison {
-  const previousRateUnavailable =
-    previous.servicesCompleted === 0 ||
-    previous.overproductionRateGramsPerCustomer === null ||
-    previous.overproductionRateGramsPerCustomer === 0;
+  const hasPreviousPeriod = previous.servicesCompleted > 0;
 
-  const noPreviousPeriodMessage = previousRateUnavailable
-    ? `No previous ${periodLabel} to compare yet.`
-    : null;
+  const noPreviousPeriodMessage = hasPreviousPeriod
+    ? null
+    : `No previous ${periodLabel} to compare yet.`;
 
-  let overproductionMessage: string | null = null;
-  if (
-    !previousRateUnavailable &&
+  const canCalculateSurplusPercent =
+    hasPreviousPeriod &&
     current.overproductionRateGramsPerCustomer !== null &&
     previous.overproductionRateGramsPerCustomer !== null &&
-    previous.overproductionRateGramsPerCustomer > 0
-  ) {
+    previous.overproductionRateGramsPerCustomer > 0;
+
+  let overproductionMessage: string | null = null;
+  if (canCalculateSurplusPercent) {
     const improvementPercent =
-      ((previous.overproductionRateGramsPerCustomer - current.overproductionRateGramsPerCustomer) /
-        previous.overproductionRateGramsPerCustomer) *
+      ((previous.overproductionRateGramsPerCustomer! - current.overproductionRateGramsPerCustomer!) /
+        previous.overproductionRateGramsPerCustomer!) *
       100;
     const rounded = Math.abs(improvementPercent).toFixed(0);
     if (improvementPercent > 0) {
@@ -543,7 +583,7 @@ export function buildProgressPeriodComparison(
 
   let shortageMessage: string | null = null;
   if (
-    previous.servicesCompleted > 0 &&
+    hasPreviousPeriod &&
     previous.shortageRateGramsPerCustomer !== null &&
     current.shortageRateGramsPerCustomer !== null
   ) {
@@ -557,27 +597,24 @@ export function buildProgressPeriodComparison(
     }
   }
 
-  const surplusComparison =
-    previousRateUnavailable
-      ? null
-      : buildSurplusComparisonDimension(
-          current.overproductionRateGramsPerCustomer,
-          previous.overproductionRateGramsPerCustomer,
-        );
-  const shortageComparison =
-    previous.servicesCompleted === 0
-      ? null
-      : buildShortageComparisonDimension(
-          current.shortageRateGramsPerCustomer,
-          previous.shortageRateGramsPerCustomer,
-        );
-  const customerErrorComparison =
-    previous.servicesCompleted === 0
-      ? null
-      : buildCustomerErrorComparisonDimension(
-          current.meanCustomerForecastAbsoluteError,
-          previous.meanCustomerForecastAbsoluteError,
-        );
+  const surplusComparison = hasPreviousPeriod
+    ? buildSurplusComparisonDimension(
+        current.overproductionRateGramsPerCustomer,
+        previous.overproductionRateGramsPerCustomer,
+      )
+    : null;
+  const shortageComparison = hasPreviousPeriod
+    ? buildShortageComparisonDimension(
+        current.shortageRateGramsPerCustomer,
+        previous.shortageRateGramsPerCustomer,
+      )
+    : null;
+  const customerErrorComparison = hasPreviousPeriod
+    ? buildCustomerErrorComparisonDimension(
+        current.meanCustomerForecastAbsoluteError,
+        previous.meanCustomerForecastAbsoluteError,
+      )
+    : null;
 
   let interpretationMessage = buildProgressPeriodInterpretation(current, previous, periodLabel);
   const customerInterpretation = buildProgressCustomerInterpretation(current, previous);

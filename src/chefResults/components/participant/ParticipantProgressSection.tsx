@@ -128,13 +128,21 @@ function ProgressBarChart({
 
 function ComparisonDimensionRow({ dimension }: { dimension: ProgressComparisonDimension }) {
   return (
-    <div className="chef-results-progress-compare-row" data-testid={`progress-compare-${dimension.label.toLowerCase().replace(/\s+/g, '-')}`}>
-      <span className="chef-results-progress-compare-row__label">{dimension.label}</span>
-      <span
-        className={`chef-results-progress-compare-row__value chef-results-progress-compare-row__value--${dimension.direction ?? 'unchanged'}`}
-      >
-        {dimension.displayValue}
-      </span>
+    <div
+      className="chef-results-progress-compare-row"
+      data-testid={`progress-compare-${dimension.label.toLowerCase().replace(/\s+/g, '-')}`}
+    >
+      <div className="chef-results-progress-compare-row__main">
+        <span className="chef-results-progress-compare-row__label">{dimension.label}</span>
+        <span
+          className={`chef-results-progress-compare-row__value chef-results-progress-compare-row__value--${dimension.direction ?? 'unchanged'}`}
+        >
+          {dimension.displayValue}
+        </span>
+      </div>
+      {dimension.detail ? (
+        <p className="chef-results-progress-compare-row__detail">{dimension.detail}</p>
+      ) : null}
     </div>
   );
 }

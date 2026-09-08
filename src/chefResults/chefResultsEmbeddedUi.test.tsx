@@ -170,6 +170,25 @@ describe('embedded chef results UI', () => {
     expect(screen.getByTestId('kitchen-progress-team-overproduction').textContent).not.toBe('5');
   });
 
+  it('does not render participant kitchen progress without authenticated user identity', () => {
+    ingestInputCollectionsForTests({
+      [KITCHEN_GROUP_INPUT_COLLECTION_KEY]:
+        embeddedKitchenPayload()[KITCHEN_GROUP_INPUT_COLLECTION_KEY],
+    });
+    render(<ChefResultsParticipantApp />);
+
+    expect(screen.queryByTestId('kitchen-progress-section')).not.toBeInTheDocument();
+    expect(screen.queryByText('4.12 kg')).not.toBeInTheDocument();
+  });
+
+  it('renders participant kitchen progress once authenticated user identity is available', () => {
+    ingestInputCollectionsForTests(embeddedKitchenPayload());
+    render(<ChefResultsParticipantApp />);
+
+    expect(screen.getByTestId('kitchen-progress-section')).toBeInTheDocument();
+    expect(screen.getByTestId('kitchen-progress-services-count')).toHaveTextContent('1');
+  });
+
   it('shows real actor names on the admin page', () => {
     ingestInputCollectionsForTests(embeddedKitchenPayload());
     render(<ChefResultsAdminApp />);
