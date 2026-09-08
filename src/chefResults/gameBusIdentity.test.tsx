@@ -25,6 +25,17 @@ function realMePayload(overrides: Record<string, unknown> = {}) {
   };
 }
 
+function expectNoParticipantDebugUi() {
+  expect(screen.queryByText('GameBus debug')).not.toBeInTheDocument();
+  expect(screen.queryByTestId('chef-results-debug-panel')).not.toBeInTheDocument();
+  expect(screen.queryByTestId('gamebus-user-diagnostic')).not.toBeInTheDocument();
+  expect(screen.queryByTestId('gamebus-user-id')).not.toBeInTheDocument();
+  expect(screen.queryByTestId('gamebus-user-name')).not.toBeInTheDocument();
+  expect(screen.queryByTestId('debug-input-collections')).not.toBeInTheDocument();
+  expect(screen.queryByTestId('debug-frontend-build')).not.toBeInTheDocument();
+  expect(screen.queryByText('hidden@example.com')).not.toBeInTheDocument();
+}
+
 describe('GameBus authenticated user on chef results', () => {
   let originalParent: Window;
 
@@ -54,22 +65,7 @@ describe('GameBus authenticated user on chef results', () => {
     vi.unstubAllEnvs();
   });
 
-  it('shows parsed firstName + lastName in the GameBus diagnostic', () => {
-    ingestInputCollectionsForTests({
-      [INPUT_COLLECTION_PARI_KEY]: {
-        [INPUT_COLLECTION_PARI_ME_REQUEST_KEY]: realMePayload(),
-      },
-    });
-
-    render(<ChefResultsParticipantApp />);
-
-    expect(screen.getByTestId('gamebus-user-diagnostic')).toBeInTheDocument();
-    expect(screen.getByTestId('gamebus-user-name')).toHaveTextContent('Test Account');
-    expect(screen.getByTestId('gamebus-user-id')).toHaveTextContent('real-user-abc');
-    expect(screen.queryByText('hidden@example.com')).not.toBeInTheDocument();
-  });
-
-  it('shows diagnostic on deployed build when gamebusDebug=1', () => {
+  it('does not render participant debug UI when gamebusDebug=1', () => {
     vi.stubEnv('DEV', false);
     ingestInputCollectionsForTests({
       [INPUT_COLLECTION_PARI_KEY]: {
@@ -83,12 +79,11 @@ describe('GameBus authenticated user on chef results', () => {
 
     render(<ChefResultsParticipantApp />);
 
-    expect(screen.getByTestId('gamebus-user-diagnostic')).toBeInTheDocument();
-    expect(screen.getByTestId('gamebus-user-id')).toHaveTextContent('deployed-user');
-    expect(screen.getByTestId('gamebus-user-name')).toHaveTextContent('Deployed Account');
+    expectNoParticipantDebugUi();
+    expect(screen.getByTestId('chef-results-participant-page')).toBeInTheDocument();
   });
 
-  it('hides diagnostic without gamebusDebug=1', () => {
+  it('does not render participant debug UI without gamebusDebug=1', () => {
     vi.stubEnv('DEV', false);
     window.location.hash = '#/chef-results';
     ingestInputCollectionsForTests({
@@ -99,7 +94,7 @@ describe('GameBus authenticated user on chef results', () => {
 
     render(<ChefResultsParticipantApp />);
 
-    expect(screen.queryByTestId('gamebus-user-diagnostic')).not.toBeInTheDocument();
+    expectNoParticipantDebugUi();
   });
 
   it('does not render the raw INPUT_COLLECTIONS debug panel', () => {
@@ -111,38 +106,7 @@ describe('GameBus authenticated user on chef results', () => {
 
     render(<ChefResultsParticipantApp />);
 
-    expect(screen.queryByTestId('raw-input-collections-debug')).not.toBeInTheDocument();
-  });
-
-  it('updates displayed id/name when the GameBus user payload changes', () => {
-    ingestInputCollectionsForTests({
-      [INPUT_COLLECTION_PARI_KEY]: {
-        [INPUT_COLLECTION_PARI_ME_REQUEST_KEY]: realMePayload({
-          id: 'user-one',
-          firstName: 'First',
-          lastName: 'Account',
-        }),
-      },
-    });
-
-    const { unmount } = render(<ChefResultsParticipantApp />);
-    expect(screen.getByTestId('gamebus-user-id')).toHaveTextContent('user-one');
-
-    unmount();
-    resetGameBusBridgeForTests();
-    ingestInputCollectionsForTests({
-      [INPUT_COLLECTION_PARI_KEY]: {
-        [INPUT_COLLECTION_PARI_ME_REQUEST_KEY]: realMePayload({
-          id: 'user-two',
-          firstName: 'Second',
-          lastName: 'Account',
-        }),
-      },
-    });
-
-    render(<ChefResultsParticipantApp />);
-    expect(screen.getByTestId('gamebus-user-id')).toHaveTextContent('user-two');
-    expect(screen.getByTestId('gamebus-user-name')).toHaveTextContent('Second Account');
+    expectNoParticipantDebugUi();
   });
 
   it('does not map the real GameBus user to fixture calculation identity', () => {
@@ -155,11 +119,9 @@ describe('GameBus authenticated user on chef results', () => {
     render(<ChefResultsParticipantApp />);
 
     expect(getFixtureCurrentUserId()).toBe(DEFAULT_FIXTURE_CURRENT_USER_ID);
-    expect(screen.getByTestId('gamebus-user-id')).not.toHaveTextContent(
-      DEFAULT_FIXTURE_CURRENT_USER_ID,
-    );
     expect(screen.queryByTestId('fixture-current-user-selector')).not.toBeInTheDocument();
     expect(screen.getByTestId('participant-results-unavailable-closeout')).toBeInTheDocument();
+    expectNoParticipantDebugUi();
   });
 
   it('logs authenticated user when gamebusDebug=1', () => {
@@ -180,5 +142,6 @@ describe('GameBus authenticated user on chef results', () => {
       id: 'logged-user',
       name: 'Logged User',
     });
+    expectNoParticipantDebugUi();
   });
 });

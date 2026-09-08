@@ -380,12 +380,28 @@ function buildSurplusComparisonDimension(
   current: number | null,
   previous: number | null,
 ): ProgressComparisonDimension | null {
-  if (previous === null || current === null) {
+  if (previous === null && current === null) {
+    return {
+      label: 'Estimated surplus',
+      direction: null,
+      displayValue: 'No % comparison',
+      detail: 'Surplus could not be normalized per customer for either period.',
+    };
+  }
+  if (previous === null) {
     return {
       label: 'Estimated surplus',
       direction: null,
       displayValue: 'No % comparison',
       detail: 'Previous period surplus could not be normalized per customer.',
+    };
+  }
+  if (current === null) {
+    return {
+      label: 'Estimated surplus',
+      direction: null,
+      displayValue: 'No % comparison',
+      detail: 'Current period surplus could not be normalized per customer.',
     };
   }
   if (previous === 0) {

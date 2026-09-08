@@ -64,7 +64,19 @@ function embeddedKitchenPayload() {
   };
 }
 
-describe('INPUT_COLLECTIONS debug panel', () => {
+function expectNoParticipantDebugUi() {
+  expect(screen.queryByText('GameBus debug')).not.toBeInTheDocument();
+  expect(screen.queryByTestId('chef-results-debug-panel')).not.toBeInTheDocument();
+  expect(screen.queryByTestId('gamebus-user-diagnostic')).not.toBeInTheDocument();
+  expect(screen.queryByTestId('debug-input-collections')).not.toBeInTheDocument();
+  expect(screen.queryByTestId('debug-frontend-build')).not.toBeInTheDocument();
+  expect(screen.queryByTestId('debug-input-collection-keys')).not.toBeInTheDocument();
+  expect(screen.queryByTestId('debug-raw-activity-count')).not.toBeInTheDocument();
+  expect(screen.queryByTestId('gamebus-user-id')).not.toBeInTheDocument();
+  expect(screen.queryByTestId('gamebus-user-name')).not.toBeInTheDocument();
+}
+
+describe('participant INPUT_COLLECTIONS debug UI regression', () => {
   let originalParent: Window;
 
   beforeEach(() => {
@@ -91,38 +103,14 @@ describe('INPUT_COLLECTIONS debug panel', () => {
     vi.restoreAllMocks();
   });
 
-  it('renders INPUT_COLLECTIONS diagnostics in gamebusDebug mode', () => {
+  it('does not render INPUT_COLLECTIONS diagnostics on participant page with gamebusDebug=1', () => {
     ingestInputCollectionsForTests(embeddedKitchenPayload());
     render(<ChefResultsParticipantApp />);
 
     const frontendDiagnosticId = getChefResultsFrontendDiagnosticIdentifier();
-    expect(screen.getByText(frontendDiagnosticId.label)).toBeInTheDocument();
-    expect(screen.getByTestId('debug-frontend-build')).toHaveTextContent(
-      frontendDiagnosticId.value,
-    );
-    expect(screen.getByTestId('debug-input-collection-keys')).toHaveTextContent(
-      'inputCollectionPari',
-    );
-    expect(screen.getByTestId('debug-input-collection-keys')).toHaveTextContent(
-      'kitchenGroupInput',
-    );
-    expect(screen.getByTestId('debug-has-pari-me')).toHaveTextContent('yes');
-    expect(screen.getByTestId('debug-has-kitchen-activities')).toHaveTextContent('yes');
-    expect(screen.getByTestId('debug-raw-activities-shape')).toHaveTextContent('array');
-    expect(screen.getByTestId('debug-raw-activity-count')).toHaveTextContent('2');
-    expect(screen.getByTestId('debug-template-count-chefForecast')).toHaveTextContent(
-      'chefForecast: 1',
-    );
-    expect(screen.getByTestId('debug-template-count-wasteMeasurement')).toHaveTextContent(
-      'wasteMeasurement: 1',
-    );
-    expect(screen.getByTestId('debug-waste-activity-id')).toHaveTextContent('wm-1');
-    expect(screen.getByTestId('debug-waste-property-refs')).toHaveTextContent('serviceDate');
-    expect(screen.getByTestId('debug-waste-missing-required')).toHaveTextContent('none');
-    expect(screen.getByTestId('debug-newest-group-activity-created-at')).toHaveTextContent(
-      '2026-07-29',
-    );
-    expect(screen.getByTestId('debug-identity-source')).toHaveTextContent('inputCollectionPari.me');
+    expect(screen.queryByText(frontendDiagnosticId.label)).not.toBeInTheDocument();
+    expectNoParticipantDebugUi();
+    expect(screen.getByTestId('chef-results-participant-page')).toBeInTheDocument();
   });
 
   it('does not render INPUT_COLLECTIONS diagnostics without gamebusDebug=1', () => {
@@ -130,8 +118,6 @@ describe('INPUT_COLLECTIONS debug panel', () => {
     ingestInputCollectionsForTests(embeddedKitchenPayload());
     render(<ChefResultsParticipantApp />);
 
-    expect(screen.queryByTestId('gamebus-user-diagnostic')).not.toBeInTheDocument();
-    expect(screen.queryByTestId('debug-input-collections')).not.toBeInTheDocument();
-    expect(screen.queryByTestId('debug-frontend-build')).not.toBeInTheDocument();
+    expectNoParticipantDebugUi();
   });
 });

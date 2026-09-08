@@ -390,7 +390,7 @@ describe('participant progress calculations', () => {
     expect(comparison.interpretationMessage).not.toMatch(/surplus increased/);
   });
 
-  it('shows surplus unavailable when previous surplus cannot be normalized but period exists', () => {
+  it('shows previous-period normalization copy when previous surplus cannot be normalized', () => {
     const current = aggregateCustomerWeightedRates([
       staffResultToProgressPoint(
         staffResult({ actualCustomers: 100, totalSimulatedOverproductionGrams: 500 }),
@@ -406,7 +406,48 @@ describe('participant progress calculations', () => {
     expect(comparison.overproductionMessage).toBeNull();
     expect(comparison.noPreviousPeriodMessage).toBeNull();
     expect(comparison.surplusComparison?.displayValue).toBe('No % comparison');
-    expect(comparison.surplusComparison?.detail).toMatch(/could not be normalized/);
+    expect(comparison.surplusComparison?.detail).toBe(
+      'Previous period surplus could not be normalized per customer.',
+    );
+  });
+
+  it('shows current-period normalization copy when current surplus cannot be normalized', () => {
+    const current = aggregateCustomerWeightedRates([
+      staffResultToProgressPoint(
+        staffResult({ actualCustomers: 0, totalSimulatedOverproductionGrams: 500 }),
+      ),
+    ]);
+    const previous = aggregateCustomerWeightedRates([
+      staffResultToProgressPoint(
+        staffResult({ actualCustomers: 100, totalSimulatedOverproductionGrams: 500 }),
+      ),
+    ]);
+
+    const comparison = buildProgressPeriodComparison(current, previous, 'week');
+    expect(comparison.surplusComparison?.displayValue).toBe('No % comparison');
+    expect(comparison.surplusComparison?.detail).toBe(
+      'Current period surplus could not be normalized per customer.',
+    );
+  });
+
+  it('shows either-period normalization copy when both surplus rates cannot be normalized', () => {
+    const current = aggregateCustomerWeightedRates([
+      staffResultToProgressPoint(
+        staffResult({ actualCustomers: 0, totalSimulatedOverproductionGrams: 500 }),
+      ),
+    ]);
+    const previous = aggregateCustomerWeightedRates([
+      staffResultToProgressPoint(
+        staffResult({ actualCustomers: 0, totalSimulatedOverproductionGrams: 500 }),
+      ),
+    ]);
+
+    const comparison = buildProgressPeriodComparison(current, previous, 'week');
+    expect(comparison.surplusComparison?.displayValue).toBe('No % comparison');
+    expect(comparison.surplusComparison?.detail).toBe(
+      'Surplus could not be normalized per customer for either period.',
+    );
+    expect(JSON.stringify(comparison)).not.toMatch(/Infinity|NaN/);
   });
 
   it('uses latest duplicate forecast per actor/date from embedded group data', () => {

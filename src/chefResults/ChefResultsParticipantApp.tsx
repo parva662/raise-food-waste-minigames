@@ -4,7 +4,6 @@ import { DashboardHeader, type DashboardStatus } from './components/participant/
 import { FixtureCurrentUserSelector } from './components/participant/FixtureCurrentUserSelector';
 import { ForecastImpactSection } from './components/participant/ForecastImpactSection';
 import { ActualKitchenOutcomeSection } from './components/participant/ActualKitchenOutcomeSection';
-import { GameBusUserDiagnostic } from './components/participant/GameBusUserDiagnostic';
 import { KitchenProgressSection } from './components/participant/KitchenProgressSection';
 import { TeamComparisonSection } from './components/participant/TeamComparisonSection';
 import { ParticipantProgressSection } from './components/participant/ParticipantProgressSection';
@@ -17,7 +16,6 @@ import {
   EMPTY_KITCHEN_PROGRESS,
   hasGroupCloseoutForDate,
 } from './adapters/groupCalculationSource';
-import { isChefResultsGameBusDebugMode } from '../gamebus/chefResultsInvestigation';
 import { resolveChefResultsServiceDate } from '../services/operationalServiceCalendar';
 import { getFixtureCurrentUserId } from './currentUserContext';
 import { findParticipantDailyResult } from './participantWeekData';
@@ -173,17 +171,6 @@ export function ChefResultsParticipantApp() {
       ) : null}
 
       {canLoadProgress ? <KitchenProgressSection progress={kitchenProgress} /> : null}
-
-      {isChefResultsGameBusDebugMode() ? (
-        <details className="chef-results-debug-panel" data-testid="chef-results-debug-panel">
-          <summary>GameBus debug</summary>
-          <GameBusUserDiagnostic
-            selectedDate={resultsServiceDate}
-            currentUserId={currentUserId}
-            hasOwnResult={ownResult !== null}
-          />
-        </details>
-      ) : null}
     </div>
   );
 }

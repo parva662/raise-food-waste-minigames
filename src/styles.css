@@ -2398,20 +2398,6 @@ ul {
   font-size: 0.9375rem;
 }
 
-.chef-results-debug-panel {
-  margin-top: var(--spacing-lg);
-  padding: var(--spacing-sm);
-  border: 1px dashed var(--color-border);
-  border-radius: var(--radius-sm);
-}
-
-.chef-results-debug-panel > summary {
-  cursor: pointer;
-  font-size: 0.875rem;
-  font-weight: 600;
-  color: var(--color-text-secondary);
-}
-
 /* Participant results — gamified feedback dashboard */
 .chef-results-page--participant {
   --chef-results-shortage: #7c3aed;

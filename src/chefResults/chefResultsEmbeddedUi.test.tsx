@@ -197,28 +197,30 @@ describe('embedded chef results UI', () => {
     expect(screen.getByTestId('staff-result-coworker-user')).toHaveTextContent('Coworker Chef');
   });
 
-  it('shows parser diagnostics only in debug mode at the bottom', () => {
+  it('does not expose participant debug UI even with gamebusDebug=1', () => {
     window.location.hash = '#/chef-results?gamebusDebug=1';
     ingestInputCollectionsForTests(embeddedKitchenPayload());
     render(<ChefResultsParticipantApp />);
 
-    const debugPanel = screen.getByTestId('chef-results-debug-panel');
-    expect(debugPanel.tagName).toBe('DETAILS');
-    expect(debugPanel).not.toHaveAttribute('open');
-    expect(screen.getByTestId('gamebus-kitchen-diagnostics')).toBeInTheDocument();
-    expect(screen.getByTestId('debug-calculable-dates')).toHaveTextContent(serviceDate);
-    expect(screen.getByTestId('debug-current-user-has-result')).toHaveTextContent('yes');
-
-    const outcome = screen.getByTestId('actual-kitchen-outcome-section');
-    expect(outcome.compareDocumentPosition(debugPanel) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(screen.queryByText('GameBus debug')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('chef-results-debug-panel')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('gamebus-user-diagnostic')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('gamebus-kitchen-diagnostics')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('debug-input-collections')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('gamebus-user-id')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('gamebus-user-name')).not.toBeInTheDocument();
+    expect(screen.getByTestId('chef-results-participant-page')).toBeInTheDocument();
+    expect(screen.getByTestId('your-progress-section')).toBeInTheDocument();
   });
 
-  it('hides parser diagnostics in normal participant mode', () => {
+  it('hides participant debug UI in normal participant mode', () => {
     ingestInputCollectionsForTests(embeddedKitchenPayload());
     render(<ChefResultsParticipantApp />);
 
+    expect(screen.queryByText('GameBus debug')).not.toBeInTheDocument();
     expect(screen.queryByTestId('chef-results-debug-panel')).not.toBeInTheDocument();
     expect(screen.queryByTestId('gamebus-kitchen-diagnostics')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('gamebus-user-diagnostic')).not.toBeInTheDocument();
   });
 });
 
