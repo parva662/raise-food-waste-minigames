@@ -1,11 +1,11 @@
 import { useEffect, useMemo, useState } from 'react';
-import { formatServiceDateLong } from './displayFormat';
-import { ActualKitchenOutcomeSection } from './components/participant/ActualKitchenOutcomeSection';
+import { CurrentServiceSection } from './components/participant/CurrentServiceSection';
+import { DashboardHeader, type DashboardStatus } from './components/participant/DashboardHeader';
 import { FixtureCurrentUserSelector } from './components/participant/FixtureCurrentUserSelector';
 import { ForecastImpactSection } from './components/participant/ForecastImpactSection';
+import { ActualKitchenOutcomeSection } from './components/participant/ActualKitchenOutcomeSection';
 import { GameBusUserDiagnostic } from './components/participant/GameBusUserDiagnostic';
 import { KitchenProgressSection } from './components/participant/KitchenProgressSection';
-import { ParticipantHeader } from './components/participant/ParticipantHeader';
 import { TeamComparisonSection } from './components/participant/TeamComparisonSection';
 import { ParticipantProgressSection } from './components/participant/ParticipantProgressSection';
 import {
@@ -31,7 +31,7 @@ import { useChefResultsData } from './useChefResultsData';
 import { useGameBusEmbed } from '../gamebus/useGameBusEmbed';
 
 /**
- * Participant-safe results view — own identifiable data + anonymous team comparison.
+ * Participant-safe results view — own identifiable data + anonymous peer comparison.
  * Route: #/chef-results (GameBus participant menu target).
  */
 export function ChefResultsParticipantApp() {
@@ -65,8 +65,11 @@ export function ChefResultsParticipantApp() {
 
   const hasCurrentResult = !isEmbeddedLoading && resultsState.status === 'ready' && ownResult !== null;
 
+  const canLoadParticipantData = !isEmbeddedLoading && (!embedded || inputCollectionsReady);
+  const canLoadProgress = canLoadParticipantData && Boolean(currentUserId || !embedded);
+
   const progressServicePoints = useMemo(() => {
-    if (!hasCurrentResult) return [];
+    if (!canLoadProgress) return [];
     if (embedded && inputCollectionsReady) {
       return buildParticipantProgressServicePoints(
         currentUserId,
@@ -76,22 +79,22 @@ export function ChefResultsParticipantApp() {
     }
     return buildParticipantProgressServicePoints(fixtureUserId, resultsServiceDate);
   }, [
+    canLoadProgress,
     currentUserId,
     embedded,
     fixtureUserId,
-    hasCurrentResult,
     inputCollections,
     inputCollectionsReady,
     resultsServiceDate,
   ]);
 
   const kitchenProgress = useMemo(() => {
-    if (!hasCurrentResult) return EMPTY_KITCHEN_PROGRESS;
+    if (!canLoadParticipantData) return EMPTY_KITCHEN_PROGRESS;
     if (embedded && inputCollectionsReady) {
       return buildParticipantKitchenProgress(inputCollections, currentUserId);
     }
     return buildFixtureKitchenProgress();
-  }, [currentUserId, embedded, hasCurrentResult, inputCollections, inputCollectionsReady]);
+  }, [canLoadParticipantData, currentUserId, embedded, inputCollections, inputCollectionsReady]);
 
   const peerBenchmark =
     dailyResults && ownResult
@@ -102,8 +105,13 @@ export function ChefResultsParticipantApp() {
       ? buildParticipantPeerComparisonInsights(ownResult, peerBenchmark)
       : null;
 
-  const formattedResultsDate = formatServiceDateLong(resultsServiceDate);
-  const showParticipantHeader = !isEmbeddedLoading;
+  const dashboardStatus: DashboardStatus = isEmbeddedLoading
+    ? 'loading'
+    : hasCurrentResult
+      ? 'result-ready'
+      : hasCloseout
+        ? 'no-forecast'
+        : 'waiting-closeout';
 
   return (
     <div
@@ -112,18 +120,7 @@ export function ChefResultsParticipantApp() {
     >
       {!embedded ? <FixtureCurrentUserSelector /> : null}
 
-      <header className="chef-results-dashboard-intro" data-testid="participant-dashboard-intro">
-        <h1 className="chef-results-dashboard-intro__title">Kitchen Staff Dashboard</h1>
-        <p className="chef-results-dashboard-intro__body">
-          After each service is closed, this dashboard compares your forecast with the actual kitchen
-          outcome for the same service date. You can see the real kitchen overproduction, what your
-          forecast would have produced, and how your result compares anonymously with other
-          participating staff.
-        </p>
-        <p className="chef-results-dashboard-intro__note">
-          Results appear only when both your forecast and the service closeout are available.
-        </p>
-      </header>
+      <DashboardHeader serviceDate={resultsServiceDate} status={dashboardStatus} />
 
       {isEmbeddedLoading ? (
         <p className="chef-results-empty" data-testid="chef-results-pending">
@@ -131,51 +128,51 @@ export function ChefResultsParticipantApp() {
         </p>
       ) : null}
 
-      {showParticipantHeader ? <ParticipantHeader serviceDate={resultsServiceDate} /> : null}
-
-      {!isEmbeddedLoading && resultsState.status === 'ready' && !hasCloseout ? (
-        <div className="chef-results-empty-state" data-testid="participant-results-unavailable-closeout">
-          <p className="chef-results-empty-state__title">
-            Results are not available yet for {formattedResultsDate}.
-          </p>
-          <p className="chef-results-empty-state__body">
-            Results appear after this service has been closed.
-          </p>
-        </div>
-      ) : null}
-
-      {!isEmbeddedLoading && resultsState.status === 'ready' && hasCloseout && !ownResult ? (
-        <div className="chef-results-empty-state" data-testid="participant-no-forecast-result">
-          <p className="chef-results-empty-state__title">
-            No forecast result for {formattedResultsDate}.
-          </p>
-          <p className="chef-results-empty-state__body">
-            You did not submit a valid forecast for this service date.
-          </p>
-        </div>
-      ) : null}
-
-      {hasCurrentResult && dailyResults && ownResult ? (
-        <>
-          <ActualKitchenOutcomeSection observed={dailyResults.observed} />
-          <ForecastImpactSection result={ownResult} observed={dailyResults.observed} />
-          {peerBenchmark && peerInsights ? (
-            <TeamComparisonSection
-              participant={ownResult}
-              benchmark={peerBenchmark}
-              insights={peerInsights}
-            />
+      {!isEmbeddedLoading ? (
+        <CurrentServiceSection>
+          {resultsState.status === 'ready' && !hasCloseout ? (
+            <div className="chef-results-empty-state" data-testid="participant-results-unavailable-closeout">
+              <p className="chef-results-empty-state__title">Waiting for service closeout</p>
+              <p className="chef-results-empty-state__body">
+                Results for this service date will appear after the kitchen closeout is recorded.
+              </p>
+            </div>
           ) : null}
-        </>
+
+          {resultsState.status === 'ready' && hasCloseout && !ownResult ? (
+            <div className="chef-results-empty-state" data-testid="participant-no-forecast-result">
+              <p className="chef-results-empty-state__title">No forecast for this service</p>
+              <p className="chef-results-empty-state__body">
+                You did not submit a valid forecast for this service date.
+              </p>
+            </div>
+          ) : null}
+
+          {hasCurrentResult && dailyResults && ownResult ? (
+            <>
+              <ActualKitchenOutcomeSection observed={dailyResults.observed} />
+              <ForecastImpactSection result={ownResult} observed={dailyResults.observed} />
+            </>
+          ) : null}
+        </CurrentServiceSection>
       ) : null}
 
-      {hasCurrentResult ? (
+      {hasCurrentResult && dailyResults && ownResult && peerBenchmark && peerInsights ? (
+        <TeamComparisonSection
+          participant={ownResult}
+          benchmark={peerBenchmark}
+          insights={peerInsights}
+        />
+      ) : null}
+
+      {canLoadProgress ? (
         <ParticipantProgressSection
           servicePoints={progressServicePoints}
           asOfServiceDate={resultsServiceDate}
         />
       ) : null}
-      {hasCurrentResult ? <KitchenProgressSection progress={kitchenProgress} /> : null}
+
+      {canLoadParticipantData ? <KitchenProgressSection progress={kitchenProgress} /> : null}
 
       {isChefResultsGameBusDebugMode() ? (
         <details className="chef-results-debug-panel" data-testid="chef-results-debug-panel">

@@ -139,11 +139,11 @@ describe('canonical participant results in embedded mode', () => {
 
     expect(screen.queryByTestId('chef-results-date-select')).not.toBeInTheDocument();
     expect(screen.getByTestId('participant-no-forecast-result')).toHaveTextContent(
-      'No forecast result for Monday, 7 September 2026.',
+      'No forecast for this service',
     );
     expect(screen.queryByText('34.27 kg')).not.toBeInTheDocument();
     expect(screen.queryByTestId('forecast-impact-section')).not.toBeInTheDocument();
-    expect(screen.queryByTestId('kitchen-progress-section')).not.toBeInTheDocument();
+    expect(screen.getByTestId('your-progress-section')).toBeInTheDocument();
   });
 
   it('shows no closeout state when the canonical date has no wasteMeasurement yet', () => {
@@ -159,9 +159,9 @@ describe('canonical participant results in embedded mode', () => {
     render(<ChefResultsParticipantApp />);
 
     expect(screen.getByTestId('participant-results-unavailable-closeout')).toHaveTextContent(
-      'Results are not available yet for Monday, 7 September 2026.',
+      'Waiting for service closeout',
     );
-    expect(screen.queryByTestId('kitchen-progress-section')).not.toBeInTheDocument();
+    expect(screen.getByTestId('kitchen-progress-section')).toBeInTheDocument();
     expect(screen.queryByTestId('team-comparison-section')).not.toBeInTheDocument();
   });
 
@@ -179,7 +179,7 @@ describe('canonical participant results in embedded mode', () => {
     render(<ChefResultsParticipantApp />);
 
     expect(screen.getByTestId('participant-no-forecast-result')).toHaveTextContent(
-      'You did not submit a valid forecast for this service date.',
+      'No forecast for this service',
     );
     expect(screen.queryByTestId('forecast-impact-section')).not.toBeInTheDocument();
   });
@@ -203,7 +203,9 @@ describe('canonical participant results in embedded mode', () => {
     );
     render(<ChefResultsParticipantApp />);
 
-    expect(screen.getByText(/Service date: Monday, 7 September 2026/)).toBeInTheDocument();
+    expect(screen.getByTestId('participant-results-header')).toHaveTextContent(
+      /Monday, 7 September 2026/,
+    );
     expect(screen.queryByTestId('chef-results-date-select')).not.toBeInTheDocument();
     expect(screen.getByTestId('forecast-impact-section')).toBeInTheDocument();
     expect(screen.getByTestId('team-comparison-section')).toBeInTheDocument();
@@ -252,8 +254,8 @@ describe('canonical participant results in embedded mode', () => {
     );
     render(<ChefResultsParticipantApp />);
 
-    expect(screen.getByTestId('participant-summary-cards')).toHaveTextContent('142');
-    expect(screen.getByTestId('participant-summary-cards')).not.toHaveTextContent('100');
+    expect(screen.getByTestId('customer-estimate-predicted')).toHaveTextContent('142');
+    expect(screen.getByTestId('customer-estimate-predicted')).not.toHaveTextContent('100');
   });
 
   it('resolves the same canonical date for every authenticated staff account', () => {

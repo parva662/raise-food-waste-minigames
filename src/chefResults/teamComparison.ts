@@ -1,4 +1,8 @@
 import type { StaffDailyResult } from './types';
+import {
+  buildPeerCustomerComparisonDetail,
+  buildPeerCustomerComparisonMessage,
+} from './forecastInterpretation';
 
 /**
  * Minimum OTHER participating staff (excluding the authenticated user) before
@@ -136,21 +140,19 @@ export function buildParticipantPeerComparisonInsights(
     }
   }
 
-  const customerDelta =
-    benchmark.participantCustomerError - benchmark.peerCustomerErrorMedian;
-  let customerMessage: string | null = null;
-  if (Math.abs(customerDelta) <= 1) {
-    customerMessage = 'Your customer forecast error was close to the other-staff median.';
-  } else if (customerDelta < 0) {
-    customerMessage = `Your customer forecast error was ${Math.abs(customerDelta).toFixed(1)} customers below the other-staff median.`;
-  } else {
-    customerMessage = `Your customer forecast error was ${customerDelta.toFixed(1)} customers above the other-staff median.`;
-  }
+  const customerMessage = buildPeerCustomerComparisonMessage(
+    benchmark.participantCustomerError,
+    benchmark.peerCustomerErrorMedian,
+  );
+  const customerDetail = buildPeerCustomerComparisonDetail(
+    benchmark.participantCustomerError,
+    benchmark.peerCustomerErrorMedian,
+  );
 
   return {
     overproductionMessage,
     shortageMessage,
-    customerMessage,
+    customerMessage: customerDetail ? `${customerMessage} ${customerDetail}` : customerMessage,
   };
 }
 

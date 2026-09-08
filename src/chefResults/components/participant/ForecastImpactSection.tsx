@@ -1,9 +1,13 @@
 import type { ObservedServiceReality, StaffDailyResult } from '../../types';
 import { sumMeasuredOverproductionGrams } from '../../actualKitchenOutcome';
-import { buildActualVsEstimatedSurplusInsight } from '../../forecastInterpretation';
+import {
+  buildActualVsEstimatedSurplusInsight,
+  FORECAST_INPUT_SEPARATION_NOTE,
+} from '../../forecastInterpretation';
 import { CategoryDetailPanel } from './CategoryDetailPanel';
 import { CategoryOutcomeVisual } from './CategoryOutcomeVisual';
-import { SummaryCards } from './SummaryCards';
+import { CustomerEstimateCard } from './CustomerEstimateCard';
+import { ProductionPlanCard } from './ProductionPlanCard';
 
 interface ForecastImpactSectionProps {
   result: StaffDailyResult;
@@ -20,22 +24,23 @@ export function ForecastImpactSection({ result, observed }: ForecastImpactSectio
 
   return (
     <section
-      className="chef-results-dashboard-section chef-results-forecast-impact"
+      className="chef-results-subsection chef-results-forecast-impact"
       data-testid="forecast-impact-section"
     >
-      <h2 className="chef-results-section-title">If your forecast had been used</h2>
-      <p className="chef-results-section-intro">
-        We compare the amount your forecast would have prepared with the amount of food actually
-        needed during service. This is an estimate, not waste attributed to you.
+      <h3 className="chef-results-subsection-title">Your forecast</h3>
+      <p className="chef-results-subsection-intro">
+        You make two forecasts: a customer estimate and a production plan.
       </p>
 
-      {surplusInsight ? (
-        <p className="chef-results-surplus-insight" data-testid="actual-vs-estimated-surplus-insight">
-          {surplusInsight}
-        </p>
-      ) : null}
+      <div className="chef-results-your-forecast">
+        <CustomerEstimateCard result={result} />
+        <ProductionPlanCard result={result} surplusInsight={surplusInsight} />
+      </div>
 
-      <SummaryCards result={result} />
+      <p className="chef-results-separation-note" data-testid="forecast-input-separation-note">
+        {FORECAST_INPUT_SEPARATION_NOTE}
+      </p>
+
       <CategoryOutcomeVisual result={result} />
       <CategoryDetailPanel result={result} />
     </section>

@@ -29,7 +29,7 @@ describe('chef results routes', () => {
     setHash('#/chef-results');
     render(<AppRouter />);
     expect(screen.getByTestId('chef-results-participant-page')).toBeInTheDocument();
-    expect(screen.getByText('Your result')).toBeInTheDocument();
+    expect(screen.getByText('Kitchen Staff Dashboard')).toBeInTheDocument();
   });
 
   it('renders preserved admin view at #/chef-results-admin', () => {

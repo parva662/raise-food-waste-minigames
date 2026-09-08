@@ -9,6 +9,7 @@ import {
 describe('buildActualVsEstimatedSurplusInsight', () => {
   it('returns approximately-the-same message when values are within tolerance', () => {
     const message = buildActualVsEstimatedSurplusInsight(610, 610 + SURPLUS_COMPARISON_TOLERANCE_GRAMS);
+    expect(message).toMatch(/production plan/);
     expect(message).toMatch(/approximately the same surplus/);
   });
 

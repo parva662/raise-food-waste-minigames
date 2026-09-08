@@ -1,6 +1,6 @@
+import { Users } from 'lucide-react';
 import { formatMeasuredGrams } from '../../displayFormat';
 import { sumMeasuredOverproductionGrams } from '../../actualKitchenOutcome';
-import { RESULT_CATEGORY_KEYS, RESULT_CATEGORY_LABELS } from '../../types';
 import type { ObservedServiceReality } from '../../types';
 
 interface ActualKitchenOutcomeSectionProps {
@@ -12,31 +12,34 @@ export function ActualKitchenOutcomeSection({ observed }: ActualKitchenOutcomeSe
 
   return (
     <section
-      className="chef-results-dashboard-section chef-results-actual-kitchen"
+      className="chef-results-subsection chef-results-actual-kitchen"
       data-testid="actual-kitchen-outcome-section"
     >
-      <h2 className="chef-results-section-title">What happened in the kitchen?</h2>
-      <p className="chef-results-section-intro">
+      <h3 className="chef-results-subsection-title">What happened in the kitchen?</h3>
+      <p className="chef-results-subsection-intro">
         Prepared food left after service, recorded in Service Closeout.
       </p>
 
-      <div className="chef-results-actual-kitchen__total">
-        <p className="chef-results-actual-kitchen__total-label">Actual surplus after service</p>
-        <p className="chef-results-actual-kitchen__total-value" data-testid="actual-kitchen-total">
-          {formatMeasuredGrams(totalGrams)}
-        </p>
-      </div>
-
-      <dl className="chef-results-actual-kitchen__categories">
-        {RESULT_CATEGORY_KEYS.map((key) => (
-          <div key={key} className="chef-results-actual-kitchen__category">
-            <dt>{RESULT_CATEGORY_LABELS[key]}</dt>
-            <dd data-testid={`actual-kitchen-${key}`}>
-              {formatMeasuredGrams(observed[key].measuredOverproductionGrams)}
-            </dd>
+      <div className="chef-results-actual-kitchen__highlights">
+        <div className="chef-results-actual-kitchen__highlight">
+          <Users size={20} aria-hidden="true" />
+          <div>
+            <p className="chef-results-actual-kitchen__highlight-value" data-testid="actual-customers-served">
+              {observed.actualCustomers}
+            </p>
+            <p className="chef-results-actual-kitchen__highlight-label">customers served</p>
           </div>
-        ))}
-      </dl>
+        </div>
+
+        <div className="chef-results-actual-kitchen__highlight">
+          <div>
+            <p className="chef-results-actual-kitchen__highlight-value" data-testid="actual-kitchen-total">
+              {formatMeasuredGrams(totalGrams)}
+            </p>
+            <p className="chef-results-actual-kitchen__highlight-label">actual surplus after service</p>
+          </div>
+        </div>
+      </div>
     </section>
   );
 }

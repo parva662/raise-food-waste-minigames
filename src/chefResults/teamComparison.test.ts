@@ -141,22 +141,23 @@ describe('buildAnonymousPeerBenchmark', () => {
 });
 
 describe('buildParticipantPeerComparisonInsights', () => {
-  it('returns neutral surplus comparison messages in g/customer', () => {
+  it('returns readable customer peer comparison messages', () => {
     const participant = staffResult({
       userId: 'you',
       totalSimulatedOverproductionGrams: 220,
       actualCustomers: 100,
+      customerForecastAbsoluteError: 20,
     });
     const peers = [
-      staffResult({ userId: 'peer-a', totalSimulatedOverproductionGrams: 180, actualCustomers: 100 }),
-      staffResult({ userId: 'peer-b', totalSimulatedOverproductionGrams: 180, actualCustomers: 100 }),
-      staffResult({ userId: 'peer-c', totalSimulatedOverproductionGrams: 180, actualCustomers: 100 }),
+      staffResult({ userId: 'peer-a', totalSimulatedOverproductionGrams: 180, actualCustomers: 100, customerForecastAbsoluteError: 50 }),
+      staffResult({ userId: 'peer-b', totalSimulatedOverproductionGrams: 180, actualCustomers: 100, customerForecastAbsoluteError: 50 }),
+      staffResult({ userId: 'peer-c', totalSimulatedOverproductionGrams: 180, actualCustomers: 100, customerForecastAbsoluteError: 50 }),
     ];
     const benchmark = buildAnonymousPeerBenchmark([participant, ...peers], 'you');
     const insights = buildParticipantPeerComparisonInsights(participant, benchmark);
 
     expect(insights.overproductionMessage).toMatch(/above the other-staff median/);
-    expect(insights.customerMessage).not.toBeNull();
+    expect(insights.customerMessage).toMatch(/closer to actual attendance/);
   });
 
   it('returns no insights when peer threshold is not met', () => {

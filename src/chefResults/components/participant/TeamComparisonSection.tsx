@@ -1,6 +1,8 @@
 import type { AnonymousPeerBenchmark, ParticipantPeerComparisonInsight } from '../../teamComparison';
 import { formatPeerRateGramsPerCustomer } from '../../teamComparison';
 import type { StaffDailyResult } from '../../types';
+import { buildPeerKeyInsights } from '../../participantInsights';
+import { HowCalculatedDisclosure } from './HowCalculatedDisclosure';
 
 interface TeamComparisonSectionProps {
   participant: StaffDailyResult;
@@ -8,34 +10,8 @@ interface TeamComparisonSectionProps {
   insights: ParticipantPeerComparisonInsight;
 }
 
-function barWidthPercent(value: number, maxValue: number): number {
-  if (maxValue <= 0) return 0;
-  return Math.min(100, (value / maxValue) * 100);
-}
-
-function PeerBarRow({
-  label,
-  value,
-  maxValue,
-  testId,
-}: {
-  label: string;
-  value: number | null;
-  maxValue: number;
-  testId: string;
-}) {
-  const display = formatPeerRateGramsPerCustomer(value);
-  const width = value === null ? 0 : barWidthPercent(value, maxValue);
-
-  return (
-    <div className="chef-results-peer-bar-row" data-testid={testId}>
-      <div className="chef-results-peer-bar-row__label">{label}</div>
-      <div className="chef-results-peer-bar-row__track" aria-hidden="true">
-        <div className="chef-results-peer-bar-row__fill" style={{ width: `${width}%` }} />
-      </div>
-      <div className="chef-results-peer-bar-row__value">{display}</div>
-    </div>
-  );
+function formatCustomerError(value: number): string {
+  return `${value.toFixed(1)} customers`;
 }
 
 export function TeamComparisonSection({
@@ -43,18 +19,7 @@ export function TeamComparisonSection({
   benchmark,
   insights,
 }: TeamComparisonSectionProps) {
-  const canShowRates =
-    benchmark.canCompare &&
-    benchmark.participantOverproductionRateGramsPerCustomer !== null &&
-    benchmark.peerOverproductionMedianGramsPerCustomer !== null;
-
-  const maxOverRate = canShowRates
-    ? Math.max(
-        benchmark.participantOverproductionRateGramsPerCustomer!,
-        benchmark.peerOverproductionMedianGramsPerCustomer!,
-        0.1,
-      )
-    : 0;
+  const keyInsights = buildPeerKeyInsights(benchmark, insights);
 
   return (
     <section
@@ -73,84 +38,78 @@ export function TeamComparisonSection({
         </p>
       ) : (
         <>
-          <div className="chef-results-peer-comparison" data-testid="peer-surplus-comparison">
-            <h3 className="chef-results-peer-comparison__heading">Estimated surplus per customer</h3>
-
-            {canShowRates ? (
-              <div className="chef-results-peer-bars">
-                <PeerBarRow
-                  label="You"
-                  value={benchmark.participantOverproductionRateGramsPerCustomer}
-                  maxValue={maxOverRate}
-                  testId="peer-surplus-bar-you"
-                />
-                <PeerBarRow
-                  label="Other staff median"
-                  value={benchmark.peerOverproductionMedianGramsPerCustomer}
-                  maxValue={maxOverRate}
-                  testId="peer-surplus-bar-median"
-                />
-              </div>
-            ) : (
-              <p className="chef-results-peer-unavailable" data-testid="peer-surplus-unavailable">
-                Estimated surplus per customer is unavailable for this service.
-              </p>
-            )}
-
-            {insights.overproductionMessage ? (
-              <p className="chef-results-peer-interpretation" data-testid="peer-surplus-interpretation">
-                {insights.overproductionMessage}
-              </p>
-            ) : null}
+          <div className="chef-results-peer-table-wrap" data-testid="peer-comparison-table">
+            <table className="chef-results-peer-table">
+              <thead>
+                <tr>
+                  <th scope="col" />
+                  <th scope="col">You</th>
+                  <th scope="col">Other staff median</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr data-testid="peer-row-surplus">
+                  <th scope="row">
+                    Estimated surplus
+                    <span className="chef-results-peer-table__unit">(g/customer)</span>
+                  </th>
+                  <td data-testid="peer-surplus-you">
+                    {formatPeerRateGramsPerCustomer(
+                      benchmark.participantOverproductionRateGramsPerCustomer,
+                    )}
+                  </td>
+                  <td data-testid="peer-surplus-median">
+                    {formatPeerRateGramsPerCustomer(
+                      benchmark.peerOverproductionMedianGramsPerCustomer,
+                    )}
+                  </td>
+                </tr>
+                <tr data-testid="peer-row-shortage">
+                  <th scope="row">
+                    Estimated shortage
+                    <span className="chef-results-peer-table__unit">(g/customer)</span>
+                  </th>
+                  <td data-testid="peer-shortage-you">
+                    {formatPeerRateGramsPerCustomer(benchmark.participantShortageRateGramsPerCustomer)}
+                  </td>
+                  <td data-testid="peer-shortage-median">
+                    {formatPeerRateGramsPerCustomer(benchmark.peerShortageMedianGramsPerCustomer)}
+                  </td>
+                </tr>
+                <tr data-testid="peer-row-customer-error">
+                  <th scope="row">
+                    Customer forecast error
+                    <span className="chef-results-peer-table__unit">(customers)</span>
+                  </th>
+                  <td data-testid="peer-customer-error-you">
+                    {formatCustomerError(benchmark.participantCustomerError)}
+                  </td>
+                  <td data-testid="peer-customer-error-median">
+                    {formatCustomerError(benchmark.peerCustomerErrorMedian)}
+                  </td>
+                </tr>
+              </tbody>
+            </table>
           </div>
 
-          <div className="chef-results-peer-comparison chef-results-peer-comparison--secondary">
-            <h3 className="chef-results-peer-comparison__heading">Estimated shortage</h3>
-            <dl className="chef-results-peer-metrics">
-              <div>
-                <dt>You</dt>
-                <dd data-testid="peer-shortage-you">
-                  {formatPeerRateGramsPerCustomer(benchmark.participantShortageRateGramsPerCustomer)}
-                </dd>
-              </div>
-              <div>
-                <dt>Other staff median</dt>
-                <dd data-testid="peer-shortage-median">
-                  {formatPeerRateGramsPerCustomer(benchmark.peerShortageMedianGramsPerCustomer)}
-                </dd>
-              </div>
-            </dl>
-            {insights.shortageMessage ? (
-              <p className="chef-results-peer-interpretation" data-testid="peer-shortage-interpretation">
-                {insights.shortageMessage}
-              </p>
-            ) : null}
-          </div>
+          <p className="chef-results-peer-aim" data-testid="peer-comparison-aim">
+            The aim is to keep both surplus and shortage low.
+          </p>
 
-          <div className="chef-results-peer-comparison chef-results-peer-comparison--secondary">
-            <h3 className="chef-results-peer-comparison__heading">Customer forecast error</h3>
-            <dl className="chef-results-peer-metrics">
-              <div>
-                <dt>You</dt>
-                <dd data-testid="peer-customer-error-you">
-                  {benchmark.participantCustomerError.toFixed(1)} customers
-                </dd>
-              </div>
-              <div>
-                <dt>Other staff median</dt>
-                <dd data-testid="peer-customer-error-median">
-                  {benchmark.peerCustomerErrorMedian.toFixed(1)} customers
-                </dd>
-              </div>
-            </dl>
-            {insights.customerMessage ? (
-              <p className="chef-results-peer-interpretation" data-testid="peer-customer-interpretation">
-                {insights.customerMessage}
-              </p>
-            ) : null}
-          </div>
+          {keyInsights.length > 0 ? (
+            <div className="chef-results-key-insights" data-testid="peer-key-insights">
+              <h3 className="chef-results-key-insights__title">Key insights</h3>
+              <ul>
+                {keyInsights.map((insight) => (
+                  <li key={insight}>{insight}</li>
+                ))}
+              </ul>
+            </div>
+          ) : null}
         </>
       )}
+
+      <HowCalculatedDisclosure />
     </section>
   );
 }

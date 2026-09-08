@@ -33,10 +33,20 @@ export type ProgressChartBucket = {
   meanCustomerForecastAbsoluteError: number;
 };
 
+export type ProgressComparisonDimension = {
+  label: string;
+  direction: 'down' | 'up' | 'unchanged' | null;
+  displayValue: string;
+};
+
 export type ProgressPeriodComparison = {
   overproductionMessage: string | null;
   shortageMessage: string | null;
   noPreviousPeriodMessage: string | null;
+  surplusComparison: ProgressComparisonDimension | null;
+  shortageComparison: ProgressComparisonDimension | null;
+  customerErrorComparison: ProgressComparisonDimension | null;
+  interpretationMessage: string | null;
 };
 
 export type ProgressPeriodSummary = {
@@ -51,6 +61,10 @@ export type ProgressPeriodSummary = {
 export type ProgressPeriodView = {
   summary: ProgressPeriodSummary;
   emptyMessage: string | null;
+  emptyHelper: string | null;
+  periodTitle: string;
+  periodRangeLabel: string;
+  previousPeriodTitle: string;
 };
 
 function calendarUtcInstant(isoDate: string): Date {
@@ -330,6 +344,168 @@ function buildYearBuckets(points: readonly ParticipantProgressServicePoint[]): P
     });
 }
 
+function shortDayMonthLabel(isoDate: string): string {
+  return new Intl.DateTimeFormat('en-GB', {
+    day: 'numeric',
+    month: 'long',
+    timeZone: OPERATIONAL_TIMEZONE,
+  }).format(calendarUtcInstant(isoDate));
+}
+
+export function formatProgressPeriodRange(start: string, end: string): string {
+  const startParts = parseIsoParts(start);
+  const endParts = parseIsoParts(end);
+  if (startParts.month === endParts.month && startParts.year === endParts.year) {
+    const monthName = new Intl.DateTimeFormat('en-GB', {
+      month: 'long',
+      timeZone: OPERATIONAL_TIMEZONE,
+    }).format(calendarUtcInstant(start));
+    return `${startParts.day}–${endParts.day} ${monthName}`;
+  }
+  return `${shortDayMonthLabel(start)} – ${shortDayMonthLabel(end)}`;
+}
+
+const PROGRESS_RATE_TOLERANCE = 0.1;
+const PROGRESS_PERCENT_TOLERANCE = 5;
+
+function ratesApproximatelyEqual(current: number, previous: number): boolean {
+  if (Math.abs(current - previous) <= PROGRESS_RATE_TOLERANCE) return true;
+  if (previous === 0) return current === 0;
+  const percentChange = Math.abs(((current - previous) / previous) * 100);
+  return percentChange <= PROGRESS_PERCENT_TOLERANCE;
+}
+
+function buildSurplusComparisonDimension(
+  current: number | null,
+  previous: number | null,
+): ProgressComparisonDimension | null {
+  if (current === null || previous === null || previous === 0) return null;
+  const improvementPercent = ((previous - current) / previous) * 100;
+  if (ratesApproximatelyEqual(current, previous)) {
+    return { label: 'Estimated surplus', direction: 'unchanged', displayValue: 'No change' };
+  }
+  const rounded = Math.abs(improvementPercent).toFixed(0);
+  if (improvementPercent > 0) {
+    return { label: 'Estimated surplus', direction: 'down', displayValue: `↓ ${rounded}%` };
+  }
+  return { label: 'Estimated surplus', direction: 'up', displayValue: `↑ ${rounded}%` };
+}
+
+function buildShortageComparisonDimension(
+  current: number | null,
+  previous: number | null,
+): ProgressComparisonDimension | null {
+  if (current === null || previous === null) return null;
+  const delta = current - previous;
+  if (Math.abs(delta) <= PROGRESS_RATE_TOLERANCE) {
+    return { label: 'Estimated shortage', direction: 'unchanged', displayValue: 'No change' };
+  }
+  if (delta < 0) {
+    return {
+      label: 'Estimated shortage',
+      direction: 'down',
+      displayValue: `↓ ${Math.abs(delta).toFixed(1)} g/customer`,
+    };
+  }
+  return {
+    label: 'Estimated shortage',
+    direction: 'up',
+    displayValue: `↑ ${delta.toFixed(1)} g/customer`,
+  };
+}
+
+function buildCustomerErrorComparisonDimension(
+  current: number,
+  previous: number,
+): ProgressComparisonDimension | null {
+  if (previous === 0 && current === 0) {
+    return { label: 'Customer estimate error', direction: 'unchanged', displayValue: 'No change' };
+  }
+  const delta = current - previous;
+  if (Math.abs(delta) <= 1) {
+    return { label: 'Customer estimate error', direction: 'unchanged', displayValue: 'No change' };
+  }
+  if (delta < 0) {
+    return {
+      label: 'Customer estimate error',
+      direction: 'down',
+      displayValue: `↓ ${Math.abs(delta).toFixed(0)} customers`,
+    };
+  }
+  return {
+    label: 'Customer estimate error',
+    direction: 'up',
+    displayValue: `↑ ${delta.toFixed(0)} customers`,
+  };
+}
+
+export function buildProgressPeriodInterpretation(
+  current: ReturnType<typeof aggregateCustomerWeightedRates>,
+  previous: ReturnType<typeof aggregateCustomerWeightedRates>,
+  periodLabel: 'week' | 'month' | 'year',
+): string | null {
+  if (
+    previous.servicesCompleted === 0 ||
+    previous.overproductionRateGramsPerCustomer === null ||
+    current.overproductionRateGramsPerCustomer === null ||
+    previous.shortageRateGramsPerCustomer === null ||
+    current.shortageRateGramsPerCustomer === null
+  ) {
+    return null;
+  }
+
+  const surplusLower =
+    current.overproductionRateGramsPerCustomer <
+    previous.overproductionRateGramsPerCustomer - PROGRESS_RATE_TOLERANCE;
+  const surplusHigher =
+    current.overproductionRateGramsPerCustomer >
+    previous.overproductionRateGramsPerCustomer + PROGRESS_RATE_TOLERANCE;
+  const shortageLower =
+    current.shortageRateGramsPerCustomer <
+    previous.shortageRateGramsPerCustomer - PROGRESS_RATE_TOLERANCE;
+  const shortageHigher =
+    current.shortageRateGramsPerCustomer >
+    previous.shortageRateGramsPerCustomer + PROGRESS_RATE_TOLERANCE;
+
+  if (!surplusLower && !surplusHigher && !shortageLower && !shortageHigher) {
+    return `Forecast food outcomes were similar to the previous ${periodLabel}.`;
+  }
+  if (surplusLower && shortageLower) {
+    return `Both estimated surplus and shortage decreased compared with the previous ${periodLabel}.`;
+  }
+  if (surplusLower && shortageHigher) {
+    return 'Estimated surplus decreased, but estimated shortage increased.';
+  }
+  if (surplusHigher && shortageLower) {
+    return 'Estimated shortage decreased, but estimated surplus increased.';
+  }
+  if (surplusHigher && shortageHigher) {
+    return `Both estimated surplus and shortage increased compared with the previous ${periodLabel}.`;
+  }
+  if (surplusLower) {
+    return `Estimated surplus decreased compared with the previous ${periodLabel}.`;
+  }
+  if (surplusHigher) {
+    return `Estimated surplus increased compared with the previous ${periodLabel}.`;
+  }
+  if (shortageLower) {
+    return `Estimated shortage decreased compared with the previous ${periodLabel}.`;
+  }
+  return `Estimated shortage increased compared with the previous ${periodLabel}.`;
+}
+
+function buildProgressCustomerInterpretation(
+  current: ReturnType<typeof aggregateCustomerWeightedRates>,
+  previous: ReturnType<typeof aggregateCustomerWeightedRates>,
+): string | null {
+  if (previous.servicesCompleted === 0) return null;
+  const delta = current.meanCustomerForecastAbsoluteError - previous.meanCustomerForecastAbsoluteError;
+  if (Math.abs(delta) <= 1) return null;
+  if (delta < 0) {
+    return 'Your average customer estimate was closer to actual attendance.';
+  }
+  return 'Your average customer estimate was further from actual attendance.';
+}
 export function buildProgressPeriodComparison(
   current: ReturnType<typeof aggregateCustomerWeightedRates>,
   previous: ReturnType<typeof aggregateCustomerWeightedRates>,
@@ -381,10 +557,44 @@ export function buildProgressPeriodComparison(
     }
   }
 
+  const surplusComparison =
+    previousRateUnavailable
+      ? null
+      : buildSurplusComparisonDimension(
+          current.overproductionRateGramsPerCustomer,
+          previous.overproductionRateGramsPerCustomer,
+        );
+  const shortageComparison =
+    previous.servicesCompleted === 0
+      ? null
+      : buildShortageComparisonDimension(
+          current.shortageRateGramsPerCustomer,
+          previous.shortageRateGramsPerCustomer,
+        );
+  const customerErrorComparison =
+    previous.servicesCompleted === 0
+      ? null
+      : buildCustomerErrorComparisonDimension(
+          current.meanCustomerForecastAbsoluteError,
+          previous.meanCustomerForecastAbsoluteError,
+        );
+
+  let interpretationMessage = buildProgressPeriodInterpretation(current, previous, periodLabel);
+  const customerInterpretation = buildProgressCustomerInterpretation(current, previous);
+  if (customerInterpretation) {
+    interpretationMessage = interpretationMessage
+      ? `${interpretationMessage} ${customerInterpretation}`
+      : customerInterpretation;
+  }
+
   return {
     overproductionMessage,
     shortageMessage,
     noPreviousPeriodMessage,
+    surplusComparison,
+    shortageComparison,
+    customerErrorComparison,
+    interpretationMessage,
   };
 }
 
@@ -455,10 +665,38 @@ export function buildParticipantProgressPeriodView(
 
   const emptyMessage =
     currentPoints.length === 0
-      ? `No completed forecast results for this ${tab}.`
+      ? `No completed forecast results for this ${tab} yet.`
       : null;
 
-  return { summary, emptyMessage };
+  const emptyHelper =
+    currentPoints.length === 0
+      ? 'Your trend will appear after a service you forecast has been closed.'
+      : null;
+
+  const periodTitle =
+    tab === 'week'
+      ? 'Week summary'
+      : tab === 'month'
+        ? `${shortMonthLabel(parseIsoParts(asOfServiceDate).month)} summary`
+        : `${parseIsoParts(asOfServiceDate).year} summary`;
+
+  const periodRangeLabel = formatProgressPeriodRange(currentRange.start, currentRange.end);
+
+  const previousPeriodTitle =
+    tab === 'week'
+      ? 'Compared with previous week'
+      : tab === 'month'
+        ? 'Compared with previous month'
+        : 'Compared with previous year';
+
+  return {
+    summary,
+    emptyMessage,
+    emptyHelper,
+    periodTitle,
+    periodRangeLabel,
+    previousPeriodTitle,
+  };
 }
 
 export function formatGramsPerCustomer(value: number | null): string {

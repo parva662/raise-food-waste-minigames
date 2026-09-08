@@ -28,8 +28,8 @@ export function CategoryOutcomeVisual({ result }: CategoryOutcomeVisualProps) {
     <div className="chef-results-category-visual" data-testid="category-outcome-visual">
       <h3 className="chef-results-subsection-title">By menu item</h3>
       <p className="chef-results-subsection-intro">
-        See where your forecast would have prepared too little, close to the amount needed, or more
-        than needed.
+        See whether your production plan would have prepared too little, close to the amount
+        needed, or more than needed.
       </p>
 
       <div className="chef-results-diverging-list">

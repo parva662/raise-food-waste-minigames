@@ -29,10 +29,8 @@ describe('ParticipantProgressSection', () => {
     expect(screen.getByTestId('your-progress-section')).toBeInTheDocument();
     expect(screen.queryByTestId('your-week-section')).not.toBeInTheDocument();
     expect(screen.getByRole('tab', { name: 'Week' })).toHaveAttribute('aria-selected', 'true');
-    expect(screen.getByText(/Estimated surplus \(g\/customer\)/)).toBeInTheDocument();
-    expect(
-      screen.getByText(/normalized by the number of customers served/i),
-    ).toBeInTheDocument();
+    expect(screen.getByText('Estimated surplus per customer')).toBeInTheDocument();
+    expect(screen.getByText(/Values are shown per customer/)).toBeInTheDocument();
   });
 
   it('switches tabs and updates the visible panel', async () => {
@@ -65,12 +63,12 @@ describe('ParticipantProgressSection', () => {
     render(<ParticipantProgressSection servicePoints={points} asOfServiceDate="2026-01-15" />);
 
     expect(screen.getByTestId('progress-period-empty')).toHaveTextContent(
-      'No completed forecast results for this week.',
+      'No completed forecast results for this week yet.',
     );
 
     await user.click(screen.getByRole('tab', { name: 'Month' }));
     expect(screen.getByTestId('progress-period-empty')).toHaveTextContent(
-      'No completed forecast results for this month.',
+      'No completed forecast results for this month yet.',
     );
   });
 

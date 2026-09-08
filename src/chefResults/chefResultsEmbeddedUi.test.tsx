@@ -131,7 +131,9 @@ describe('embedded chef results UI', () => {
     render(<ChefResultsParticipantApp />);
 
     expect(screen.queryByTestId('chef-results-date-select')).not.toBeInTheDocument();
-    expect(screen.getByText(/Service date: Wednesday, 29 July 2026/)).toBeInTheDocument();
+    expect(screen.getByTestId('participant-results-header')).toHaveTextContent(
+      /Wednesday, 29 July 2026/,
+    );
   });
 
   it('shows only the authenticated user result on the participant page', () => {
@@ -153,10 +155,10 @@ describe('embedded chef results UI', () => {
 
     expect(screen.queryByTestId('chef-results-date-select')).not.toBeInTheDocument();
     expect(screen.getByTestId('participant-no-forecast-result')).toHaveTextContent(
-      'You did not submit a valid forecast for this service date.',
+      'No forecast for this service',
     );
-    expect(screen.queryByTestId('kitchen-progress-section')).not.toBeInTheDocument();
-    expect(screen.queryByTestId('your-progress-section')).not.toBeInTheDocument();
+    expect(screen.getByTestId('your-progress-section')).toBeInTheDocument();
+    expect(screen.getByTestId('kitchen-progress-section')).toBeInTheDocument();
   });
 
   it('uses real embedded kitchen progress instead of fixture leakage', () => {
@@ -290,6 +292,6 @@ describe('standalone chef results fixtures', () => {
     expect(screen.getByTestId('your-progress-section')).toBeInTheDocument();
     expect(screen.getByTestId('kitchen-progress-section')).toBeInTheDocument();
     expect(screen.queryByTestId('chef-results-date-select')).not.toBeInTheDocument();
-    expect(screen.getByText(/Service date: Friday, 31 July 2026/)).toBeInTheDocument();
+    expect(screen.getByTestId('participant-results-header')).toHaveTextContent(/Friday, 31 July 2026/);
   });
 });
