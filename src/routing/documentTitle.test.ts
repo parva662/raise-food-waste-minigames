@@ -7,6 +7,6 @@ describe('document title routing', () => {
     expect(getDocumentTitleForMode('chef')).toBe('Kitchen Forecast');
     expect(getDocumentTitleForMode('service-closeout')).toBe('Service Closeout');
     expect(getDocumentTitleForMode('chef-results')).toBe('Chef Results');
-    expect(getDocumentTitleForMode('chef-results-admin')).toBe('Chef Results Admin');
+    expect(getDocumentTitleForMode('chef-results-admin')).toBe('Kitchen Management Dashboard');
   });
 });

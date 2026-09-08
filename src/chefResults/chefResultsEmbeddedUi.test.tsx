@@ -193,8 +193,8 @@ describe('embedded chef results UI', () => {
     ingestInputCollectionsForTests(embeddedKitchenPayload());
     render(<ChefResultsAdminApp />);
 
-    expect(screen.getByTestId('staff-result-real-user-abc')).toHaveTextContent('Test Account');
-    expect(screen.getByTestId('staff-result-coworker-user')).toHaveTextContent('Coworker Chef');
+    expect(screen.getByTestId('staff-result-name-real-user-abc')).toHaveTextContent('Test Account');
+    expect(screen.getByTestId('staff-result-name-coworker-user')).toHaveTextContent('Coworker Chef');
   });
 
   it('does not expose participant debug UI even with gamebusDebug=1', () => {

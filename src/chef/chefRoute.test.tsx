@@ -54,7 +54,7 @@ describe('App routing', () => {
 
     setHash('#/chef-results-admin');
     rerender(<AppRouter />);
-    expect(document.title).toBe('Chef Results Admin');
+    expect(document.title).toBe('Kitchen Management Dashboard');
   });
 
   it('known available date shows four menu forecast cards on chef route', () => {

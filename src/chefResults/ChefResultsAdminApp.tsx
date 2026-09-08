@@ -1,15 +1,19 @@
 import { useEffect, useMemo, useState } from 'react';
 import { getGroupResultServiceDates } from './adapters/groupCalculationSource';
 import { getFixtureServiceDates } from './adapters/fixtureCalculationSource';
-import { ObservedServicePanel } from './components/ObservedServicePanel';
-import { StaffResultCard } from './components/StaffResultCard';
-import { WeeklySummaryPanel } from './components/WeeklySummaryPanel';
+import { ForecastingManagementSection } from './components/management/ForecastingManagementSection';
+import { ManagementDashboardHeader } from './components/management/ManagementDashboardHeader';
+import { ServiceDateSelector } from './components/management/ServiceDateSelector';
 import { useChefResultsData } from './useChefResultsData';
 import { useGameBusEmbed } from '../gamebus/useGameBusEmbed';
 
 /**
- * Research/admin view — full staff-level results with real actor names when embedded.
- * Route: #/chef-results-admin (hidden; route-level authorization still required before production).
+ * Kitchen Management Dashboard — operational forecasting management for authorized users.
+ * Route: #/chef-results-admin (hidden from participant navigation).
+ *
+ * TODO: Route-level authorization is not implemented in this frontend. Access must be
+ * enforced by GameBus/platform configuration until a reliable permission signal exists
+ * in the INPUT_COLLECTIONS contract.
  */
 export function ChefResultsAdminApp() {
   const { embedded, inputCollections, inputCollectionsReady } = useGameBusEmbed();
@@ -34,69 +38,37 @@ export function ChefResultsAdminApp() {
 
   const resultsState = useChefResultsData(selectedDate);
   const dailyResults = resultsState.status === 'ready' ? resultsState.dailyResults : null;
-  const weeklySummaries = resultsState.status === 'ready' ? resultsState.weeklySummaries : [];
+  const isLoading = resultsState.status === 'pending';
 
   return (
-    <div className="chef-results-page chef-results-page--admin" data-testid="chef-results-admin-page">
-      <header className="chef-results-header">
-        <p className="chef-results-header__eyebrow">Kitchen admin results</p>
-        <h1 className="chef-results-header__title">Daily simulation results</h1>
-        <p className="chef-results-header__intro">
-          Research/admin view showing all participating kitchen staff with real actor names when
-          embedded in GameBus. Not linked from participant navigation. Route-level authorization is
-          still required before production.
-        </p>
-      </header>
+    <div
+      className="chef-results-page chef-results-page--admin kitchen-mgmt-page"
+      data-testid="chef-results-admin-page"
+    >
+      <ManagementDashboardHeader isLoading={isLoading} />
 
-      {resultsState.status === 'pending' ? (
-        <p className="chef-results-empty" data-testid="chef-results-admin-pending">
-          Loading kitchen group activities…
-        </p>
+      {!isLoading ? (
+        <ServiceDateSelector
+          serviceDates={serviceDates}
+          selectedDate={selectedDate}
+          onSelectDate={setSelectedDate}
+        />
       ) : null}
 
-      <div className="chef-results-toolbar">
-        <label className="chef-results-date-picker">
-          <span>Service date</span>
-          <select
-            value={selectedDate}
-            onChange={(event) => setSelectedDate(event.target.value)}
-            data-testid="chef-results-admin-date-select"
-            disabled={serviceDates.length === 0}
-          >
-            {serviceDates.map((date) => (
-              <option key={date} value={date}>
-                {date}
-              </option>
-            ))}
-          </select>
-        </label>
-      </div>
-
-      {resultsState.status === 'ready' && !dailyResults ? (
-        <p className="chef-results-empty" data-testid="chef-results-admin-empty">
-          No closeout data for this service date.
+      {resultsState.status === 'ready' && selectedDate && !dailyResults ? (
+        <p className="kitchen-mgmt-empty" data-testid="chef-results-admin-empty">
+          No complete forecast and service-closeout result is available for this service.
         </p>
       ) : null}
 
       {dailyResults ? (
-        <>
-          <ObservedServicePanel observed={dailyResults.observed} />
-          <section className="chef-results-panel">
-            <h2 className="chef-results-panel__title">Staff simulations</h2>
-            <p className="chef-results-panel__intro">
-              Each staff member with a forecast for this service date is evaluated independently
-              against the shared observed closeout.
-            </p>
-            <div className="chef-results-staff-grid">
-              {dailyResults.staffResults.map((result) => (
-                <StaffResultCard key={result.userId} result={result} />
-              ))}
-            </div>
-          </section>
-        </>
+        <ForecastingManagementSection
+          dailyResults={dailyResults}
+          embedded={embedded}
+          inputCollectionsReady={inputCollectionsReady}
+          inputCollections={inputCollections}
+        />
       ) : null}
-
-      <WeeklySummaryPanel summaries={weeklySummaries} />
     </div>
   );
 }

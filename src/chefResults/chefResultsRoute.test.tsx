@@ -32,12 +32,11 @@ describe('chef results routes', () => {
     expect(screen.getByText('Kitchen Staff Dashboard')).toBeInTheDocument();
   });
 
-  it('renders preserved admin view at #/chef-results-admin', () => {
+  it('renders management dashboard at #/chef-results-admin', () => {
     setHash('#/chef-results-admin');
     render(<AppRouter />);
     expect(screen.getByTestId('chef-results-admin-page')).toBeInTheDocument();
-    expect(screen.getByText('Kitchen admin results')).toBeInTheDocument();
-    expect(screen.getByText('Daily simulation results')).toBeInTheDocument();
+    expect(screen.getByText('Kitchen Management Dashboard')).toBeInTheDocument();
   });
 
   it('does not load chef forecast UI on participant route', () => {
@@ -132,20 +131,22 @@ describe('admin preservation', () => {
     setHash('');
   });
 
-  it('still exposes all fixture staff calculations', () => {
+  it('exposes all fixture staff in the management table', () => {
     render(<AppRouter />);
-    expect(screen.getByTestId('observed-service-panel')).toBeInTheDocument();
-    expect(screen.getByText('Staff simulations')).toBeInTheDocument();
+    expect(screen.getByTestId('kitchen-mgmt-service-overview')).toBeInTheDocument();
+    expect(screen.getByText('Staff results')).toBeInTheDocument();
     const select = screen.getByTestId('chef-results-admin-date-select') as HTMLSelectElement;
     expect(select.value).toBe('2026-07-31');
-    expect(screen.getByTestId('staff-result-fixture-user-b')).toBeInTheDocument();
-    expect(screen.getByTestId('staff-result-fixture-user-c')).toBeInTheDocument();
-    expect(screen.getByTestId('staff-result-fixture-user-d')).toBeInTheDocument();
-    expect(screen.getByTestId('weekly-summary-panel')).toBeInTheDocument();
+    expect(screen.getByTestId('staff-result-row-fixture-user-b')).toBeInTheDocument();
+    expect(screen.getByTestId('staff-result-row-fixture-user-c')).toBeInTheDocument();
+    expect(screen.getByTestId('staff-result-row-fixture-user-d')).toBeInTheDocument();
+    expect(screen.getByTestId('kitchen-mgmt-trends')).toBeInTheDocument();
   });
 
   it('shows real staff names on admin page', () => {
     render(<AppRouter />);
-    expect(screen.getByTestId('staff-result-fixture-user-b')).toHaveTextContent('Boris Lindström');
+    expect(screen.getByTestId('staff-result-name-fixture-user-b')).toHaveTextContent(
+      'Boris Lindström',
+    );
   });
 });

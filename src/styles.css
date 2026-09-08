@@ -3545,3 +3545,302 @@ ul {
   font-size: 0.875rem;
   color: var(--color-text-secondary);
 }
+
+/* Kitchen Management Dashboard */
+.kitchen-mgmt-page {
+  max-width: 72rem;
+  margin: 0 auto;
+  padding: var(--spacing-md);
+}
+
+.kitchen-mgmt-header {
+  margin-bottom: var(--spacing-lg);
+}
+
+.kitchen-mgmt-header__title {
+  margin: 0 0 var(--spacing-xs);
+  font-size: clamp(1.5rem, 4vw, 2rem);
+  font-weight: 700;
+}
+
+.kitchen-mgmt-header__lead {
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-size: 1rem;
+  max-width: 42rem;
+}
+
+.kitchen-mgmt-header__loading {
+  margin: var(--spacing-sm) 0 0;
+  color: var(--color-text-secondary);
+}
+
+.kitchen-mgmt-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: var(--spacing-md);
+  margin-bottom: var(--spacing-lg);
+}
+
+.kitchen-mgmt-date-picker {
+  display: grid;
+  gap: var(--spacing-xs);
+  font-size: 0.875rem;
+}
+
+.kitchen-mgmt-date-picker select {
+  min-height: 2.5rem;
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+}
+
+.kitchen-mgmt-date-picker__readable {
+  margin: 0;
+  font-size: 0.9375rem;
+  color: var(--color-text-secondary);
+}
+
+.kitchen-mgmt-forecasting {
+  display: grid;
+  gap: var(--spacing-xl);
+}
+
+.kitchen-mgmt-module-title {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 700;
+}
+
+.kitchen-mgmt-module-intro {
+  margin: var(--spacing-xs) 0 0;
+  color: var(--color-text-secondary);
+  max-width: 42rem;
+}
+
+.kitchen-mgmt-section {
+  display: grid;
+  gap: var(--spacing-md);
+}
+
+.kitchen-mgmt-section__title {
+  margin: 0;
+  font-size: 1.125rem;
+  font-weight: 700;
+}
+
+.kitchen-mgmt-section__intro,
+.kitchen-mgmt-section__range,
+.kitchen-mgmt-helper {
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-size: 0.9375rem;
+}
+
+.kitchen-mgmt-metrics {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
+  gap: var(--spacing-sm);
+  margin: 0;
+}
+
+.kitchen-mgmt-metrics dt {
+  font-size: 0.75rem;
+  color: var(--color-text-secondary);
+}
+
+.kitchen-mgmt-metrics dd {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.kitchen-mgmt-table th[scope='row'] {
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.kitchen-mgmt-sort-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  text-align: left;
+}
+
+.kitchen-mgmt-sort-button:hover,
+.kitchen-mgmt-sort-button:focus-visible {
+  color: var(--color-text);
+  text-decoration: underline;
+}
+
+.kitchen-mgmt-detail-button {
+  min-height: 2.25rem;
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  font-size: 0.875rem;
+  cursor: pointer;
+}
+
+.kitchen-mgmt-detail-button:hover,
+.kitchen-mgmt-detail-button:focus-visible {
+  border-color: var(--color-accent, #2563eb);
+}
+
+.kitchen-mgmt-staff-detail {
+  padding: var(--spacing-md);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  display: grid;
+  gap: var(--spacing-md);
+}
+
+.kitchen-mgmt-staff-detail__header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-sm);
+}
+
+.kitchen-mgmt-staff-detail__title {
+  margin: 0;
+  font-size: 1.125rem;
+  font-weight: 700;
+}
+
+.kitchen-mgmt-detail-block h3 {
+  margin: 0 0 var(--spacing-xs);
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.kitchen-mgmt-detail-block__helper,
+.kitchen-mgmt-detail-block__note {
+  margin: 0 0 var(--spacing-sm);
+  font-size: 0.875rem;
+  color: var(--color-text-secondary);
+}
+
+.kitchen-mgmt-detail-metrics {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(8rem, 1fr));
+  gap: var(--spacing-sm);
+  margin: 0;
+}
+
+.kitchen-mgmt-detail-metrics dt {
+  font-size: 0.75rem;
+  color: var(--color-text-secondary);
+}
+
+.kitchen-mgmt-detail-metrics dd {
+  margin: 0;
+  font-weight: 600;
+}
+
+.kitchen-mgmt-detail-metrics__rate {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--color-text-secondary);
+}
+
+.kitchen-mgmt-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-xs);
+}
+
+.kitchen-mgmt-tabs__tab {
+  min-height: 2.5rem;
+  padding: var(--spacing-xs) var(--spacing-md);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  font-size: 0.875rem;
+  cursor: pointer;
+}
+
+.kitchen-mgmt-tabs__tab--active {
+  border-color: var(--color-accent, #2563eb);
+  font-weight: 600;
+}
+
+.kitchen-mgmt-chart {
+  margin: 0;
+}
+
+.kitchen-mgmt-chart__svg {
+  width: 100%;
+  max-width: 100%;
+  height: auto;
+}
+
+.kitchen-mgmt-chart__baseline {
+  stroke: var(--color-border);
+  stroke-width: 1;
+}
+
+.kitchen-mgmt-chart__bar {
+  fill: color-mix(in srgb, var(--chef-results-over, #ea580c) 70%, white);
+}
+
+.kitchen-mgmt-chart__bar--latest {
+  fill: var(--chef-results-over, #ea580c);
+}
+
+.kitchen-mgmt-chart__label {
+  font-size: 10px;
+  fill: var(--color-text-secondary);
+}
+
+.kitchen-mgmt-period-summary h3,
+.kitchen-mgmt-comparison h3 {
+  margin: 0 0 var(--spacing-sm);
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.kitchen-mgmt-comparison-row {
+  display: grid;
+  gap: 0.125rem;
+  margin-bottom: var(--spacing-xs);
+  font-size: 0.875rem;
+}
+
+.kitchen-mgmt-comparison-row__label {
+  font-weight: 600;
+}
+
+.kitchen-mgmt-interpretation {
+  margin: var(--spacing-sm) 0 0;
+  font-size: 0.875rem;
+  color: var(--color-text-secondary);
+}
+
+.kitchen-mgmt-empty {
+  margin: 0;
+  color: var(--color-text-secondary);
+}
+
+@media (max-width: 480px) {
+  .kitchen-mgmt-page {
+    padding: var(--spacing-sm);
+  }
+
+  .kitchen-mgmt-metrics {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
