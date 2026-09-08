@@ -347,7 +347,7 @@ describe('participant progress calculations', () => {
     ]);
 
     const comparison = buildProgressPeriodComparison(current, previous, 'week');
-    expect(comparison.overproductionMessage).toBe('↓ 30% simulated overproduction vs previous week');
+    expect(comparison.overproductionMessage).toBe('↓ 30% estimated surplus vs previous week');
     expect(comparison.noPreviousPeriodMessage).toBeNull();
 
     const noPrevious = buildProgressPeriodComparison(current, aggregateCustomerWeightedRates([]), 'week');

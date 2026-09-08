@@ -23,8 +23,8 @@ import { getFixtureCurrentUserId } from './currentUserContext';
 import { findParticipantDailyResult } from './participantWeekData';
 import { buildParticipantProgressServicePoints } from './participantProgressData';
 import {
-  buildAnonymousTeamBenchmark,
-  buildParticipantComparisonInsights,
+  buildAnonymousPeerBenchmark,
+  buildParticipantPeerComparisonInsights,
 } from './teamComparison';
 import { useGameBusAuthenticatedUser } from './useGameBusAuthenticatedUser';
 import { useChefResultsData } from './useChefResultsData';
@@ -93,13 +93,13 @@ export function ChefResultsParticipantApp() {
     return buildFixtureKitchenProgress();
   }, [currentUserId, embedded, hasCurrentResult, inputCollections, inputCollectionsReady]);
 
-  const teamBenchmark =
-    dailyResults && dailyResults.staffResults.length > 0
-      ? buildAnonymousTeamBenchmark(dailyResults.staffResults)
+  const peerBenchmark =
+    dailyResults && ownResult
+      ? buildAnonymousPeerBenchmark(dailyResults.staffResults, currentUserId)
       : null;
-  const comparisonInsights =
-    ownResult && teamBenchmark
-      ? buildParticipantComparisonInsights(ownResult, teamBenchmark)
+  const peerInsights =
+    ownResult && peerBenchmark
+      ? buildParticipantPeerComparisonInsights(ownResult, peerBenchmark)
       : null;
 
   const formattedResultsDate = formatServiceDateLong(resultsServiceDate);
@@ -158,12 +158,12 @@ export function ChefResultsParticipantApp() {
       {hasCurrentResult && dailyResults && ownResult ? (
         <>
           <ActualKitchenOutcomeSection observed={dailyResults.observed} />
-          <ForecastImpactSection result={ownResult} />
-          {teamBenchmark && comparisonInsights ? (
+          <ForecastImpactSection result={ownResult} observed={dailyResults.observed} />
+          {peerBenchmark && peerInsights ? (
             <TeamComparisonSection
               participant={ownResult}
-              benchmark={teamBenchmark}
-              insights={comparisonInsights}
+              benchmark={peerBenchmark}
+              insights={peerInsights}
             />
           ) : null}
         </>

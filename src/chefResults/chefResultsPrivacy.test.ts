@@ -3,30 +3,35 @@ import { buildFixtureDailyServiceResults } from './adapters/fixtureCalculationSo
 import { buildParticipantProgressServicePoints } from './participantProgressData';
 import { findParticipantDailyResult } from './participantWeekData';
 import {
-  buildAnonymousTeamBenchmark,
-  buildParticipantComparisonInsights,
-  MIN_ANONYMOUS_COMPARISON_PARTICIPANTS,
+  buildAnonymousPeerBenchmark,
+  buildParticipantPeerComparisonInsights,
+  MIN_ANONYMOUS_PEER_COUNT,
 } from './teamComparison';
 
-describe('team comparison privacy utilities', () => {
-  it('calculates anonymous team median from staff results', () => {
+describe('peer comparison privacy utilities', () => {
+  it('calculates anonymous peer median excluding the participant', () => {
     const daily = buildFixtureDailyServiceResults('2026-07-27');
     expect(daily).not.toBeNull();
-    const benchmark = buildAnonymousTeamBenchmark(daily!.staffResults);
-    expect(benchmark.participantCount).toBe(3);
-    expect(benchmark.overproductionMedianGrams).toBeGreaterThan(0);
-    expect(benchmark.canShowRange).toBe(
-      daily!.staffResults.length >= MIN_ANONYMOUS_COMPARISON_PARTICIPANTS,
+    const participant = daily!.staffResults[0]!;
+    const benchmark = buildAnonymousPeerBenchmark(daily!.staffResults, participant.userId);
+    expect(benchmark.peerCount).toBe(daily!.staffResults.length - 1);
+    expect(benchmark.peerOverproductionMedianGramsPerCustomer).toBeGreaterThan(0);
+    expect(benchmark.canCompare).toBe(
+      benchmark.peerCount >= MIN_ANONYMOUS_PEER_COUNT,
     );
   });
 
   it('does not expose privileged role labels in comparison insights', () => {
     const daily = buildFixtureDailyServiceResults('2026-07-27');
     const participant = daily!.staffResults[0]!;
-    const benchmark = buildAnonymousTeamBenchmark(daily!.staffResults);
-    const insights = buildParticipantComparisonInsights(participant, benchmark);
-    expect(insights.overproductionMessage).not.toMatch(/head chef/i);
-    expect(insights.shortageMessage).not.toMatch(/head chef/i);
+    const benchmark = buildAnonymousPeerBenchmark(daily!.staffResults, participant.userId);
+    const insights = buildParticipantPeerComparisonInsights(participant, benchmark);
+    if (insights.overproductionMessage) {
+      expect(insights.overproductionMessage).not.toMatch(/head chef/i);
+    }
+    if (insights.shortageMessage) {
+      expect(insights.shortageMessage).not.toMatch(/head chef/i);
+    }
   });
 });
 

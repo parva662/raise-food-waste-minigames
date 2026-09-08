@@ -15,13 +15,13 @@ export function ActualKitchenOutcomeSection({ observed }: ActualKitchenOutcomeSe
       className="chef-results-dashboard-section chef-results-actual-kitchen"
       data-testid="actual-kitchen-outcome-section"
     >
-      <h2 className="chef-results-section-title">Actual kitchen overproduction</h2>
+      <h2 className="chef-results-section-title">What happened in the kitchen?</h2>
       <p className="chef-results-section-intro">
-        Prepared food left unsold after service, recorded in Service Closeout.
+        Prepared food left after service, recorded in Service Closeout.
       </p>
 
       <div className="chef-results-actual-kitchen__total">
-        <p className="chef-results-actual-kitchen__total-label">Total actual overproduction</p>
+        <p className="chef-results-actual-kitchen__total-label">Actual surplus after service</p>
         <p className="chef-results-actual-kitchen__total-value" data-testid="actual-kitchen-total">
           {formatMeasuredGrams(totalGrams)}
         </p>

@@ -5,10 +5,15 @@ import { ActualKitchenOutcomeSection } from './components/participant/ActualKitc
 import { ForecastImpactSection } from './components/participant/ForecastImpactSection';
 import { TeamComparisonSection } from './components/participant/TeamComparisonSection';
 import {
-  buildAnonymousTeamBenchmark,
-  buildParticipantComparisonInsights,
+  buildAnonymousPeerBenchmark,
+  buildParticipantPeerComparisonInsights,
 } from './teamComparison';
-import type { ObservedCategoryReality, ObservedServiceReality, StaffCategorySimulation, StaffDailyResult } from './types';
+import type {
+  ObservedCategoryReality,
+  ObservedServiceReality,
+  StaffCategorySimulation,
+  StaffDailyResult,
+} from './types';
 
 function observedCategoryGrams(grams: number): ObservedCategoryReality {
   return {
@@ -21,7 +26,7 @@ function observedCategoryGrams(grams: number): ObservedCategoryReality {
   };
 }
 
-function observedReality(): ObservedServiceReality {
+function observedReality(overrides: Partial<ObservedServiceReality> = {}): ObservedServiceReality {
   return {
     serviceDate: '2026-07-27',
     actualCustomers: 150,
@@ -29,6 +34,7 @@ function observedReality(): ObservedServiceReality {
     vegetarian: { ...observedCategoryGrams(600), itemId: 'veg' },
     soup: { ...observedCategoryGrams(20), itemId: 'soup' },
     dessert: { ...observedCategoryGrams(20), itemId: 'dessert' },
+    ...overrides,
   };
 }
 
@@ -51,8 +57,8 @@ function categorySimulation(
   };
 }
 
-function staffResult(): StaffDailyResult {
-  return {
+function staffResult(overrides: Partial<StaffDailyResult> = {}): StaffDailyResult {
+  const base: StaffDailyResult = {
     serviceDate: '2026-07-27',
     userId: 'fixture-user-c',
     userName: 'Casey Chef',
@@ -67,6 +73,7 @@ function staffResult(): StaffDailyResult {
     totalSimulatedOverproductionGrams: 34270,
     totalSimulatedShortageGrams: 250,
   };
+  return { ...base, ...overrides };
 }
 
 describe('participant dashboard sections', () => {
@@ -74,26 +81,24 @@ describe('participant dashboard sections', () => {
     cleanup();
   });
 
-  it('section 1 shows measured kitchen overproduction from observed reality', () => {
+  it('section 1 shows actual kitchen surplus from observed reality', () => {
     render(<ActualKitchenOutcomeSection observed={observedReality()} />);
 
     const section = screen.getByTestId('actual-kitchen-outcome-section');
-    expect(section).toHaveTextContent('Actual kitchen overproduction');
+    expect(section).toHaveTextContent('What happened in the kitchen?');
+    expect(section).toHaveTextContent('Actual surplus after service');
     expect(screen.getByTestId('actual-kitchen-total')).toHaveTextContent('1,140 g');
-    expect(screen.getByTestId('actual-kitchen-main')).toHaveTextContent('500 g');
-    expect(screen.getByTestId('actual-kitchen-vegetarian')).toHaveTextContent('600 g');
-    expect(screen.getByTestId('actual-kitchen-soup')).toHaveTextContent('20 g');
-    expect(screen.getByTestId('actual-kitchen-dessert')).toHaveTextContent('20 g');
-    expect(section).not.toHaveTextContent('34.27 kg');
     expect(section).not.toHaveTextContent('Simulated');
   });
 
-  it('section 2 shows customer forecast and simulated totals separately from actual waste', () => {
-    render(<ForecastImpactSection result={staffResult()} />);
+  it('section 2 shows estimated surplus and shortage with understandable copy', () => {
+    render(
+      <ForecastImpactSection result={staffResult()} observed={observedReality()} />,
+    );
 
     const section = screen.getByTestId('forecast-impact-section');
-    expect(section).toHaveTextContent('What would your forecast have produced?');
-    expect(section).toHaveTextContent('These values are not the actual kitchen waste');
+    expect(section).toHaveTextContent('If your forecast had been used');
+    expect(section).toHaveTextContent('This is an estimate, not waste attributed to you');
 
     const summary = screen.getByTestId('participant-summary-cards');
     expect(within(summary).getByText('Customer forecast')).toBeInTheDocument();
@@ -101,25 +106,53 @@ describe('participant dashboard sections', () => {
     expect(within(summary).getByText('160')).toBeInTheDocument();
     expect(within(summary).getByText('Actual')).toBeInTheDocument();
     expect(within(summary).getByText('150')).toBeInTheDocument();
-    expect(within(summary).getByText('Simulated overproduction')).toBeInTheDocument();
+    expect(within(summary).getByText('Estimated surplus')).toBeInTheDocument();
     expect(within(summary).getByText('34.27 kg')).toBeInTheDocument();
-    expect(within(summary).getByText('Simulated shortage')).toBeInTheDocument();
+    expect(within(summary).getByText('Estimated shortage')).toBeInTheDocument();
     expect(within(summary).getByText('250 g')).toBeInTheDocument();
-    expect(section).not.toHaveTextContent('1,140 g');
+    expect(within(summary).queryByText('Simulated overproduction')).not.toBeInTheDocument();
   });
 
-  it('section 2 category simulation identifies shortage, close match, and overproduction', () => {
-    render(<ForecastImpactSection result={staffResult()} />);
+  it('shows actual-vs-estimated surplus insight when values differ', () => {
+    render(
+      <ForecastImpactSection
+        result={staffResult({ totalSimulatedOverproductionGrams: 1000 })}
+        observed={observedReality()}
+      />,
+    );
+
+    expect(screen.getByTestId('actual-vs-estimated-surplus-insight')).toHaveTextContent(
+      /less surplus than the kitchen actually recorded/,
+    );
+  });
+
+  it('by-menu-item visual uses Too little / On target / Too much without duplicate zero labels', () => {
+    render(<ForecastImpactSection result={staffResult()} observed={observedReality()} />);
 
     const visual = screen.getByTestId('category-outcome-visual');
-    expect(within(visual).getByText('Category simulation')).toBeInTheDocument();
-    expect(within(visual).getByText(/Shortage 250 g/)).toBeInTheDocument();
-    expect(within(visual).getByText(/Overproduction 13\.82 kg/)).toBeInTheDocument();
-    expect(within(visual).getByText(/Overproduction 12\.00 kg/)).toBeInTheDocument();
-    expect(within(visual).getByText(/Overproduction 8\.45 kg/)).toBeInTheDocument();
+    expect(within(visual).getByText('By menu item')).toBeInTheDocument();
+    expect(within(visual).getAllByText('On target').length).toBeGreaterThan(0);
+    expect(within(visual).getAllByText('Too little').length).toBeGreaterThan(0);
+    expect(within(visual).getAllByText('Too much').length).toBeGreaterThan(0);
+    expect(within(visual).getByText(/250 g estimated shortage/)).toBeInTheDocument();
+    expect(within(visual).getByText(/13\.82 kg estimated surplus/)).toBeInTheDocument();
+    expect(within(visual).queryByText('Category simulation')).not.toBeInTheDocument();
+    expect(within(visual).queryByText(/^0$/)).not.toBeInTheDocument();
+
+    const mainScale = within(visual).getAllByRole('img')[0];
+    expect(mainScale).toHaveAttribute('aria-label', 'Main: estimated surplus 13820 grams');
   });
 
-  it('section 3 compares forecast performance using simulated metrics', () => {
+  it('renders all four menu categories', () => {
+    render(<ForecastImpactSection result={staffResult()} observed={observedReality()} />);
+    const visual = screen.getByTestId('category-outcome-visual');
+    expect(within(visual).getByText('Main')).toBeInTheDocument();
+    expect(within(visual).getByText('Vegetarian')).toBeInTheDocument();
+    expect(within(visual).getByText('Soup')).toBeInTheDocument();
+    expect(within(visual).getByText('Dessert')).toBeInTheDocument();
+  });
+
+  it('section 3 compares against other staff with two-bar peer comparison', () => {
     const participant = staffResult();
     const peers: StaffDailyResult[] = [
       participant,
@@ -139,20 +172,48 @@ describe('participant dashboard sections', () => {
         totalSimulatedShortageGrams: 100,
         customerForecastAbsoluteError: 15,
       },
+      {
+        ...participant,
+        userId: 'peer-c',
+        userName: 'Peer C',
+        totalSimulatedOverproductionGrams: 33000,
+        totalSimulatedShortageGrams: 200,
+        customerForecastAbsoluteError: 12,
+      },
     ];
-    const benchmark = buildAnonymousTeamBenchmark(peers);
-    const insights = buildParticipantComparisonInsights(participant, benchmark);
+    const benchmark = buildAnonymousPeerBenchmark(peers, participant.userId);
+    const insights = buildParticipantPeerComparisonInsights(participant, benchmark);
 
     render(
       <TeamComparisonSection participant={participant} benchmark={benchmark} insights={insights} />,
     );
 
     const section = screen.getByTestId('team-comparison-section');
-    expect(section).toHaveTextContent('How your forecast compares with the team');
-    expect(section).toHaveTextContent('forecast performance');
-    expect(section).toHaveTextContent('same actual kitchen outcome');
-    expect(section).toHaveTextContent('simulated overproduction');
+    expect(section).toHaveTextContent('Compared with other staff');
+    expect(section).toHaveTextContent('Other staff median');
+    expect(section).toHaveTextContent('Estimated surplus per customer');
+    expect(screen.getByTestId('peer-surplus-bar-you')).toBeInTheDocument();
+    expect(screen.getByTestId('peer-surplus-bar-median')).toBeInTheDocument();
+    expect(screen.queryByTestId('team-benchmark-chart')).not.toBeInTheDocument();
+    expect(section).not.toHaveTextContent('Simulated overproduction — anonymous team range');
     expect(section).not.toHaveTextContent('Peer A');
     expect(section).not.toHaveTextContent('Peer B');
+  });
+
+  it('shows insufficient peers message when fewer than three other staff', () => {
+    const participant = staffResult();
+    const benchmark = buildAnonymousPeerBenchmark(
+      [participant, { ...participant, userId: 'peer-a' }],
+      participant.userId,
+    );
+    const insights = buildParticipantPeerComparisonInsights(participant, benchmark);
+
+    render(
+      <TeamComparisonSection participant={participant} benchmark={benchmark} insights={insights} />,
+    );
+
+    expect(screen.getByTestId('peer-comparison-unavailable')).toHaveTextContent(
+      /Not enough other staff results/,
+    );
   });
 });

@@ -29,7 +29,7 @@ function ProgressBarChart({ buckets }: { buckets: readonly ProgressChartBucket[]
     return (
       <figure className="chef-results-progress-chart" data-testid="progress-bar-chart">
         <figcaption className="chef-results-progress-chart__caption">
-          Simulated overproduction (g/customer)
+          Estimated surplus (g/customer)
         </figcaption>
         <p className="chef-results-progress-chart__unavailable" data-testid="progress-chart-unavailable">
           No chartable normalized performance for this period.
@@ -44,13 +44,13 @@ function ProgressBarChart({ buckets }: { buckets: readonly ProgressChartBucket[]
   return (
     <figure className="chef-results-progress-chart" data-testid="progress-bar-chart">
       <figcaption className="chef-results-progress-chart__caption">
-        Simulated overproduction (g/customer)
+        Estimated surplus (g/customer)
       </figcaption>
       <svg
         className="chef-results-progress-chart__svg"
         viewBox={`0 0 ${Math.max(280, chartBuckets.length * 56)} 140`}
         role="img"
-        aria-label="Simulated overproduction per customer"
+        aria-label="Estimated surplus per customer"
       >
         {chartBuckets.map((bucket, index) => {
           const rate = bucket.overproductionRateGramsPerCustomer!;
@@ -120,7 +120,7 @@ function PeriodSummary({ period }: { period: ProgressPeriodView }) {
 
       <dl className="chef-results-progress-metrics">
         <div>
-          <dt>Average simulated overproduction</dt>
+          <dt>Average estimated surplus</dt>
           <dd data-testid="progress-average-overproduction">
             {formatGramsPerCustomer(summary.overproductionRateGramsPerCustomer)}
           </dd>
@@ -178,8 +178,8 @@ export function ParticipantProgressSection({
     <section className="chef-results-progress" data-testid="your-progress-section">
       <h2 className="chef-results-section-title">Your progress</h2>
       <p className="chef-results-section-intro">
-        See how your forecasts perform over time. Lower simulated overproduction is better, as long
-        as shortages stay under control.
+        See how your forecasts perform over time. These are estimates based on what your forecast
+        would have prepared, normalized per customer served.
       </p>
 
       <div

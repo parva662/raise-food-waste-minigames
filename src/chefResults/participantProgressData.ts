@@ -357,11 +357,11 @@ export function buildProgressPeriodComparison(
       100;
     const rounded = Math.abs(improvementPercent).toFixed(0);
     if (improvementPercent > 0) {
-      overproductionMessage = `↓ ${rounded}% simulated overproduction vs previous ${periodLabel}`;
+      overproductionMessage = `↓ ${rounded}% estimated surplus vs previous ${periodLabel}`;
     } else if (improvementPercent < 0) {
-      overproductionMessage = `↑ ${rounded}% simulated overproduction vs previous ${periodLabel}`;
+      overproductionMessage = `↑ ${rounded}% estimated surplus vs previous ${periodLabel}`;
     } else {
-      overproductionMessage = `Simulated overproduction unchanged vs previous ${periodLabel}`;
+      overproductionMessage = `Estimated surplus unchanged vs previous ${periodLabel}`;
     }
   }
 

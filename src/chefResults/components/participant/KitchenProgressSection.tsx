@@ -15,7 +15,7 @@ export function KitchenProgressSection({ progress }: KitchenProgressSectionProps
           <dd data-testid="kitchen-progress-services-count">{progress.servicesCompletedCount}</dd>
         </div>
         <div>
-          <dt>Anonymous team average simulated overproduction</dt>
+          <dt>Anonymous team average estimated surplus</dt>
           <dd data-testid="kitchen-progress-team-overproduction">
             {formatGrams(progress.anonymousTeamAverageOverproductionGrams)}
           </dd>

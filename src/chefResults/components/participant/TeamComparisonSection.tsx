@@ -1,84 +1,155 @@
-import type { AnonymousTeamBenchmark, ParticipantComparisonInsight } from '../../teamComparison';
+import type { AnonymousPeerBenchmark, ParticipantPeerComparisonInsight } from '../../teamComparison';
+import { formatPeerRateGramsPerCustomer } from '../../teamComparison';
 import type { StaffDailyResult } from '../../types';
-import { formatGrams } from '../../useChefResultsData';
 
 interface TeamComparisonSectionProps {
   participant: StaffDailyResult;
-  benchmark: AnonymousTeamBenchmark;
-  insights: ParticipantComparisonInsight;
+  benchmark: AnonymousPeerBenchmark;
+  insights: ParticipantPeerComparisonInsight;
 }
 
-function markerPercent(value: number, min: number, max: number): number {
-  if (max <= min) return 50;
-  return ((value - min) / (max - min)) * 100;
+function barWidthPercent(value: number, maxValue: number): number {
+  if (maxValue <= 0) return 0;
+  return Math.min(100, (value / maxValue) * 100);
+}
+
+function PeerBarRow({
+  label,
+  value,
+  maxValue,
+  testId,
+}: {
+  label: string;
+  value: number | null;
+  maxValue: number;
+  testId: string;
+}) {
+  const display = formatPeerRateGramsPerCustomer(value);
+  const width = value === null ? 0 : barWidthPercent(value, maxValue);
+
+  return (
+    <div className="chef-results-peer-bar-row" data-testid={testId}>
+      <div className="chef-results-peer-bar-row__label">{label}</div>
+      <div className="chef-results-peer-bar-row__track" aria-hidden="true">
+        <div className="chef-results-peer-bar-row__fill" style={{ width: `${width}%` }} />
+      </div>
+      <div className="chef-results-peer-bar-row__value">{display}</div>
+    </div>
+  );
 }
 
 export function TeamComparisonSection({
-  participant,
+  participant: _participant,
   benchmark,
   insights,
 }: TeamComparisonSectionProps) {
-  const overMarker = markerPercent(
-    participant.totalSimulatedOverproductionGrams,
-    benchmark.overproductionMinGrams,
-    benchmark.overproductionMaxGrams,
-  );
-  const medianMarker = markerPercent(
-    benchmark.overproductionMedianGrams,
-    benchmark.overproductionMinGrams,
-    benchmark.overproductionMaxGrams,
-  );
+  const canShowRates =
+    benchmark.canCompare &&
+    benchmark.participantOverproductionRateGramsPerCustomer !== null &&
+    benchmark.peerOverproductionMedianGramsPerCustomer !== null;
+
+  const maxOverRate = canShowRates
+    ? Math.max(
+        benchmark.participantOverproductionRateGramsPerCustomer!,
+        benchmark.peerOverproductionMedianGramsPerCustomer!,
+        0.1,
+      )
+    : 0;
 
   return (
     <section
       className="chef-results-dashboard-section chef-results-team-compare"
       data-testid="team-comparison-section"
     >
-      <h2 className="chef-results-section-title">How your forecast compares with the team</h2>
+      <h2 className="chef-results-section-title">Compared with other staff</h2>
       <p className="chef-results-section-intro">
-        Compares your forecast performance against anonymous participating staff. Everyone shares
-        the same actual kitchen outcome for this service date. No names or individual coworker
-        values are shown.
+        Your forecast is compared anonymously with other staff who forecast the same service.
+        Individual staff results are never shown.
       </p>
 
-      <ul className="chef-results-insight-list">
-        <li>{insights.overproductionMessage}</li>
-        <li>{insights.shortageMessage}</li>
-        <li>{insights.customerMessage}</li>
-      </ul>
-
-      {benchmark.canShowRange ? (
-        <div className="chef-results-benchmark-chart" data-testid="team-benchmark-chart">
-          <p className="chef-results-benchmark-chart__label">
-            Simulated overproduction — anonymous team range
-          </p>
-          <div className="chef-results-benchmark-track">
-            <div className="chef-results-benchmark-track__range" />
-            <div
-              className="chef-results-benchmark-track__median"
-              style={{ left: `${medianMarker}%` }}
-              title={`Team median ${formatGrams(benchmark.overproductionMedianGrams)}`}
-            >
-              <span>Median</span>
-            </div>
-            <div
-              className="chef-results-benchmark-track__you"
-              style={{ left: `${overMarker}%` }}
-              title={`You ${formatGrams(participant.totalSimulatedOverproductionGrams)}`}
-            >
-              <span>You</span>
-            </div>
-          </div>
-          <div className="chef-results-benchmark-chart__axis">
-            <span>{formatGrams(benchmark.overproductionMinGrams)}</span>
-            <span>{formatGrams(benchmark.overproductionMaxGrams)}</span>
-          </div>
-        </div>
-      ) : (
-        <p className="chef-results-benchmark-fallback" data-testid="team-benchmark-median-only">
-          Team median simulated overproduction today:{' '}
-          {formatGrams(benchmark.overproductionMedianGrams)}
+      {!benchmark.canCompare ? (
+        <p className="chef-results-peer-insufficient" data-testid="peer-comparison-unavailable">
+          Not enough other staff results for an anonymous comparison yet.
         </p>
+      ) : (
+        <>
+          <div className="chef-results-peer-comparison" data-testid="peer-surplus-comparison">
+            <h3 className="chef-results-peer-comparison__heading">Estimated surplus per customer</h3>
+
+            {canShowRates ? (
+              <div className="chef-results-peer-bars">
+                <PeerBarRow
+                  label="You"
+                  value={benchmark.participantOverproductionRateGramsPerCustomer}
+                  maxValue={maxOverRate}
+                  testId="peer-surplus-bar-you"
+                />
+                <PeerBarRow
+                  label="Other staff median"
+                  value={benchmark.peerOverproductionMedianGramsPerCustomer}
+                  maxValue={maxOverRate}
+                  testId="peer-surplus-bar-median"
+                />
+              </div>
+            ) : (
+              <p className="chef-results-peer-unavailable" data-testid="peer-surplus-unavailable">
+                Estimated surplus per customer is unavailable for this service.
+              </p>
+            )}
+
+            {insights.overproductionMessage ? (
+              <p className="chef-results-peer-interpretation" data-testid="peer-surplus-interpretation">
+                {insights.overproductionMessage}
+              </p>
+            ) : null}
+          </div>
+
+          <div className="chef-results-peer-comparison chef-results-peer-comparison--secondary">
+            <h3 className="chef-results-peer-comparison__heading">Estimated shortage</h3>
+            <dl className="chef-results-peer-metrics">
+              <div>
+                <dt>You</dt>
+                <dd data-testid="peer-shortage-you">
+                  {formatPeerRateGramsPerCustomer(benchmark.participantShortageRateGramsPerCustomer)}
+                </dd>
+              </div>
+              <div>
+                <dt>Other staff median</dt>
+                <dd data-testid="peer-shortage-median">
+                  {formatPeerRateGramsPerCustomer(benchmark.peerShortageMedianGramsPerCustomer)}
+                </dd>
+              </div>
+            </dl>
+            {insights.shortageMessage ? (
+              <p className="chef-results-peer-interpretation" data-testid="peer-shortage-interpretation">
+                {insights.shortageMessage}
+              </p>
+            ) : null}
+          </div>
+
+          <div className="chef-results-peer-comparison chef-results-peer-comparison--secondary">
+            <h3 className="chef-results-peer-comparison__heading">Customer forecast error</h3>
+            <dl className="chef-results-peer-metrics">
+              <div>
+                <dt>You</dt>
+                <dd data-testid="peer-customer-error-you">
+                  {benchmark.participantCustomerError.toFixed(1)} customers
+                </dd>
+              </div>
+              <div>
+                <dt>Other staff median</dt>
+                <dd data-testid="peer-customer-error-median">
+                  {benchmark.peerCustomerErrorMedian.toFixed(1)} customers
+                </dd>
+              </div>
+            </dl>
+            {insights.customerMessage ? (
+              <p className="chef-results-peer-interpretation" data-testid="peer-customer-interpretation">
+                {insights.customerMessage}
+              </p>
+            ) : null}
+          </div>
+        </>
       )}
     </section>
   );

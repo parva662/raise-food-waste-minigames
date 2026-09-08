@@ -108,7 +108,7 @@ describe('participant privacy', () => {
   it('uses participant-facing kitchen progress wording', () => {
     render(<AppRouter />);
     expect(screen.getByText('Services completed this week')).toBeInTheDocument();
-    expect(screen.getByText('Anonymous team average simulated overproduction')).toBeInTheDocument();
+    expect(screen.getByText('Anonymous team average estimated surplus')).toBeInTheDocument();
     expect(screen.queryByText(/Fixture services/i)).not.toBeInTheDocument();
     expect(screen.queryByText(/Reserved for a future/i)).not.toBeInTheDocument();
     expect(screen.queryByText(/Informational only/i)).not.toBeInTheDocument();

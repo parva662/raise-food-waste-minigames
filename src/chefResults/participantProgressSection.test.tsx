@@ -29,7 +29,7 @@ describe('ParticipantProgressSection', () => {
     expect(screen.getByTestId('your-progress-section')).toBeInTheDocument();
     expect(screen.queryByTestId('your-week-section')).not.toBeInTheDocument();
     expect(screen.getByRole('tab', { name: 'Week' })).toHaveAttribute('aria-selected', 'true');
-    expect(screen.getByText(/Simulated overproduction \(g\/customer\)/)).toBeInTheDocument();
+    expect(screen.getByText(/Estimated surplus \(g\/customer\)/)).toBeInTheDocument();
     expect(
       screen.getByText(/normalized by the number of customers served/i),
     ).toBeInTheDocument();

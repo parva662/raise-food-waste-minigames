@@ -111,6 +111,20 @@ describe('chef results calculation engine', () => {
     expect(result.simulatedShortageGrams).toBe(200);
   });
 
+  it('preserves worked example: 10_000 g prepared, 1_000 g surplus, forecast vs 9_000 g demand', () => {
+    const surplusCase = simulateFromQuantities(100, 100, 1000, 95);
+    expect(surplusCase.actualPreparedWeightGrams).toBe(10_000);
+    expect(surplusCase.observedDemandWeightGrams).toBe(9_000);
+    expect(surplusCase.forecastProductionWeightGrams).toBe(9_500);
+    expect(surplusCase.simulatedOverproductionGrams).toBe(500);
+    expect(surplusCase.simulatedShortageGrams).toBe(0);
+
+    const shortageCase = simulateFromQuantities(100, 100, 1000, 85);
+    expect(shortageCase.forecastProductionWeightGrams).toBe(8_500);
+    expect(shortageCase.simulatedOverproductionGrams).toBe(0);
+    expect(shortageCase.simulatedShortageGrams).toBe(500);
+  });
+
   it('calculates each category independently', () => {
     const daily = calculateDailyServiceResults(baseCloseout, participation, [
       forecastFor('fixture-user-a', 'Aino Virtanen'),
