@@ -1,9 +1,7 @@
-import {
-  formatCategoryOutcomeLabel,
-  getCategoryOutcomeKind,
-} from '../../forecastInterpretation';
+import { formatServiceDateLong } from '../../displayFormat';
 import {
   formatCustomerErrorCount,
+  formatManagementCategoryOutcome,
   formatNormalizedRate,
   formatStaffDetailCustomerDifference,
 } from '../../managementFormat';
@@ -17,10 +15,11 @@ import { formatGrams } from '../../useChefResultsData';
 
 interface StaffDetailPanelProps {
   result: StaffDailyResult;
+  serviceDate: string;
   onClose: () => void;
 }
 
-export function StaffDetailPanel({ result, onClose }: StaffDetailPanelProps) {
+export function StaffDetailPanel({ result, serviceDate, onClose }: StaffDetailPanelProps) {
   const surplusRate = surplusRateGramsPerCustomer(result);
   const shortageRate = shortageRateGramsPerCustomer(result);
 
@@ -32,9 +31,18 @@ export function StaffDetailPanel({ result, onClose }: StaffDetailPanelProps) {
       aria-labelledby="kitchen-mgmt-staff-detail-title"
     >
       <div className="kitchen-mgmt-staff-detail__header">
-        <h2 className="kitchen-mgmt-staff-detail__title" id="kitchen-mgmt-staff-detail-title">
-          {result.userName} — service detail
-        </h2>
+        <div>
+          <h3
+            className="kitchen-mgmt-staff-detail__name"
+            id="kitchen-mgmt-staff-detail-title"
+            data-testid="kitchen-mgmt-staff-detail-title"
+          >
+            {result.userName}
+          </h3>
+          <p className="kitchen-mgmt-staff-detail__subtitle" data-testid="staff-detail-service-context">
+            Service detail — {formatServiceDateLong(serviceDate)}
+          </p>
+        </div>
         <button
           type="button"
           className="kitchen-mgmt-detail-button"
@@ -45,93 +53,85 @@ export function StaffDetailPanel({ result, onClose }: StaffDetailPanelProps) {
         </button>
       </div>
 
-      <section className="kitchen-mgmt-detail-block" data-testid="staff-detail-customer-estimate">
-        <h3>Customer estimate</h3>
-        <dl className="kitchen-mgmt-detail-metrics">
-          <div>
-            <dt>Predicted</dt>
-            <dd data-testid="staff-detail-predicted">{result.forecastCustomers}</dd>
-          </div>
-          <div>
-            <dt>Actual</dt>
-            <dd data-testid="staff-detail-actual">{result.actualCustomers}</dd>
-          </div>
-          <div>
-            <dt>Difference</dt>
-            <dd data-testid="staff-detail-difference">
-              {formatStaffDetailCustomerDifference(result)}
-            </dd>
-          </div>
-          <div>
-            <dt>Customer error</dt>
-            <dd data-testid="staff-detail-customer-error">
-              {formatCustomerErrorCount(result.customerForecastAbsoluteError)}
-            </dd>
-          </div>
-        </dl>
-      </section>
+      <div className="kitchen-mgmt-detail-cards">
+        <article className="kitchen-mgmt-detail-card" data-testid="staff-detail-customer-estimate">
+          <h4>Customer estimate</h4>
+          <dl>
+            <div>
+              <dt>Predicted</dt>
+              <dd data-testid="staff-detail-predicted">{result.forecastCustomers}</dd>
+            </div>
+            <div>
+              <dt>Actual</dt>
+              <dd data-testid="staff-detail-actual">{result.actualCustomers}</dd>
+            </div>
+            <div>
+              <dt>Difference</dt>
+              <dd data-testid="staff-detail-difference">
+                {formatStaffDetailCustomerDifference(result)}
+              </dd>
+            </div>
+            <div>
+              <dt>Customer error</dt>
+              <dd data-testid="staff-detail-customer-error">
+                {formatCustomerErrorCount(result.customerForecastAbsoluteError)}
+              </dd>
+            </div>
+          </dl>
+        </article>
 
-      <section className="kitchen-mgmt-detail-block" data-testid="staff-detail-production-plan">
-        <h3>Production plan</h3>
-        <p className="kitchen-mgmt-detail-block__helper">If this production plan had been used</p>
-        <dl className="kitchen-mgmt-detail-metrics">
-          <div>
-            <dt>Estimated surplus</dt>
-            <dd data-testid="staff-detail-surplus-absolute">
-              {formatGrams(result.totalSimulatedOverproductionGrams)}
-            </dd>
-            <dd className="kitchen-mgmt-detail-metrics__rate" data-testid="staff-detail-surplus-rate">
-              {formatNormalizedRate(surplusRate)}
-            </dd>
-          </div>
-          <div>
-            <dt>Estimated shortage</dt>
-            <dd data-testid="staff-detail-shortage-absolute">
-              {formatGrams(result.totalSimulatedShortageGrams)}
-            </dd>
-            <dd className="kitchen-mgmt-detail-metrics__rate" data-testid="staff-detail-shortage-rate">
-              {formatNormalizedRate(shortageRate)}
-            </dd>
-          </div>
-        </dl>
-        <p className="kitchen-mgmt-detail-block__note">
-          Estimated surplus and shortage are calculated from the staff member&apos;s planned menu
-          quantities compared with observed service demand.
-        </p>
-      </section>
+        <article className="kitchen-mgmt-detail-card" data-testid="staff-detail-production-plan">
+          <h4>Production plan</h4>
+          <dl>
+            <div>
+              <dt>Estimated surplus</dt>
+              <dd data-testid="staff-detail-surplus-absolute">
+                {formatGrams(result.totalSimulatedOverproductionGrams)}
+              </dd>
+              <dd className="kitchen-mgmt-detail-card__rate" data-testid="staff-detail-surplus-rate">
+                {formatNormalizedRate(surplusRate)}
+              </dd>
+            </div>
+            <div>
+              <dt>Estimated shortage</dt>
+              <dd data-testid="staff-detail-shortage-absolute">
+                {formatGrams(result.totalSimulatedShortageGrams)}
+              </dd>
+              <dd className="kitchen-mgmt-detail-card__rate" data-testid="staff-detail-shortage-rate">
+                {formatNormalizedRate(shortageRate)}
+              </dd>
+            </div>
+          </dl>
+        </article>
+      </div>
 
-      <section className="kitchen-mgmt-detail-block" data-testid="staff-detail-menu-breakdown">
-        <h3>Menu item breakdown</h3>
-        <div className="chef-results-table-wrap">
+      <section className="kitchen-mgmt-surface kitchen-mgmt-surface--nested" data-testid="staff-detail-menu-breakdown">
+        <h4 className="kitchen-mgmt-surface__title">By menu item</h4>
+        <div className="chef-results-table-wrap kitchen-mgmt-table-wrap">
           <table className="chef-results-table kitchen-mgmt-table">
             <thead>
               <tr>
                 <th scope="col">Menu item</th>
-                <th scope="col">Forecast quantity</th>
-                <th scope="col">Forecast weight</th>
-                <th scope="col">Observed demand</th>
+                <th scope="col" className="kitchen-mgmt-table__num">Forecast</th>
+                <th scope="col" className="kitchen-mgmt-table__num">Observed demand</th>
                 <th scope="col">Outcome</th>
               </tr>
             </thead>
             <tbody>
               {RESULT_CATEGORY_KEYS.map((key) => {
                 const category = result[key];
-                const kind = getCategoryOutcomeKind(
+                const outcome = formatManagementCategoryOutcome(
                   category.simulatedOverproductionGrams,
                   category.simulatedShortageGrams,
                 );
-                const grams =
-                  kind === 'shortage'
-                    ? category.simulatedShortageGrams
-                    : category.simulatedOverproductionGrams;
-                const outcome = formatCategoryOutcomeLabel(kind, grams);
 
                 return (
                   <tr key={key} data-testid={`staff-detail-category-${key}`}>
                     <th scope="row">{RESULT_CATEGORY_LABELS[key]}</th>
-                    <td>{category.forecastQuantity}</td>
-                    <td>{formatGrams(category.forecastProductionWeightGrams)}</td>
-                    <td>{formatGrams(category.observedDemandWeightGrams)}</td>
+                    <td className="kitchen-mgmt-table__num">{category.forecastQuantity}</td>
+                    <td className="kitchen-mgmt-table__num">
+                      {formatGrams(category.observedDemandWeightGrams)}
+                    </td>
                     <td data-testid={`staff-detail-outcome-${key}`}>{outcome}</td>
                   </tr>
                 );

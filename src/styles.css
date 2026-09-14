@@ -3548,13 +3548,49 @@ ul {
 
 /* Kitchen Management Dashboard */
 .kitchen-mgmt-page {
-  max-width: 72rem;
+  max-width: 77.5rem;
   margin: 0 auto;
   padding: var(--spacing-md);
+  overflow-x: hidden;
 }
 
 .kitchen-mgmt-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--spacing-md);
   margin-bottom: var(--spacing-lg);
+}
+
+.kitchen-mgmt-header__main {
+  flex: 1 1 16rem;
+  min-width: 0;
+}
+
+.kitchen-mgmt-date-picker--compact {
+  flex: 0 1 auto;
+  align-self: center;
+}
+
+.kitchen-mgmt-date-picker__title {
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  color: var(--color-text-secondary);
+}
+
+.kitchen-mgmt-date-picker__sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }
 
 .kitchen-mgmt-header__title {
@@ -3605,7 +3641,319 @@ ul {
 
 .kitchen-mgmt-forecasting {
   display: grid;
-  gap: var(--spacing-xl);
+  gap: var(--spacing-lg);
+}
+
+.kitchen-mgmt-primary-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-xs);
+  border-bottom: 1px solid var(--color-border);
+  padding-bottom: var(--spacing-xs);
+}
+
+.kitchen-mgmt-primary-tabs__tab {
+  min-height: 2.5rem;
+  padding: var(--spacing-xs) var(--spacing-md);
+  border: 0;
+  border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+  background: transparent;
+  font-size: 0.9375rem;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+}
+
+.kitchen-mgmt-primary-tabs__tab--active {
+  color: var(--color-text);
+  font-weight: 600;
+  box-shadow: inset 0 -2px 0 var(--color-accent, #2563eb);
+}
+
+.kitchen-mgmt-primary-panel {
+  padding-top: var(--spacing-md);
+}
+
+.kitchen-mgmt-overview,
+.kitchen-mgmt-trends-tab,
+.kitchen-mgmt-staff-tab {
+  display: grid;
+  gap: var(--spacing-lg);
+}
+
+.kitchen-mgmt-surface {
+  padding: 1rem 1.25rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: #fff;
+  box-shadow: 0 1px 2px rgb(15 23 42 / 4%);
+}
+
+.kitchen-mgmt-surface--nested {
+  margin-top: var(--spacing-sm);
+}
+
+.kitchen-mgmt-surface__title {
+  margin: 0 0 var(--spacing-md);
+  font-size: 0.8125rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--color-text-secondary);
+}
+
+.kitchen-mgmt-surface__subtitle {
+  margin: 0 0 var(--spacing-md);
+  font-size: 0.8125rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--color-text-secondary);
+}
+
+.kitchen-mgmt-kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(8.5rem, 1fr));
+  gap: var(--spacing-sm);
+}
+
+.kitchen-mgmt-kpi {
+  padding: 0.75rem 1rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+}
+
+.kitchen-mgmt-kpi__value {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.kitchen-mgmt-kpi__label {
+  margin: 0.25rem 0 0;
+  font-size: 0.75rem;
+  color: var(--color-text-secondary);
+}
+
+.kitchen-mgmt-kpi--neutral {
+  border-color: color-mix(in srgb, var(--chef-results-actual, #0d9488) 35%, var(--color-border));
+}
+
+.kitchen-mgmt-kpi--surplus {
+  border-color: color-mix(in srgb, var(--chef-results-over, #ea580c) 40%, var(--color-border));
+}
+
+.kitchen-mgmt-kpi--shortage {
+  border-color: color-mix(in srgb, #7c3aed 40%, var(--color-border));
+}
+
+.kitchen-mgmt-kpi--forecast {
+  border-color: color-mix(in srgb, #2563eb 30%, var(--color-border));
+}
+
+.kitchen-mgmt-kpi--completed .kitchen-mgmt-kpi__value {
+  color: #15803d;
+}
+
+.kitchen-mgmt-kpi-grid--snapshot dl,
+.kitchen-mgmt-kpi-grid--snapshot > div {
+  padding: 0.5rem 0;
+}
+
+.kitchen-mgmt-kpi-grid--snapshot dt {
+  font-size: 0.75rem;
+  color: var(--color-text-secondary);
+}
+
+.kitchen-mgmt-kpi-grid--snapshot dd {
+  margin: 0.125rem 0 0;
+  font-weight: 600;
+}
+
+.kitchen-mgmt-snapshot-message,
+.kitchen-mgmt-snapshot-hint {
+  margin: 0;
+  font-size: 0.9375rem;
+  color: var(--color-text-secondary);
+}
+
+.kitchen-mgmt-snapshot-hint {
+  margin-top: var(--spacing-xs);
+}
+
+.kitchen-mgmt-table-wrap {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.kitchen-mgmt-table thead th {
+  border-bottom: 2px solid var(--color-border);
+  padding-bottom: var(--spacing-xs);
+  font-size: 0.8125rem;
+}
+
+.kitchen-mgmt-table tbody tr:hover {
+  background: color-mix(in srgb, var(--color-border) 25%, transparent);
+}
+
+.kitchen-mgmt-table__row--selected {
+  background: color-mix(in srgb, var(--color-accent, #2563eb) 8%, white);
+  outline: 2px solid color-mix(in srgb, var(--color-accent, #2563eb) 35%, transparent);
+  outline-offset: -2px;
+}
+
+.kitchen-mgmt-table__num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.kitchen-mgmt-forecast-cell__primary {
+  display: block;
+  font-weight: 600;
+}
+
+.kitchen-mgmt-forecast-cell__secondary {
+  display: block;
+  font-size: 0.8125rem;
+  color: var(--color-text-secondary);
+}
+
+.kitchen-mgmt-staff-tab__header {
+  display: grid;
+  gap: var(--spacing-xs);
+}
+
+.kitchen-mgmt-staff-tab__context {
+  margin: 0;
+  font-size: 0.9375rem;
+  color: var(--color-text-secondary);
+}
+
+.kitchen-mgmt-staff-tab__context-sep {
+  margin: 0 0.35rem;
+}
+
+.kitchen-mgmt-staff-detail__name {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 700;
+}
+
+.kitchen-mgmt-staff-detail__subtitle {
+  margin: 0.25rem 0 0;
+  font-size: 0.875rem;
+  color: var(--color-text-secondary);
+}
+
+.kitchen-mgmt-detail-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
+  gap: var(--spacing-md);
+}
+
+.kitchen-mgmt-detail-card {
+  padding: 1rem 1.25rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: #fff;
+}
+
+.kitchen-mgmt-detail-card h4 {
+  margin: 0 0 var(--spacing-sm);
+  font-size: 0.8125rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--color-text-secondary);
+}
+
+.kitchen-mgmt-detail-card dl {
+  display: grid;
+  gap: var(--spacing-xs);
+  margin: 0;
+}
+
+.kitchen-mgmt-detail-card dt {
+  font-size: 0.75rem;
+  color: var(--color-text-secondary);
+}
+
+.kitchen-mgmt-detail-card dd {
+  margin: 0;
+  font-weight: 600;
+}
+
+.kitchen-mgmt-detail-card__rate {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--color-text-secondary);
+}
+
+.kitchen-mgmt-chart-empty {
+  padding: 1rem 1.25rem;
+  border: 1px dashed var(--color-border);
+  border-radius: var(--radius-md);
+  font-size: 0.9375rem;
+  color: var(--color-text-secondary);
+}
+
+.kitchen-mgmt-chart-empty p {
+  margin: 0 0 var(--spacing-xs);
+}
+
+.kitchen-mgmt-chart__caption {
+  margin: 0 0 var(--spacing-sm);
+  font-size: 0.8125rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--color-text-secondary);
+}
+
+.kitchen-mgmt-chart-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-md);
+  margin-bottom: var(--spacing-sm);
+  font-size: 0.8125rem;
+}
+
+.kitchen-mgmt-chart-legend__item::before {
+  content: '';
+  display: inline-block;
+  width: 0.75rem;
+  height: 0.75rem;
+  margin-right: 0.35rem;
+  border-radius: 2px;
+  vertical-align: middle;
+}
+
+.kitchen-mgmt-chart-legend__item--surplus::before {
+  background: var(--chef-results-over, #ea580c);
+}
+
+.kitchen-mgmt-chart-legend__item--shortage::before {
+  background: #7c3aed;
+}
+
+.kitchen-mgmt-comparison-card__rows {
+  display: grid;
+  gap: var(--spacing-xs);
+}
+
+.kitchen-mgmt-comparison-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 0.25rem 1rem;
+  align-items: baseline;
+  font-size: 0.875rem;
+}
+
+.kitchen-mgmt-comparison-row__detail {
+  grid-column: 2;
+  font-size: 0.8125rem;
+  color: var(--color-text-secondary);
 }
 
 .kitchen-mgmt-module-title {
@@ -3792,12 +4140,20 @@ ul {
   stroke-width: 1;
 }
 
-.kitchen-mgmt-chart__bar {
-  fill: color-mix(in srgb, var(--chef-results-over, #ea580c) 70%, white);
+.kitchen-mgmt-chart__bar--surplus {
+  fill: color-mix(in srgb, var(--chef-results-over, #ea580c) 75%, white);
 }
 
-.kitchen-mgmt-chart__bar--latest {
+.kitchen-mgmt-chart__bar--surplus.kitchen-mgmt-chart__bar--latest {
   fill: var(--chef-results-over, #ea580c);
+}
+
+.kitchen-mgmt-chart__bar--shortage {
+  fill: color-mix(in srgb, #7c3aed 75%, white);
+}
+
+.kitchen-mgmt-chart__bar--shortage.kitchen-mgmt-chart__bar--latest {
+  fill: #7c3aed;
 }
 
 .kitchen-mgmt-chart__label {

@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { ChefResultsParticipantApp } from './ChefResultsParticipantApp';
 import { ChefResultsAdminApp } from './ChefResultsAdminApp';
 import { DEFAULT_FIXTURE_CURRENT_USER_ID } from './currentUserContext';
@@ -189,9 +190,11 @@ describe('embedded chef results UI', () => {
     expect(screen.getByTestId('kitchen-progress-services-count')).toHaveTextContent('1');
   });
 
-  it('shows real actor names on the admin page', () => {
+  it('shows real actor names on the admin page', async () => {
+    const user = userEvent.setup();
     ingestInputCollectionsForTests(embeddedKitchenPayload());
     render(<ChefResultsAdminApp />);
+    await user.click(screen.getByTestId('kitchen-mgmt-primary-tab-staff'));
 
     expect(screen.getByTestId('staff-result-name-real-user-abc')).toHaveTextContent('Test Account');
     expect(screen.getByTestId('staff-result-name-coworker-user')).toHaveTextContent('Coworker Chef');

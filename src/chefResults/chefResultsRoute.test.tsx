@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { cleanup, render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { AppRouter } from '../AppRouter';
 import { DEFAULT_FIXTURE_CURRENT_USER_ID } from './currentUserContext';
 import * as operationalCalendarModule from '../services/operationalServiceCalendar';
@@ -131,20 +132,25 @@ describe('admin preservation', () => {
     setHash('');
   });
 
-  it('exposes all fixture staff in the management table', () => {
+  it('exposes all fixture staff in the management table', async () => {
+    const user = userEvent.setup();
     render(<AppRouter />);
     expect(screen.getByTestId('kitchen-mgmt-service-overview')).toBeInTheDocument();
-    expect(screen.getByText('Staff results')).toBeInTheDocument();
+    await user.click(screen.getByTestId('kitchen-mgmt-primary-tab-staff'));
+    expect(screen.getByText('Staff forecasts')).toBeInTheDocument();
     const select = screen.getByTestId('chef-results-admin-date-select') as HTMLSelectElement;
     expect(select.value).toBe('2026-07-31');
     expect(screen.getByTestId('staff-result-row-fixture-user-b')).toBeInTheDocument();
     expect(screen.getByTestId('staff-result-row-fixture-user-c')).toBeInTheDocument();
     expect(screen.getByTestId('staff-result-row-fixture-user-d')).toBeInTheDocument();
+    await user.click(screen.getByTestId('kitchen-mgmt-primary-tab-trends'));
     expect(screen.getByTestId('kitchen-mgmt-trends')).toBeInTheDocument();
   });
 
-  it('shows real staff names on admin page', () => {
+  it('shows real staff names on admin page', async () => {
+    const user = userEvent.setup();
     render(<AppRouter />);
+    await user.click(screen.getByTestId('kitchen-mgmt-primary-tab-staff'));
     expect(screen.getByTestId('staff-result-name-fixture-user-b')).toHaveTextContent(
       'Boris Lindström',
     );

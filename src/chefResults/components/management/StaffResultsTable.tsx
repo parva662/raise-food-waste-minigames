@@ -1,8 +1,9 @@
 import { useMemo, useState } from 'react';
+import { formatServiceDateLong } from '../../displayFormat';
 import {
   formatCustomerErrorCount,
   formatNormalizedRate,
-  formatStaffTableCustomerDifference,
+  formatStaffTableCustomerForecast,
 } from '../../managementFormat';
 import {
   shortageRateGramsPerCustomer,
@@ -14,6 +15,7 @@ type SortKey = 'name' | 'customerError' | 'surplus' | 'shortage';
 type SortDirection = 'asc' | 'desc';
 
 interface StaffResultsTableProps {
+  serviceDate: string;
   staffResults: readonly StaffDailyResult[];
   selectedStaffId: string | null;
   onSelectStaff: (userId: string) => void;
@@ -58,6 +60,7 @@ function sortIndicator(active: boolean, direction: SortDirection): string {
 }
 
 export function StaffResultsTable({
+  serviceDate,
   staffResults,
   selectedStaffId,
   onSelectStaff,
@@ -81,16 +84,20 @@ export function StaffResultsTable({
   }
 
   return (
-    <section className="kitchen-mgmt-section" data-testid="kitchen-mgmt-staff-results">
-      <h2 className="kitchen-mgmt-section__title">Staff results</h2>
-      <p className="kitchen-mgmt-section__intro">
-        Forecast results for staff who submitted a forecast for this service.
-      </p>
-      <p className="kitchen-mgmt-helper">
-        The aim is to keep both estimated surplus and shortage low.
-      </p>
+    <section className="kitchen-mgmt-staff-tab" data-testid="kitchen-mgmt-staff-results">
+      <header className="kitchen-mgmt-staff-tab__header">
+        <h3 className="kitchen-mgmt-surface__title">Staff forecasts</h3>
+        <p className="kitchen-mgmt-staff-tab__context" data-testid="kitchen-mgmt-staff-context">
+          {formatServiceDateLong(serviceDate)}
+          <span className="kitchen-mgmt-staff-tab__context-sep">·</span>
+          {staffResults.length} forecast{staffResults.length === 1 ? '' : 's'} submitted
+        </p>
+        <p className="kitchen-mgmt-helper">
+          The aim is to keep both estimated surplus and shortage low.
+        </p>
+      </header>
 
-      <div className="chef-results-table-wrap">
+      <div className="chef-results-table-wrap kitchen-mgmt-table-wrap">
         <table className="chef-results-table kitchen-mgmt-table" data-testid="kitchen-mgmt-staff-table">
           <thead>
             <tr>
@@ -104,9 +111,8 @@ export function StaffResultsTable({
                   Staff{sortIndicator(sortKey === 'name', sortDirection)}
                 </button>
               </th>
-              <th scope="col">Customer estimate</th>
-              <th scope="col">Difference</th>
-              <th scope="col">
+              <th scope="col">Customer forecast</th>
+              <th scope="col" className="kitchen-mgmt-table__num">
                 <button
                   type="button"
                   className="kitchen-mgmt-sort-button"
@@ -116,7 +122,7 @@ export function StaffResultsTable({
                   Estimated surplus{sortIndicator(sortKey === 'surplus', sortDirection)}
                 </button>
               </th>
-              <th scope="col">
+              <th scope="col" className="kitchen-mgmt-table__num">
                 <button
                   type="button"
                   className="kitchen-mgmt-sort-button"
@@ -126,7 +132,7 @@ export function StaffResultsTable({
                   Estimated shortage{sortIndicator(sortKey === 'shortage', sortDirection)}
                 </button>
               </th>
-              <th scope="col">
+              <th scope="col" className="kitchen-mgmt-table__num">
                 <button
                   type="button"
                   className="kitchen-mgmt-sort-button"
@@ -140,34 +146,47 @@ export function StaffResultsTable({
             </tr>
           </thead>
           <tbody>
-            {sortedResults.map((result) => (
-              <tr
-                key={result.userId}
-                data-testid={`staff-result-row-${result.userId}`}
-                aria-selected={selectedStaffId === result.userId}
-              >
-                <th scope="row" data-testid={`staff-result-name-${result.userId}`}>
-                  {result.userName}
-                </th>
-                <td>{result.forecastCustomers}</td>
-                <td>{formatStaffTableCustomerDifference(result)}</td>
-                <td>{formatNormalizedRate(surplusRateGramsPerCustomer(result))}</td>
-                <td>{formatNormalizedRate(shortageRateGramsPerCustomer(result))}</td>
-                <td>{formatCustomerErrorCount(result.customerForecastAbsoluteError)}</td>
-                <td>
-                  <button
-                    type="button"
-                    className="kitchen-mgmt-detail-button"
-                    data-testid={`staff-view-details-${result.userId}`}
-                    aria-expanded={selectedStaffId === result.userId}
-                    aria-controls="kitchen-mgmt-staff-detail"
-                    onClick={() => onSelectStaff(result.userId)}
-                  >
-                    View details
-                  </button>
-                </td>
-              </tr>
-            ))}
+            {sortedResults.map((result) => {
+              const forecast = formatStaffTableCustomerForecast(result);
+              const isSelected = selectedStaffId === result.userId;
+              return (
+                <tr
+                  key={result.userId}
+                  data-testid={`staff-result-row-${result.userId}`}
+                  className={isSelected ? 'kitchen-mgmt-table__row--selected' : undefined}
+                  aria-selected={isSelected}
+                >
+                  <th scope="row" data-testid={`staff-result-name-${result.userId}`}>
+                    {result.userName}
+                  </th>
+                  <td data-testid={`staff-forecast-cell-${result.userId}`}>
+                    <span className="kitchen-mgmt-forecast-cell__primary">{forecast.primary}</span>
+                    <span className="kitchen-mgmt-forecast-cell__secondary">{forecast.secondary}</span>
+                  </td>
+                  <td className="kitchen-mgmt-table__num">
+                    {formatNormalizedRate(surplusRateGramsPerCustomer(result))}
+                  </td>
+                  <td className="kitchen-mgmt-table__num">
+                    {formatNormalizedRate(shortageRateGramsPerCustomer(result))}
+                  </td>
+                  <td className="kitchen-mgmt-table__num">
+                    {formatCustomerErrorCount(result.customerForecastAbsoluteError)}
+                  </td>
+                  <td>
+                    <button
+                      type="button"
+                      className="kitchen-mgmt-detail-button"
+                      data-testid={`staff-view-details-${result.userId}`}
+                      aria-expanded={isSelected}
+                      aria-controls="kitchen-mgmt-staff-detail"
+                      onClick={() => onSelectStaff(result.userId)}
+                    >
+                      View
+                    </button>
+                  </td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>

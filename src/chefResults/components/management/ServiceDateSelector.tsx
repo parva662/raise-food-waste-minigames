@@ -4,12 +4,14 @@ interface ServiceDateSelectorProps {
   serviceDates: readonly string[];
   selectedDate: string;
   onSelectDate: (date: string) => void;
+  compact?: boolean;
 }
 
 export function ServiceDateSelector({
   serviceDates,
   selectedDate,
   onSelectDate,
+  compact = false,
 }: ServiceDateSelectorProps) {
   if (serviceDates.length === 0) {
     return (
@@ -20,9 +22,12 @@ export function ServiceDateSelector({
   }
 
   return (
-    <div className="kitchen-mgmt-toolbar" data-testid="kitchen-mgmt-service-date-selector">
-      <label className="kitchen-mgmt-date-picker">
-        <span>Service date</span>
+    <div
+      className={compact ? 'kitchen-mgmt-date-picker kitchen-mgmt-date-picker--compact' : 'kitchen-mgmt-toolbar'}
+      data-testid="kitchen-mgmt-service-date-selector"
+    >
+      <label className="kitchen-mgmt-date-picker__label">
+        <span className="kitchen-mgmt-date-picker__title">Service date</span>
         <select
           value={selectedDate}
           onChange={(event) => onSelectDate(event.target.value)}
@@ -35,10 +40,15 @@ export function ServiceDateSelector({
           ))}
         </select>
       </label>
-      {selectedDate ? (
+      {selectedDate && !compact ? (
         <p className="kitchen-mgmt-date-picker__readable" data-testid="kitchen-mgmt-selected-date">
-          {formatServiceDateLong(selectedDate)}
+          {formatServiceDateShort(selectedDate)}
         </p>
+      ) : null}
+      {selectedDate && compact ? (
+        <span className="kitchen-mgmt-date-picker__sr" data-testid="kitchen-mgmt-selected-date">
+          {formatServiceDateLong(selectedDate)}
+        </span>
       ) : null}
     </div>
   );

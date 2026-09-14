@@ -1,14 +1,11 @@
 import { useMemo, useState } from 'react';
 import type { DailyServiceResults } from '../../types';
-import {
-  buildManagementTrendPoints,
-  buildServiceTeamOverview,
-} from '../../managementTrendsData';
+import { buildManagementTrendPoints } from '../../managementTrendsData';
+import { ManagementTabNav, type ManagementPrimaryTab } from './ManagementTabNav';
 import { ManagementTrendsSection } from './ManagementTrendsSection';
-import { ServiceOverviewSection } from './ServiceOverviewSection';
+import { OverviewSection } from './OverviewSection';
 import { StaffDetailPanel } from './StaffDetailPanel';
 import { StaffResultsTable } from './StaffResultsTable';
-import { TeamOverviewSection } from './TeamOverviewSection';
 
 interface ForecastingManagementSectionProps {
   dailyResults: DailyServiceResults;
@@ -23,16 +20,12 @@ export function ForecastingManagementSection({
   inputCollectionsReady,
   inputCollections,
 }: ForecastingManagementSectionProps) {
+  const [activeTab, setActiveTab] = useState<ManagementPrimaryTab>('overview');
   const [selectedStaffId, setSelectedStaffId] = useState<string | null>(null);
 
   const selectedStaff = useMemo(
     () => dailyResults.staffResults.find((result) => result.userId === selectedStaffId) ?? null,
     [dailyResults.staffResults, selectedStaffId],
-  );
-
-  const teamOverview = useMemo(
-    () => buildServiceTeamOverview(dailyResults.staffResults),
-    [dailyResults.staffResults],
   );
 
   const trendPoints = useMemo(() => {
@@ -46,25 +39,34 @@ export function ForecastingManagementSection({
   }, [dailyResults.serviceDate, embedded, inputCollections, inputCollectionsReady]);
 
   return (
-    <div className="kitchen-mgmt-forecasting" data-testid="kitchen-mgmt-forecasting">
-      <h2 className="kitchen-mgmt-module-title">Forecasting</h2>
-      <p className="kitchen-mgmt-module-intro">
-        Compare staff forecasts with observed service demand and review performance over time.
-      </p>
-
-      <ServiceOverviewSection dailyResults={dailyResults} />
-      <StaffResultsTable
-        staffResults={dailyResults.staffResults}
-        selectedStaffId={selectedStaffId}
-        onSelectStaff={setSelectedStaffId}
-      />
-
-      {selectedStaff ? (
-        <StaffDetailPanel result={selectedStaff} onClose={() => setSelectedStaffId(null)} />
-      ) : null}
-
-      <TeamOverviewSection overview={teamOverview} />
-      <ManagementTrendsSection trendPoints={trendPoints} asOfServiceDate={dailyResults.serviceDate} />
-    </div>
+    <ManagementTabNav activeTab={activeTab} onTabChange={setActiveTab}>
+      {(tab) => {
+        if (tab === 'overview') {
+          return <OverviewSection dailyResults={dailyResults} />;
+        }
+        if (tab === 'staff') {
+          return (
+            <>
+              <StaffResultsTable
+                serviceDate={dailyResults.serviceDate}
+                staffResults={dailyResults.staffResults}
+                selectedStaffId={selectedStaffId}
+                onSelectStaff={setSelectedStaffId}
+              />
+              {selectedStaff ? (
+                <StaffDetailPanel
+                  result={selectedStaff}
+                  serviceDate={dailyResults.serviceDate}
+                  onClose={() => setSelectedStaffId(null)}
+                />
+              ) : null}
+            </>
+          );
+        }
+        return (
+          <ManagementTrendsSection trendPoints={trendPoints} asOfServiceDate={dailyResults.serviceDate} />
+        );
+      }}
+    </ManagementTabNav>
   );
 }

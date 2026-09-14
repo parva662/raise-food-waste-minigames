@@ -3,7 +3,6 @@ import { getGroupResultServiceDates } from './adapters/groupCalculationSource';
 import { getFixtureServiceDates } from './adapters/fixtureCalculationSource';
 import { ForecastingManagementSection } from './components/management/ForecastingManagementSection';
 import { ManagementDashboardHeader } from './components/management/ManagementDashboardHeader';
-import { ServiceDateSelector } from './components/management/ServiceDateSelector';
 import { useChefResultsData } from './useChefResultsData';
 import { useGameBusEmbed } from '../gamebus/useGameBusEmbed';
 
@@ -45,15 +44,12 @@ export function ChefResultsAdminApp() {
       className="chef-results-page chef-results-page--admin kitchen-mgmt-page"
       data-testid="chef-results-admin-page"
     >
-      <ManagementDashboardHeader isLoading={isLoading} />
-
-      {!isLoading ? (
-        <ServiceDateSelector
-          serviceDates={serviceDates}
-          selectedDate={selectedDate}
-          onSelectDate={setSelectedDate}
-        />
-      ) : null}
+      <ManagementDashboardHeader
+        isLoading={isLoading}
+        serviceDates={serviceDates}
+        selectedDate={selectedDate}
+        onSelectDate={setSelectedDate}
+      />
 
       {resultsState.status === 'ready' && selectedDate && !dailyResults ? (
         <p className="kitchen-mgmt-empty" data-testid="chef-results-admin-empty">

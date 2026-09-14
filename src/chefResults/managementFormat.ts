@@ -1,4 +1,5 @@
-import { buildCustomerEstimateDifferenceLabel } from './forecastInterpretation';
+import { formatGrams } from './useChefResultsData';
+import { buildCustomerEstimateDifferenceLabel, getCategoryOutcomeKind } from './forecastInterpretation';
 import type { StaffDailyResult } from './types';
 
 export function formatStaffTableCustomerDifference(result: StaffDailyResult): string {
@@ -30,4 +31,36 @@ export function formatNormalizedRate(value: number | null): string {
 
 export function formatCustomerErrorCount(value: number): string {
   return `${value.toFixed(0)} customers`;
+}
+
+export function formatStaffTableCustomerForecast(result: StaffDailyResult): {
+  primary: string;
+  secondary: string;
+} {
+  const primary = String(result.forecastCustomers);
+  const label = buildCustomerEstimateDifferenceLabel(
+    result.forecastCustomers,
+    result.actualCustomers,
+  );
+  if (label.primary === 'On target') {
+    return { primary, secondary: 'On target' };
+  }
+  const magnitude = Math.abs(result.customerForecastDifference);
+  const direction = label.secondary === 'customers high' ? 'high' : 'low';
+  return {
+    primary,
+    secondary: `${magnitude} ${direction} vs ${result.actualCustomers} actual`,
+  };
+}
+
+export function formatManagementCategoryOutcome(
+  simulatedOverproductionGrams: number,
+  simulatedShortageGrams: number,
+): string {
+  const kind = getCategoryOutcomeKind(simulatedOverproductionGrams, simulatedShortageGrams);
+  const grams =
+    kind === 'shortage' ? simulatedShortageGrams : simulatedOverproductionGrams;
+  if (kind === 'on-target') return 'On target';
+  const formatted = formatGrams(grams);
+  return kind === 'shortage' ? `${formatted} shortage` : `${formatted} surplus`;
 }
