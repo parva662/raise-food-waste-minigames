@@ -149,4 +149,26 @@ describe('menu workbook pipeline', () => {
     expect(report.slotOrderPerDay).toEqual(['main', 'vegetarian', 'soup', 'dessert']);
     expect(report.mappingStatus).toBe('mappable');
   });
+
+  it('marks a fully CLOSED workbook day as closed in conversion', () => {
+    const path = join(tempDir, 'closed-day.xlsx');
+    writeWorkbook(path, {
+      'Week 1': [
+        ['MENU ITEMS', 'QUANTITY', 'DATE'],
+        ['CLOSED', 0, new Date('2026-06-01')],
+        ['CLOSED', 0, new Date('2026-06-01')],
+        ['CLOSED', 0, new Date('2026-06-01')],
+        ['CLOSED', 0, new Date('2026-06-01')],
+        ['Main dish', 200, new Date('2026-06-02')],
+        ['Veg dish', 50, new Date('2026-06-02')],
+        ['Soup dish', 30, new Date('2026-06-02')],
+        ['Dessert dish', 30, new Date('2026-06-02')],
+      ],
+    });
+    const result = convertWorkbookFile(path);
+    const closedDay = result.dailyMenus.find((day) => day.date === '2026-06-01');
+    const openDay = result.dailyMenus.find((day) => day.date === '2026-06-02');
+    expect(closedDay?.closed).toBe(true);
+    expect(openDay?.closed).toBe(false);
+  });
 });

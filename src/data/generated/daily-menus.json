@@ -1191,76 +1191,6 @@
   },
   {
     "date": "2026-09-11",
-    "sheetWeek": 14,
-    "slots": [
-      {
-        "slot": "main",
-        "itemId": "closed-2026-04-03-main",
-        "name": "CLOSED",
-        "forecastQuantity": 0,
-        "closed": true
-      },
-      {
-        "slot": "vegetarian",
-        "itemId": "closed-2026-04-03-vegetarian",
-        "name": "CLOSED",
-        "forecastQuantity": 0,
-        "closed": true
-      },
-      {
-        "slot": "soup",
-        "itemId": "closed-2026-04-03-soup",
-        "name": "CLOSED",
-        "forecastQuantity": 0,
-        "closed": true
-      },
-      {
-        "slot": "dessert",
-        "itemId": "closed-2026-04-03-dessert",
-        "name": "CLOSED",
-        "forecastQuantity": 0,
-        "closed": true
-      }
-    ],
-    "closed": true
-  },
-  {
-    "date": "2026-09-14",
-    "sheetWeek": 15,
-    "slots": [
-      {
-        "slot": "main",
-        "itemId": "closed-2026-04-06-main",
-        "name": "CLOSED",
-        "forecastQuantity": 0,
-        "closed": true
-      },
-      {
-        "slot": "vegetarian",
-        "itemId": "closed-2026-04-06-vegetarian",
-        "name": "CLOSED",
-        "forecastQuantity": 0,
-        "closed": true
-      },
-      {
-        "slot": "soup",
-        "itemId": "closed-2026-04-06-soup",
-        "name": "CLOSED",
-        "forecastQuantity": 0,
-        "closed": true
-      },
-      {
-        "slot": "dessert",
-        "itemId": "closed-2026-04-06-dessert",
-        "name": "CLOSED",
-        "forecastQuantity": 0,
-        "closed": true
-      }
-    ],
-    "closed": true
-  },
-  {
-    "date": "2026-09-15",
     "sheetWeek": 15,
     "slots": [
       {
@@ -1295,7 +1225,7 @@
     "closed": false
   },
   {
-    "date": "2026-09-16",
+    "date": "2026-09-14",
     "sheetWeek": 15,
     "slots": [
       {
@@ -1330,7 +1260,7 @@
     "closed": false
   },
   {
-    "date": "2026-09-17",
+    "date": "2026-09-15",
     "sheetWeek": 15,
     "slots": [
       {
@@ -1365,7 +1295,7 @@
     "closed": false
   },
   {
-    "date": "2026-09-18",
+    "date": "2026-09-16",
     "sheetWeek": 15,
     "slots": [
       {
@@ -1400,7 +1330,7 @@
     "closed": false
   },
   {
-    "date": "2026-09-21",
+    "date": "2026-09-17",
     "sheetWeek": 16,
     "slots": [
       {
@@ -1435,7 +1365,7 @@
     "closed": false
   },
   {
-    "date": "2026-09-22",
+    "date": "2026-09-18",
     "sheetWeek": 16,
     "slots": [
       {
@@ -1470,7 +1400,7 @@
     "closed": false
   },
   {
-    "date": "2026-09-23",
+    "date": "2026-09-21",
     "sheetWeek": 16,
     "slots": [
       {
@@ -1505,7 +1435,7 @@
     "closed": false
   },
   {
-    "date": "2026-09-24",
+    "date": "2026-09-22",
     "sheetWeek": 16,
     "slots": [
       {
@@ -1540,7 +1470,7 @@
     "closed": false
   },
   {
-    "date": "2026-09-25",
+    "date": "2026-09-23",
     "sheetWeek": 16,
     "slots": [
       {
@@ -1575,7 +1505,7 @@
     "closed": false
   },
   {
-    "date": "2026-09-28",
+    "date": "2026-09-24",
     "sheetWeek": 17,
     "slots": [
       {
@@ -1610,7 +1540,7 @@
     "closed": false
   },
   {
-    "date": "2026-09-29",
+    "date": "2026-09-25",
     "sheetWeek": 17,
     "slots": [
       {
@@ -1645,7 +1575,7 @@
     "closed": false
   },
   {
-    "date": "2026-09-30",
+    "date": "2026-09-28",
     "sheetWeek": 17,
     "slots": [
       {
@@ -1680,7 +1610,7 @@
     "closed": false
   },
   {
-    "date": "2026-10-01",
+    "date": "2026-09-29",
     "sheetWeek": 17,
     "slots": [
       {
@@ -1715,7 +1645,7 @@
     "closed": false
   },
   {
-    "date": "2026-10-02",
+    "date": "2026-09-30",
     "sheetWeek": 17,
     "slots": [
       {
@@ -1750,7 +1680,7 @@
     "closed": false
   },
   {
-    "date": "2026-10-05",
+    "date": "2026-10-01",
     "sheetWeek": 18,
     "slots": [
       {
@@ -1785,7 +1715,7 @@
     "closed": false
   },
   {
-    "date": "2026-10-06",
+    "date": "2026-10-02",
     "sheetWeek": 18,
     "slots": [
       {
@@ -1820,7 +1750,7 @@
     "closed": false
   },
   {
-    "date": "2026-10-07",
+    "date": "2026-10-05",
     "sheetWeek": 18,
     "slots": [
       {
@@ -1855,7 +1785,7 @@
     "closed": false
   },
   {
-    "date": "2026-10-08",
+    "date": "2026-10-06",
     "sheetWeek": 18,
     "slots": [
       {
@@ -1890,42 +1820,7 @@
     "closed": false
   },
   {
-    "date": "2026-10-09",
-    "sheetWeek": 18,
-    "slots": [
-      {
-        "slot": "main",
-        "itemId": "closed-2026-05-01-main",
-        "name": "CLOSED",
-        "forecastQuantity": 0,
-        "closed": true
-      },
-      {
-        "slot": "vegetarian",
-        "itemId": "closed-2026-05-01-vegetarian",
-        "name": "CLOSED",
-        "forecastQuantity": 0,
-        "closed": true
-      },
-      {
-        "slot": "soup",
-        "itemId": "closed-2026-05-01-soup",
-        "name": "CLOSED",
-        "forecastQuantity": 0,
-        "closed": true
-      },
-      {
-        "slot": "dessert",
-        "itemId": "closed-2026-05-01-dessert",
-        "name": "CLOSED",
-        "forecastQuantity": 0,
-        "closed": true
-      }
-    ],
-    "closed": true
-  },
-  {
-    "date": "2026-10-12",
+    "date": "2026-10-07",
     "sheetWeek": 19,
     "slots": [
       {
@@ -1960,7 +1855,7 @@
     "closed": false
   },
   {
-    "date": "2026-10-13",
+    "date": "2026-10-08",
     "sheetWeek": 19,
     "slots": [
       {
@@ -1995,7 +1890,7 @@
     "closed": false
   },
   {
-    "date": "2026-10-14",
+    "date": "2026-10-09",
     "sheetWeek": 19,
     "slots": [
       {
@@ -2030,7 +1925,7 @@
     "closed": false
   },
   {
-    "date": "2026-10-15",
+    "date": "2026-10-12",
     "sheetWeek": 19,
     "slots": [
       {
@@ -2065,7 +1960,7 @@
     "closed": false
   },
   {
-    "date": "2026-10-16",
+    "date": "2026-10-13",
     "sheetWeek": 19,
     "slots": [
       {
@@ -2100,7 +1995,7 @@
     "closed": false
   },
   {
-    "date": "2026-10-19",
+    "date": "2026-10-14",
     "sheetWeek": 20,
     "slots": [
       {
@@ -2135,7 +2030,7 @@
     "closed": false
   },
   {
-    "date": "2026-10-20",
+    "date": "2026-10-15",
     "sheetWeek": 20,
     "slots": [
       {
@@ -2170,7 +2065,7 @@
     "closed": false
   },
   {
-    "date": "2026-10-21",
+    "date": "2026-10-16",
     "sheetWeek": 20,
     "slots": [
       {
@@ -2205,77 +2100,7 @@
     "closed": false
   },
   {
-    "date": "2026-10-22",
-    "sheetWeek": 20,
-    "slots": [
-      {
-        "slot": "main",
-        "itemId": "closed-2026-05-14-main",
-        "name": "CLOSED",
-        "forecastQuantity": 0,
-        "closed": true
-      },
-      {
-        "slot": "vegetarian",
-        "itemId": "closed-2026-05-14-vegetarian",
-        "name": "CLOSED",
-        "forecastQuantity": 0,
-        "closed": true
-      },
-      {
-        "slot": "soup",
-        "itemId": "closed-2026-05-14-soup",
-        "name": "CLOSED",
-        "forecastQuantity": 0,
-        "closed": true
-      },
-      {
-        "slot": "dessert",
-        "itemId": "closed-2026-05-14-dessert",
-        "name": "CLOSED",
-        "forecastQuantity": 0,
-        "closed": true
-      }
-    ],
-    "closed": true
-  },
-  {
-    "date": "2026-10-23",
-    "sheetWeek": 20,
-    "slots": [
-      {
-        "slot": "main",
-        "itemId": "closed-2026-05-15-main",
-        "name": "CLOSED",
-        "forecastQuantity": 0,
-        "closed": true
-      },
-      {
-        "slot": "vegetarian",
-        "itemId": "closed-2026-05-15-vegetarian",
-        "name": "CLOSED",
-        "forecastQuantity": 0,
-        "closed": true
-      },
-      {
-        "slot": "soup",
-        "itemId": "closed-2026-05-15-soup",
-        "name": "CLOSED",
-        "forecastQuantity": 0,
-        "closed": true
-      },
-      {
-        "slot": "dessert",
-        "itemId": "closed-2026-05-15-dessert",
-        "name": "CLOSED",
-        "forecastQuantity": 0,
-        "closed": true
-      }
-    ],
-    "closed": true
-  },
-  {
-    "date": "2026-10-26",
+    "date": "2026-10-19",
     "sheetWeek": 21,
     "slots": [
       {
@@ -2310,7 +2135,7 @@
     "closed": false
   },
   {
-    "date": "2026-10-27",
+    "date": "2026-10-20",
     "sheetWeek": 21,
     "slots": [
       {
@@ -2345,7 +2170,7 @@
     "closed": false
   },
   {
-    "date": "2026-10-28",
+    "date": "2026-10-21",
     "sheetWeek": 21,
     "slots": [
       {
@@ -2380,7 +2205,7 @@
     "closed": false
   },
   {
-    "date": "2026-10-29",
+    "date": "2026-10-22",
     "sheetWeek": 21,
     "slots": [
       {
@@ -2415,7 +2240,7 @@
     "closed": false
   },
   {
-    "date": "2026-10-30",
+    "date": "2026-10-23",
     "sheetWeek": 21,
     "slots": [
       {
@@ -2450,7 +2275,7 @@
     "closed": false
   },
   {
-    "date": "2026-11-02",
+    "date": "2026-10-26",
     "sheetWeek": 22,
     "slots": [
       {
@@ -2485,7 +2310,7 @@
     "closed": false
   },
   {
-    "date": "2026-11-03",
+    "date": "2026-10-27",
     "sheetWeek": 22,
     "slots": [
       {
@@ -2520,7 +2345,7 @@
     "closed": false
   },
   {
-    "date": "2026-11-04",
+    "date": "2026-10-28",
     "sheetWeek": 22,
     "slots": [
       {
@@ -2555,7 +2380,7 @@
     "closed": false
   },
   {
-    "date": "2026-11-05",
+    "date": "2026-10-29",
     "sheetWeek": 22,
     "slots": [
       {
@@ -2590,7 +2415,7 @@
     "closed": false
   },
   {
-    "date": "2026-11-06",
+    "date": "2026-10-30",
     "sheetWeek": 22,
     "slots": [
       {

@@ -1,19 +1,19 @@
 {
   "sourceWorkbook": "C:\\Users\\20184558\\gamebus-lunch-dnd-v2\\reference\\Example_menu.xlsx",
-  "generatedAt": "2026-08-31T11:05:33.212Z",
-  "menuVersion": "excel-2026-07-27-2026-11-06",
+  "generatedAt": "2026-09-14T08:39:29.288Z",
+  "menuVersion": "excel-2026-07-27-2026-10-30",
   "dateRange": {
     "start": "2026-07-27",
-    "end": "2026-11-06"
+    "end": "2026-10-30"
   },
-  "dailyMenuCount": 75,
+  "dailyMenuCount": 70,
   "catalogueItemCount": 116,
   "runtimeSchedule": {
     "strategy": "continuous-weekday-remap",
     "runtimeStartDate": "2026-07-27",
-    "sourceMenuDayCount": 75,
-    "runtimeMenuDayCount": 75,
-    "runtimeEndDate": "2026-11-06",
+    "sourceMenuDayCount": 70,
+    "runtimeMenuDayCount": 70,
+    "runtimeEndDate": "2026-10-30",
     "sourceWorkbookDateRange": {
       "start": "2026-02-02",
       "end": "2026-05-29"

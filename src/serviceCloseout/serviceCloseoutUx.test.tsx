@@ -7,6 +7,7 @@ import { ServiceCloseoutApp } from './ServiceCloseoutApp';
 import { MENU_DATES } from '../test/fixtures/dates';
 import { resolveMealSlotsForDate } from '../services/mealSlots';
 import * as datesModule from '../utils/dates';
+import * as menuResolverModule from '../services/menuResolver';
 import * as operationalCalendarModule from '../services/operationalServiceCalendar';
 import { CLOSEOUT_OVERPRODUCTION_EXCEEDS_PREPARED_ERROR } from './validation';
 import { CLOSEOUT_INCOMPLETE_MESSAGE } from './types';
@@ -156,6 +157,10 @@ describe('service closeout UX', () => {
 
   it('blocks finalize on closed menu day', () => {
     vi.spyOn(datesModule, 'getTodayIsoDate').mockReturnValue(MENU_DATES.closedWorkbookDay);
+    vi.spyOn(menuResolverModule, 'resolveMenuForDate').mockReturnValue({
+      status: 'closed',
+      reason: 'Canteen closed',
+    });
     render(<ServiceCloseoutApp />);
     expect(screen.getByText(/cannot be finalized/i)).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Finalize service' })).not.toBeInTheDocument();

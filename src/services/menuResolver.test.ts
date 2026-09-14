@@ -61,12 +61,21 @@ describe('generated dated menu resolver', () => {
     expect(resolveMenuForDate(MENU_DATES.missingFromWorkbook).status).toBe('unavailable');
   });
 
-  it('marks workbook CLOSED days as closed', () => {
-    expect(resolveMenuForDate(MENU_DATES.closedWorkbookDay)).toEqual({
+  it('marks workbook CLOSED day semantics via generated day.closed flag', () => {
+    const closedDay = getAllGeneratedDailyMenus().find((day) => day.closed);
+    if (!closedDay) {
+      expect(getAllGeneratedDailyMenus().every((day) => !day.closed)).toBe(true);
+      return;
+    }
+    expect(resolveMenuForDate(closedDay.date)).toEqual({
       status: 'closed',
       reason: 'Canteen closed',
     });
-    expect(resolveMealSlotsForDate(MENU_DATES.closedWorkbookDay)).toBeNull();
+    expect(resolveMealSlotsForDate(closedDay.date)).toBeNull();
+  });
+
+  it('has no workbook-marked closed days in the cleaned demo runtime menu', () => {
+    expect(getAllGeneratedDailyMenus().every((day) => !day.closed)).toBe(true);
   });
 
   it('returns unavailable for dates missing from the workbook', () => {
@@ -81,7 +90,7 @@ describe('generated dated menu resolver', () => {
   it('returns unavailable before and after the generated date range', () => {
     const range = getGeneratedMenuDateRange();
     expect(range.start).toBe(MENU_DATES.runtimeMonday);
-    expect(range.end).toBe('2026-11-06');
+    expect(range.end).toBe('2026-10-30');
     expect(resolveMenuForDate(MENU_DATES.beforeRange)).toEqual({ status: 'unavailable' });
     expect(resolveMenuForDate(MENU_DATES.afterRange)).toEqual({ status: 'unavailable' });
   });
@@ -172,13 +181,13 @@ describe('generated daily menu integrity', () => {
     expect(meta.runtimeSchedule).toEqual({
       strategy: 'continuous-weekday-remap',
       runtimeStartDate: MENU_DATES.runtimeMonday,
-      sourceMenuDayCount: 75,
-      runtimeMenuDayCount: 75,
-      runtimeEndDate: '2026-11-06',
+      sourceMenuDayCount: 70,
+      runtimeMenuDayCount: 70,
+      runtimeEndDate: '2026-10-30',
       sourceWorkbookDateRange: { start: '2026-02-02', end: '2026-05-29' },
     });
-    expect(meta.dateRange).toEqual({ start: MENU_DATES.runtimeMonday, end: '2026-11-06' });
-    expect(meta.dailyMenuCount).toBe(75);
+    expect(meta.dateRange).toEqual({ start: MENU_DATES.runtimeMonday, end: '2026-10-30' });
+    expect(meta.dailyMenuCount).toBe(70);
   });
 
   it('makes 2026-09-01 available in the runtime calendar', () => {

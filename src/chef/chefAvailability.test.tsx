@@ -3,6 +3,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { cleanup, render, screen } from '@testing-library/react';
 import { ChefApp } from './ChefApp';
 import { MENU_DATES, SUBMISSION_TIMES } from '../test/fixtures/dates';
+import * as menuResolverModule from '../services/menuResolver';
 import * as operationalCalendarModule from '../services/operationalServiceCalendar';
 import { OperationalCalendarError } from '../services/operationalServiceCalendar';
 
@@ -20,6 +21,10 @@ describe('ChefApp menu availability', () => {
     vi.spyOn(operationalCalendarModule, 'resolveChefForecastServiceDate').mockReturnValue(
       MENU_DATES.closedWorkbookDay,
     );
+    vi.spyOn(menuResolverModule, 'resolveMenuForDate').mockReturnValue({
+      status: 'closed',
+      reason: 'Canteen closed',
+    });
     render(<ChefApp clock={() => SUBMISSION_TIMES.midday} />);
     expect(screen.getByText('The canteen is closed on this date.')).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Submit forecast' })).not.toBeInTheDocument();

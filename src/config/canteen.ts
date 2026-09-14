@@ -6,7 +6,7 @@ export const CANTEEN_CONFIG = {
   submissionDeadlineSecond: 0,
   menuCycleStartDate: '2026-01-06',
   menuValidityStartDate: '2026-07-27',
-  menuValidityEndDate: '2026-11-06',
+  menuValidityEndDate: '2026-10-30',
   menuVersion: 'excel-dated-menu',
   menuCycleWeeks: 3,
 } as const;
