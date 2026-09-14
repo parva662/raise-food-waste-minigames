@@ -9,7 +9,7 @@ interface ProductionPlanCardProps {
 
 export function ProductionPlanCard({ result, surplusInsight }: ProductionPlanCardProps) {
   return (
-    <article className="chef-results-forecast-card" data-testid="production-plan-card">
+    <article className="kitchen-mgmt-detail-card chef-results-forecast-card" data-testid="production-plan-card">
       <h3 className="chef-results-forecast-card__title">If your production plan had been used</h3>
 
       {surplusInsight ? (
@@ -18,7 +18,7 @@ export function ProductionPlanCard({ result, surplusInsight }: ProductionPlanCar
         </p>
       ) : null}
 
-      <div className="chef-results-production-metrics" data-testid="participant-summary-cards">
+      <div className="chef-results-production-metrics participant-summary-cards" data-testid="participant-summary-cards">
         <div className="chef-results-production-metric">
           <div className="chef-results-production-metric__icon" aria-hidden="true">
             <TrendingUp size={18} strokeWidth={2} />

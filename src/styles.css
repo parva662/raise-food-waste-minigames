@@ -4200,3 +4200,81 @@ ul {
   }
 }
 
+/* Kitchen Staff Dashboard — shared kitchen-mgmt surfaces */
+.chef-results-page--participant.kitchen-mgmt-page {
+  display: grid;
+  gap: var(--spacing-lg);
+}
+
+.participant-overview,
+.participant-progress-tab {
+  display: grid;
+  gap: var(--spacing-lg);
+}
+
+.chef-results-dashboard-header__caveat {
+  margin: var(--spacing-xs) 0 0;
+  font-size: 0.8125rem;
+  color: var(--color-text-secondary);
+}
+
+.chef-results-dashboard-header__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-md);
+  align-items: flex-start;
+}
+
+.chef-results-dashboard-header__meta-block {
+  display: grid;
+  gap: 0.25rem;
+  min-width: 10rem;
+}
+
+.chef-results-dashboard-header__date-value {
+  margin: 0;
+  font-size: 0.9375rem;
+  font-weight: 600;
+}
+
+.participant-forecast-hint {
+  margin: var(--spacing-sm) 0;
+}
+
+.participant-forecast-kpis .kitchen-mgmt-kpi {
+  min-height: 5.5rem;
+}
+
+.participant-menu-outcomes__row--surplus td {
+  color: var(--chef-results-over, #ea580c);
+  font-weight: 600;
+}
+
+.participant-menu-outcomes__row--shortage td {
+  color: #7c3aed;
+  font-weight: 600;
+}
+
+.participant-menu-outcomes__row--target td {
+  color: #15803d;
+  font-weight: 600;
+}
+
+.participant-category-details summary {
+  cursor: pointer;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--color-accent, #2563eb);
+}
+
+.participant-progress-panel__content {
+  display: grid;
+  gap: var(--spacing-lg);
+}
+
+.chef-results-separation-note {
+  margin: var(--spacing-sm) 0 0;
+  font-size: 0.8125rem;
+  color: var(--color-text-secondary);
+}
+

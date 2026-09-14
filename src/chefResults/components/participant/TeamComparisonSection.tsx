@@ -11,7 +11,7 @@ interface TeamComparisonSectionProps {
 }
 
 function formatCustomerError(value: number): string {
-  return `${value.toFixed(1)} customers`;
+  return `${value.toFixed(0)} customers`;
 }
 
 export function TeamComparisonSection({
@@ -23,13 +23,13 @@ export function TeamComparisonSection({
 
   return (
     <section
-      className="chef-results-dashboard-section chef-results-team-compare"
+      className="kitchen-mgmt-surface participant-peer-compare"
       data-testid="team-comparison-section"
     >
-      <h2 className="chef-results-section-title">Compared with other staff</h2>
-      <p className="chef-results-section-intro">
-        Your forecast is compared anonymously with other staff who forecast the same service.
-        Individual staff results are never shown.
+      <h3 className="kitchen-mgmt-surface__title">Compared with other staff</h3>
+      <p className="kitchen-mgmt-snapshot-hint">
+        Anonymous comparison with other staff who forecast the same service. Individual results are
+        never shown.
       </p>
 
       {!benchmark.canCompare ? (
@@ -38,53 +38,44 @@ export function TeamComparisonSection({
         </p>
       ) : (
         <>
-          <div className="chef-results-peer-table-wrap" data-testid="peer-comparison-table">
-            <table className="chef-results-peer-table">
+          <div className="chef-results-table-wrap kitchen-mgmt-table-wrap" data-testid="peer-comparison-table">
+            <table className="chef-results-table kitchen-mgmt-table chef-results-peer-table">
               <thead>
                 <tr>
-                  <th scope="col" />
-                  <th scope="col">You</th>
-                  <th scope="col">Other staff median</th>
+                  <th scope="col">Metric</th>
+                  <th scope="col" className="kitchen-mgmt-table__num">You</th>
+                  <th scope="col" className="kitchen-mgmt-table__num">Other staff median</th>
                 </tr>
               </thead>
               <tbody>
                 <tr data-testid="peer-row-surplus">
-                  <th scope="row">
-                    Estimated surplus
-                    <span className="chef-results-peer-table__unit">(g/customer)</span>
-                  </th>
-                  <td data-testid="peer-surplus-you">
+                  <th scope="row">Estimated surplus</th>
+                  <td className="kitchen-mgmt-table__num" data-testid="peer-surplus-you">
                     {formatPeerRateGramsPerCustomer(
                       benchmark.participantOverproductionRateGramsPerCustomer,
                     )}
                   </td>
-                  <td data-testid="peer-surplus-median">
+                  <td className="kitchen-mgmt-table__num" data-testid="peer-surplus-median">
                     {formatPeerRateGramsPerCustomer(
                       benchmark.peerOverproductionMedianGramsPerCustomer,
                     )}
                   </td>
                 </tr>
                 <tr data-testid="peer-row-shortage">
-                  <th scope="row">
-                    Estimated shortage
-                    <span className="chef-results-peer-table__unit">(g/customer)</span>
-                  </th>
-                  <td data-testid="peer-shortage-you">
+                  <th scope="row">Estimated shortage</th>
+                  <td className="kitchen-mgmt-table__num" data-testid="peer-shortage-you">
                     {formatPeerRateGramsPerCustomer(benchmark.participantShortageRateGramsPerCustomer)}
                   </td>
-                  <td data-testid="peer-shortage-median">
+                  <td className="kitchen-mgmt-table__num" data-testid="peer-shortage-median">
                     {formatPeerRateGramsPerCustomer(benchmark.peerShortageMedianGramsPerCustomer)}
                   </td>
                 </tr>
                 <tr data-testid="peer-row-customer-error">
-                  <th scope="row">
-                    Customer forecast error
-                    <span className="chef-results-peer-table__unit">(customers)</span>
-                  </th>
-                  <td data-testid="peer-customer-error-you">
+                  <th scope="row">Customer forecast error</th>
+                  <td className="kitchen-mgmt-table__num" data-testid="peer-customer-error-you">
                     {formatCustomerError(benchmark.participantCustomerError)}
                   </td>
-                  <td data-testid="peer-customer-error-median">
+                  <td className="kitchen-mgmt-table__num" data-testid="peer-customer-error-median">
                     {formatCustomerError(benchmark.peerCustomerErrorMedian)}
                   </td>
                 </tr>
@@ -98,7 +89,7 @@ export function TeamComparisonSection({
 
           {keyInsights.length > 0 ? (
             <div className="chef-results-key-insights" data-testid="peer-key-insights">
-              <h3 className="chef-results-key-insights__title">Key insights</h3>
+              <h4 className="kitchen-mgmt-surface__subtitle">Key insights</h4>
               <ul>
                 {keyInsights.map((insight) => (
                   <li key={insight}>{insight}</li>

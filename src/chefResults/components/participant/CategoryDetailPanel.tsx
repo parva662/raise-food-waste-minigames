@@ -13,8 +13,8 @@ interface CategoryDetailPanelProps {
 export function CategoryDetailPanel({ result }: CategoryDetailPanelProps) {
   return (
     <section className="chef-results-category-detail" data-testid="category-detail-panel">
-      <details>
-        <summary>Technical details by menu item</summary>
+      <details className="participant-category-details">
+        <summary>View calculation details</summary>
         <div className="chef-results-category-detail__grid">
           {RESULT_CATEGORY_KEYS.map((key) => {
             const category = result[key];

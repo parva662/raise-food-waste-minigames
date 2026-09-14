@@ -1,4 +1,3 @@
-import { Users } from 'lucide-react';
 import { formatMeasuredGrams } from '../../displayFormat';
 import { sumMeasuredOverproductionGrams } from '../../actualKitchenOutcome';
 import type { ObservedServiceReality } from '../../types';
@@ -12,33 +11,27 @@ export function ActualKitchenOutcomeSection({ observed }: ActualKitchenOutcomeSe
 
   return (
     <section
-      className="chef-results-subsection chef-results-actual-kitchen"
+      className="kitchen-mgmt-surface participant-kitchen-outcome"
       data-testid="actual-kitchen-outcome-section"
     >
-      <h3 className="chef-results-subsection-title">What happened in the kitchen?</h3>
-      <p className="chef-results-subsection-intro">
-        Prepared food left after service, recorded in Service Closeout.
+      <h3 className="kitchen-mgmt-surface__title">Kitchen outcome</h3>
+      <p className="kitchen-mgmt-snapshot-hint">
+        What really happened in the kitchen after service (Service Closeout).
       </p>
 
-      <div className="chef-results-actual-kitchen__highlights">
-        <div className="chef-results-actual-kitchen__highlight">
-          <Users size={20} aria-hidden="true" />
-          <div>
-            <p className="chef-results-actual-kitchen__highlight-value" data-testid="actual-customers-served">
-              {observed.actualCustomers}
-            </p>
-            <p className="chef-results-actual-kitchen__highlight-label">customers served</p>
-          </div>
-        </div>
-
-        <div className="chef-results-actual-kitchen__highlight">
-          <div>
-            <p className="chef-results-actual-kitchen__highlight-value" data-testid="actual-kitchen-total">
-              {formatMeasuredGrams(totalGrams)}
-            </p>
-            <p className="chef-results-actual-kitchen__highlight-label">actual surplus after service</p>
-          </div>
-        </div>
+      <div className="kitchen-mgmt-kpi-grid">
+        <article className="kitchen-mgmt-kpi kitchen-mgmt-kpi--neutral">
+          <p className="kitchen-mgmt-kpi__value" data-testid="actual-customers-served">
+            {observed.actualCustomers}
+          </p>
+          <p className="kitchen-mgmt-kpi__label">Customers served</p>
+        </article>
+        <article className="kitchen-mgmt-kpi kitchen-mgmt-kpi--neutral">
+          <p className="kitchen-mgmt-kpi__value" data-testid="actual-kitchen-total">
+            {formatMeasuredGrams(totalGrams)}
+          </p>
+          <p className="kitchen-mgmt-kpi__label">Actual surplus after service</p>
+        </article>
       </div>
     </section>
   );

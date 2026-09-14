@@ -97,16 +97,20 @@ describe('participant privacy', () => {
     expect(screen.getByTestId('participant-results-header')).toHaveTextContent(/Friday, 31 July 2026/);
   });
 
-  it('shows progress section for participated services', () => {
+  it('shows progress section for participated services', async () => {
+    const user = userEvent.setup();
     render(<AppRouter />);
+    await user.click(screen.getByTestId('participant-primary-tab-progress'));
     expect(screen.getByTestId('your-progress-section')).toBeInTheDocument();
     expect(screen.getByText(/Your progress/i)).toBeInTheDocument();
     expect(screen.getByRole('tab', { name: 'Week' })).toHaveAttribute('aria-selected', 'true');
     expect(screen.getByTestId('progress-bar-chart')).toBeInTheDocument();
   });
 
-  it('uses participant-facing kitchen progress wording', () => {
+  it('uses participant-facing kitchen progress wording', async () => {
+    const user = userEvent.setup();
     render(<AppRouter />);
+    await user.click(screen.getByTestId('participant-primary-tab-progress'));
     expect(screen.getByText('Services completed this week')).toBeInTheDocument();
     expect(screen.getByText('Anonymous team average estimated surplus')).toBeInTheDocument();
     expect(screen.queryByText(/Fixture services/i)).not.toBeInTheDocument();

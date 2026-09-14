@@ -1,19 +1,15 @@
 import { useEffect, useMemo, useState } from 'react';
-import { CurrentServiceSection } from './components/participant/CurrentServiceSection';
 import { DashboardHeader, type DashboardStatus } from './components/participant/DashboardHeader';
 import { FixtureCurrentUserSelector } from './components/participant/FixtureCurrentUserSelector';
-import { ForecastImpactSection } from './components/participant/ForecastImpactSection';
-import { ActualKitchenOutcomeSection } from './components/participant/ActualKitchenOutcomeSection';
-import { KitchenProgressSection } from './components/participant/KitchenProgressSection';
-import { TeamComparisonSection } from './components/participant/TeamComparisonSection';
+import { ParticipantOverviewSection } from './components/participant/ParticipantOverviewSection';
 import { ParticipantProgressSection } from './components/participant/ParticipantProgressSection';
+import { ParticipantTabNav, type ParticipantPrimaryTab } from './components/participant/ParticipantTabNav';
 import {
   buildFixtureKitchenProgress,
   hasFixtureCloseoutForDate,
 } from './adapters/fixtureCalculationSource';
 import {
   buildParticipantKitchenProgress,
-  EMPTY_KITCHEN_PROGRESS,
   hasGroupCloseoutForDate,
 } from './adapters/groupCalculationSource';
 import { resolveChefResultsServiceDate } from '../services/operationalServiceCalendar';
@@ -46,6 +42,7 @@ export function ChefResultsParticipantApp() {
   }, []);
 
   const resultsServiceDate = useMemo(() => resolveChefResultsServiceDate(now), [now]);
+  const [primaryTab, setPrimaryTab] = useState<ParticipantPrimaryTab>('overview');
 
   const resultsState = useChefResultsData(resultsServiceDate);
   const dailyResults = resultsState.status === 'ready' ? resultsState.dailyResults : null;
@@ -87,7 +84,7 @@ export function ChefResultsParticipantApp() {
   ]);
 
   const kitchenProgress = useMemo(() => {
-    if (!canLoadProgress) return EMPTY_KITCHEN_PROGRESS;
+    if (!canLoadProgress) return null;
     if (embedded && inputCollectionsReady) {
       return buildParticipantKitchenProgress(inputCollections, currentUserId);
     }
@@ -113,7 +110,7 @@ export function ChefResultsParticipantApp() {
 
   return (
     <div
-      className="chef-results-page chef-results-page--participant"
+      className="chef-results-page chef-results-page--participant kitchen-mgmt-page"
       data-testid="chef-results-participant-page"
     >
       {!embedded ? <FixtureCurrentUserSelector /> : null}
@@ -121,56 +118,36 @@ export function ChefResultsParticipantApp() {
       <DashboardHeader serviceDate={resultsServiceDate} status={dashboardStatus} />
 
       {isEmbeddedLoading ? (
-        <p className="chef-results-empty" data-testid="chef-results-pending">
+        <p className="kitchen-mgmt-empty" data-testid="chef-results-pending">
           Loading kitchen results…
         </p>
       ) : null}
 
       {!isEmbeddedLoading ? (
-        <CurrentServiceSection>
-          {resultsState.status === 'ready' && !hasCloseout ? (
-            <div className="chef-results-empty-state" data-testid="participant-results-unavailable-closeout">
-              <p className="chef-results-empty-state__title">Waiting for service closeout</p>
-              <p className="chef-results-empty-state__body">
-                Results for this service date will appear after the kitchen closeout is recorded.
-              </p>
-            </div>
-          ) : null}
-
-          {resultsState.status === 'ready' && hasCloseout && !ownResult ? (
-            <div className="chef-results-empty-state" data-testid="participant-no-forecast-result">
-              <p className="chef-results-empty-state__title">No forecast for this service</p>
-              <p className="chef-results-empty-state__body">
-                You did not submit a valid forecast for this service date.
-              </p>
-            </div>
-          ) : null}
-
-          {hasCurrentResult && dailyResults && ownResult ? (
-            <>
-              <ActualKitchenOutcomeSection observed={dailyResults.observed} />
-              <ForecastImpactSection result={ownResult} observed={dailyResults.observed} />
-            </>
-          ) : null}
-        </CurrentServiceSection>
+        <ParticipantTabNav activeTab={primaryTab} onTabChange={setPrimaryTab}>
+          {(tab) => {
+            if (tab === 'overview') {
+              return (
+                <ParticipantOverviewSection
+                  resultsReady={resultsState.status === 'ready'}
+                  hasCloseout={hasCloseout}
+                  ownResult={ownResult}
+                  dailyResults={dailyResults}
+                  peerBenchmark={peerBenchmark}
+                  peerInsights={peerInsights}
+                />
+              );
+            }
+            return (
+              <ParticipantProgressSection
+                servicePoints={progressServicePoints}
+                asOfServiceDate={resultsServiceDate}
+                kitchenProgress={canLoadProgress ? kitchenProgress : null}
+              />
+            );
+          }}
+        </ParticipantTabNav>
       ) : null}
-
-      {hasCurrentResult && dailyResults && ownResult && peerBenchmark && peerInsights ? (
-        <TeamComparisonSection
-          participant={ownResult}
-          benchmark={peerBenchmark}
-          insights={peerInsights}
-        />
-      ) : null}
-
-      {canLoadProgress ? (
-        <ParticipantProgressSection
-          servicePoints={progressServicePoints}
-          asOfServiceDate={resultsServiceDate}
-        />
-      ) : null}
-
-      {canLoadProgress ? <KitchenProgressSection progress={kitchenProgress} /> : null}
     </div>
   );
 }

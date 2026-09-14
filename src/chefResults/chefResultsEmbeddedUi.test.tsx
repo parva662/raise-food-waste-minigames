@@ -148,7 +148,8 @@ describe('embedded chef results UI', () => {
     expect(screen.queryByText('coworker-user')).not.toBeInTheDocument();
   });
 
-  it('shows no forecast state when the current user has no forecast for the canonical date', () => {
+  it('shows no forecast state when the current user has no forecast for the canonical date', async () => {
+    const user = userEvent.setup();
     ingestInputCollectionsForTests(
       embeddedKitchenPayload({ includeCurrentUserForecast: false, includeCoworkerForecast: true }),
     );
@@ -158,13 +159,16 @@ describe('embedded chef results UI', () => {
     expect(screen.getByTestId('participant-no-forecast-result')).toHaveTextContent(
       'No forecast for this service',
     );
+    await user.click(screen.getByTestId('participant-primary-tab-progress'));
     expect(screen.getByTestId('your-progress-section')).toBeInTheDocument();
     expect(screen.getByTestId('kitchen-progress-section')).toBeInTheDocument();
   });
 
-  it('uses real embedded kitchen progress instead of fixture leakage', () => {
+  it('uses real embedded kitchen progress instead of fixture leakage', async () => {
+    const user = userEvent.setup();
     ingestInputCollectionsForTests(embeddedKitchenPayload());
     render(<ChefResultsParticipantApp />);
+    await user.click(screen.getByTestId('participant-primary-tab-progress'));
 
     expect(screen.getByTestId('kitchen-progress-services-count')).toHaveTextContent('1');
     expect(screen.getByTestId('kitchen-progress-team-overproduction').textContent).not.toBe('4.12 kg');
@@ -182,9 +186,11 @@ describe('embedded chef results UI', () => {
     expect(screen.queryByText('4.12 kg')).not.toBeInTheDocument();
   });
 
-  it('renders participant kitchen progress once authenticated user identity is available', () => {
+  it('renders participant kitchen progress once authenticated user identity is available', async () => {
+    const user = userEvent.setup();
     ingestInputCollectionsForTests(embeddedKitchenPayload());
     render(<ChefResultsParticipantApp />);
+    await user.click(screen.getByTestId('participant-primary-tab-progress'));
 
     expect(screen.getByTestId('kitchen-progress-section')).toBeInTheDocument();
     expect(screen.getByTestId('kitchen-progress-services-count')).toHaveTextContent('1');
@@ -200,7 +206,8 @@ describe('embedded chef results UI', () => {
     expect(screen.getByTestId('staff-result-name-coworker-user')).toHaveTextContent('Coworker Chef');
   });
 
-  it('does not expose participant debug UI even with gamebusDebug=1', () => {
+  it('does not expose participant debug UI even with gamebusDebug=1', async () => {
+    const user = userEvent.setup();
     window.location.hash = '#/chef-results?gamebusDebug=1';
     ingestInputCollectionsForTests(embeddedKitchenPayload());
     render(<ChefResultsParticipantApp />);
@@ -213,6 +220,7 @@ describe('embedded chef results UI', () => {
     expect(screen.queryByTestId('gamebus-user-id')).not.toBeInTheDocument();
     expect(screen.queryByTestId('gamebus-user-name')).not.toBeInTheDocument();
     expect(screen.getByTestId('chef-results-participant-page')).toBeInTheDocument();
+    await user.click(screen.getByTestId('participant-primary-tab-progress'));
     expect(screen.getByTestId('your-progress-section')).toBeInTheDocument();
   });
 
@@ -306,13 +314,15 @@ describe('standalone chef results fixtures', () => {
     vi.restoreAllMocks();
   });
 
-  it('still renders fixture participant results in standalone mode', () => {
+  it('still renders fixture participant results in standalone mode', async () => {
+    const user = userEvent.setup();
     render(<ChefResultsParticipantApp />);
 
     expect(screen.queryByTestId('chef-results-pending')).not.toBeInTheDocument();
     expect(screen.getByTestId('actual-kitchen-outcome-section')).toBeInTheDocument();
     expect(screen.getByTestId('forecast-impact-section')).toBeInTheDocument();
     expect(screen.getByTestId('participant-summary-cards')).toBeInTheDocument();
+    await user.click(screen.getByTestId('participant-primary-tab-progress'));
     expect(screen.getByTestId('your-progress-section')).toBeInTheDocument();
     expect(screen.getByTestId('kitchen-progress-section')).toBeInTheDocument();
     expect(screen.queryByTestId('chef-results-date-select')).not.toBeInTheDocument();

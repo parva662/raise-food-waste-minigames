@@ -2,6 +2,7 @@
 import { describe, it, expect, afterEach } from 'vitest';
 import { cleanup, render, screen, within } from '@testing-library/react';
 import { ActualKitchenOutcomeSection } from './components/participant/ActualKitchenOutcomeSection';
+import { CategoryOutcomeVisual } from './components/participant/CategoryOutcomeVisual';
 import { ForecastImpactSection } from './components/participant/ForecastImpactSection';
 import { TeamComparisonSection } from './components/participant/TeamComparisonSection';
 import {
@@ -83,7 +84,7 @@ describe('participant dashboard sections', () => {
     render(<ActualKitchenOutcomeSection observed={observedReality()} />);
 
     const section = screen.getByTestId('actual-kitchen-outcome-section');
-    expect(section).toHaveTextContent('What happened in the kitchen?');
+    expect(section).toHaveTextContent('Kitchen outcome');
     expect(screen.getByTestId('actual-kitchen-total')).toHaveTextContent('1,140 g');
     expect(screen.getByTestId('actual-customers-served')).toHaveTextContent('150');
     expect(section).not.toHaveTextContent('Simulated');
@@ -96,27 +97,25 @@ describe('participant dashboard sections', () => {
     expect(section).toHaveTextContent('Your forecast');
     expect(screen.getByTestId('customer-estimate-card')).toBeInTheDocument();
     expect(screen.getByTestId('production-plan-card')).toBeInTheDocument();
-    expect(within(section).getByText('Estimated surplus')).toBeInTheDocument();
+    expect(screen.getByTestId('participant-kpi-estimated-surplus')).toBeInTheDocument();
     expect(within(section).getByText('34.27 kg')).toBeInTheDocument();
-    expect(within(section).getByText('Estimated shortage')).toBeInTheDocument();
+    expect(screen.getByTestId('participant-kpi-estimated-shortage')).toBeInTheDocument();
     expect(within(section).getByText('250 g')).toBeInTheDocument();
     expect(within(section).queryByText('Simulated overproduction')).not.toBeInTheDocument();
   });
 
-  it('by-menu-item visual uses Too little / On target / Too much without duplicate zero labels', () => {
-    render(<ForecastImpactSection result={staffResult()} observed={observedReality()} />);
+  it('by-menu-item table shows readable surplus, shortage, and on-target outcomes', () => {
+    render(<CategoryOutcomeVisual result={staffResult()} />);
 
     const visual = screen.getByTestId('category-outcome-visual');
     expect(within(visual).getByText('By menu item')).toBeInTheDocument();
-    expect(within(visual).getAllByText('On target').length).toBeGreaterThan(0);
-    expect(within(visual).getAllByText('Too little').length).toBeGreaterThan(0);
-    expect(within(visual).getAllByText('Too much').length).toBeGreaterThan(0);
-    expect(within(visual).getByText(/250 g estimated shortage/)).toBeInTheDocument();
+    expect(within(visual).getByTestId('participant-category-outcome-label-soup')).toHaveTextContent(
+      /shortage/i,
+    );
+    expect(within(visual).getByTestId('participant-category-outcome-label-main')).toHaveTextContent(
+      /surplus/i,
+    );
     expect(within(visual).queryByText('Category simulation')).not.toBeInTheDocument();
-    expect(within(visual).queryByText(/^0$/)).not.toBeInTheDocument();
-
-    const mainScale = within(visual).getAllByRole('img')[0];
-    expect(mainScale).toHaveAttribute('aria-label', 'Main: estimated surplus 13820 grams');
   });
 
   it('section 3 compares against other staff with peer table', () => {

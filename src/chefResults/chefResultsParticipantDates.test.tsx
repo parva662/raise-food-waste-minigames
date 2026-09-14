@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { ChefResultsParticipantApp } from './ChefResultsParticipantApp';
 import {
   KITCHEN_GROUP_ACTIVITIES_REQUEST_KEY,
@@ -143,10 +144,9 @@ describe('canonical participant results in embedded mode', () => {
     );
     expect(screen.queryByText('34.27 kg')).not.toBeInTheDocument();
     expect(screen.queryByTestId('forecast-impact-section')).not.toBeInTheDocument();
-    expect(screen.getByTestId('your-progress-section')).toBeInTheDocument();
   });
 
-  it('shows no closeout state when the canonical date has no wasteMeasurement yet', () => {
+  it('shows no closeout state when the canonical date has no wasteMeasurement yet', async () => {
     ingestInputCollectionsForTests(
       embeddedPayload(staff1Id, [
         buildAnonymizedChefForecastActivity({
@@ -156,11 +156,13 @@ describe('canonical participant results in embedded mode', () => {
         }),
       ]),
     );
+    const user = userEvent.setup();
     render(<ChefResultsParticipantApp />);
 
     expect(screen.getByTestId('participant-results-unavailable-closeout')).toHaveTextContent(
       'Waiting for service closeout',
     );
+    await user.click(screen.getByTestId('participant-primary-tab-progress'));
     expect(screen.getByTestId('kitchen-progress-section')).toBeInTheDocument();
     expect(screen.queryByTestId('team-comparison-section')).not.toBeInTheDocument();
   });
@@ -184,7 +186,7 @@ describe('canonical participant results in embedded mode', () => {
     expect(screen.queryByTestId('forecast-impact-section')).not.toBeInTheDocument();
   });
 
-  it('shows Monday results and team comparison for the canonical date', () => {
+  it('shows Monday results and team comparison for the canonical date', async () => {
     ingestInputCollectionsForTests(
       embeddedPayload(staff1Id, [
         buildAnonymizedChefForecastActivity({
@@ -201,6 +203,7 @@ describe('canonical participant results in embedded mode', () => {
         wasteMeasurementForDate(sep7),
       ]),
     );
+    const user = userEvent.setup();
     render(<ChefResultsParticipantApp />);
 
     expect(screen.getByTestId('participant-results-header')).toHaveTextContent(
@@ -210,6 +213,7 @@ describe('canonical participant results in embedded mode', () => {
     expect(screen.getByTestId('forecast-impact-section')).toBeInTheDocument();
     expect(screen.getByTestId('team-comparison-section')).toBeInTheDocument();
     expect(screen.queryByText('Coworker Chef')).not.toBeInTheDocument();
+    await user.click(screen.getByTestId('participant-primary-tab-progress'));
     expect(screen.getByTestId('kitchen-progress-section')).toBeInTheDocument();
   });
 

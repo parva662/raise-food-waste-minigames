@@ -7,20 +7,23 @@ interface KitchenProgressSectionProps {
 
 export function KitchenProgressSection({ progress }: KitchenProgressSectionProps) {
   return (
-    <section className="chef-results-kitchen-progress" data-testid="kitchen-progress-section">
-      <h2 className="chef-results-section-title">Kitchen progress</h2>
-      <dl className="chef-results-kitchen-progress__metrics">
-        <div>
-          <dt>Services completed this week</dt>
-          <dd data-testid="kitchen-progress-services-count">{progress.servicesCompletedCount}</dd>
-        </div>
-        <div>
-          <dt>Anonymous team average estimated surplus</dt>
-          <dd data-testid="kitchen-progress-team-overproduction">
+    <section className="kitchen-mgmt-surface participant-kitchen-progress" data-testid="kitchen-progress-section">
+      <h3 className="kitchen-mgmt-surface__title">Kitchen progress</h3>
+      <p className="kitchen-mgmt-snapshot-hint">Anonymous team context for the current week.</p>
+      <div className="kitchen-mgmt-kpi-grid">
+        <article className="kitchen-mgmt-kpi kitchen-mgmt-kpi--neutral">
+          <p className="kitchen-mgmt-kpi__value" data-testid="kitchen-progress-services-count">
+            {progress.servicesCompletedCount}
+          </p>
+          <p className="kitchen-mgmt-kpi__label">Services completed this week</p>
+        </article>
+        <article className="kitchen-mgmt-kpi kitchen-mgmt-kpi--surplus">
+          <p className="kitchen-mgmt-kpi__value" data-testid="kitchen-progress-team-overproduction">
             {formatGrams(progress.anonymousTeamAverageOverproductionGrams)}
-          </dd>
-        </div>
-      </dl>
+          </p>
+          <p className="kitchen-mgmt-kpi__label">Anonymous team average estimated surplus</p>
+        </article>
+      </div>
     </section>
   );
 }

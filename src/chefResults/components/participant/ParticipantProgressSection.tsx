@@ -1,5 +1,6 @@
 import { useCallback, useMemo, useState, type KeyboardEvent } from 'react';
 import { formatServiceDateLong } from '../../displayFormat';
+import type { KitchenProgressSummary } from '../../adapters/groupCalculationSource';
 import {
   buildParticipantProgressPeriodView,
   formatCustomerError,
@@ -11,10 +12,12 @@ import {
   type ProgressPeriodView,
   type ParticipantProgressServicePoint,
 } from '../../participantProgressData';
+import { KitchenProgressSection } from './KitchenProgressSection';
 
 interface ParticipantProgressSectionProps {
   servicePoints: readonly ParticipantProgressServicePoint[];
   asOfServiceDate: string;
+  kitchenProgress?: KitchenProgressSummary | null;
 }
 
 const TABS: { id: ProgressPeriodTab; label: string }[] = [
@@ -23,7 +26,7 @@ const TABS: { id: ProgressPeriodTab; label: string }[] = [
   { id: 'year', label: 'Year' },
 ];
 
-function ProgressBarChart({
+function ProgressTrendChart({
   buckets,
   latestServiceDate,
 }: {
@@ -32,86 +35,101 @@ function ProgressBarChart({
 }) {
   const chartBuckets = getChartableProgressBuckets(buckets);
 
-  if (chartBuckets.length === 0) {
+  if (chartBuckets.length < 2) {
     return (
-      <figure className="chef-results-progress-chart" data-testid="progress-bar-chart">
-        <figcaption className="chef-results-progress-chart__caption">
-          Estimated surplus per customer
-        </figcaption>
-        <p className="chef-results-progress-chart__unavailable" data-testid="progress-chart-unavailable">
-          No chartable normalized performance for this period.
+      <div className="kitchen-mgmt-chart-empty" data-testid="progress-chart-unavailable">
+        <p>Not enough completed services to show a trend yet.</p>
+        <p>
+          Trend visualization will appear after at least two completed service periods are
+          available.
         </p>
-      </figure>
+      </div>
     );
   }
 
-  const rates = chartBuckets.map((bucket) => bucket.overproductionRateGramsPerCustomer!);
-  const maxRate = Math.max(...rates, 1);
-
-  const chartWidth = Math.max(280, chartBuckets.length * 56);
+  const maxRate = Math.max(
+    ...chartBuckets.flatMap((bucket) => [
+      bucket.overproductionRateGramsPerCustomer ?? 0,
+      bucket.shortageRateGramsPerCustomer ?? 0,
+    ]),
+    1,
+  );
+  const groupWidth = 56;
+  const chartWidth = Math.max(280, chartBuckets.length * groupWidth);
 
   return (
-    <figure className="chef-results-progress-chart" data-testid="progress-bar-chart">
-      <figcaption className="chef-results-progress-chart__caption">
-        Estimated surplus per customer
-      </figcaption>
+    <figure className="kitchen-mgmt-chart chef-results-progress-chart" data-testid="progress-bar-chart">
+      <figcaption className="kitchen-mgmt-chart__caption">Trend</figcaption>
+      <div className="kitchen-mgmt-chart-legend" data-testid="progress-chart-legend">
+        <span className="kitchen-mgmt-chart-legend__item kitchen-mgmt-chart-legend__item--surplus">
+          Estimated surplus
+        </span>
+        <span className="kitchen-mgmt-chart-legend__item kitchen-mgmt-chart-legend__item--shortage">
+          Estimated shortage
+        </span>
+      </div>
       <svg
-        className="chef-results-progress-chart__svg"
-        viewBox={`0 0 ${chartWidth} 120`}
+        className="kitchen-mgmt-chart__svg chef-results-progress-chart__svg"
+        viewBox={`0 0 ${chartWidth} 132`}
         role="img"
-        aria-label="Estimated surplus per customer"
+        aria-label="Your estimated surplus and shortage per customer"
+        data-testid="progress-trend-chart-svg"
       >
-        <line className="chef-results-progress-chart__baseline" x1="8" y1="96" x2={chartWidth - 8} y2="96" />
+        <line className="kitchen-mgmt-chart__baseline" x1="8" y1="96" x2={chartWidth - 8} y2="96" />
         {chartBuckets.map((bucket, index) => {
-          const rate = bucket.overproductionRateGramsPerCustomer!;
-          const barHeight = (rate / maxRate) * 72;
-          const x = index * 56 + 12;
-          const y = 96 - barHeight;
+          const surplusRate = bucket.overproductionRateGramsPerCustomer ?? 0;
+          const shortageRate = bucket.shortageRateGramsPerCustomer ?? 0;
+          const surplusHeight = (surplusRate / maxRate) * 72;
+          const shortageHeight = (shortageRate / maxRate) * 72;
+          const baseX = index * groupWidth + 12;
           const isLatest = latestServiceDate
             ? bucket.serviceDates.includes(latestServiceDate)
             : false;
           const title = bucket.serviceDates
             .map((serviceDate) => {
-              const shortage = bucket.shortageRateGramsPerCustomer;
-              return `${formatServiceDateLong(serviceDate)}: ${formatGramsPerCustomer(
+              return `${formatServiceDateLong(serviceDate)}: surplus ${formatGramsPerCustomer(
                 bucket.overproductionRateGramsPerCustomer,
-              )}, shortage ${formatGramsPerCustomer(shortage)}, customer error ${bucket.meanCustomerForecastAbsoluteError.toFixed(1)}`;
+              )}, shortage ${formatGramsPerCustomer(bucket.shortageRateGramsPerCustomer)}`;
             })
             .join('; ');
 
           return (
-            <g key={bucket.key} className="chef-results-progress-chart__bar-group">
+            <g key={bucket.key}>
+              <title>{title}</title>
               <rect
-                className="chef-results-progress-chart__bar"
-                x={x}
-                y={y}
-                width={32}
-                height={barHeight}
-                rx={4}
-              >
-                <title>{title}</title>
-              </rect>
-              <text
-                className="chef-results-progress-chart__value"
-                x={x + 16}
-                y={y - 4}
-                textAnchor="middle"
-              >
-                {rate.toFixed(1)}
-              </text>
-              <text
-                className="chef-results-progress-chart__label"
-                x={x + 16}
-                y={108}
-                textAnchor="middle"
-              >
+                className={
+                  isLatest
+                    ? 'kitchen-mgmt-chart__bar kitchen-mgmt-chart__bar--surplus kitchen-mgmt-chart__bar--latest'
+                    : 'kitchen-mgmt-chart__bar kitchen-mgmt-chart__bar--surplus'
+                }
+                data-testid="progress-chart-bar-surplus"
+                x={baseX}
+                y={96 - surplusHeight}
+                width={18}
+                height={surplusHeight}
+                rx={3}
+              />
+              <rect
+                className={
+                  isLatest
+                    ? 'kitchen-mgmt-chart__bar kitchen-mgmt-chart__bar--shortage kitchen-mgmt-chart__bar--latest'
+                    : 'kitchen-mgmt-chart__bar kitchen-mgmt-chart__bar--shortage'
+                }
+                data-testid="progress-chart-bar-shortage"
+                x={baseX + 20}
+                y={96 - shortageHeight}
+                width={18}
+                height={shortageHeight}
+                rx={3}
+              />
+              <text className="kitchen-mgmt-chart__label" x={baseX + 19} y={112} textAnchor="middle">
                 {bucket.label}
               </text>
               {isLatest ? (
                 <text
                   className="chef-results-progress-chart__latest"
-                  x={x + 16}
-                  y={118}
+                  x={baseX + 19}
+                  y={124}
                   textAnchor="middle"
                   data-testid="progress-latest-marker"
                 >
@@ -129,64 +147,69 @@ function ProgressBarChart({
 function ComparisonDimensionRow({ dimension }: { dimension: ProgressComparisonDimension }) {
   return (
     <div
-      className="chef-results-progress-compare-row"
+      className="kitchen-mgmt-comparison-row chef-results-progress-compare-row"
       data-testid={`progress-compare-${dimension.label.toLowerCase().replace(/\s+/g, '-')}`}
     >
-      <div className="chef-results-progress-compare-row__main">
-        <span className="chef-results-progress-compare-row__label">{dimension.label}</span>
-        <span
-          className={`chef-results-progress-compare-row__value chef-results-progress-compare-row__value--${dimension.direction ?? 'unchanged'}`}
-        >
-          {dimension.displayValue}
-        </span>
-      </div>
+      <span className="kitchen-mgmt-comparison-row__label">{dimension.label}</span>
+      <span
+        className={`kitchen-mgmt-comparison-row__value chef-results-progress-compare-row__value chef-results-progress-compare-row__value--${dimension.direction ?? 'unchanged'}`}
+      >
+        {dimension.displayValue}
+      </span>
       {dimension.detail ? (
-        <p className="chef-results-progress-compare-row__detail">{dimension.detail}</p>
+        <span className="kitchen-mgmt-comparison-row__detail">{dimension.detail}</span>
       ) : null}
     </div>
   );
 }
 
-function PeriodSummaryCards({ period }: { period: ProgressPeriodView }) {
+function PeriodSummaryKpis({ period }: { period: ProgressPeriodView }) {
   const { summary } = period;
-  const { comparison } = summary;
+
+  return (
+    <section className="kitchen-mgmt-surface" data-testid="progress-period-summary">
+      <h4 className="kitchen-mgmt-surface__subtitle">Period summary</h4>
+      <p className="kitchen-mgmt-snapshot-hint">{period.periodRangeLabel}</p>
+      <div className="kitchen-mgmt-kpi-grid" data-testid="progress-summary-cards">
+        <article className="kitchen-mgmt-kpi kitchen-mgmt-kpi--surplus">
+          <p className="kitchen-mgmt-kpi__value" data-testid="progress-average-overproduction">
+            {formatGramsPerCustomer(summary.overproductionRateGramsPerCustomer)}
+          </p>
+          <p className="kitchen-mgmt-kpi__label">Average estimated surplus</p>
+        </article>
+        <article className="kitchen-mgmt-kpi kitchen-mgmt-kpi--shortage">
+          <p className="kitchen-mgmt-kpi__value" data-testid="progress-shortage-risk">
+            {formatGramsPerCustomer(summary.shortageRateGramsPerCustomer)}
+          </p>
+          <p className="kitchen-mgmt-kpi__label">Average estimated shortage</p>
+        </article>
+        <article className="kitchen-mgmt-kpi kitchen-mgmt-kpi--forecast">
+          <p className="kitchen-mgmt-kpi__value" data-testid="progress-average-customer-error">
+            {formatCustomerError(summary.meanCustomerForecastAbsoluteError)}
+          </p>
+          <p className="kitchen-mgmt-kpi__label">Average customer error</p>
+        </article>
+        <article className="kitchen-mgmt-kpi kitchen-mgmt-kpi--neutral">
+          <p className="kitchen-mgmt-kpi__value" data-testid="progress-completed-services">
+            {summary.servicesCompleted}
+          </p>
+          <p className="kitchen-mgmt-kpi__label">Completed services</p>
+        </article>
+      </div>
+    </section>
+  );
+}
+
+function PreviousPeriodCard({ period }: { period: ProgressPeriodView }) {
+  const { comparison } = period.summary;
   const hasPreviousComparison = comparison.noPreviousPeriodMessage === null;
 
   return (
-    <div className="chef-results-progress-cards" data-testid="progress-summary-cards">
-      <article className="chef-results-progress-card" data-testid="progress-period-summary">
-        <h3 className="chef-results-progress-card__title">{period.periodTitle}</h3>
-        <p className="chef-results-progress-card__range">{period.periodRangeLabel}</p>
-        <dl className="chef-results-progress-metrics">
-          <div>
-            <dt>Average estimated surplus</dt>
-            <dd data-testid="progress-average-overproduction">
-              {formatGramsPerCustomer(summary.overproductionRateGramsPerCustomer)}
-            </dd>
-          </div>
-          <div>
-            <dt>Average estimated shortage</dt>
-            <dd data-testid="progress-shortage-risk">
-              {formatGramsPerCustomer(summary.shortageRateGramsPerCustomer)}
-            </dd>
-          </div>
-          <div>
-            <dt>Average customer error</dt>
-            <dd data-testid="progress-average-customer-error">
-              {formatCustomerError(summary.meanCustomerForecastAbsoluteError)}
-            </dd>
-          </div>
-          <div>
-            <dt>Completed services</dt>
-            <dd data-testid="progress-completed-services">{summary.servicesCompleted}</dd>
-          </div>
-        </dl>
-      </article>
-
-      <article className="chef-results-progress-card" data-testid="progress-previous-comparison">
-        <h3 className="chef-results-progress-card__title">{period.previousPeriodTitle}</h3>
-        {hasPreviousComparison ? (
-          <>
+    <article className="kitchen-mgmt-surface kitchen-mgmt-comparison-card" data-testid="progress-previous-comparison">
+      <h4 className="kitchen-mgmt-surface__subtitle">{period.previousPeriodTitle}</h4>
+      {hasPreviousComparison ? (
+        <>
+          <div className="kitchen-mgmt-comparison-card__rows">
             {comparison.surplusComparison ? (
               <ComparisonDimensionRow dimension={comparison.surplusComparison} />
             ) : null}
@@ -196,25 +219,24 @@ function PeriodSummaryCards({ period }: { period: ProgressPeriodView }) {
             {comparison.customerErrorComparison ? (
               <ComparisonDimensionRow dimension={comparison.customerErrorComparison} />
             ) : null}
-            {comparison.interpretationMessage ? (
-              <p className="chef-results-progress-interpretation" data-testid="progress-interpretation">
-                {comparison.interpretationMessage}
-              </p>
-            ) : null}
-          </>
-        ) : (
-          <p className="chef-results-progress-comparison chef-results-progress-comparison--muted">
-            {comparison.noPreviousPeriodMessage}
-          </p>
-        )}
-      </article>
-    </div>
+          </div>
+          {comparison.interpretationMessage ? (
+            <p className="kitchen-mgmt-interpretation" data-testid="progress-interpretation">
+              {comparison.interpretationMessage}
+            </p>
+          ) : null}
+        </>
+      ) : (
+        <p className="kitchen-mgmt-snapshot-hint">{comparison.noPreviousPeriodMessage}</p>
+      )}
+    </article>
   );
 }
 
 export function ParticipantProgressSection({
   servicePoints,
   asOfServiceDate,
+  kitchenProgress = null,
 }: ParticipantProgressSectionProps) {
   const [activeTab, setActiveTab] = useState<ProgressPeriodTab>('week');
 
@@ -246,7 +268,7 @@ export function ParticipantProgressSection({
       if (nextIndex !== null) {
         event.preventDefault();
         setActiveTab(TABS[nextIndex]!.id);
-        const nextTab = document.getElementById(`progress-tab-${TABS[nextIndex]!.id}`);
+        const nextTab = document.getElementById(`participant-progress-tab-${TABS[nextIndex]!.id}`);
         nextTab?.focus();
       }
     },
@@ -254,25 +276,24 @@ export function ParticipantProgressSection({
   );
 
   return (
-    <section className="chef-results-progress" data-testid="your-progress-section">
-      <h2 className="chef-results-section-title">Your progress</h2>
-      <p className="chef-results-section-intro">
-        See how your forecasts perform over time. Values are shown per customer so services of
-        different sizes can be compared.
+    <section className="participant-progress-tab" data-testid="your-progress-section">
+      <h3 className="kitchen-mgmt-surface__title">Your progress</h3>
+      <p className="kitchen-mgmt-snapshot-hint">
+        Performance over time, normalized per customer for fair comparison.
       </p>
 
       {!hasAnyHistory ? (
-        <div className="chef-results-progress-global-empty" data-testid="progress-global-empty">
+        <div className="kitchen-mgmt-surface" data-testid="progress-global-empty">
           <p>Your progress will build over time.</p>
-          <p>
-            After you submit forecasts and those services are closed, your Week, Month and Year
-            trends will appear here.
+          <p className="kitchen-mgmt-snapshot-hint">
+            After you submit forecasts and those services are closed, Week, Month and Year trends
+            will appear here.
           </p>
         </div>
       ) : null}
 
       <div
-        className="chef-results-progress-tabs chef-results-progress-tabs--segmented"
+        className="kitchen-mgmt-tabs chef-results-progress-tabs"
         role="tablist"
         aria-label="Progress period"
         data-testid="progress-period-tabs"
@@ -282,12 +303,14 @@ export function ParticipantProgressSection({
             key={tab.id}
             type="button"
             role="tab"
-            id={`progress-tab-${tab.id}`}
+            id={`participant-progress-tab-${tab.id}`}
             aria-selected={activeTab === tab.id}
-            aria-controls={`progress-panel-${tab.id}`}
-            className={`chef-results-progress-tabs__button${
-              activeTab === tab.id ? ' chef-results-progress-tabs__button--active' : ''
-            }`}
+            aria-controls={`participant-progress-panel-${tab.id}`}
+            className={
+              activeTab === tab.id
+                ? 'kitchen-mgmt-tabs__tab kitchen-mgmt-tabs__tab--active'
+                : 'kitchen-mgmt-tabs__tab'
+            }
             data-testid={`progress-tab-${tab.id}`}
             onClick={() => setActiveTab(tab.id)}
             onKeyDown={(event) => handleTabKeyDown(event, tab.id)}
@@ -298,27 +321,32 @@ export function ParticipantProgressSection({
       </div>
 
       <div
-        id={`progress-panel-${activeTab}`}
+        id={`participant-progress-panel-${activeTab}`}
         role="tabpanel"
-        aria-labelledby={`progress-tab-${activeTab}`}
-        className="chef-results-progress-panel"
+        aria-labelledby={`participant-progress-tab-${activeTab}`}
+        className="participant-progress-panel"
         data-testid={`progress-panel-${activeTab}`}
       >
         {activePeriod.emptyMessage ? (
-          <div className="chef-results-progress-empty-block" data-testid="progress-period-empty">
+          <div className="kitchen-mgmt-surface" data-testid="progress-period-empty">
             <p>{activePeriod.emptyMessage}</p>
-            {activePeriod.emptyHelper ? <p>{activePeriod.emptyHelper}</p> : null}
+            {activePeriod.emptyHelper ? (
+              <p className="kitchen-mgmt-snapshot-hint">{activePeriod.emptyHelper}</p>
+            ) : null}
           </div>
         ) : (
-          <>
-            <ProgressBarChart
+          <div className="participant-progress-panel__content">
+            <PeriodSummaryKpis period={activePeriod} />
+            <ProgressTrendChart
               buckets={activePeriod.summary.buckets}
               latestServiceDate={activeTab === 'week' ? asOfServiceDate : latestServiceDate}
             />
-            <PeriodSummaryCards period={activePeriod} />
-          </>
+            <PreviousPeriodCard period={activePeriod} />
+          </div>
         )}
       </div>
+
+      {kitchenProgress ? <KitchenProgressSection progress={kitchenProgress} /> : null}
     </section>
   );
 }

@@ -1,84 +1,56 @@
+import { formatManagementCategoryOutcome } from '../../managementFormat';
 import { RESULT_CATEGORY_KEYS, RESULT_CATEGORY_LABELS } from '../../types';
 import type { StaffDailyResult } from '../../types';
-import {
-  buildCategoryAriaLabel,
-  formatCategoryOutcomeLabel,
-  getCategoryOutcomeKind,
-} from '../../forecastInterpretation';
+import { getCategoryOutcomeKind } from '../../forecastInterpretation';
 
 interface CategoryOutcomeVisualProps {
   result: StaffDailyResult;
 }
 
-function scalePercent(value: number, maxValue: number): number {
-  if (maxValue <= 0) return 0;
-  return Math.min(100, (value / maxValue) * 100);
-}
-
 export function CategoryOutcomeVisual({ result }: CategoryOutcomeVisualProps) {
-  const maxMagnitude = Math.max(
-    1,
-    ...RESULT_CATEGORY_KEYS.flatMap((key) => [
-      result[key].simulatedOverproductionGrams,
-      result[key].simulatedShortageGrams,
-    ]),
-  );
-
   return (
-    <div className="chef-results-category-visual" data-testid="category-outcome-visual">
-      <h3 className="chef-results-subsection-title">By menu item</h3>
-      <p className="chef-results-subsection-intro">
-        See whether your production plan would have prepared too little, close to the amount
-        needed, or more than needed.
-      </p>
+    <section className="participant-menu-outcomes" data-testid="category-outcome-visual">
+      <h4 className="kitchen-mgmt-surface__subtitle">By menu item</h4>
+      <div className="chef-results-table-wrap kitchen-mgmt-table-wrap">
+        <table className="chef-results-table kitchen-mgmt-table">
+          <thead>
+            <tr>
+              <th scope="col">Menu item</th>
+              <th scope="col">Outcome</th>
+            </tr>
+          </thead>
+          <tbody>
+            {RESULT_CATEGORY_KEYS.map((key) => {
+              const category = result[key];
+              const kind = getCategoryOutcomeKind(
+                category.simulatedOverproductionGrams,
+                category.simulatedShortageGrams,
+              );
+              const outcome = formatManagementCategoryOutcome(
+                category.simulatedOverproductionGrams,
+                category.simulatedShortageGrams,
+              );
+              const rowClass =
+                kind === 'surplus'
+                  ? 'participant-menu-outcomes__row--surplus'
+                  : kind === 'shortage'
+                    ? 'participant-menu-outcomes__row--shortage'
+                    : 'participant-menu-outcomes__row--target';
 
-      <div className="chef-results-diverging-list">
-        {RESULT_CATEGORY_KEYS.map((key) => {
-          const category = result[key];
-          const kind = getCategoryOutcomeKind(
-            category.simulatedOverproductionGrams,
-            category.simulatedShortageGrams,
-          );
-          const grams =
-            kind === 'shortage'
-              ? category.simulatedShortageGrams
-              : category.simulatedOverproductionGrams;
-          const shortagePct = scalePercent(category.simulatedShortageGrams, maxMagnitude);
-          const overPct = scalePercent(category.simulatedOverproductionGrams, maxMagnitude);
-          const outcomeLabel = formatCategoryOutcomeLabel(kind, grams);
-          const ariaLabel = buildCategoryAriaLabel(RESULT_CATEGORY_LABELS[key], kind, grams);
-
-          return (
-            <article key={key} className="chef-results-diverging-item">
-              <div className="chef-results-diverging-item__header">
-                <h3>{RESULT_CATEGORY_LABELS[key]}</h3>
-                <p className="chef-results-diverging-item__outcome">{outcomeLabel}</p>
-              </div>
-
-              <div className="chef-results-diverging-scale" role="img" aria-label={ariaLabel}>
-                <div
-                  className="chef-results-diverging-scale__shortage"
-                  style={{ width: `${shortagePct}%` }}
-                />
-                <div className="chef-results-diverging-scale__axis">
-                  <div className="chef-results-diverging-scale__center-line" aria-hidden="true" />
-                  <span className="chef-results-diverging-scale__center-label">On target</span>
-                </div>
-                <div
-                  className="chef-results-diverging-scale__over"
-                  style={{ width: `${overPct}%` }}
-                />
-              </div>
-
-              <div className="chef-results-diverging-scale__legend" aria-hidden="true">
-                <span>Too little</span>
-                <span>On target</span>
-                <span>Too much</span>
-              </div>
-            </article>
-          );
-        })}
+              return (
+                <tr
+                  key={key}
+                  className={rowClass}
+                  data-testid={`participant-category-outcome-${key}`}
+                >
+                  <th scope="row">{RESULT_CATEGORY_LABELS[key]}</th>
+                  <td data-testid={`participant-category-outcome-label-${key}`}>{outcome}</td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
       </div>
-    </div>
+    </section>
   );
 }

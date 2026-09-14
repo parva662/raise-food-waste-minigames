@@ -19,7 +19,7 @@ describe('ParticipantProgressSection', () => {
     vi.restoreAllMocks();
   });
 
-  it('replaces Your week with Your progress and default Week tab', () => {
+  it('shows Your progress with default Week tab', () => {
     const points = buildParticipantProgressServicePoints(
       DEFAULT_FIXTURE_CURRENT_USER_ID,
       '2026-07-31',
@@ -29,8 +29,17 @@ describe('ParticipantProgressSection', () => {
     expect(screen.getByTestId('your-progress-section')).toBeInTheDocument();
     expect(screen.queryByTestId('your-week-section')).not.toBeInTheDocument();
     expect(screen.getByRole('tab', { name: 'Week' })).toHaveAttribute('aria-selected', 'true');
-    expect(screen.getByText('Estimated surplus per customer')).toBeInTheDocument();
-    expect(screen.getByText(/Values are shown per customer/)).toBeInTheDocument();
+    expect(screen.getByTestId('progress-period-summary')).toBeInTheDocument();
+    expect(screen.getByTestId('progress-chart-legend')).toBeInTheDocument();
+  });
+
+  it('renders period summary before the trend chart in document order', () => {
+    const points = buildParticipantProgressServicePoints('fixture-user-c', '2026-07-31');
+    render(<ParticipantProgressSection servicePoints={points} asOfServiceDate="2026-07-31" />);
+
+    const summary = screen.getByTestId('progress-period-summary');
+    const chart = screen.getByTestId('progress-bar-chart');
+    expect(summary.compareDocumentPosition(chart) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   });
 
   it('switches tabs and updates the visible panel', async () => {
@@ -55,6 +64,8 @@ describe('ParticipantProgressSection', () => {
     expect(screen.getByTestId('progress-average-customer-error')).toBeInTheDocument();
     expect(screen.getByTestId('progress-completed-services')).toHaveTextContent('4');
     expect(screen.getByTestId('progress-bar-chart')).toBeInTheDocument();
+    expect(screen.getAllByTestId('progress-chart-bar-surplus').length).toBeGreaterThan(0);
+    expect(screen.getAllByTestId('progress-chart-bar-shortage').length).toBeGreaterThan(0);
   });
 
   it('shows empty state for a period without participant data', async () => {
@@ -72,7 +83,7 @@ describe('ParticipantProgressSection', () => {
     );
   });
 
-  it('does not render a bar for unavailable normalized values', () => {
+  it('shows not-enough-data message when fewer than two chartable buckets', () => {
     const points = [
       {
         serviceDate: '2026-07-27',
@@ -96,11 +107,11 @@ describe('ParticipantProgressSection', () => {
 
     render(<ParticipantProgressSection servicePoints={points} asOfServiceDate="2026-07-28" />);
 
-    expect(screen.getByTestId('progress-bar-chart')).toBeInTheDocument();
-    expect(screen.queryByTestId('progress-chart-unavailable')).not.toBeInTheDocument();
-    expect(screen.getByText('0.0')).toBeInTheDocument();
-    const bars = document.querySelectorAll('.chef-results-progress-chart__bar');
-    expect(bars).toHaveLength(1);
+    expect(screen.getByTestId('progress-chart-unavailable')).toHaveTextContent(
+      /Not enough completed services/i,
+    );
+    expect(screen.queryByTestId('progress-trend-chart-svg')).not.toBeInTheDocument();
+    expect(screen.getByTestId('progress-period-summary')).toBeInTheDocument();
   });
 
   it('does not render coworker names', () => {

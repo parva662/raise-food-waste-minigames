@@ -12,7 +12,7 @@ export function CustomerEstimateCard({ result }: CustomerEstimateCardProps) {
   );
 
   return (
-    <article className="chef-results-forecast-card" data-testid="customer-estimate-card">
+    <article className="kitchen-mgmt-detail-card chef-results-forecast-card" data-testid="customer-estimate-card">
       <h3 className="chef-results-forecast-card__title">Customer estimate</h3>
       <dl className="chef-results-forecast-card__metrics">
         <div>

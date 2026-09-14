@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 import { describe, it, expect, afterEach, beforeEach, vi } from 'vitest';
 import { cleanup, render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { ChefResultsParticipantApp } from './ChefResultsParticipantApp';
 import { ActualKitchenOutcomeSection } from './components/participant/ActualKitchenOutcomeSection';
 import { ForecastImpactSection } from './components/participant/ForecastImpactSection';
@@ -136,8 +137,8 @@ describe('customer estimate vs production plan UX', () => {
       FORECAST_INPUT_SEPARATION_NOTE,
     );
     expect(screen.getByText('If your production plan had been used')).toBeInTheDocument();
-    expect(screen.getByText('Estimated surplus')).toBeInTheDocument();
-    expect(screen.getByText('Estimated shortage')).toBeInTheDocument();
+    expect(screen.getByTestId('participant-kpi-estimated-surplus')).toBeInTheDocument();
+    expect(screen.getByTestId('participant-kpi-estimated-shortage')).toBeInTheDocument();
   });
 
   it('shows actual kitchen customers served and surplus', () => {
@@ -256,19 +257,23 @@ describe('dashboard headings and progress discoverability', () => {
     window.sessionStorage.setItem('chef-results-fixture-current-user-id', 'fixture-user-a');
   });
 
-  it('has exactly one h1 and shows progress without current result', () => {
+  it('has exactly one h1 and shows progress without current result', async () => {
+    const user = userEvent.setup();
     render(<ChefResultsParticipantApp />);
     expect(screen.getAllByRole('heading', { level: 1 })).toHaveLength(1);
     expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Kitchen Staff Dashboard');
     expect(screen.queryByText('Your result')).not.toBeInTheDocument();
+    await user.click(screen.getByTestId('participant-primary-tab-progress'));
     expect(screen.getByTestId('your-progress-section')).toBeInTheDocument();
     expect(screen.getByTestId('progress-period-tabs')).toBeInTheDocument();
   });
 
-  it('shows progress while current service has no personal forecast', () => {
+  it('shows progress while current service has no personal forecast', async () => {
+    const user = userEvent.setup();
     render(<ChefResultsParticipantApp />);
     expect(screen.getByTestId('participant-no-forecast-result')).toBeInTheDocument();
     expect(screen.queryByTestId('forecast-impact-section')).not.toBeInTheDocument();
+    await user.click(screen.getByTestId('participant-primary-tab-progress'));
     expect(screen.getByTestId('your-progress-section')).toBeInTheDocument();
     expect(screen.getByTestId('progress-bar-chart')).toBeInTheDocument();
   });
@@ -284,7 +289,7 @@ describe('ParticipantProgressSection period summary', () => {
     render(<ParticipantProgressSection servicePoints={points} asOfServiceDate="2026-07-31" />);
 
     expect(screen.getByTestId('progress-period-summary')).toBeInTheDocument();
-    expect(screen.getByText('Week summary')).toBeInTheDocument();
+    expect(screen.getByText('Period summary')).toBeInTheDocument();
     expect(screen.getByTestId('progress-average-overproduction')).toBeInTheDocument();
     expect(screen.getByTestId('progress-shortage-risk')).toBeInTheDocument();
     expect(screen.getByTestId('progress-average-customer-error')).toBeInTheDocument();

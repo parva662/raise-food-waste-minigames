@@ -2,10 +2,15 @@ import type { ObservedServiceReality, StaffDailyResult } from '../../types';
 import { sumMeasuredOverproductionGrams } from '../../actualKitchenOutcome';
 import {
   buildActualVsEstimatedSurplusInsight,
+  buildCustomerEstimateDifferenceLabel,
   FORECAST_INPUT_SEPARATION_NOTE,
 } from '../../forecastInterpretation';
-import { CategoryDetailPanel } from './CategoryDetailPanel';
-import { CategoryOutcomeVisual } from './CategoryOutcomeVisual';
+import { formatNormalizedRate } from '../../managementFormat';
+import {
+  shortageRateGramsPerCustomer,
+  surplusRateGramsPerCustomer,
+} from '../../teamComparison';
+import { formatGrams } from '../../useChefResultsData';
 import { CustomerEstimateCard } from './CustomerEstimateCard';
 import { ProductionPlanCard } from './ProductionPlanCard';
 
@@ -21,18 +26,69 @@ export function ForecastImpactSection({ result, observed }: ForecastImpactSectio
     actualSurplusGrams,
     estimatedSurplusGrams,
   );
+  const difference = buildCustomerEstimateDifferenceLabel(
+    result.forecastCustomers,
+    result.actualCustomers,
+  );
+  const surplusRate = surplusRateGramsPerCustomer(result);
+  const shortageRate = shortageRateGramsPerCustomer(result);
+
+  const differencePrimary =
+    difference.primary === 'On target'
+      ? 'On target'
+      : difference.secondary === 'customers high'
+        ? `${Math.abs(result.customerForecastDifference)} high`
+        : `${Math.abs(result.customerForecastDifference)} low`;
 
   return (
     <section
-      className="chef-results-subsection chef-results-forecast-impact"
+      className="kitchen-mgmt-surface participant-your-forecast"
       data-testid="forecast-impact-section"
     >
-      <h3 className="chef-results-subsection-title">Your forecast</h3>
-      <p className="chef-results-subsection-intro">
+      <h3 className="kitchen-mgmt-surface__title">Your forecast</h3>
+
+      <div className="kitchen-mgmt-kpi-grid participant-forecast-kpis" data-testid="participant-forecast-kpis">
+        <article className="kitchen-mgmt-kpi kitchen-mgmt-kpi--forecast">
+          <p className="kitchen-mgmt-kpi__value" data-testid="participant-kpi-customer-estimate">
+            {result.forecastCustomers}
+          </p>
+          <p className="kitchen-mgmt-kpi__label">Customer estimate</p>
+        </article>
+        <article className="kitchen-mgmt-kpi kitchen-mgmt-kpi--forecast">
+          <p className="kitchen-mgmt-kpi__value" data-testid="participant-kpi-customer-difference">
+            {differencePrimary}
+          </p>
+          <p className="kitchen-mgmt-kpi__label">
+            {difference.primary === 'On target'
+              ? 'Customer difference'
+              : `vs ${result.actualCustomers} actual`}
+          </p>
+        </article>
+        <article className="kitchen-mgmt-kpi kitchen-mgmt-kpi--surplus">
+          <p className="kitchen-mgmt-kpi__value" data-testid="participant-kpi-estimated-surplus">
+            {formatNormalizedRate(surplusRate)}
+          </p>
+          <p className="kitchen-mgmt-kpi__label">Estimated surplus</p>
+          <p className="kitchen-mgmt-forecast-cell__secondary" data-testid="participant-kpi-surplus-absolute">
+            {formatGrams(result.totalSimulatedOverproductionGrams)} total
+          </p>
+        </article>
+        <article className="kitchen-mgmt-kpi kitchen-mgmt-kpi--shortage">
+          <p className="kitchen-mgmt-kpi__value" data-testid="participant-kpi-estimated-shortage">
+            {formatNormalizedRate(shortageRate)}
+          </p>
+          <p className="kitchen-mgmt-kpi__label">Estimated shortage</p>
+          <p className="kitchen-mgmt-forecast-cell__secondary" data-testid="participant-kpi-shortage-absolute">
+            {formatGrams(result.totalSimulatedShortageGrams)} total
+          </p>
+        </article>
+      </div>
+
+      <p className="kitchen-mgmt-snapshot-hint participant-forecast-hint">
         You make two forecasts: a customer estimate and a production plan.
       </p>
 
-      <div className="chef-results-your-forecast">
+      <div className="kitchen-mgmt-detail-cards">
         <CustomerEstimateCard result={result} />
         <ProductionPlanCard result={result} surplusInsight={surplusInsight} />
       </div>
@@ -41,8 +97,6 @@ export function ForecastImpactSection({ result, observed }: ForecastImpactSectio
         {FORECAST_INPUT_SEPARATION_NOTE}
       </p>
 
-      <CategoryOutcomeVisual result={result} />
-      <CategoryDetailPanel result={result} />
     </section>
   );
 }
