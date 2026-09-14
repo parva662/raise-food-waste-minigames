@@ -1,6 +1,8 @@
 import { buildActivityMessage } from './buildActivityMessage';
 import { buildChefActivityMessage } from './buildChefActivityMessage';
 import { buildWasteMeasurementActivityMessage } from './buildWasteMeasurementActivityMessage';
+import { buildTrimSmartActivityMessage } from './buildTrimSmartActivityMessage';
+import type { TrimSmartSubmission } from '../trimSmart/types';
 import { getExpectedActivityRef } from './appMode';
 import { isGameBusEmbed } from './detectEmbed';
 import { gamebusDevLog } from './devLog';
@@ -45,6 +47,8 @@ let taskData: TaskData | null = null;
 let inputCollectionsData: GameBusInputCollectionsPayload | null = null;
 let hasPostedActivity = false;
 let chefForecastPostedTargetDate: string | null = null;
+const trimSmartPostedAttemptKeys = new Set<string>();
+let trimSmartSubmissionInFlight = false;
 let submissionInFlight = false;
 let taskListener: TaskListener | null = null;
 let inputCollectionsListener: InputCollectionsListener | null = null;
@@ -348,6 +352,46 @@ export function tryPostChefActivity(
   }
 }
 
+export function tryPostTrimSmartActivity(
+  submission: TrimSmartSubmission,
+  attemptPostKey: string,
+): { ok: true; message: ActivityMessage } | { ok: false; reason: string } {
+  if (trimSmartPostedAttemptKeys.has(attemptPostKey)) {
+    gamebusDevLog('trimSmart submission blocked as duplicate attempt');
+    return { ok: false, reason: 'duplicate' };
+  }
+  if (trimSmartSubmissionInFlight) {
+    gamebusDevLog('trimSmart submission blocked as in flight');
+    return { ok: false, reason: 'in_flight' };
+  }
+  if (!taskData) {
+    return { ok: false, reason: 'no_task' };
+  }
+
+  trimSmartSubmissionInFlight = true;
+  try {
+    const message = buildTrimSmartActivityMessage(taskData, submission);
+    if (import.meta.env.DEV) {
+      console.info('[gamebus] trimSmart ACTIVITY payload', message);
+    }
+    window.parent.postMessage(message, '*');
+    trimSmartPostedAttemptKeys.add(attemptPostKey);
+    gamebusDevLog('ACTIVITY sent', {
+      type: message.type,
+      template: message.data.template,
+      propertyCount: message.data.properties.length,
+    });
+    return { ok: true, message };
+  } catch (error) {
+    return {
+      ok: false,
+      reason: error instanceof Error ? error.message : 'build_failed',
+    };
+  } finally {
+    trimSmartSubmissionInFlight = false;
+  }
+}
+
 export function tryPostCloseoutActivity(
   closeout: ServiceCloseout,
 ): { ok: true; message: ActivityMessage } | { ok: false; reason: string } {
@@ -396,6 +440,8 @@ export function resetGameBusBridgeForTests(): void {
   inputCollectionsData = null;
   hasPostedActivity = false;
   chefForecastPostedTargetDate = null;
+  trimSmartPostedAttemptKeys.clear();
+  trimSmartSubmissionInFlight = false;
   submissionInFlight = false;
   taskListener = null;
   inputCollectionsListener = null;
