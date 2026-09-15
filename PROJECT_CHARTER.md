@@ -77,7 +77,7 @@ Games run in an iframe; GameBus supplies **TASK** data and **INPUT_COLLECTIONS**
 
 - **In scope:** Custom embed UIs, client-side validation, mapping to GameBus ACTIVITY payloads, standalone demo modes, GitHub Pages deployment, automated unit/integration tests (Vitest).
 - **Out of scope (unless explicitly added):** GameBus server administration, live template editing, cross-user activity APIs (some flows still fixture-backed), badge/result engines, Rescue & Reuse and Portion Control apps until implemented.
-- **Authority:** [`PROJECT_RULES.md`](./PROJECT_RULES.md) for engineering process; **approved** `.feature` files for product targets; **source on `main`** for what is actually built; root legacy markdown contracts until migrated under `docs/contracts/`.
+- **Authority:** [`PROJECT_RULES.md`](./PROJECT_RULES.md) for engineering process; **approved** `.feature` files for product targets; **source on `main`** for what is actually built; GameBus contracts under [`docs/contracts/`](./docs/contracts/); product pages under [`docs/product/`](./docs/product/).
 
 ---
 

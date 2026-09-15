@@ -7,7 +7,7 @@
 > - **CURRENT IMPLEMENTATION** — §3 and other facts that describe Trim Smart **v1 on `main`** (route `#/waste/trim-smart`, `trimSmart` ACTIVITY, multi-ingredient session).
 > - **WORKING / PROPOSED** — §4 onward (preparation technique, reusable material, chef review activity, GameBus API reload, Rescue & Reuse handoff). **Not** automatically approved or implemented because it appears here.
 >
-> Do not treat proposed sections as shipped product without explicit approval. See `docs/current-state/IMPLEMENTATION_STATUS.md`.
+> Do not treat proposed sections as shipped product without explicit approval. See [`../../current-state/IMPLEMENTATION_STATUS.md`](../../current-state/IMPLEMENTATION_STATUS.md) and [`../WASTE_CHALLENGES.md`](../WASTE_CHALLENGES.md).
 
 **Status:** Working specification v0.3
 

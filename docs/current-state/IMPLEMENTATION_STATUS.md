@@ -37,7 +37,7 @@ Explicitly approved (among other rules in that file):
 | | |
 |--|--|
 | **Status** | **Implemented** on `main` (`#/chef`, `chefForecast` ACTIVITY) |
-| **Migration / doc review** | Pending (root `GAMEBUS_CHEF_FORECAST_CONTRACT.md`, `SPEC.md` §9) |
+| **Migration / doc review** | Pending ([`../contracts/KITCHEN_FORECAST_GAMEBUS.md`](../contracts/KITCHEN_FORECAST_GAMEBUS.md), [`../archive/SPEC_LEGACY.md`](../archive/SPEC_LEGACY.md) §9) |
 
 ---
 
@@ -46,7 +46,7 @@ Explicitly approved (among other rules in that file):
 | | |
 |--|--|
 | **Status** | **Implemented** on `main` (`#/service-closeout`, `wasteMeasurement` ACTIVITY) |
-| **Migration / doc review** | Pending (root `GAMEBUS_SERVICE_CLOSEOUT_CONTRACT.md`, `SPEC.md` §10) |
+| **Migration / doc review** | Pending ([`../contracts/SERVICE_CLOSEOUT_GAMEBUS.md`](../contracts/SERVICE_CLOSEOUT_GAMEBUS.md), [`../archive/SPEC_LEGACY.md`](../archive/SPEC_LEGACY.md) §10) |
 
 ---
 
@@ -55,7 +55,7 @@ Explicitly approved (among other rules in that file):
 | | |
 |--|--|
 | **Status** | **Implemented** on `main` (`#/chef-results`; read-only UI, fixture-backed calculation engine) |
-| **Migration / doc review** | Pending (`SPEC.md` §11) |
+| **Migration / doc review** | Pending ([`../archive/SPEC_LEGACY.md`](../archive/SPEC_LEGACY.md) §11; [`../product/KITCHEN_RESULTS.md`](../product/KITCHEN_RESULTS.md)) |
 
 ---
 
@@ -74,7 +74,7 @@ Explicitly approved (among other rules in that file):
 |--|--|
 | **Status** | **Implemented** on `main` (`#/waste/trim-smart`, `trimSmart` ACTIVITY, multi-ingredient session per ingredient) |
 | **Current v1** | Participant flow: Ingredient → Practice → Measure; see `src/trimSmart/` |
-| **Proposed target docs** | `docs/teacher-game/*` (**WORKING / PROPOSED**; not v1) |
+| **Proposed target docs** | [`../product/waste-challenges/`](../product/waste-challenges/) (**WORKING / PROPOSED**; not v1) |
 | **Current vs target review** | Pending |
 
 ---
@@ -93,7 +93,7 @@ Explicitly approved (among other rules in that file):
 | | |
 |--|--|
 | **Status** | **No route or application module** found on `main` at baseline commit. |
-| **Evidence** | Described as a **separate future game** in `docs/teacher-game/product-spec.md` (proposed); not implemented in this repository. |
+| **Evidence** | Described as a **separate future game** in [`../product/waste-challenges/TRIM_SMART.md`](../product/waste-challenges/TRIM_SMART.md) (proposed); not implemented in this repository. |
 
 ---
 

@@ -157,13 +157,13 @@
     "tsconfig.node.json",
     ".github/workflows/test.yml",
     ".github/workflows/deploy-pages.yml",
-    "SPEC.md",
+    "docs/archive/SPEC_LEGACY.md",
     "IMPLEMENTATION_INVENTORY.json",
-    "GAMEBUS_LUNCH_CONTRACT.md",
-    "GAMEBUS_CHEF_FORECAST_CONTRACT.md",
-    "GAMEBUS_SERVICE_CLOSEOUT_CONTRACT.md",
-    "RAISE_BARLAUREA_STUDY_AND_SYSTEM_MASTER_PLAN.md",
-    "NEXT_STEPS.md"
+    "docs/contracts/STUDENT_LUNCH_GAMEBUS.md",
+    "docs/contracts/KITCHEN_FORECAST_GAMEBUS.md",
+    "docs/contracts/SERVICE_CLOSEOUT_GAMEBUS.md",
+    "docs/product/RAISE_BARLAUREA_MASTER_PLAN.md",
+    "docs/current-state/ROADMAP.md"
   ],
   "tests": [
     "src/services/menuResolver.test.ts",

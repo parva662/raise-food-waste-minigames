@@ -2,7 +2,28 @@
 
 Repository: **parva662/raise-food-waste-minigames**
 
-Engineering baseline: **`main`** at `019ce6637c2b75319b0c86a6a099b0645ec9ae4f` (verify with `git rev-parse HEAD` before relying on this line).
+Verify the current commit with `git rev-parse HEAD` before relying on any pinned baseline in older docs.
+
+---
+
+## Authority model
+
+| Document | Role |
+|----------|------|
+| [`../PROJECT_RULES.md`](../PROJECT_RULES.md) | Engineering / AI working rules |
+| [`../PROJECT_CHARTER.md`](../PROJECT_CHARTER.md) | High-level purpose and scope |
+| **This file** (`docs/README.md`) | Documentation master index / START HERE |
+| [`product/`](product/) | Human-readable product documentation |
+| [`../features/`](../features/) | Gherkin acceptance specifications |
+| [`contracts/`](contracts/) | GameBus and external technical contracts |
+| [`architecture/`](architecture/) | Technical architecture (placeholder) |
+| [`current-state/`](current-state/) | Implementation status, gaps, roadmap |
+| [`decisions/`](decisions/) | Future ADR / product decisions |
+| [`testing/`](testing/) | Testing strategy notes |
+| [`archive/`](archive/) | Superseded / legacy documents (**HISTORICAL**) |
+| `src/` | Current implementation |
+
+No single legacy root file competes with this structure.
 
 ---
 
@@ -10,8 +31,8 @@ Engineering baseline: **`main`** at `019ce6637c2b75319b0c86a6a099b0645ec9ae4f` (
 
 1. Read [`/PROJECT_RULES.md`](../PROJECT_RULES.md).
 2. Read [`/PROJECT_CHARTER.md`](../PROJECT_CHARTER.md).
-3. Read the **relevant product documentation** (see index below).
-4. Read the **relevant `.feature` acceptance specification** under [`/features/`](../features/) when one exists.
+3. Read the **relevant product documentation** under [`product/`](product/).
+4. Read the **relevant `.feature` acceptance specification** under [`../features/`](../features/) when one exists.
 5. **Inspect current source on `main`** for the area you are changing or diagnosing.
 6. Separate clearly:
    - **intended product behavior** (approved contracts and explicit decisions),
@@ -35,64 +56,91 @@ Engineering baseline: **`main`** at `019ce6637c2b75319b0c86a6a099b0645ec9ae4f` (
 
 ---
 
-## Phase 1 layout (skeleton)
-
-Migration is **in progress**. Root-level markdown files (`SPEC.md`, `GAMEBUS_*.md`, etc.) remain authoritative for their topics until moved in later phases.
+## Layout
 
 ```
 docs/
-├── README.md                 ← you are here
+├── README.md
+├── product/
+│   ├── STUDENT_LUNCH.md
+│   ├── KITCHEN_FORECAST.md
+│   ├── SERVICE_CLOSEOUT.md
+│   ├── KITCHEN_RESULTS.md
+│   ├── WASTE_CHALLENGES.md
+│   ├── RAISE_BARLAUREA_MASTER_PLAN.md
+│   └── waste-challenges/
+│       ├── TRIM_SMART.md
+│       └── TRIM_SMART_DATA_MODEL.md
+├── contracts/
+│   ├── STUDENT_LUNCH_GAMEBUS.md
+│   ├── KITCHEN_FORECAST_GAMEBUS.md
+│   ├── SERVICE_CLOSEOUT_GAMEBUS.md
+│   └── KITCHEN_FORECAST_ADMIN_SETUP.md
 ├── current-state/
-│   └── IMPLEMENTATION_STATUS.md
-├── product/                  (placeholder — future product specs)
-├── architecture/             (placeholder)
-├── contracts/                (placeholder — future home of GAMEBUS_*.md)
-├── decisions/                (placeholder)
-├── testing/                  (placeholder)
-├── archive/                  (placeholder)
-├── student-game/             (pointer to canonical student .feature)
-└── teacher-game/             (Trim Smart working/proposed specs)
+│   ├── IMPLEMENTATION_STATUS.md
+│   └── ROADMAP.md
+├── architecture/   decisions/   testing/   archive/
+└── student-game/   (pointer to canonical Student Lunch .feature)
 
 features/
-├── student/
-│   └── student-lunch.feature   ← APPROVED PRODUCT TARGET (canonical)
-├── kitchen/                  (placeholder)
-└── waste-challenges/         (placeholder)
+├── student/student-lunch.feature          ← APPROVED PRODUCT TARGET
+└── waste-challenges/trim-smart.feature    ← WORKING / PROPOSED (not v1)
 ```
 
 ---
 
-## Documentation index (current)
+## Product pages
 
-| Path | Type | Notes |
-|------|------|--------|
-| [`../PROJECT_RULES.md`](../PROJECT_RULES.md) | Rules | Engineering and diagnosis process. |
-| [`../PROJECT_CHARTER.md`](../PROJECT_CHARTER.md) | Charter | Pilot context, user groups, product families. |
-| [`current-state/IMPLEMENTATION_STATUS.md`](current-state/IMPLEMENTATION_STATUS.md) | **CURRENT IMPLEMENTATION** + gaps | Short status; not full specs. |
-| [`../features/student/student-lunch.feature`](../features/student/student-lunch.feature) | **APPROVED PRODUCT TARGET** | Student Lunch acceptance contract. |
-| [`teacher-game/product-spec.md`](teacher-game/product-spec.md) | Mixed | Trim Smart v1 facts + **proposed** target (see file header). |
-| [`teacher-game/data-model.md`](teacher-game/data-model.md) | Mixed | v1 properties + **proposed** target model (see file header). |
-| [`teacher-game/trim-smart.feature`](teacher-game/trim-smart.feature) | **WORKING / PROPOSED** | Target Gherkin; not v1 behavior. |
-| [`../SPEC.md`](../SPEC.md) | Product + implementation | Student lunch + sections for other routes; migration pending. |
-| [`../RAISE_BARLAUREA_STUDY_AND_SYSTEM_MASTER_PLAN.md`](../RAISE_BARLAUREA_STUDY_AND_SYSTEM_MASTER_PLAN.md) | Study / product | Living master plan; migration pending. |
-| [`../NEXT_STEPS.md`](../NEXT_STEPS.md) | Roadmap | GameBus integration steps; migration pending. |
-| [`../GAMEBUS_LUNCH_CONTRACT.md`](../GAMEBUS_LUNCH_CONTRACT.md) | **EXTERNAL / GAMEBUS CONTRACT** | Student activity; migration pending. |
-| [`../GAMEBUS_CHEF_FORECAST_CONTRACT.md`](../GAMEBUS_CHEF_FORECAST_CONTRACT.md) | **EXTERNAL / GAMEBUS CONTRACT** | Chef forecast; migration pending. |
-| [`../GAMEBUS_SERVICE_CLOSEOUT_CONTRACT.md`](../GAMEBUS_SERVICE_CLOSEOUT_CONTRACT.md) | **EXTERNAL / GAMEBUS CONTRACT** | Closeout; migration pending. |
-| [`../GAMEBUS_CHEF_ADMIN_SETUP.md`](../GAMEBUS_CHEF_ADMIN_SETUP.md) | Operational / contract | Admin checklist; migration pending. |
-| [`../reference/README.md`](../reference/README.md) | Operational | Menu workbook reference. |
-| [`../.github/workflows/test.yml`](../.github/workflows/test.yml) | Operational | CI test policy. |
-| [`../.github/workflows/deploy-pages.yml`](../.github/workflows/deploy-pages.yml) | Operational | GitHub Pages deploy. |
+| Path | Notes |
+|------|--------|
+| [`product/STUDENT_LUNCH.md`](product/STUDENT_LUNCH.md) | Student Lunch navigation |
+| [`product/KITCHEN_FORECAST.md`](product/KITCHEN_FORECAST.md) | Kitchen Forecast navigation |
+| [`product/SERVICE_CLOSEOUT.md`](product/SERVICE_CLOSEOUT.md) | Service Closeout navigation |
+| [`product/KITCHEN_RESULTS.md`](product/KITCHEN_RESULTS.md) | Staff + management results |
+| [`product/WASTE_CHALLENGES.md`](product/WASTE_CHALLENGES.md) | Practical kitchen family overview |
+| [`product/RAISE_BARLAUREA_MASTER_PLAN.md`](product/RAISE_BARLAUREA_MASTER_PLAN.md) | Study / system master plan |
+| [`product/waste-challenges/TRIM_SMART.md`](product/waste-challenges/TRIM_SMART.md) | Trim Smart mixed CURRENT + proposed |
+| [`product/waste-challenges/TRIM_SMART_DATA_MODEL.md`](product/waste-challenges/TRIM_SMART_DATA_MODEL.md) | Trim Smart data model mixed |
+
+---
+
+## Contracts
+
+| Path | Notes |
+|------|--------|
+| [`contracts/STUDENT_LUNCH_GAMEBUS.md`](contracts/STUDENT_LUNCH_GAMEBUS.md) | `studentLunchCheckin` |
+| [`contracts/KITCHEN_FORECAST_GAMEBUS.md`](contracts/KITCHEN_FORECAST_GAMEBUS.md) | `chefForecast` |
+| [`contracts/SERVICE_CLOSEOUT_GAMEBUS.md`](contracts/SERVICE_CLOSEOUT_GAMEBUS.md) | `wasteMeasurement` |
+| [`contracts/KITCHEN_FORECAST_ADMIN_SETUP.md`](contracts/KITCHEN_FORECAST_ADMIN_SETUP.md) | Admin checklist |
+
+---
+
+## Current state and archive
+
+| Path | Notes |
+|------|--------|
+| [`current-state/IMPLEMENTATION_STATUS.md`](current-state/IMPLEMENTATION_STATUS.md) | Status + known gaps |
+| [`current-state/ROADMAP.md`](current-state/ROADMAP.md) | Integration roadmap (former `NEXT_STEPS.md`) |
+| [`archive/SPEC_LEGACY.md`](archive/SPEC_LEGACY.md) | **HISTORICAL** mixed root SPEC |
 
 ---
 
 ## Canonical acceptance specs
 
-| Game / area | Canonical path |
-|-------------|----------------|
-| Student Lunch | [`../features/student/student-lunch.feature`](../features/student/student-lunch.feature) |
+| Game / area | Canonical path | Status |
+|-------------|----------------|--------|
+| Student Lunch | [`../features/student/student-lunch.feature`](../features/student/student-lunch.feature) | **APPROVED PRODUCT TARGET** |
+| Trim Smart (target redesign) | [`../features/waste-challenges/trim-smart.feature`](../features/waste-challenges/trim-smart.feature) | **WORKING / PROPOSED** — not v1 |
 
-No other `.feature` file is **APPROVED PRODUCT TARGET** in Phase 1.
+---
+
+## Other operational docs
+
+| Path | Notes |
+|------|--------|
+| [`../reference/README.md`](../reference/README.md) | Menu workbook reference |
+| [`../.github/workflows/test.yml`](../.github/workflows/test.yml) | CI test policy |
+| [`../.github/workflows/deploy-pages.yml`](../.github/workflows/deploy-pages.yml) | GitHub Pages deploy |
 
 ---
 

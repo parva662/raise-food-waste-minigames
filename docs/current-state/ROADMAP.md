@@ -1,10 +1,12 @@
-# Next steps — GameBus integration
+# Roadmap — GameBus integration
+
+> Formerly root `NEXT_STEPS.md`. Content preserved; paths updated for the documentation layout.
 
 **Student workflow:** activity template **`studentLunchCheckin`** (twelve quantity-aware properties).  
 **Closeout workflow:** activity template **`wasteMeasurement`** (fifteen required properties — mapper implemented in repo).  
 **Chef workflow:** activity template **`chefForecast`** (twelve required properties + two optional links — mapper implemented in repo).
 
-**References:** [`GAMEBUS_LUNCH_CONTRACT.md`](./GAMEBUS_LUNCH_CONTRACT.md), [`GAMEBUS_CHEF_FORECAST_CONTRACT.md`](./GAMEBUS_CHEF_FORECAST_CONTRACT.md), [`GAMEBUS_SERVICE_CLOSEOUT_CONTRACT.md`](./GAMEBUS_SERVICE_CLOSEOUT_CONTRACT.md), [`RAISE_BARLAUREA_STUDY_AND_SYSTEM_MASTER_PLAN.md`](./RAISE_BARLAUREA_STUDY_AND_SYSTEM_MASTER_PLAN.md), [`SPEC.md`](./SPEC.md).
+**References:** [`../contracts/STUDENT_LUNCH_GAMEBUS.md`](../contracts/STUDENT_LUNCH_GAMEBUS.md), [`../contracts/KITCHEN_FORECAST_GAMEBUS.md`](../contracts/KITCHEN_FORECAST_GAMEBUS.md), [`../contracts/SERVICE_CLOSEOUT_GAMEBUS.md`](../contracts/SERVICE_CLOSEOUT_GAMEBUS.md), [`../product/RAISE_BARLAUREA_MASTER_PLAN.md`](../product/RAISE_BARLAUREA_MASTER_PLAN.md), [`../archive/SPEC_LEGACY.md`](../archive/SPEC_LEGACY.md) (**HISTORICAL**).
 
 **Participant model:** Embedded submit does **not** send `studentId` or `chefId` on ACTIVITY; persistence must bind to the **authenticated GameBus user**.
 
@@ -33,7 +35,7 @@
 
 **Research value:** `confidence` supports perceived vs actual forecast accuracy; `notes` preserve context for unusual service days and FAIR metadata.
 
-Full YAML schemas: `GAMEBUS_CHEF_FORECAST_CONTRACT.md`, `src/gamebus/propertySchemas.ts`.
+Full YAML schemas: `docs/contracts/KITCHEN_FORECAST_GAMEBUS.md`, `src/gamebus/propertySchemas.ts`.
 
 Chef embed URL: `https://parva662.github.io/raise-food-waste-minigames/#/chef`
 

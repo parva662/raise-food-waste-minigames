@@ -1,5 +1,8 @@
 # Practical kitchen / waste challenge features
 
-Reserved for acceptance specs for practical teaching games (e.g. Trim Smart target scenarios). Deployed Trim Smart v1 is documented under `docs/current-state/` and `src/trimSmart/`.
+| Spec | Status |
+|------|--------|
+| [`trim-smart.feature`](trim-smart.feature) | **WORKING / PROPOSED** target Gherkin — **not** deployed Trim Smart v1 |
 
-Target Trim Smart Gherkin (proposed, not v1): [`../../docs/teacher-game/trim-smart.feature`](../../docs/teacher-game/trim-smart.feature).
+Product overview: [`../../docs/product/WASTE_CHALLENGES.md`](../../docs/product/WASTE_CHALLENGES.md).
+Current v1 status: [`../../docs/current-state/IMPLEMENTATION_STATUS.md`](../../docs/current-state/IMPLEMENTATION_STATUS.md) and `src/trimSmart/`.

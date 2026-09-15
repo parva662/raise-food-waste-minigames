@@ -611,6 +611,7 @@ With optional values entered:
 
 ## H. Related repository docs
 
-- [`GAMEBUS_CHEF_FORECAST_CONTRACT.md`](./GAMEBUS_CHEF_FORECAST_CONTRACT.md) — integration contract
-- [`NEXT_STEPS.md`](./NEXT_STEPS.md) — roadmap
+- [`KITCHEN_FORECAST_GAMEBUS.md`](KITCHEN_FORECAST_GAMEBUS.md) — integration contract
+- [`../current-state/ROADMAP.md`](../current-state/ROADMAP.md) — roadmap
+- Product page: [`../product/KITCHEN_FORECAST.md`](../product/KITCHEN_FORECAST.md)
 - `src/gamebus/mapChefForecast.ts` — runtime mapper (authoritative property list)

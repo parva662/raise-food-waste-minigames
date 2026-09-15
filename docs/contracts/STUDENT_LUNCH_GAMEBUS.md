@@ -345,6 +345,6 @@ Child does **not** receive confirmation message in the demo; success is assumed 
 ## Status (repo consolidation)
 
 - **One workflow:** `studentLunchCheckin` via `src/gamebus/mapStudentLunchCheckin.ts` (twelve logical properties; optional item IDs omitted when quantity is 0).
-- **Live GameBus** still has seven legacy linked properties until manual admin migration (`NEXT_STEPS.md`).
+- **Live GameBus** still has seven legacy linked properties until manual admin migration (`docs/current-state/ROADMAP.md`).
 - Item IDs in ACTIVITY match **generated catalogue slugs** from `reference/Example_menu.xlsx` (via `src/data/generated/`).
 - **`studentLunchCheckinV2` is not supported** in this repository.

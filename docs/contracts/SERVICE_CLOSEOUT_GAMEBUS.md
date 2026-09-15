@@ -145,6 +145,7 @@ From `GAMEBUS_TEMPLATE_EXPORT.json` — closeout-relevant templates that remain 
 
 ## 8. References
 
-- [`SPEC.md`](./SPEC.md) — product specification §10
-- [`GAMEBUS_CHEF_FORECAST_CONTRACT.md`](./GAMEBUS_CHEF_FORECAST_CONTRACT.md) — chef forecast (unchanged)
-- [`NEXT_STEPS.md`](./NEXT_STEPS.md) — roadmap
+- [`../archive/SPEC_LEGACY.md`](../archive/SPEC_LEGACY.md) — legacy product specification §10 (**HISTORICAL**)
+- [`KITCHEN_FORECAST_GAMEBUS.md`](KITCHEN_FORECAST_GAMEBUS.md) — chef forecast (unchanged)
+- [`../current-state/ROADMAP.md`](../current-state/ROADMAP.md) — roadmap
+- Product page: [`../product/SERVICE_CLOSEOUT.md`](../product/SERVICE_CLOSEOUT.md)

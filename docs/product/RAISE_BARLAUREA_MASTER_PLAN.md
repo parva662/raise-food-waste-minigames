@@ -1,6 +1,9 @@
 # RAISE BarLaurea — study and system master plan
 
-**Repository:** `gamebus-lunch-dnd-v2` (GitHub Pages: `raise-food-waste-minigames`)  
+> Location: `docs/product/RAISE_BARLAUREA_MASTER_PLAN.md` (moved from repository root).
+> Prefer product navigation pages under `docs/product/` and approved `.feature` files for acceptance rules. Mixed historical statements in this plan do not override approved contracts or current source.
+
+**Repository:** `gamebus-lunch-dnd-v2` (GitHub Pages: `raise-food-waste-minigames`)
 **Status:** Living document — authoritative for study purpose and product boundaries.
 
 ---
@@ -117,7 +120,7 @@ Result is based on **actual canteen operational data**, not student declarations
   - manually verified: real menu date, all item IDs, prepared quantities, kg waste conversion, `submittedAt`, authenticated actor, iframe close.
 - **Chef results** — participant view `#/chef-results` (GameBus menu target; own results + anonymous comparison) and admin view `#/chef-results-admin` (all-staff research; authorization TBD). Shared fixture-backed calculation engine; no composite score. Authenticated GameBus identity is read from `inputCollectionPari.me` (`id`, `firstName`, `lastName`); fixture profiles still drive calculation UI until Raoul's cross-user endpoint is available.
 - GameBus ACTIVITY mappers for `studentLunchCheckin`, `chefForecast`, and `wasteMeasurement`.
-- Contract: `GAMEBUS_SERVICE_CLOSEOUT_CONTRACT.md`.
+- Contract: `docs/contracts/SERVICE_CLOSEOUT_GAMEBUS.md`.
 
 **Known non-blocking GameBus issue:** My Activities may display `overproductionDessertKg` with the wrong label (“Overproduction meat (kg)”) while persisting the correct dessert value. GameBus display/configuration investigation — not an application defect.
 
@@ -155,8 +158,9 @@ Task 2 availability should preferably use `studentLunchCheckin.mealType` (`no_lu
 
 ## 7. References
 
-- [`SPEC.md`](./SPEC.md) — product specification.
-- [`GAMEBUS_LUNCH_CONTRACT.md`](./GAMEBUS_LUNCH_CONTRACT.md) — student activity contract.
-- [`GAMEBUS_CHEF_FORECAST_CONTRACT.md`](./GAMEBUS_CHEF_FORECAST_CONTRACT.md) — chef activity contract and admin migration.
-- [`GAMEBUS_SERVICE_CLOSEOUT_CONTRACT.md`](./GAMEBUS_SERVICE_CLOSEOUT_CONTRACT.md) — service closeout `wasteMeasurement` contract.
-- [`NEXT_STEPS.md`](./NEXT_STEPS.md) — ordered roadmap.
+- [`../archive/SPEC_LEGACY.md`](../archive/SPEC_LEGACY.md) — legacy mixed specification (**HISTORICAL**).
+- [`../contracts/STUDENT_LUNCH_GAMEBUS.md`](../contracts/STUDENT_LUNCH_GAMEBUS.md) — student activity contract.
+- [`../contracts/KITCHEN_FORECAST_GAMEBUS.md`](../contracts/KITCHEN_FORECAST_GAMEBUS.md) — chef activity contract and admin migration.
+- [`../contracts/SERVICE_CLOSEOUT_GAMEBUS.md`](../contracts/SERVICE_CLOSEOUT_GAMEBUS.md) — service closeout `wasteMeasurement` contract.
+- [`../current-state/ROADMAP.md`](../current-state/ROADMAP.md) — ordered roadmap.
+- Product navigation: [`STUDENT_LUNCH.md`](STUDENT_LUNCH.md), [`KITCHEN_FORECAST.md`](KITCHEN_FORECAST.md), [`SERVICE_CLOSEOUT.md`](SERVICE_CLOSEOUT.md), [`KITCHEN_RESULTS.md`](KITCHEN_RESULTS.md), [`WASTE_CHALLENGES.md`](WASTE_CHALLENGES.md).

@@ -1,8 +1,12 @@
 # Student lunch declaration — product and technical specification
 
-**Repository:** `gamebus-lunch-dnd-v2` (npm package name; GitHub: `raise-food-waste-minigames`)  
-**Status:** Current implementation in `src/` is authoritative.  
-**GameBus integration:** Single quantity-aware `studentLunchCheckin` ACTIVITY mapper — see [`GAMEBUS_LUNCH_CONTRACT.md`](./GAMEBUS_LUNCH_CONTRACT.md). **Repository mapper is ready**; live GameBus activity must still be **manually migrated** to the twelve-property set.
+> **HISTORICAL / LEGACY (archived)**
+> This file is retained for context only. It mixes product intent and implementation notes and may contradict approved acceptance rules or current code.
+> Prefer: [`../README.md`](../README.md), [`../product/STUDENT_LUNCH.md`](../product/STUDENT_LUNCH.md), [`../../features/student/student-lunch.feature`](../../features/student/student-lunch.feature), and [`../current-state/IMPLEMENTATION_STATUS.md`](../current-state/IMPLEMENTATION_STATUS.md).
+
+**Repository:** `gamebus-lunch-dnd-v2` (npm package name; GitHub: `raise-food-waste-minigames`)
+**Status:** Current implementation in `src/` is authoritative.
+**GameBus integration:** Single quantity-aware `studentLunchCheckin` ACTIVITY mapper — see [`../contracts/STUDENT_LUNCH_GAMEBUS.md`](../contracts/STUDENT_LUNCH_GAMEBUS.md). **Repository mapper is ready**; live GameBus activity must still be **manually migrated** to the twelve-property set.
 
 ---
 
@@ -120,7 +124,7 @@ Routing: student default at `/`; chef forecast at `#/chef`.
 - Key: `lunch-declaration-{studentId}-{lunchDate}` (`declarationRepository.ts`)
 - Full `ActiveDeclaration` JSON on submit only
 - Restore on load when menu available; after submit UI locks
-- **GameBus embed:** localStorage is not authoritative; see `GAMEBUS_LUNCH_CONTRACT.md`
+- **GameBus embed:** localStorage is not authoritative; see `docs/contracts/STUDENT_LUNCH_GAMEBUS.md`
 
 ---
 
@@ -155,8 +159,8 @@ Routing: student default at `/`; chef forecast at `#/chef`.
 - **Properties:** twelve always sent; `confidence` and `notes` optional in payload when entered (keep linked in GameBus)
 - **Input model:** all five numeric fields start blank (unanswered); explicit `0` is intentional zero; all five required before submit; confidence uses five labeled options mapped to 0–1; no auto-distribution of portions
 - **Forecast semantics:** `forecastTotalCustomers` is a headcount forecast; each menu quantity (`forecastMeat`, `forecastVegetarian`, `forecastSoup`, `forecastDessert`) is an independent category forecast. One customer may correspond to multiple prepared portions or menu items (e.g. main plus soup, meal plus dessert). The chef UI does **not** compare or force equality between expected customers and menu quantities. Later analysis compares each forecast with its matching actual value; waste is handled separately.
-- **Contract:** [`GAMEBUS_CHEF_FORECAST_CONTRACT.md`](./GAMEBUS_CHEF_FORECAST_CONTRACT.md)
-- **Master plan:** [`RAISE_BARLAUREA_STUDY_AND_SYSTEM_MASTER_PLAN.md`](./RAISE_BARLAUREA_STUDY_AND_SYSTEM_MASTER_PLAN.md)
+- **Contract:** [`../contracts/KITCHEN_FORECAST_GAMEBUS.md`](../contracts/KITCHEN_FORECAST_GAMEBUS.md)
+- **Master plan:** [`../product/RAISE_BARLAUREA_MASTER_PLAN.md`](../product/RAISE_BARLAUREA_MASTER_PLAN.md)
 
 ---
 
@@ -168,12 +172,12 @@ Routing: student default at `/`; chef forecast at `#/chef`.
 - **Submitted forecast (read-only):** when embedded in GameBus, inbound `INPUT_COLLECTIONS` → `kitchenGroupInput.activities` provides group `chefForecast` activities (exact `targetDate` only; multiple staff shown when present).
 - **Inputs:** actual customers; read-only **Recorded by** from `inputCollectionPari.me`; per category — prepared portions, read-only standard portion weight (grams, from reference provider), overproduction waste (**entered in grams**).
 - **Domain model:** `ServiceCloseout` (application field names; overproduction in grams). Optional `NormalizedServiceCloseout` adds `overproductionKg` per category (`normalizeCloseoutKg()`).
-- **GameBus:** outbound **`wasteMeasurement`** ACTIVITY on Finalize (embed mode) — see [`GAMEBUS_SERVICE_CLOSEOUT_CONTRACT.md`](./GAMEBUS_SERVICE_CLOSEOUT_CONTRACT.md). Inbound forecast via `kitchenGroupInput.activities` (`chefForecast` only). One Finalize posts exactly one ACTIVITY; iframe closes via normal GameBus behaviour.
+- **GameBus:** outbound **`wasteMeasurement`** ACTIVITY on Finalize (embed mode) — see [`../contracts/SERVICE_CLOSEOUT_GAMEBUS.md`](../contracts/SERVICE_CLOSEOUT_GAMEBUS.md). Inbound forecast via `kitchenGroupInput.activities` (`chefForecast` only). One Finalize posts exactly one ACTIVITY; iframe closes via normal GameBus behaviour.
 - **Validation:** overproduction grams ≤ prepared quantity × portion weight; prepared 0 requires waste 0.
 - **State:** draft → ready → finalized (session-local in standalone; embed posts `wasteMeasurement` then relies on GameBus to close iframe).
 - **Fixtures:** development staff rotation and portion weights are **not study data** (`src/serviceCloseout/fixtures/`, `src/serviceCloseout/portionWeight/`).
 - **Future:** finalizing closeout will trigger per-user daily forecast evaluation; weekly results aggregate finalized daily results.
-- **Contract:** [`GAMEBUS_SERVICE_CLOSEOUT_CONTRACT.md`](./GAMEBUS_SERVICE_CLOSEOUT_CONTRACT.md)
+- **Contract:** [`../contracts/SERVICE_CLOSEOUT_GAMEBUS.md`](../contracts/SERVICE_CLOSEOUT_GAMEBUS.md)
 
 ---
 

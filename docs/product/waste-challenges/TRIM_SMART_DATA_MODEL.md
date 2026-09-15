@@ -7,7 +7,7 @@
 > - **CURRENT IMPLEMENTATION** — §2 (nine `trimSmart` properties on `main`; pointers to `src/trimSmart/` and GameBus mappers).
 > - **WORKING / PROPOSED** — §3 onward (target property set, `preparationTechnique`, `wastePracticeReview`, GameBus API session reload, Rescue & Reuse read contract). **Not** automatically approved or implemented.
 >
-> See `docs/current-state/IMPLEMENTATION_STATUS.md` for the short v1 vs target distinction.
+> See [`../../current-state/IMPLEMENTATION_STATUS.md`](../../current-state/IMPLEMENTATION_STATUS.md) for the short v1 vs target distinction.
 
 **Status:** Working data model v0.3
 
@@ -17,7 +17,7 @@
 
 **Verified baseline:** `main` at `019ce6637c2b75319b0c86a6a099b0645ec9ae4f`
 
-**Companion specifications:** `product-spec.md`, `trim-smart.feature`
+**Companion specifications:** [`TRIM_SMART.md`](TRIM_SMART.md), [`../../../features/waste-challenges/trim-smart.feature`](../../../features/waste-challenges/trim-smart.feature)
 
 ## 1. Data-model goals
 
