@@ -4,6 +4,7 @@ import {
   tryResolveStudentLunchServiceDate,
 } from './studentLunchServiceDate';
 import { helsinki } from '../test/fixtures/dates';
+import { mockExplicitClosures } from '../test/fixtures/serviceCalendar';
 import * as menuResolverModule from './menuResolver';
 
 const DATES = {
@@ -34,68 +35,25 @@ describe('resolveStudentLunchServiceDate', () => {
   });
 
   it('skips an explicitly closed Monday and targets Tuesday', () => {
-    vi.spyOn(menuResolverModule, 'resolveMenuForDate').mockImplementation((isoDate) => {
-      if (isoDate === DATES.mondayAug17) {
-        return { status: 'closed', reason: 'Public holiday' };
-      }
-      if (isoDate === DATES.fridayAug14 || isoDate === DATES.tuesdayAug18) {
-        return {
-          status: 'available',
-          items: [],
-          dailyMenuId: `dated-${isoDate}`,
-          menuCycleWeek: 1,
-          menuVersion: 'test',
-        };
-      }
-      return { status: 'unavailable' };
-    });
+    mockExplicitClosures(DATES.mondayAug17);
 
     const friday = helsinki(DATES.fridayAug14, '12:00:00');
     expect(resolveStudentLunchServiceDate(friday)).toBe(DATES.tuesdayAug18);
   });
 
   it('skips consecutive closed weekdays until the next operational service', () => {
-    const closed = new Set(['2026-08-17', '2026-08-18', '2026-08-19']);
-    const open = '2026-08-20';
-    vi.spyOn(menuResolverModule, 'resolveMenuForDate').mockImplementation((isoDate) => {
-      if (closed.has(isoDate)) {
-        return { status: 'closed', reason: 'Closed' };
-      }
-      if (isoDate === open || isoDate === '2026-08-14') {
-        return {
-          status: 'available',
-          items: [],
-          dailyMenuId: `dated-${isoDate}`,
-          menuCycleWeek: 1,
-          menuVersion: 'test',
-        };
-      }
-      return { status: 'unavailable' };
-    });
+    mockExplicitClosures('2026-08-17', '2026-08-18', '2026-08-19');
 
     const friday = helsinki('2026-08-14', '12:00:00');
-    expect(resolveStudentLunchServiceDate(friday)).toBe(open);
+    expect(resolveStudentLunchServiceDate(friday)).toBe('2026-08-20');
   });
 
   it('does not skip a weekday merely because menu data is unavailable', () => {
-    vi.spyOn(menuResolverModule, 'resolveMenuForDate').mockImplementation((isoDate) => {
-      if (isoDate === DATES.mondayAug17) {
-        return { status: 'unavailable' };
-      }
-      if (isoDate === DATES.fridayAug14 || isoDate === DATES.tuesdayAug18) {
-        return {
-          status: 'available',
-          items: [],
-          dailyMenuId: `dated-${isoDate}`,
-          menuCycleWeek: 1,
-          menuVersion: 'test',
-        };
-      }
-      return { status: 'unavailable' };
-    });
+    const wednesdayWithoutMenu = '2026-01-07';
+    expect(menuResolverModule.resolveMenuForDate(wednesdayWithoutMenu).status).toBe('unavailable');
 
-    const friday = helsinki(DATES.fridayAug14, '12:00:00');
-    expect(resolveStudentLunchServiceDate(friday)).toBe(DATES.mondayAug17);
+    const tuesday = helsinki('2026-01-06', '12:00:00');
+    expect(resolveStudentLunchServiceDate(tuesday)).toBe(wednesdayWithoutMenu);
   });
 
   it('uses Europe/Helsinki operational calendar of the provided instant', () => {

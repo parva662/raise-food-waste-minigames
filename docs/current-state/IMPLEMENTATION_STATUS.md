@@ -53,7 +53,27 @@ Cannot be closed from this repo’s Vitest stack (no browser E2E):
 | | |
 |--|--|
 | **Status** | **Implemented** on `main` (`#/chef`, `chefForecast` ACTIVITY) |
+| **Approved target** | [`../../features/kitchen/kitchen-forecast.feature`](../../features/kitchen/kitchen-forecast.feature) |
 | **Migration / doc review** | Pending ([`../contracts/KITCHEN_FORECAST_GAMEBUS.md`](../contracts/KITCHEN_FORECAST_GAMEBUS.md), [`../archive/SPEC_LEGACY.md`](../archive/SPEC_LEGACY.md) §9) |
+
+### Approved timing model — implemented
+
+- **Operational calendar is independent of menu availability.** `isOperationalServiceDay` = weekday AND not explicitly closed (`isExplicitlyClosedServiceDate`, which reads closure configuration only). Next/previous operational service resolution skips weekends and explicit closures, never a date whose menu content is merely missing. Student Lunch now shares this single definition; its approved behaviour is unchanged.
+- Helsinki time alone resolves one target: closed before 08:00, today's service 08:00:00–08:29:59, next operational service 08:30:00–23:59:59. No target-date picker.
+- Before 08:00 the page keeps today as the target and stays closed instead of jumping ahead to the next service.
+- Non-operational days (weekends, explicitly closed days) have no open window.
+- Retrieval eligibility for target date `D`: submitted on the previous operational service day 08:30:00–23:59:59, or on `D` 08:00:00–08:29:59. Everything else is ignored, exact `targetDate` matching only, and a later ineligible activity never replaces an earlier eligible one.
+- Window copy and countdown follow the active window: `08:30 today` during the grace window, midnight during the advance window.
+
+### Still `@pending` in Gherkin (not silently invented)
+
+- Open-page service-date rollover across a window boundary (deferred for the pilot).
+
+### Contract documentation
+
+- [`../contracts/KITCHEN_FORECAST_GAMEBUS.md`](../contracts/KITCHEN_FORECAST_GAMEBUS.md) §A.1 now documents the target-resolution table, the eligible retrieval windows, and the pilot latest-eligible rule; the stale "tomorrow's published menu" wording is gone. The `late` enum is retained for schema compatibility and documented as never produced.
+- [`../contracts/KITCHEN_FORECAST_ADMIN_SETUP.md`](../contracts/KITCHEN_FORECAST_ADMIN_SETUP.md) states that 0–1000 is the business range and that the wider legacy schema maximum is an admin/compatibility detail; tightening live schemas remains a separate manual admin decision.
+- No live GameBus configuration was changed.
 
 ---
 

@@ -82,7 +82,12 @@
 
 **Note:** `forecastMeat` is the existing reference for **main/classic** forecast quantity. Do not create `forecastMain`.
 
-**Note:** The chef app validates integers 0–1000 (`src/config/chef.ts`). Existing export schemas for forecast integers use a wider maximum (`9007199254740991`) — **do not change those existing templates** unless you deliberately align admin with app limits.
+### Quantity range — product rule vs. admin schema
+
+- **Kitchen Forecast business values are whole numbers 0–1000 inclusive** for expected customers and every forecast quantity (`src/config/chef.ts`; enforced by the app before submission).
+- Several reused legacy GameBus property schemas below declare a much wider maximum (`9007199254740991`). That is a **compatibility / admin schema detail** of shared global templates, not a Kitchen Forecast business range.
+- **A value above 1000 is not a valid Kitchen Forecast value**, regardless of what the live schema would accept. Any such value in the data is out of contract and should be treated as invalid on analysis.
+- Tightening those live schemas to 0–1000 is a **separate manual GameBus admin decision**. Do not change live GameBus configuration from this repository, and do not edit the existing templates as part of Kitchen Forecast delivery.
 
 ---
 

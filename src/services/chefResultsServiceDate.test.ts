@@ -4,7 +4,7 @@ import {
   resolveChefForecastServiceDate,
   resolveChefResultsServiceDate,
 } from './operationalServiceCalendar';
-import * as menuResolverModule from './menuResolver';
+import { mockExplicitClosures } from '../test/fixtures/serviceCalendar';
 
 const SERVICE_DATES = {
   fridaySep4: '2026-09-04',
@@ -74,24 +74,7 @@ describe('canonical chef results service date', () => {
   });
 
   it('skips a closed Monday when resolving the canonical results date', () => {
-    vi.spyOn(menuResolverModule, 'resolveMenuForDate').mockImplementation((isoDate) => {
-      if (isoDate === SERVICE_DATES.mondayAug17) {
-        return { status: 'closed', reason: 'Public holiday' };
-      }
-      if (
-        isoDate === SERVICE_DATES.fridayAug14 ||
-        isoDate === SERVICE_DATES.tuesdayAug18
-      ) {
-        return {
-          status: 'available',
-          items: [],
-          dailyMenuId: `dated-${isoDate}`,
-          menuCycleWeek: 1,
-          menuVersion: 'test',
-        };
-      }
-      return { status: 'unavailable' };
-    });
+    mockExplicitClosures(SERVICE_DATES.mondayAug17);
 
     expect(resolveChefForecastServiceDate(helsinki(SERVICE_DATES.fridayAug14, '15:00:00'))).toBe(
       SERVICE_DATES.tuesdayAug18,

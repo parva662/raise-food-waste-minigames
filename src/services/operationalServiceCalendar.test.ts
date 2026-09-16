@@ -1,12 +1,13 @@
 import { describe, expect, it, vi, afterEach } from 'vitest';
 import {
-  OperationalCalendarError,
+  isOperationalServiceDay,
   resolveChefForecastServiceDate,
   resolveNextServiceDate,
   resolvePreviousOperationalDay,
 } from './operationalServiceCalendar';
 import { MENU_DATES } from '../test/fixtures/dates';
 import { helsinki } from '../test/fixtures/dates';
+import { mockExplicitClosures } from '../test/fixtures/serviceCalendar';
 import * as menuResolverModule from './menuResolver';
 
 const SERVICE_CALENDAR_DATES = {
@@ -18,6 +19,38 @@ const SERVICE_CALENDAR_DATES = {
   mondayAug17: '2026-08-17',
   tuesdayAug18: '2026-08-18',
 } as const;
+
+describe('operational service day classification', () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it('treats a weekday with available menu data as an operational service day', () => {
+    expect(menuResolverModule.resolveMenuForDate(SERVICE_CALENDAR_DATES.mondayAug17).status).toBe(
+      'available',
+    );
+    expect(isOperationalServiceDay(SERVICE_CALENDAR_DATES.mondayAug17)).toBe(true);
+  });
+
+  it('still treats a weekday with unavailable menu data as an operational service day', () => {
+    expect(menuResolverModule.resolveMenuForDate(MENU_DATES.missingFromWorkbook).status).toBe(
+      'unavailable',
+    );
+    expect(isOperationalServiceDay(MENU_DATES.missingFromWorkbook)).toBe(true);
+  });
+
+  it('treats an explicitly closed weekday as non-service', () => {
+    expect(isOperationalServiceDay(SERVICE_CALENDAR_DATES.mondayAug17)).toBe(true);
+
+    mockExplicitClosures(SERVICE_CALENDAR_DATES.mondayAug17);
+    expect(isOperationalServiceDay(SERVICE_CALENDAR_DATES.mondayAug17)).toBe(false);
+  });
+
+  it('treats weekends as non-service', () => {
+    expect(isOperationalServiceDay(SERVICE_CALENDAR_DATES.saturdayAug15)).toBe(false);
+    expect(isOperationalServiceDay(SERVICE_CALENDAR_DATES.sundayAug16)).toBe(false);
+  });
+});
 
 describe('operational service calendar', () => {
   afterEach(() => {
@@ -48,35 +81,20 @@ describe('operational service calendar', () => {
     );
   });
 
-  it('skips an explicitly closed weekday to the next available service date', () => {
-    vi.spyOn(menuResolverModule, 'resolveMenuForDate').mockImplementation((isoDate) => {
-      if (isoDate === SERVICE_CALENDAR_DATES.mondayAug17) {
-        return { status: 'closed', reason: 'Public holiday' };
-      }
-      if (
-        isoDate === SERVICE_CALENDAR_DATES.fridayAug14 ||
-        isoDate === SERVICE_CALENDAR_DATES.tuesdayAug18
-      ) {
-        return {
-          status: 'available',
-          items: [],
-          dailyMenuId: `dated-${isoDate}`,
-          menuCycleWeek: 1,
-          menuVersion: 'test',
-        };
-      }
-      return { status: 'unavailable' };
-    });
+  it('skips an explicitly closed weekday to the next operational service date', () => {
+    mockExplicitClosures(SERVICE_CALENDAR_DATES.mondayAug17);
 
     expect(resolveNextServiceDate(SERVICE_CALENDAR_DATES.fridayAug14)).toBe(
       SERVICE_CALENDAR_DATES.tuesdayAug18,
     );
   });
 
-  it('does not silently skip a weekday with unavailable menu data', () => {
-    expect(() => resolveNextServiceDate(MENU_DATES.missingFromWorkbook)).toThrow(
-      OperationalCalendarError,
-    );
+  it('does not skip a weekday whose menu data is unavailable', () => {
+    const wednesdayWithoutMenu = MENU_DATES.missingFromWorkbook;
+    expect(menuResolverModule.resolveMenuForDate(wednesdayWithoutMenu).status).toBe('unavailable');
+
+    expect(resolveNextServiceDate('2026-01-06')).toBe(wednesdayWithoutMenu);
+    expect(resolvePreviousOperationalDay('2026-01-08')).toBe(wednesdayWithoutMenu);
   });
 
   it('resolves previous operational day Tuesday to Monday', () => {
@@ -92,24 +110,7 @@ describe('operational service calendar', () => {
   });
 
   it('skips closed Monday when resolving previous operational day for Tuesday', () => {
-    vi.spyOn(menuResolverModule, 'resolveMenuForDate').mockImplementation((isoDate) => {
-      if (isoDate === SERVICE_CALENDAR_DATES.mondayAug17) {
-        return { status: 'closed', reason: 'Public holiday' };
-      }
-      if (
-        isoDate === SERVICE_CALENDAR_DATES.fridayAug14 ||
-        isoDate === SERVICE_CALENDAR_DATES.tuesdayAug18
-      ) {
-        return {
-          status: 'available',
-          items: [],
-          dailyMenuId: `dated-${isoDate}`,
-          menuCycleWeek: 1,
-          menuVersion: 'test',
-        };
-      }
-      return { status: 'unavailable' };
-    });
+    mockExplicitClosures(SERVICE_CALENDAR_DATES.mondayAug17);
 
     expect(resolvePreviousOperationalDay(SERVICE_CALENDAR_DATES.tuesdayAug18)).toBe(
       SERVICE_CALENDAR_DATES.fridayAug14,

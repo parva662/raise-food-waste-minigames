@@ -1,4 +1,13 @@
+import { fromZonedTime } from 'date-fns-tz';
 import { MENU_DATES } from '../../../test/fixtures/dates';
+import { CHEF_CONFIG } from '../../../config/chef';
+import { resolvePreviousOperationalDay } from '../../../services/operationalServiceCalendar';
+
+/** 19:05 Helsinki inside the advance window on the previous operational service day. */
+function defaultSubmittedAt(targetDate: string): string {
+  const advanceDay = resolvePreviousOperationalDay(targetDate);
+  return fromZonedTime(`${advanceDay} 19:05:00`, CHEF_CONFIG.timezone).toISOString();
+}
 
 type RawGameBusProperty = {
   value: { value: unknown };
@@ -52,8 +61,9 @@ export function buildAnonymizedChefForecastActivity(
   } = {},
 ): RawGameBusChefForecastActivity {
   const targetDate = overrides.targetDate ?? MENU_DATES.runtimeWednesday;
+  const submittedAt = overrides.submittedAt ?? defaultSubmittedAt(targetDate);
   const propertyBuilders: Record<string, RawGameBusProperty> = {
-    submittedAt: property('submittedAt', 'Submitted at', overrides.submittedAt ?? '2026-07-28T16:05:00.000Z'),
+    submittedAt: property('submittedAt', 'Submitted at', submittedAt),
     targetDate: property('targetDate', 'Target date', targetDate),
     forecastTotalCustomers: property(
       'forecastTotalCustomers',
@@ -114,7 +124,7 @@ export function buildAnonymizedChefForecastActivity(
       name: overrides.actorName ?? 'Chef A. Example',
       image: null,
     },
-    createdAt: overrides.createdAt ?? '2026-07-28T16:05:01.000Z',
+    createdAt: overrides.createdAt ?? new Date(new Date(submittedAt).getTime() + 1000).toISOString(),
     template: { slug: 'chefForecast', name: 'Chef forecast' },
     properties,
   };
@@ -133,8 +143,6 @@ export const EMPTY_PROPERTIES_CHEF_FORECAST_ACTIVITY: RawGameBusChefForecastActi
 export const TOMORROW_CHEF_FORECAST_ACTIVITY = buildAnonymizedChefForecastActivity({
   id: 'activity-forecast-tomorrow',
   targetDate: MENU_DATES.runtimeThursday,
-  submittedAt: '2026-08-11T07:30:00.000Z',
-  createdAt: '2026-08-11T07:30:01.000Z',
   forecastMain: 88,
 });
 

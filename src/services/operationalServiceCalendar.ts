@@ -1,9 +1,9 @@
 import { parseISO } from 'date-fns';
 import { toZonedTime } from 'date-fns-tz';
 import { CANTEEN_CONFIG } from '../config/canteen';
-import { isChefForecastSubmissionInstantEligible } from './chefForecastEligibilityPolicy';
+import { isBeforeChefWindowSwitch } from './chefForecastWindow';
 import { addDaysToIsoDate, getOperationalDateIso } from '../utils/dates';
-import { resolveMenuForDate } from './menuResolver';
+import { isExplicitlyClosedServiceDate } from './menuResolver';
 
 const MAX_CALENDAR_STEPS = 366;
 
@@ -14,103 +14,66 @@ export class OperationalCalendarError extends Error {
   }
 }
 
-type ServiceDayClassification =
-  | { kind: 'service'; isoDate: string }
-  | { kind: 'skip' }
-  | { kind: 'unavailable'; isoDate: string };
-
 function isWeekend(isoDate: string): boolean {
   const zoned = toZonedTime(parseISO(isoDate), CANTEEN_CONFIG.timezone);
   const dayIndex = zoned.getDay();
   return dayIndex === 0 || dayIndex === 6;
 }
 
-function classifyOperationalDate(isoDate: string): ServiceDayClassification {
-  if (isWeekend(isoDate)) {
-    return { kind: 'skip' };
-  }
-
-  const menu = resolveMenuForDate(isoDate);
-  if (menu.status === 'available') {
-    return { kind: 'service', isoDate };
-  }
-  if (menu.status === 'closed') {
-    return { kind: 'skip' };
-  }
-
-  return { kind: 'unavailable', isoDate };
+/**
+ * Operational service day: a weekday that is not explicitly configured as closed.
+ * Menu availability is a separate concern — a weekday whose menu data is missing is
+ * still an operational service day, it just cannot show a menu.
+ */
+export function isOperationalServiceDay(isoDate: string): boolean {
+  return !isWeekend(isoDate) && !isExplicitlyClosedServiceDate(isoDate);
 }
 
 function stepCalendarDate(isoDate: string, direction: 1 | -1): string {
   return addDaysToIsoDate(isoDate, direction);
 }
 
-/**
- * Next BarLaurea service date after the given operational calendar date.
- * Skips weekends and explicitly closed days; fails on weekday unavailable menus.
- */
-export function resolveNextServiceDate(fromIsoDate: string): string {
-  let candidate = stepCalendarDate(fromIsoDate, 1);
+function resolveServiceDate(fromIsoDate: string, direction: 1 | -1, label: string): string {
+  let candidate = stepCalendarDate(fromIsoDate, direction);
 
   for (let step = 0; step < MAX_CALENDAR_STEPS; step += 1) {
-    const classification = classifyOperationalDate(candidate);
-    if (classification.kind === 'service') {
-      return classification.isoDate;
+    if (isOperationalServiceDay(candidate)) {
+      return candidate;
     }
-    if (classification.kind === 'unavailable') {
-      throw new OperationalCalendarError(
-        `Menu unavailable for operational date ${classification.isoDate}; cannot resolve next service date.`,
-      );
-    }
-    candidate = stepCalendarDate(candidate, 1);
+    candidate = stepCalendarDate(candidate, direction);
   }
 
   throw new OperationalCalendarError(
-    `Could not resolve next service date after ${fromIsoDate} within ${MAX_CALENDAR_STEPS} days.`,
+    `Could not resolve ${label} for ${fromIsoDate} within ${MAX_CALENDAR_STEPS} days.`,
   );
+}
+
+/**
+ * Next BarLaurea service date after the given operational calendar date.
+ * Skips weekends and explicitly closed days only.
+ */
+export function resolveNextServiceDate(fromIsoDate: string): string {
+  return resolveServiceDate(fromIsoDate, 1, 'next service date');
 }
 
 /**
  * Previous BarLaurea operational day before the given service date.
- * Skips weekends and explicitly closed days; fails on weekday unavailable menus.
+ * Skips weekends and explicitly closed days only.
  */
 export function resolvePreviousOperationalDay(serviceDate: string): string {
-  let candidate = stepCalendarDate(serviceDate, -1);
-
-  for (let step = 0; step < MAX_CALENDAR_STEPS; step += 1) {
-    const classification = classifyOperationalDate(candidate);
-    if (classification.kind === 'service') {
-      return classification.isoDate;
-    }
-    if (classification.kind === 'unavailable') {
-      throw new OperationalCalendarError(
-        `Menu unavailable for operational date ${classification.isoDate}; cannot resolve previous operational day.`,
-      );
-    }
-    candidate = stepCalendarDate(candidate, -1);
-  }
-
-  throw new OperationalCalendarError(
-    `Could not resolve previous operational day before ${serviceDate} within ${MAX_CALENDAR_STEPS} days.`,
-  );
+  return resolveServiceDate(serviceDate, -1, 'previous operational day');
 }
 
-/** Kitchen forecast target date when the page is opened (Helsinki operational day). */
+/**
+ * Kitchen forecast target date when the page is opened (Helsinki operational day).
+ * Before 08:30 the target is today's own service; from 08:30 it is the next operational
+ * service. Whether entry is actually open is a separate question — see the submission window.
+ */
 export function resolveChefForecastServiceDate(now: Date = new Date()): string {
   const today = getOperationalDateIso(now);
-  const classification = classifyOperationalDate(today);
 
-  if (classification.kind === 'unavailable') {
-    throw new OperationalCalendarError(
-      `Menu unavailable for operational date ${classification.isoDate}; cannot resolve kitchen forecast service date.`,
-    );
-  }
-
-  if (
-    classification.kind === 'service' &&
-    isChefForecastSubmissionInstantEligible(now, classification.isoDate)
-  ) {
-    return classification.isoDate;
+  if (isOperationalServiceDay(today) && isBeforeChefWindowSwitch(now)) {
+    return today;
   }
 
   return resolveNextServiceDate(today);

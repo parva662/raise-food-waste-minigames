@@ -242,7 +242,7 @@ describe('canonical participant results in embedded mode', () => {
           actorId: staff1Id,
           actorName: 'Staff One',
           targetDate: sep7,
-          submittedAt: '2026-09-06T10:00:00.000Z',
+          submittedAt: '2026-09-04T10:00:00.000Z',
           forecastTotalCustomers: 100,
         }),
         buildAnonymizedChefForecastActivity({
@@ -250,7 +250,7 @@ describe('canonical participant results in embedded mode', () => {
           actorId: staff1Id,
           actorName: 'Staff One',
           targetDate: sep7,
-          submittedAt: '2026-09-06T16:00:00.000Z',
+          submittedAt: '2026-09-04T16:00:00.000Z',
           forecastTotalCustomers: 142,
         }),
         wasteMeasurementForDate(sep7),

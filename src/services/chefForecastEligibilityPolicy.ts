@@ -1,23 +1,31 @@
 import { parseISO } from 'date-fns';
-import { fromZonedTime } from 'date-fns-tz';
-import { CHEF_CONFIG } from '../config/chef';
+import {
+  isWithinChefAdvanceWindowTime,
+  isWithinChefGraceWindowTime,
+} from './chefForecastWindow';
+import { resolvePreviousOperationalDay } from './operationalServiceCalendar';
+import { getOperationalDateIso } from '../utils/dates';
 import type { GameBusChefForecast } from '../serviceCloseout/forecast/gameBusChefForecastTypes';
 
-function pad(value: number): string {
-  return String(value).padStart(2, '0');
-}
-
-/** 08:30:00 Europe/Helsinki on the target service date — forecasts must be submitted before this instant. */
-export function getChefForecastCutoffInstant(targetDate: string): Date {
-  const local = `${targetDate} ${pad(CHEF_CONFIG.forecastCutoffHour)}:${pad(CHEF_CONFIG.forecastCutoffMinute)}:${pad(CHEF_CONFIG.forecastCutoffSecond)}`;
-  return fromZonedTime(local, CHEF_CONFIG.timezone);
-}
-
+/**
+ * A forecast for target service date D is eligible only when it was submitted inside one
+ * of two Europe/Helsinki windows: on the previous operational service day from 08:30:00
+ * through 23:59:59, or on D itself from 08:00:00 through 08:29:59.
+ */
 export function isChefForecastSubmissionInstantEligible(
   instant: Date,
   targetDate: string,
 ): boolean {
-  return instant.getTime() < getChefForecastCutoffInstant(targetDate).getTime();
+  const submissionDate = getOperationalDateIso(instant);
+
+  if (submissionDate === targetDate) {
+    return isWithinChefGraceWindowTime(instant);
+  }
+  if (submissionDate > targetDate || !isWithinChefAdvanceWindowTime(instant)) {
+    return false;
+  }
+
+  return submissionDate === resolvePreviousOperationalDay(targetDate);
 }
 
 export function getChefForecastSubmissionInstant(forecast: GameBusChefForecast): Date | null {
@@ -34,8 +42,4 @@ export function isChefForecastActivityEligible(forecast: GameBusChefForecast): b
 
 export function chefForecastSubmissionSortKey(forecast: GameBusChefForecast): string {
   return forecast.submittedAt ?? forecast.createdAt ?? '';
-}
-
-export function formatChefForecastDeadlineLabel(): string {
-  return `${pad(CHEF_CONFIG.forecastCutoffHour)}:${pad(CHEF_CONFIG.forecastCutoffMinute)} on service day`;
 }

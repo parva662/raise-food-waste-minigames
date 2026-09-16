@@ -1,4 +1,3 @@
-import { formatChefForecastDeadlineLabel } from '../../services/chefForecastEligibilityPolicy';
 import type { ChefSubmissionWindowStatus } from '../types';
 import { formatCountdown } from '../../services/submissionWindow';
 import { formatDisplayDate } from '../../utils/dates';
@@ -47,9 +46,7 @@ export function ChefForecastHeader({
         <p className="chef-header__instruction">
           Enter portions for this service day&apos;s menu. One forecast per service day.
         </p>
-        <span className="chef-badge chef-badge--deadline">
-          Deadline {formatChefForecastDeadlineLabel()}
-        </span>
+        <span className="chef-badge chef-badge--deadline">{submissionWindow.windowLabel}</span>
         <span className="chef-header__phase" role="status">
           {submissionWindow.message}
         </span>

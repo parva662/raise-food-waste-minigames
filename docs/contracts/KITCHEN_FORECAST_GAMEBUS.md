@@ -8,7 +8,7 @@
 
 ## A. Product model
 
-The on-duty chef (personal GameBus account) submits **one forecast per service day** for **tomorrow’s published menu**:
+The on-duty chef (personal GameBus account) submits **one forecast per target service date** (see [§A.1](#a1-target-service-date-and-eligible-windows)):
 
 - expected total customers (headcount forecast);
 - main, vegetarian, soup, and dessert portion forecasts (main and vegetarian are independent; soup and dessert share one soup-menu quantity);
@@ -23,6 +23,35 @@ No `chefId`, `actors`, `provider`, `result`, `waste`, `points`, or `badge` field
 Participant association: **authenticated GameBus user** (chef on duty).
 
 **Forecast semantics:** Expected customers and each menu-item quantity are separate forecasts, except soup and dessert which operationally form one soup menu. The chef UI enters soup quantity once and derives `forecastDessert` from `forecastSoup`; both properties are still submitted for GameBus compatibility. Main and vegetarian remain independent. One customer may consume multiple portions or categories. Later analysis compares each forecast property with its matching actual value; waste is a separate operational outcome.
+
+---
+
+## A.1 Target service date and eligible windows
+
+All times are Europe/Helsinki, independent of device timezone. The target is resolved deterministically from the clock — there is no target-date picker and never two selectable targets.
+
+| Helsinki time on an operational service day | Target | Entry |
+|---|---|---|
+| 00:00:00–07:59:59 | none | **closed** |
+| 08:00:00–08:29:59 | **today's** operational service (same-day grace window) | open |
+| 08:30:00–23:59:59 | **next** operational service | open |
+
+An operational service day is a weekday that is not explicitly configured as closed. Menu availability is a **separate** concern: a weekday with missing menu data is still an operational service day; its `targetDate` is unchanged and only the menu-dependent form is blocked.
+
+### Eligible activity windows for retrieval
+
+An activity carrying `targetDate = D` is eligible only when `submittedAt` falls inside one of:
+
+1. the previous operational service day `P`, **08:30:00–23:59:59**; or
+2. `D` itself, **08:00:00–08:29:59**.
+
+Anything outside those windows is ineligible for `D`. `targetDate` is always explicit on the activity: never infer it from `submittedAt`, and never substitute an activity belonging to another `targetDate`.
+
+### Pilot replay and retrieval selection
+
+Intended production behaviour is **one successful forecast per authenticated staff member per `targetDate`**. GameBus is currently configured to allow replay during the pilot, so for a given actor + exact `targetDate`, downstream retrieval collects matching activities, discards those outside the eligible windows, and uses the **latest eligible `submittedAt`**. A later **ineligible** activity never replaces an earlier eligible one.
+
+This is a retrieval/analysis rule for deterministic pilot data. It does not change the production workflow, is not permission to submit multiple forecasts, and the current replay count must not be hard-coded into product logic.
 
 ---
 
@@ -264,6 +293,8 @@ additionalProperties: false
 ```
 
 Example `obj.value`: `"on-time"`
+
+**Note:** the `late` enum value is retained for **schema compatibility** with the shared global template. Kitchen Forecast never creates an accepted late forecast: a submission is only possible inside an eligible window ([§A.1](#a1-target-service-date-and-eligible-windows)), so every recorded `chefForecast` carries `on-time`.
 
 #### `submittedAt` — reuse global template, add activity link
 

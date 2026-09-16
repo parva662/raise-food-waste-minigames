@@ -7,6 +7,7 @@ import { selectCurrentUserForecastForDate, selectForecastsForDate } from './sele
 
 const serviceDate = '2026-07-29';
 const mondayServiceDate = '2026-08-17';
+const fridayAdvanceDay = '2026-08-14';
 
 function helsinki(dateIso: string, time: string): string {
   return fromZonedTime(`${dateIso} ${time}`, CHEF_CONFIG.timezone).toISOString();
@@ -69,6 +70,95 @@ describe('selectForecastsForDate', () => {
       buildAnonymizedChefForecastActivity({ targetDate: '2026-07-30' }),
     ]);
     expect(selectForecastsForDate(valid, serviceDate)).toHaveLength(0);
+  });
+
+  it('keeps an activity submitted in the previous operational day advance window', () => {
+    const { valid } = parseGameBusChefForecastActivities([
+      buildAnonymizedChefForecastActivity({
+        actorId: 'user-a',
+        targetDate: mondayServiceDate,
+        submittedAt: helsinki(fridayAdvanceDay, '23:59:59'),
+        forecastMain: 44,
+      }),
+    ]);
+
+    expect(selectForecastsForDate(valid, mondayServiceDate)).toHaveLength(1);
+  });
+
+  it('ignores activities submitted outside both eligible windows', () => {
+    const { valid } = parseGameBusChefForecastActivities([
+      buildAnonymizedChefForecastActivity({
+        id: 'too-early-on-friday',
+        actorId: 'user-a',
+        targetDate: mondayServiceDate,
+        submittedAt: helsinki(fridayAdvanceDay, '08:29:59'),
+      }),
+      buildAnonymizedChefForecastActivity({
+        id: 'weekend',
+        actorId: 'user-b',
+        targetDate: mondayServiceDate,
+        submittedAt: helsinki('2026-08-15', '12:00:00'),
+      }),
+      buildAnonymizedChefForecastActivity({
+        id: 'before-grace',
+        actorId: 'user-c',
+        targetDate: mondayServiceDate,
+        submittedAt: helsinki(mondayServiceDate, '07:59:59'),
+      }),
+    ]);
+
+    expect(selectForecastsForDate(valid, mondayServiceDate)).toHaveLength(0);
+  });
+
+  it('uses the latest eligible activity when the pilot left several behind', () => {
+    const { valid } = parseGameBusChefForecastActivities([
+      buildAnonymizedChefForecastActivity({
+        id: 'advance',
+        actorId: 'user-a',
+        actorName: 'Aino Virtanen',
+        targetDate: mondayServiceDate,
+        submittedAt: helsinki(fridayAdvanceDay, '15:00:00'),
+        forecastMain: 40,
+      }),
+      buildAnonymizedChefForecastActivity({
+        id: 'grace',
+        actorId: 'user-a',
+        actorName: 'Aino Virtanen',
+        targetDate: mondayServiceDate,
+        submittedAt: helsinki(mondayServiceDate, '08:15:00'),
+        forecastMain: 44,
+      }),
+    ]);
+
+    const selected = selectForecastsForDate(valid, mondayServiceDate);
+    expect(selected).toHaveLength(1);
+    expect(selected[0]!.forecastMain).toBe(44);
+  });
+
+  it('never lets a later ineligible activity replace an earlier eligible one', () => {
+    const { valid } = parseGameBusChefForecastActivities([
+      buildAnonymizedChefForecastActivity({
+        id: 'eligible',
+        actorId: 'user-a',
+        actorName: 'Aino Virtanen',
+        targetDate: mondayServiceDate,
+        submittedAt: helsinki(mondayServiceDate, '08:15:00'),
+        forecastMain: 44,
+      }),
+      buildAnonymizedChefForecastActivity({
+        id: 'later-ineligible',
+        actorId: 'user-a',
+        actorName: 'Aino Virtanen',
+        targetDate: mondayServiceDate,
+        submittedAt: helsinki(mondayServiceDate, '11:00:00'),
+        forecastMain: 99,
+      }),
+    ]);
+
+    const selected = selectForecastsForDate(valid, mondayServiceDate);
+    expect(selected).toHaveLength(1);
+    expect(selected[0]!.forecastMain).toBe(44);
+    expect(selectCurrentUserForecastForDate(valid, mondayServiceDate, 'user-a')?.forecastMain).toBe(44);
   });
 
   it('rejects forecasts submitted at or after the service-date cutoff before deduplication', () => {

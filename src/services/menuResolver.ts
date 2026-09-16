@@ -84,6 +84,19 @@ export function findMissingCatalogueIds(itemIds: string[]): string[] {
   return itemIds.filter((id) => foodCatalogue[id] === undefined);
 }
 
+/**
+ * Explicit closure configuration for a date: a closure override or a workbook day marked
+ * closed. Independent of whether menu content resolves, so a weekday with missing menu
+ * data is still an operational service day.
+ */
+export function isExplicitlyClosedServiceDate(lunchDate: string): boolean {
+  const override = menuOverrides.find((entry) => entry.lunchDate === lunchDate);
+  if (override) {
+    return override.type === 'closed';
+  }
+  return getGeneratedDailyMenu(lunchDate)?.closed === true;
+}
+
 export function resolveMenuForDate(lunchDate: string): MenuAvailability {
   if (!isWeekday(lunchDate)) {
     return { status: 'unavailable' };

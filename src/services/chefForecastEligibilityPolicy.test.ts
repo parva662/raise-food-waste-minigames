@@ -1,75 +1,111 @@
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { fromZonedTime } from 'date-fns-tz';
 import { CHEF_CONFIG } from '../config/chef';
 import {
-  formatChefForecastDeadlineLabel,
-  getChefForecastCutoffInstant,
   isChefForecastActivityEligible,
   isChefForecastSubmissionInstantEligible,
 } from './chefForecastEligibilityPolicy';
+import * as menuResolverModule from './menuResolver';
+import { mockExplicitClosures } from '../test/fixtures/serviceCalendar';
 import { buildAnonymizedChefForecastActivity } from '../serviceCloseout/forecast/fixtures/gameBusChefForecastActivities';
 import { parseGameBusChefForecastActivities } from '../serviceCloseout/forecast/parseGameBusChefForecast';
 
-const SERVICE_DATE = '2026-08-17';
-const TUESDAY_SERVICE_DATE = '2026-08-18';
+const THURSDAY = '2026-08-13';
+const FRIDAY = '2026-08-14';
+const SATURDAY = '2026-08-15';
+const MONDAY = '2026-08-17';
+const TUESDAY = '2026-08-18';
 
 function helsinki(dateIso: string, time: string): Date {
   return fromZonedTime(`${dateIso} ${time}`, CHEF_CONFIG.timezone);
 }
 
 describe('chefForecastEligibilityPolicy', () => {
-  it('treats submissions strictly before 08:30 on the target service date as eligible', () => {
-    expect(isChefForecastSubmissionInstantEligible(helsinki(SERVICE_DATE, '08:29:59'), SERVICE_DATE)).toBe(
-      true,
-    );
-    expect(isChefForecastSubmissionInstantEligible(helsinki(SERVICE_DATE, '08:30:00'), SERVICE_DATE)).toBe(
-      false,
-    );
-    expect(isChefForecastSubmissionInstantEligible(helsinki(SERVICE_DATE, '08:30:01'), SERVICE_DATE)).toBe(
-      false,
-    );
+  afterEach(() => {
+    vi.restoreAllMocks();
   });
 
-  it('evaluates Tuesday target-day eligibility at the 08:30 boundary', () => {
-    expect(
-      isChefForecastSubmissionInstantEligible(helsinki(TUESDAY_SERVICE_DATE, '08:29:59'), TUESDAY_SERVICE_DATE),
-    ).toBe(true);
-    expect(
-      isChefForecastSubmissionInstantEligible(helsinki(TUESDAY_SERVICE_DATE, '08:30:00'), TUESDAY_SERVICE_DATE),
-    ).toBe(false);
-    expect(
-      isChefForecastSubmissionInstantEligible(helsinki(TUESDAY_SERVICE_DATE, '08:30:01'), TUESDAY_SERVICE_DATE),
-    ).toBe(false);
+  describe('same-day grace window on the target service date', () => {
+    it('rejects submissions before 08:00', () => {
+      expect(isChefForecastSubmissionInstantEligible(helsinki(MONDAY, '07:59:59'), MONDAY)).toBe(false);
+      expect(isChefForecastSubmissionInstantEligible(helsinki(MONDAY, '00:00:00'), MONDAY)).toBe(false);
+    });
+
+    it('accepts submissions from exactly 08:00:00 through 08:29:59', () => {
+      expect(isChefForecastSubmissionInstantEligible(helsinki(MONDAY, '08:00:00'), MONDAY)).toBe(true);
+      expect(isChefForecastSubmissionInstantEligible(helsinki(MONDAY, '08:29:59'), MONDAY)).toBe(true);
+    });
+
+    it('rejects submissions from exactly 08:30:00 onwards', () => {
+      expect(isChefForecastSubmissionInstantEligible(helsinki(MONDAY, '08:30:00'), MONDAY)).toBe(false);
+      expect(isChefForecastSubmissionInstantEligible(helsinki(MONDAY, '08:30:01'), MONDAY)).toBe(false);
+      expect(isChefForecastSubmissionInstantEligible(helsinki(MONDAY, '12:00:00'), MONDAY)).toBe(false);
+    });
   });
 
-  it('allows earlier operational days before the service-date cutoff', () => {
-    expect(
-      isChefForecastSubmissionInstantEligible(helsinki('2026-08-14', '18:00:00'), SERVICE_DATE),
-    ).toBe(true);
-  });
+  describe('advance window on the previous operational service day', () => {
+    it('accepts Friday 08:30:00 through 23:59:59 for a Monday service', () => {
+      expect(isChefForecastSubmissionInstantEligible(helsinki(FRIDAY, '08:30:00'), MONDAY)).toBe(true);
+      expect(isChefForecastSubmissionInstantEligible(helsinki(FRIDAY, '15:00:00'), MONDAY)).toBe(true);
+      expect(isChefForecastSubmissionInstantEligible(helsinki(FRIDAY, '23:59:59'), MONDAY)).toBe(true);
+    });
 
-  it('uses Helsinki timezone for the cutoff instant', () => {
-    const cutoff = getChefForecastCutoffInstant(SERVICE_DATE);
-    expect(cutoff.toISOString()).toBe('2026-08-17T05:30:00.000Z');
-  });
+    it('rejects Friday before 08:30 for a Monday service', () => {
+      expect(isChefForecastSubmissionInstantEligible(helsinki(FRIDAY, '08:29:59'), MONDAY)).toBe(false);
+      expect(isChefForecastSubmissionInstantEligible(helsinki(FRIDAY, '07:00:00'), MONDAY)).toBe(false);
+    });
 
-  it('formats the deadline label from CHEF_CONFIG', () => {
-    expect(formatChefForecastDeadlineLabel()).toBe('08:30 on service day');
+    it('rejects weekend submissions for a Monday service', () => {
+      expect(isChefForecastSubmissionInstantEligible(helsinki(SATURDAY, '12:00:00'), MONDAY)).toBe(false);
+    });
+
+    it('rejects operational days earlier than the previous operational service day', () => {
+      expect(isChefForecastSubmissionInstantEligible(helsinki(THURSDAY, '20:00:00'), MONDAY)).toBe(false);
+    });
+
+    it('treats Monday evening as the advance window for Tuesday, not for Monday', () => {
+      expect(isChefForecastSubmissionInstantEligible(helsinki(MONDAY, '18:00:00'), TUESDAY)).toBe(true);
+      expect(isChefForecastSubmissionInstantEligible(helsinki(MONDAY, '08:00:00'), TUESDAY)).toBe(false);
+    });
+
+    it('skips an explicitly closed Monday so Friday owns the Tuesday advance window', () => {
+      mockExplicitClosures(MONDAY);
+
+      expect(isChefForecastSubmissionInstantEligible(helsinki(FRIDAY, '15:00:00'), TUESDAY)).toBe(true);
+      expect(isChefForecastSubmissionInstantEligible(helsinki(MONDAY, '15:00:00'), TUESDAY)).toBe(false);
+    });
+
+    it('uses the previous operational day even when menu data is unavailable', () => {
+      const wednesdayWithoutMenu = '2026-01-07';
+      const tuesdayWithoutMenu = '2026-01-06';
+      const mondayWithoutMenu = '2026-01-05';
+      expect(menuResolverModule.resolveMenuForDate(wednesdayWithoutMenu).status).toBe('unavailable');
+
+      expect(
+        isChefForecastSubmissionInstantEligible(helsinki(tuesdayWithoutMenu, '15:00:00'), wednesdayWithoutMenu),
+      ).toBe(true);
+      expect(
+        isChefForecastSubmissionInstantEligible(helsinki(mondayWithoutMenu, '15:00:00'), wednesdayWithoutMenu),
+      ).toBe(false);
+      expect(
+        isChefForecastSubmissionInstantEligible(helsinki(wednesdayWithoutMenu, '08:15:00'), wednesdayWithoutMenu),
+      ).toBe(true);
+    });
   });
 
   it('evaluates activity eligibility from submittedAt with createdAt fallback', () => {
     const { valid } = parseGameBusChefForecastActivities([
       buildAnonymizedChefForecastActivity({
-        targetDate: SERVICE_DATE,
-        submittedAt: '2026-08-17T05:29:59.000Z',
+        targetDate: MONDAY,
+        submittedAt: helsinki(MONDAY, '08:29:59').toISOString(),
       }),
     ]);
     expect(isChefForecastActivityEligible(valid[0]!)).toBe(true);
 
     const { valid: late } = parseGameBusChefForecastActivities([
       buildAnonymizedChefForecastActivity({
-        targetDate: SERVICE_DATE,
-        submittedAt: '2026-08-17T05:30:00.000Z',
+        targetDate: MONDAY,
+        submittedAt: helsinki(MONDAY, '08:30:00').toISOString(),
       }),
     ]);
     expect(isChefForecastActivityEligible(late[0]!)).toBe(false);

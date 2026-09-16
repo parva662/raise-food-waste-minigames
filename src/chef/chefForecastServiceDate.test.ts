@@ -1,11 +1,9 @@
 import { describe, expect, it, vi, afterEach } from 'vitest';
 import { helsinki } from '../test/fixtures/dates';
-import {
-  OperationalCalendarError,
-  resolveChefForecastServiceDate,
-} from '../services/operationalServiceCalendar';
+import { resolveChefForecastServiceDate } from '../services/operationalServiceCalendar';
 import { resolveMealSlotsForDate } from '../services/mealSlots';
 import { MENU_DATES } from '../test/fixtures/dates';
+import { mockExplicitClosures } from '../test/fixtures/serviceCalendar';
 import * as menuResolverModule from '../services/menuResolver';
 
 const SERVICE_DATES = {
@@ -18,6 +16,21 @@ const SERVICE_DATES = {
 describe('kitchen forecast service date', () => {
   afterEach(() => {
     vi.restoreAllMocks();
+  });
+
+  it('keeps today as the target before the grace window opens', () => {
+    expect(resolveChefForecastServiceDate(helsinki(SERVICE_DATES.mondayAug17, '00:00:00'))).toBe(
+      SERVICE_DATES.mondayAug17,
+    );
+    expect(resolveChefForecastServiceDate(helsinki(SERVICE_DATES.mondayAug17, '07:59:59'))).toBe(
+      SERVICE_DATES.mondayAug17,
+    );
+  });
+
+  it('targets Monday when opened Monday at 08:00:00', () => {
+    expect(resolveChefForecastServiceDate(helsinki(SERVICE_DATES.mondayAug17, '08:00:00'))).toBe(
+      SERVICE_DATES.mondayAug17,
+    );
   });
 
   it('targets Monday when opened Monday at 08:29:59', () => {
@@ -63,6 +76,9 @@ describe('kitchen forecast service date', () => {
     expect(resolveChefForecastServiceDate(helsinki(SERVICE_DATES.fridayAug14, '15:00:00'))).toBe(
       SERVICE_DATES.mondayAug17,
     );
+    expect(resolveChefForecastServiceDate(helsinki(SERVICE_DATES.fridayAug14, '23:59:59'))).toBe(
+      SERVICE_DATES.mondayAug17,
+    );
   });
 
   it('targets Monday when opened on Saturday', () => {
@@ -72,30 +88,22 @@ describe('kitchen forecast service date', () => {
   });
 
   it('targets Tuesday when Monday is explicitly closed', () => {
-    vi.spyOn(menuResolverModule, 'resolveMenuForDate').mockImplementation((isoDate) => {
-      if (isoDate === SERVICE_DATES.mondayAug17) {
-        return { status: 'closed', reason: 'Public holiday' };
-      }
-      if (isoDate === SERVICE_DATES.fridayAug14 || isoDate === SERVICE_DATES.tuesdayAug18) {
-        return {
-          status: 'available',
-          items: [],
-          dailyMenuId: `dated-${isoDate}`,
-          menuCycleWeek: 1,
-          menuVersion: 'test',
-        };
-      }
-      return { status: 'unavailable' };
-    });
+    mockExplicitClosures(SERVICE_DATES.mondayAug17);
 
     expect(resolveChefForecastServiceDate(helsinki(SERVICE_DATES.fridayAug14, '15:00:00'))).toBe(
       SERVICE_DATES.tuesdayAug18,
     );
   });
 
-  it('fails safely when a weekday menu is unavailable', () => {
-    expect(() => resolveChefForecastServiceDate(helsinki(MENU_DATES.missingFromWorkbook, '08:00:00'))).toThrow(
-      OperationalCalendarError,
+  it('keeps a weekday target whose menu data is unavailable', () => {
+    const wednesdayWithoutMenu = MENU_DATES.missingFromWorkbook;
+    expect(menuResolverModule.resolveMenuForDate(wednesdayWithoutMenu).status).toBe('unavailable');
+
+    expect(resolveChefForecastServiceDate(helsinki(wednesdayWithoutMenu, '08:00:00'))).toBe(
+      wednesdayWithoutMenu,
+    );
+    expect(resolveChefForecastServiceDate(helsinki('2026-01-06', '15:00:00'))).toBe(
+      wednesdayWithoutMenu,
     );
   });
 

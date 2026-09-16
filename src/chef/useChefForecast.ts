@@ -196,6 +196,7 @@ export function useChefForecast(clock: Clock = systemClock) {
       return {
         phase: 'closed' as const,
         countdownTargetIso: null,
+        windowLabel: 'Forecast unavailable',
         message: 'Forecast closed',
         detailLines: [
           serviceDateResolution.status === 'calendar_error'

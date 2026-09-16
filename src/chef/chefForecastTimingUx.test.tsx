@@ -4,10 +4,15 @@ import { act, cleanup, fireEvent, render, screen, within } from '@testing-librar
 import { ChefApp } from './ChefApp';
 import { helsinki } from '../test/fixtures/dates';
 import { resolveMealSlotsForDate } from '../services/mealSlots';
-import { getChefForecastCutoffInstant } from '../services/chefForecastEligibilityPolicy';
+import {
+  getChefAdvanceWindowEndInstant,
+  getChefGraceWindowEndInstant,
+} from '../services/chefForecastWindow';
 import { getChefSubmissionWindowStatus } from './chefSubmissionWindow';
 
 const SERVICE_DATES = {
+  fridayAug14: '2026-08-14',
+  saturdayAug15: '2026-08-15',
   mondayAug17: '2026-08-17',
   tuesdayAug18: '2026-08-18',
 } as const;
@@ -109,19 +114,64 @@ describe('kitchen forecast page timing UX', () => {
     expect(screen.queryByText('Forecast closed')).not.toBeInTheDocument();
   });
 
-  it('renders the deadline label from central policy', () => {
+  it('keeps today as the target and stays closed before 08:00', () => {
+    const clock = () => helsinki(SERVICE_DATES.mondayAug17, '07:59:59');
+    render(<ChefApp clock={clock} />);
+
+    expect(screen.getByRole('time')).toHaveAttribute('dateTime', SERVICE_DATES.mondayAug17);
+    expect(screen.getByText('Forecast closed')).toBeInTheDocument();
+    expect(screen.getByText('Opens 08:00 today')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Submit forecast' })).toBeDisabled();
+  });
+
+  it('opens the same-day window at 08:00 with today as the target', () => {
+    const clock = () => helsinki(SERVICE_DATES.mondayAug17, '08:00:00');
+    render(<ChefApp clock={clock} />);
+
+    expect(screen.getByRole('time')).toHaveAttribute('dateTime', SERVICE_DATES.mondayAug17);
+    expect(screen.getByText('Forecast open')).toBeInTheDocument();
+    expect(screen.getByText('Deadline 08:30 today')).toBeInTheDocument();
+  });
+
+  it('shows no open window on a weekend day', () => {
+    const clock = () => helsinki(SERVICE_DATES.saturdayAug15, '12:00:00');
+    render(<ChefApp clock={clock} />);
+
+    expect(screen.getByText('Forecast closed')).toBeInTheDocument();
+    expect(screen.getByText('Opens 08:30 on the previous service day')).toBeInTheDocument();
+  });
+
+  it('renders the advance-window deadline badge after 08:30', () => {
     const clock = () => helsinki(SERVICE_DATES.mondayAug17, '15:37:00');
     render(<ChefApp clock={clock} />);
 
-    expect(screen.getByText('Deadline 08:30 on service day')).toBeInTheDocument();
-    expect(screen.queryByText('Deadline 09:00 on service day')).not.toBeInTheDocument();
+    expect(screen.getByText('Deadline midnight tonight')).toBeInTheDocument();
+    expect(screen.queryByText('Deadline 08:30 today')).not.toBeInTheDocument();
   });
 
-  it('counts down to Tuesday 08:30 Helsinki when Monday afternoon targets Tuesday', () => {
-    const now = helsinki(SERVICE_DATES.mondayAug17, '15:37:00');
-    const status = getChefSubmissionWindowStatus(now, SERVICE_DATES.tuesdayAug18);
-    expect(status.countdownTargetIso).toBe(
-      getChefForecastCutoffInstant(SERVICE_DATES.tuesdayAug18).toISOString(),
+  it('counts down to the end of the current window, not to the service date', () => {
+    const advance = getChefSubmissionWindowStatus(
+      helsinki(SERVICE_DATES.mondayAug17, '15:37:00'),
+      SERVICE_DATES.tuesdayAug18,
     );
+    expect(advance.countdownTargetIso).toBe(
+      getChefAdvanceWindowEndInstant(SERVICE_DATES.mondayAug17).toISOString(),
+    );
+
+    const grace = getChefSubmissionWindowStatus(
+      helsinki(SERVICE_DATES.tuesdayAug18, '08:10:00'),
+      SERVICE_DATES.tuesdayAug18,
+    );
+    expect(grace.countdownTargetIso).toBe(
+      getChefGraceWindowEndInstant(SERVICE_DATES.tuesdayAug18).toISOString(),
+    );
+  });
+
+  it('targets Monday from the Friday advance window', () => {
+    const clock = () => helsinki(SERVICE_DATES.fridayAug14, '23:59:59');
+    render(<ChefApp clock={clock} />);
+
+    expect(screen.getByRole('time')).toHaveAttribute('dateTime', SERVICE_DATES.mondayAug17);
+    expect(screen.getByText('Forecast open')).toBeInTheDocument();
   });
 });

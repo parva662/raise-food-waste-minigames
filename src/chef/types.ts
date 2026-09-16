@@ -5,6 +5,8 @@ export type ChefSubmissionPhase = 'on-time' | 'late' | 'closed';
 export type ChefSubmissionWindowStatus = {
   phase: ChefSubmissionPhase;
   countdownTargetIso: string | null;
+  /** Badge text for the current window, e.g. "Deadline 08:30 today". */
+  windowLabel: string;
   message: string;
   detailLines: string[];
 };
