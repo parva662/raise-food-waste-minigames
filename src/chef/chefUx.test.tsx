@@ -165,6 +165,36 @@ describe('chef forecast UX', () => {
     expect(screen.getByText(CHEF_INTEGER_RANGE_ERROR)).toBeInTheDocument();
   });
 
+  it('rejects 1001 on every required editable forecast and communicates the 0 to 1000 range', async () => {
+    const user = userEvent.setup();
+
+    for (const field of ['Expected customers', 'Main', 'Vegetarian', 'Soup'] as const) {
+      cleanup();
+      renderChef();
+      const input =
+        field === 'Expected customers' ? getExpectedCustomersInput() : getCategoryInput(field);
+      await user.click(input);
+      await user.paste('1001');
+      expect(screen.getByText(CHEF_INTEGER_RANGE_ERROR)).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'Submit forecast' })).toBeDisabled();
+    }
+  });
+
+  it('accepts 0 and 1000 as valid whole-number forecasts', async () => {
+    const user = userEvent.setup();
+    renderChef();
+
+    await fillAllForecastFields(user, {
+      customers: '1000',
+      main: '0',
+      vegetarian: '1000',
+      soup: '0',
+    });
+
+    expect(screen.getByRole('button', { name: 'Submit forecast' })).not.toBeDisabled();
+    expect(screen.queryByText(CHEF_INTEGER_RANGE_ERROR)).not.toBeInTheDocument();
+  });
+
   it('uses visible label for expected customers aligned with menu rows', () => {
     renderChef();
     const input = getExpectedCustomersInput();

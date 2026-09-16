@@ -186,6 +186,43 @@ describe('selectForecastsForDate', () => {
     expect(selected[0]!.forecastMain).toBe(44);
   });
 
+  it('compares submission instants chronologically rather than by ISO string layout', () => {
+    const { valid } = parseGameBusChefForecastActivities([
+      buildAnonymizedChefForecastActivity({
+        id: 'offset-earlier',
+        actorId: 'user-a',
+        actorName: 'Aino Virtanen',
+        targetDate: mondayServiceDate,
+        submittedAt: '2026-08-17T08:15:00+03:00',
+        forecastMain: 40,
+      }),
+      buildAnonymizedChefForecastActivity({
+        id: 'utc-later',
+        actorId: 'user-a',
+        actorName: 'Aino Virtanen',
+        targetDate: mondayServiceDate,
+        submittedAt: '2026-08-17T05:20:00.000Z',
+        forecastMain: 44,
+      }),
+    ]);
+
+    expect('2026-08-17T08:15:00+03:00'.localeCompare('2026-08-17T05:20:00.000Z')).toBeGreaterThan(0);
+    expect(selectCurrentUserForecastForDate(valid, mondayServiceDate, 'user-a')?.forecastMain).toBe(44);
+    expect(selectForecastsForDate(valid, mondayServiceDate)[0]!.forecastMain).toBe(44);
+  });
+
+  it('ignores an activity from several operational days before the previous operational day', () => {
+    const { valid } = parseGameBusChefForecastActivities([
+      buildAnonymizedChefForecastActivity({
+        actorId: 'user-a',
+        targetDate: mondayServiceDate,
+        submittedAt: helsinki('2026-08-13', '20:00:00'),
+      }),
+    ]);
+
+    expect(selectForecastsForDate(valid, mondayServiceDate)).toHaveLength(0);
+  });
+
   it('returns no forecast when all submissions for an actor are after cutoff', () => {
     const { valid } = parseGameBusChefForecastActivities([
       buildAnonymizedChefForecastActivity({
@@ -202,6 +239,19 @@ describe('selectForecastsForDate', () => {
 });
 
 describe('selectCurrentUserForecastForDate', () => {
+  it('does not invent a forecast from another participant when the authenticated actor has none', () => {
+    const { valid } = parseGameBusChefForecastActivities([
+      buildAnonymizedChefForecastActivity({
+        actorId: 'user-a',
+        actorName: 'Staff One',
+        targetDate: serviceDate,
+        forecastMain: 200,
+      }),
+    ]);
+
+    expect(selectCurrentUserForecastForDate(valid, serviceDate, 'user-b')).toBeNull();
+  });
+
   it('returns only the matching authenticated actor', () => {
     const { valid } = parseGameBusChefForecastActivities([
       buildAnonymizedChefForecastActivity({

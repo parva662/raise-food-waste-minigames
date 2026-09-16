@@ -148,5 +148,5 @@ features/
 
 ## Related reading
 
-- Automated tests: Vitest (`npm run test:run`); see [`testing/README.md`](testing/README.md).
+- Automated tests: Vitest (`npm run test:run`); see [`testing/README.md`](testing/README.md). Kitchen Forecast Gherkin → test map: [`testing/KITCHEN_FORECAST_ACCEPTANCE_COVERAGE.md`](testing/KITCHEN_FORECAST_ACCEPTANCE_COVERAGE.md).
 - Do not assume Gherkin files are executed in CI until a runner is explicitly added.

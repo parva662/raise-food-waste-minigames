@@ -43,3 +43,21 @@ export function isChefForecastActivityEligible(forecast: GameBusChefForecast): b
 export function chefForecastSubmissionSortKey(forecast: GameBusChefForecast): string {
   return forecast.submittedAt ?? forecast.createdAt ?? '';
 }
+
+/** Milliseconds since epoch for the activity's submission instant, independent of ISO string layout. */
+export function chefForecastSubmissionInstantMs(forecast: GameBusChefForecast): number | null {
+  const iso = chefForecastSubmissionSortKey(forecast);
+  if (!iso) return null;
+  const ms = Date.parse(iso);
+  return Number.isNaN(ms) ? null : ms;
+}
+
+/** Chronological compare: later submission is greater. Unparseable instants sort as earliest. */
+export function compareChefForecastSubmissionTime(
+  left: GameBusChefForecast,
+  right: GameBusChefForecast,
+): number {
+  const leftMs = chefForecastSubmissionInstantMs(left) ?? Number.NEGATIVE_INFINITY;
+  const rightMs = chefForecastSubmissionInstantMs(right) ?? Number.NEGATIVE_INFINITY;
+  return leftMs - rightMs;
+}

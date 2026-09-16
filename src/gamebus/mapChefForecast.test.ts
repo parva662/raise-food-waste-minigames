@@ -147,6 +147,21 @@ describe('mapChefForecast / buildChefActivityMessage', () => {
     expect(props.targetDate).toEqual({ value: '2026-07-29' });
     expect(props.timingStatus).toEqual({ value: 'on-time' });
     expect(props.submittedAt).toEqual({ value: '2026-07-28T12:00:00.000Z' });
+    expect(String(props.submittedAt.value)).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/);
+    expect(String(props.targetDate.value)).not.toBe(String(props.submittedAt.value).slice(0, 10));
+  });
+
+  it('records the service date being forecast, not the day the form was filled', () => {
+    const advanceSubmission: ChefForecastSubmission = {
+      targetDate: '2026-08-17',
+      timingStatus: 'on-time',
+      submittedAt: '2026-08-14T12:00:00.000Z',
+    };
+    const msg = buildChefActivityMessage(taskFixture, advanceSubmission, draft, slots);
+    const props = propertyMap(msg);
+    expect(props.targetDate).toEqual({ value: '2026-08-17' });
+    expect(props.submittedAt).toEqual({ value: '2026-08-14T12:00:00.000Z' });
+    expect(props.targetDate.value).not.toBe('2026-08-14');
   });
 
   it('submits main, vegetarian, soup and dessert quantities', () => {
@@ -220,9 +235,12 @@ describe('mapChefForecast / buildChefActivityMessage', () => {
     expect(keys).not.toContain('confidence');
     expect(keys).not.toContain('notes');
     expect(keys).not.toContain('result');
+    expect(keys).not.toContain('accuracy');
     expect(keys).not.toContain('points');
     expect(keys).not.toContain('badge');
     expect(keys).not.toContain('waste');
+    expect(keys).not.toContain('actors');
+    expect(keys).not.toContain('provider');
   });
 
   it('uses GameBus JSON object shape { template, obj: { value } }', () => {
@@ -455,6 +473,41 @@ describe('chefForecast optional properties', () => {
 });
 
 describe('chef integer validation', () => {
+  it.each([
+    ['Expected customers', 0],
+    ['Expected customers', 120],
+    ['Expected customers', 1000],
+    ['Main', 0],
+    ['Main', 1000],
+    ['Vegetarian', 30],
+    ['Soup menu', 40],
+  ])('accepts %s = %s', (field, quantity) => {
+    expect(validateChefInteger(quantity, field)).toEqual({ ok: true, value: quantity });
+  });
+
+  it.each(['Expected customers', 'Main', 'Vegetarian', 'Soup menu'])(
+    'rejects 1001 for %s and communicates the 0–1000 range',
+    (field) => {
+      const result = validateChefInteger(1001, field);
+      expect(result.ok).toBe(false);
+      if (!result.ok) expect(result.error).toBe(CHEF_INTEGER_RANGE_ERROR);
+    },
+  );
+
+  it.each(['Expected customers', 'Main', 'Vegetarian', 'Soup menu'])(
+    'rejects -1 for %s',
+    (field) => {
+      expect(validateChefInteger(-1, field).ok).toBe(false);
+    },
+  );
+
+  it.each(['Expected customers', 'Main', 'Vegetarian', 'Soup menu'])(
+    'rejects 12.5 for %s',
+    (field) => {
+      expect(validateChefInteger('12.5', field).ok).toBe(false);
+    },
+  );
+
   it('accepts valid integers for expected customers and quantities', () => {
     expect(validateChefInteger(0, 'Expected customers')).toEqual({ ok: true, value: 0 });
     expect(validateChefInteger(500, 'Main portions')).toEqual({ ok: true, value: 500 });

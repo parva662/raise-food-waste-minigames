@@ -1,5 +1,5 @@
 import {
-  chefForecastSubmissionSortKey,
+  compareChefForecastSubmissionTime,
   isChefForecastActivityEligible,
 } from '../../services/chefForecastEligibilityPolicy';
 import type { GameBusChefForecast } from './gameBusChefForecastTypes';
@@ -14,12 +14,7 @@ function dedupeForecastsByActor(
   const byActor = new Map<string, GameBusChefForecast>();
   for (const forecast of forecasts) {
     const existing = byActor.get(forecast.actorId);
-    if (
-      !existing ||
-      chefForecastSubmissionSortKey(forecast).localeCompare(
-        chefForecastSubmissionSortKey(existing),
-      ) > 0
-    ) {
+    if (!existing || compareChefForecastSubmissionTime(forecast, existing) > 0) {
       byActor.set(forecast.actorId, forecast);
     }
   }
@@ -55,9 +50,7 @@ export function selectCurrentUserForecastForDate(
   if (matching.length === 0) return null;
   if (matching.length === 1) return matching[0]!;
 
-  return [...matching].sort((left, right) =>
-    chefForecastSubmissionSortKey(left).localeCompare(chefForecastSubmissionSortKey(right)),
-  )[matching.length - 1]!;
+  return [...matching].sort(compareChefForecastSubmissionTime)[matching.length - 1]!;
 }
 
 /** @deprecated Prefer {@link selectForecastsForDate} for multi-staff closeout display. */

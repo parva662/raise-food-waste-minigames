@@ -137,8 +137,20 @@ describe('kitchen forecast page timing UX', () => {
     const clock = () => helsinki(SERVICE_DATES.saturdayAug15, '12:00:00');
     render(<ChefApp clock={clock} />);
 
+    expect(screen.getByRole('time')).toHaveAttribute('dateTime', SERVICE_DATES.mondayAug17);
     expect(screen.getByText('Forecast closed')).toBeInTheDocument();
     expect(screen.getByText('Opens 08:30 on the previous service day')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Submit forecast' })).toBeDisabled();
+  });
+
+  it('shows no open window on Sunday either', () => {
+    const clock = () => helsinki('2026-08-16', '12:00:00');
+    render(<ChefApp clock={clock} />);
+
+    expect(screen.getByRole('time')).toHaveAttribute('dateTime', SERVICE_DATES.mondayAug17);
+    expect(screen.getByRole('time')).not.toHaveAttribute('dateTime', '2026-08-16');
+    expect(screen.getByText('Forecast closed')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Submit forecast' })).toBeDisabled();
   });
 
   it('renders the advance-window deadline badge after 08:30', () => {
