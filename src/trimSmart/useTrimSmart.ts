@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useLayoutEffect, useRef, useState } from 'react';
 import { isGameBusEmbed } from '../gamebus/detectEmbed';
 import { tryPostTrimSmartActivity } from '../gamebus/bridge';
 import { useGameBusEmbed } from '../gamebus/useGameBusEmbed';
@@ -72,6 +72,7 @@ export function useTrimSmart() {
   const [attemptPostKey, setAttemptPostKey] = useState<string | null>(null);
   const attemptCounterRef = useRef(0);
   const stepHeadingRef = useRef<HTMLHeadingElement | null>(null);
+  const [stepFocusRequest, setStepFocusRequest] = useState(0);
 
   const ingredientIssues = validateIngredientStepInput({
     ingredientCategory,
@@ -94,10 +95,15 @@ export function useTrimSmart() {
   const currentIngredientOrdinal = completedIngredients.length + 1;
 
   const focusStepHeading = useCallback(() => {
-    requestAnimationFrame(() => {
-      stepHeadingRef.current?.focus();
-    });
+    setStepFocusRequest((request) => request + 1);
   }, []);
+
+  // Focus lands with the commit that renders the new step, so nothing can be
+  // typed into the new step before focus moves.
+  useLayoutEffect(() => {
+    if (stepFocusRequest === 0) return;
+    stepHeadingRef.current?.focus();
+  }, [stepFocusRequest]);
 
   const goToStep = useCallback(
     (next: TrimSmartStep) => {

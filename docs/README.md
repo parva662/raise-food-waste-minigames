@@ -40,7 +40,7 @@ No single legacy root file competes with this structure.
    - **observed / live GameBus behavior** (test or production environment; verify independently).
 7. **Never silently resolve** an open product decision—record uncertainty or ask the product owner.
 8. **Never modify an approved product contract** merely to match existing code.
-9. **Update documentation** when an agreed product or architecture decision changes.
+9. **Update documentation** when an agreed product or architecture decision changes. The mandatory synchronization workflow and the documentation consistency check are defined in [`/PROJECT_RULES.md`](../PROJECT_RULES.md#documentation-synchronization); follow it in the same change, not as a follow-up.
 
 ---
 
@@ -84,6 +84,7 @@ docs/
 
 features/
 ├── student/student-lunch.feature          ← APPROVED PRODUCT TARGET
+├── kitchen/kitchen-forecast.feature       ← APPROVED PRODUCT TARGET
 └── waste-challenges/trim-smart.feature    ← WORKING / PROPOSED (not v1)
 ```
 
@@ -130,6 +131,7 @@ features/
 | Game / area | Canonical path | Status |
 |-------------|----------------|--------|
 | Student Lunch | [`../features/student/student-lunch.feature`](../features/student/student-lunch.feature) | **APPROVED PRODUCT TARGET** |
+| Kitchen Forecast | [`../features/kitchen/kitchen-forecast.feature`](../features/kitchen/kitchen-forecast.feature) | **APPROVED PRODUCT TARGET** — one `@pending` rollover edge case deferred |
 | Trim Smart (target redesign) | [`../features/waste-challenges/trim-smart.feature`](../features/waste-challenges/trim-smart.feature) | **WORKING / PROPOSED** — not v1 |
 
 ---

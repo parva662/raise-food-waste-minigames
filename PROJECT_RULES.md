@@ -124,6 +124,45 @@ For new games or product changes:
 5. Once the logic is agreed, provide one consolidated Cursor prompt.
 6. Keep scientific/performance metrics separate from GameBus gamification mechanics when they are conceptually different.
 
+## Documentation synchronization
+
+Documentation is part of implementation, not an optional follow-up.
+
+Whenever an approved product, technical, integration, route, data-model, configuration, testing, or architecture change is implemented:
+
+1. Inspect all repository documentation that may describe the changed behaviour.
+2. Update every affected canonical document in the same change.
+3. Update relevant README/index/status files when their links, status, scope, terminology, or descriptions are affected.
+4. Keep the following layers synchronized where applicable:
+   - `features/` — acceptance/product behaviour
+   - `docs/product/` — human-readable product behaviour
+   - `docs/contracts/` — GameBus/external technical contracts
+   - `docs/current-state/IMPLEMENTATION_STATUS.md` — actual implementation status
+   - `docs/current-state/ROADMAP.md` — when roadmap status/order genuinely changes
+   - relevant README/index files
+   - architecture documentation when architecture changes
+   - testing documentation when test architecture/workflow changes
+5. Do not knowingly leave stale canonical documentation behind after implementing an approved change.
+
+Exceptions:
+
+- Do not rewrite historical files under `docs/archive/` merely to reflect current behaviour.
+- Repository documentation changes do NOT authorize changes to live/external GameBus configuration.
+- If an external contract is genuinely uncertain or has not been approved, do not invent a contract change; report the conflict.
+- If the product owner explicitly defers a documentation update, record that deferral clearly.
+
+Inspecting documentation on every change does not mean editing documentation on every change. When behaviour is unchanged — for example a deterministic test-implementation fix — leave product documentation untouched and report that the consistency check found no changes necessary.
+
+Before declaring implementation complete, perform a documentation consistency check:
+
+- search for superseded terminology
+- search for old timing/date rules
+- search for old routes
+- search for old limits/configuration values
+- search for stale implementation-status statements related to the changed area
+- verify canonical product docs, approved feature specifications, contracts where applicable, current implementation, and status documentation do not contradict one another
+- report any intentional remaining mismatch
+
 ## Uncertainty
 
 If information is uncertain:
@@ -141,6 +180,7 @@ For implementation work, use the repository's relevant checks. Unless the task c
 - relevant automated tests
 - production build
 - any project-specific validation commands affected by the change
+- the documentation consistency check described in **Documentation synchronization**, covering every affected canonical document and every affected README/index file
 
 Do not weaken, delete, or bypass tests merely to make the suite pass.
 
