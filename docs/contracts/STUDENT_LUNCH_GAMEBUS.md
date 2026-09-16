@@ -1,138 +1,96 @@
-# GameBus lunch declaration — integration contract
+# Student Lunch — `studentLunchCheckin` GameBus contract
 
-**Status:** Design document (implementation not started)  
-**Source of truth:** React app `gamebus-lunch-dnd-v2` (`src/` as of commit `137d30b` and later)  
-**Protocol reference:** Louar `gamebus-minigame-demo` (`schemas.ts`, `embed/task`) — protocol only, not UI  
-**Live GameBus config audit:** `GAMEBUS_TEMPLATE_EXPORT.json` / `GAMEBUS_CONFIG_SNAPSHOT.md` (test env, 2026-07-27)
+**Status:** **EXTERNAL / GAMEBUS CONTRACT** — repository mapper implemented; live GameBus template migration still manual and pending.
+**Approved product behaviour:** [`../../features/student/student-lunch.feature`](../../features/student/student-lunch.feature) (**APPROVED PRODUCT TARGET**).
+**Implemented technical behaviour:** current `src/` on `main` — `src/gamebus/mapStudentLunchCheckin.ts`, `src/gamebus/resolveActivityProperties.ts`, `src/gamebus/buildActivityMessage.ts`, `src/gamebus/propertySchemas.ts`.
+**Live GameBus configuration:** not verified from this repository. The last recorded admin audit was taken from the test environment on 2026-07-27 and is not stored here.
 
----
+This document has four distinct layers, in order:
 
-## A. Final declaration model (React)
+| Section | Layer |
+|---------|-------|
+| [A](#a-approved-product-semantics) | Approved Student Lunch product semantics |
+| [B](#b-canonical-studentluncheckin-activity-contract) | Canonical `studentLunchCheckin` ACTIVITY contract |
+| [C](#c-current-repository-implementation) | Current repository implementation |
+| [D](#d-manual--live-gamebus-work-still-required) | Manual / live GameBus admin work still required |
 
-### A.1 Persisted record: `ActiveDeclaration`
-
-Defined in `src/types/declaration.ts`. Created by `createDeclarationFromDraft` in `src/utils/declaration.ts` on successful submit.
-
-| Field | Type | Meaning |
-|-------|------|---------|
-| `studentId` | `string` | From `CANTEEN_CONFIG.studentId` (`demo-student-001`) |
-| `lunchDate` | `string` | ISO date `YYYY-MM-DD`; target meal = **tomorrow** (`getTomorrowIsoDate`) |
-| `menuCycleWeek` | `number` | 1–3 from menu resolver at submit time |
-| `menuVersion` | `string` | e.g. `2026-v1` from config |
-| `mealChoice` | `'regular' \| 'soup' \| 'no_lunch'` | Active section at submit |
-| `regularMainSelected` | `boolean` \| `undefined` | Set when `mealChoice === 'regular'`: `mainQuantity > 0` |
-| `regularVegetarianSelected` | `boolean` \| `undefined` | Set when `mealChoice === 'regular'`: `vegetarianQuantity > 0` |
-| `noLunch` | `boolean` | `true` when `mealChoice === 'no_lunch'` |
-| `selections` | `SelectionEntry[]` | Non-empty lines for selected items (see below); `[]` for no lunch |
-| `submittedAt` | `string` | ISO timestamp (first and only submit) |
-| `updatedAt` | `string` | Same as `submittedAt` (no updates in product) |
-| `includeInForecast` | `true` | Literal; no UI consumer |
-
-`SelectionEntry` (`src/types/menu.ts`): `{ itemId, name, quantity, unit }` — only items with `quantity > 0` in the active section.
-
-### A.2 Draft (pre-submit): `MealDraft` / `DraftSnapshot`
-
-Defined in `src/types/mealChoice.ts`. Held in `useLunchSelection` state.
-
-| Field | Type | Meaning |
-|-------|------|---------|
-| `mealChoice` | `'regular' \| 'soup' \| 'no_lunch' \| null` | Active section; `null` before user picks |
-| `mainQuantity` | `number` | 0…`mealSlots.main.maxQuantity` when regular active |
-| `vegetarianQuantity` | `number` | 0…`mealSlots.vegetarian.maxQuantity` when regular active |
-| `soupQuantity` | `number` | 0…`mealSlots.soup.maxQuantity` when soup active |
-| `dessertQuantity` | `number` | 0…`mealSlots.dessert.maxQuantity` when soup active |
-
-**Section rules** (`mealDraftActions.ts`, `mealChoice.ts`):
-
-- Three UI sections always visible; only one `mealChoice` active.
-- Switching section clears all portion quantities (`draftForMealChoice`).
-- `+` on a card in another section activates that section and applies the increment.
-- **Regular** valid iff `mainQuantity > 0` OR `vegetarianQuantity > 0`.
-- **Soup** valid iff `soupQuantity > 0` OR `dessertQuantity > 0`.
-- **No lunch** valid with all quantities 0.
-
-### A.3 Daily slots: `DailyMealSlots`
-
-One main (classic), one vegetarian, one soup, one dessert per lunch day (`resolveMealSlotsForDate`). Item ids come from `menuSchedule` + `foodCatalogue`.
-
-**Max quantities (catalogue):** main/vegetarian typically **3** portions; soup **2** cups; dessert **2** pieces; classic meat items may be **6** pieces where used as main.
-
-### A.4 Field classification
-
-| Data | Category |
-|------|----------|
-| `mealChoice`, quantities, `selections`, `lunchDate`, `submittedAt` | **Product / domain** — required for GameBus activity |
-| `mealSlots.*.id`, `mealSlots.*.name` | **Domain** — map to GameBus item id/name properties |
-| `studentId` | **Local identity** — optional on GameBus if platform knows actor; include in contract for parity |
-| `menuCycleWeek`, `menuVersion`, `includeInForecast` | **Local / forecast metadata** — not required for GameBus v1 |
-| `regularMainSelected`, `regularVegetarianSelected` | **Redundant** with quantities — derivable; optional on GameBus |
-| `noLunch` | **Redundant** with `mealChoice === 'no_lunch'` — derivable |
-| `successMessage`, toast state, `initialized`, `now` | **UI-only** — not sent to GameBus |
-| `savedSnapshot`, localStorage JSON | **Local persistence** — not authoritative when embedded in GameBus |
+Do not treat older documents as authoritative over the approved `.feature` (product) or current `src/` (technical). Historical material lives in [`../archive/SPEC_LEGACY.md`](../archive/SPEC_LEGACY.md) and is **HISTORICAL** only.
 
 ---
 
-## B. Proposed GameBus activity template
+## A. Approved product semantics
+
+The `.feature` file is authoritative; this is the subset that shapes the GameBus payload.
+
+- The **authenticated GameBus student** is the participant and owner of the declaration. A student submits only for themself, and never selects or types an identity.
+- The target is the **next operational lunch service**, not calendar tomorrow. Weekends and explicitly closed / non-service days are skipped.
+- BarLaurea menus are planned well in advance. **Missing menu data does not redefine the target service date**: it may block the form, but the resolved date stands.
+- **Europe/Helsinki** is authoritative regardless of device timezone.
+- The declaration is open **before 23:59:00** Helsinki time and **closed at exactly 23:59:00**; a page left open closes without a reload.
+- The student **reviews** the declaration before one final confirmation.
+- A successful submission is **final**: no edit, no second declaration.
+- A failed submission preserves the entered values and may be retried while the window is still open.
+- In embedded mode, **GameBus persistence is authoritative**. Local storage exists only for the standalone GitHub Pages demo and is never a GameBus record.
+
+---
+
+## B. Canonical `studentLunchCheckin` ACTIVITY contract
+
+### B.1 Activity template
 
 | Field | Value |
 |-------|--------|
-| **Reference** | `studentLunchCheckin` (retain) |
+| **Slug / reference** | `studentLunchCheckin` (retained; `studentLunchCheckinV2` is **not** supported) |
 | **Label** | Student lunch check-in |
-| **Admin ID (test)** | `019f9404-88ec-7f31-89d6-8b2cbfbcab4f` |
-| **Purpose** | One-shot student declaration for tomorrow’s canteen meal (regular, soup, or no lunch) with portion quantities |
+| **Admin ID (test env, 2026-07-27 audit)** | `019f9404-88ec-7f31-89d6-8b2cbfbcab4f` |
+| **Purpose** | One-shot student declaration for the **next operational lunch service** (regular, soup, or no lunch) with portion quantities |
+| **Message type** | `ACTIVITY` only — never `SILENT_ACTIVITY` |
 
-**Modify vs replace:** **Modify** the existing template in GameBus admin by **replacing linked property templates** with the set in section C. Keep the reference `studentLunchCheckin` so Pari’s embedded task (`embedded-task-Pari`, URL in test config) does not need re-linking once the task’s `+1` activity is confirmed as this template.
+The existing template is **modified** (its linked property templates are replaced) rather than recreated, so the embedded Pari task does not need re-linking.
 
-Do **not** edit live templates from this repository; this document is the specification for a manual/admin or follow-up config change.
+### B.2 Property set
 
----
+The mapper sends **7 always-required** business properties and **up to 4 conditional** item-ID properties — a **maximum of 11** property links.
 
-## C. Property templates (proposed)
+Always sent, including when the value is zero:
 
-GameBus property values use the platform wrapper: `{ "value": <payload> }` inside each activity property’s `obj` (see section E).
+| # | Property | JSON Schema (`obj.value`) | Source | Example |
+|---|----------|---------------------------|--------|---------|
+| 1 | `targetDate` | `string`, `format: date` | resolved next operational service date | `"2026-07-28"` |
+| 2 | `mealType` | `string`, enum `regular` \| `soup` \| `no_lunch` | active meal package | `"regular"` |
+| 3 | `mainQuantity` | `integer`, `minimum: 0`, `maximum: 6` | Main stepper | `2` |
+| 4 | `vegetarianQuantity` | `integer`, `minimum: 0`, `maximum: 6` | Vegetarian stepper | `0` |
+| 5 | `soupQuantity` | `integer`, `minimum: 0`, `maximum: 6` | Soup stepper | `0` |
+| 6 | `dessertQuantity` | `integer`, `minimum: 0`, `maximum: 6` | Dessert stepper | `0` |
+| 7 | `submittedAt` | `string`, `format: date-time` | submission timestamp | `"2026-07-27T16:00:00.000Z"` |
 
-All numeric quantity schemas: **integer**, **minimum 0**, **maximum** = per-slot `maxQuantity` from catalogue (use **6** as global max if admin requires one cap; app clamps per item).
+Sent only when the matching quantity is greater than zero, and **omitted entirely** otherwise:
 
-| Reference | Label | Required | JSON Schema (`value`) | React source | Example |
-|-----------|-------|----------|----------------------|--------------|---------|
-| `targetDate` | Target date | yes | `string`, `format: date` | `lunchDate` | `"2026-07-28"` |
-| `mealType` | Meal type | yes | `string`, `enum`: `regular`, `soup`, `no_lunch` | `mealChoice` | `"regular"` |
-| `mainItemId` | Main dish id | optional link | `string`, `minLength: 1` | `mealSlots.main.id` when `mainQuantity > 0` | `"meatballs"` |
-| `mainQuantity` | Main quantity | yes | `integer`, `minimum: 0`, `maximum: 6` | `mainQuantity` | `2` |
-| `vegetarianItemId` | Vegetarian dish id | optional link | `string`, `minLength: 1` | `mealSlots.vegetarian.id` when `vegetarianQuantity > 0` | `"pasta-primavera"` |
-| `vegetarianQuantity` | Vegetarian quantity | yes | `integer`, `minimum: 0`, `maximum: 6` | `vegetarianQuantity` | `0` |
-| `soupItemId` | Soup id | optional link | `string`, `minLength: 1` | `mealSlots.soup.id` when `soupQuantity > 0` | `"tomato-soup"` |
-| `soupQuantity` | Soup quantity | yes | `integer`, `minimum: 0`, `maximum: 6` | `soupQuantity` | `1` |
-| `dessertItemId` | Dessert id | optional link | `string`, `minLength: 1` | `mealSlots.dessert.id` when `dessertQuantity > 0` | `"yogurt-berries"` |
-| `dessertQuantity` | Dessert quantity | yes | `integer`, `minimum: 0`, `maximum: 6` | `dessertQuantity` | `0` |
-| `submittedAt` | Submitted at | yes | `string`, `format: date-time` | `submittedAt` | `"2026-07-27T15:30:00.000Z"` |
+| Property | JSON Schema (`obj.value`) | Condition |
+|----------|---------------------------|-----------|
+| `mainItemId` | `string`, `minLength: 1` | `mainQuantity > 0` |
+| `vegetarianItemId` | `string`, `minLength: 1` | `vegetarianQuantity > 0` |
+| `soupItemId` | `string`, `minLength: 1` | `soupQuantity > 0` |
+| `dessertItemId` | `string`, `minLength: 1` | `dessertQuantity > 0` |
 
-\* **Item ids:** Include only when the corresponding quantity is **> 0**. Omit the property entirely when not selected. No sentinels (`noMain`, `noVeg`, etc.). Local scoring fields are **not** used by the React app and are **not** sent on ACTIVITY.
+Item IDs are generated catalogue slugs from `reference/Example_menu.xlsx` (via `src/data/generated/`). There are no nulls, no empty strings, and **no sentinel values** such as `noMain`, `noVeg`, `noSoup`, or `noDessert`.
 
-**Justification:** Replaces sentinel strings (`noVeg`, `noSoup`, `noDessert`) and ambiguous `comingStatus` with explicit `mealType` + numeric quantities. Matches the React model directly.
+Quantity schemas use `maximum: 6` as a single admin-side cap; the application clamps each item to its own configured per-slot maximum. The final business maximum is still an open product decision (`@pending @quantity` in the `.feature`).
 
----
+Property order follows `orderedPropertyRefsForDraft`: `targetDate`, `mealType`, then each package slot as `<slot>ItemId?` immediately before `<slot>Quantity`, then `submittedAt`.
 
-## D. Migration from current GameBus `studentLunchCheckin` properties
+### B.3 Not part of this contract
 
-| Current property | Action | Reason |
-|------------------|--------|--------|
-| `targetDate` | **Retain** | Same semantics as `lunchDate` |
-| `comingStatus` | **Remove** → `mealType` | `no_lunch` vs coming is expressed by `mealType`; no separate status string |
-| `selectedMain` | **Remove** → `mainItemId` + `mainQuantity` | Quantity model; no encoded selection string |
-| `selectedVegetarianOrNoVeg` | **Remove** → `vegetarianItemId` + `vegetarianQuantity` | No `noVeg` sentinel |
-| `selectedSoupOrNoSoup` | **Remove** → `soupItemId` + `soupQuantity` | No `noSoup` sentinel |
-| `selectedDessertOrNoDessert` | **Remove** → `dessertItemId` + `dessertQuantity` | No `noDessert` sentinel |
-| `submittedAt` | **Retain** | Same |
-| — | **Add** `mealType`, four quantities, optional item ids | Align with React quantity model |
+| Excluded | Reason |
+|----------|--------|
+| `studentId` | The authenticated GameBus user is the participant. Identity is never a business property on the ACTIVITY. |
+| `actors`, `provider` | Must not be added to represent identity either. |
+| `timingStatus` | **Student Lunch has no `timingStatus` property.** It is valid on `chefForecast`, which is a different product; do not link it to `studentLunchCheckin` and do not add it to the mapper. |
+| `basePoints`, `timingAdjustment`, `totalPoints` | Local scoring concepts; not sent. |
+| `comingStatus`, `selectedMain`, `selectedVegetarianOrNoVeg`, `selectedSoupOrNoSoup`, `selectedDessertOrNoDessert` | Superseded legacy properties (see [D.1](#d1-admin-migration-manual)). |
+| `menuCycleWeek`, `menuVersion`, `includeInForecast`, `regularMainSelected`, `regularVegetarianSelected`, `noLunch`, `selections` | Internal record fields, redundant with `mealType` and the quantities, or local forecast metadata. |
 
-Until admin templates are updated, **live ingest will not match** the repository mapper. The React app targets the final twelve-property set only.
-
----
-
-## E. Example `ACTIVITY` payloads
-
-**Protocol shape** (from `gamebus-minigame-demo` `EmbeddedActivityMessage` + `activitySchema`):
+### B.4 Message shape
 
 ```json
 {
@@ -142,22 +100,29 @@ Until admin templates are updated, **live ingest will not match** the repository
     "start": "<ISO-8601 datetime>",
     "end": "<ISO-8601 datetime>",
     "properties": [
-      { "template": "<propertyReference>", "obj": { "value": <schema-conformant> } }
+      { "template": "<propertySlug>", "obj": { "value": <schema-conformant> } }
     ]
   }
 }
 ```
 
-- Child sends via `window.parent.postMessage(payload, targetOrigin)`.
-- Use **`ACTIVITY`** only (not `SILENT_ACTIVITY`) so the parent closes the modal.
-- `start` / `end`: recommend `submittedAt` for `start` and `start + 1 minute` for `end` unless task rules require otherwise.
-- **Placeholder:** replace `studentLunchCheckin` and property references with admin-confirmed refs if they differ.
+- Each property is `{ "template": "<slug>", "obj": { "value": … } }` — **not** `{ "template": "<slug>", "value": … }`.
+- `start` is `submittedAt`; `end` is `start + 1 minute`.
+- The child posts once via `window.parent.postMessage`; the parent closes the modal on an accepted `ACTIVITY`.
 
-Assume lunch date **2026-07-28**, slots: main `meatballs`, vegetarian `pasta-primavera`, soup `tomato-soup`, dessert `yogurt-berries`, submit at `2026-07-27T16:00:00.000Z` (on-time).
+Embed handshake, as implemented in `src/gamebus/bridge.ts`:
 
-### 1. Regular lunch — main only
+1. Child registers its `message` listener and posts `{ type: 'IFRAME_READY' }`, retrying until a TASK arrives.
+2. Parent posts `{ type: 'TASK', data: { activityTemplates, … } }`; the first TASK wins and later duplicates are ignored.
+3. Parent optionally posts `{ type: 'INPUT_COLLECTIONS', data: { … } }`, which carries the authenticated user under `inputCollectionPari.me`.
+4. Child posts one `ACTIVITY`.
+5. Parent closes the modal. There is no acknowledgement message, so closure is the only success signal available to the child.
 
-`mealType` `regular`, main × 2, vegetarian × 0.
+### B.5 Examples
+
+Target service **2026-07-28** (Tuesday), declared on Monday 2026-07-27 at `16:00:00.000Z`. Slots: main `meatballs`, vegetarian `pasta-primavera`, soup `tomato-soup`, dessert `yogurt-berries`.
+
+#### Regular lunch — main only (8 properties)
 
 ```json
 {
@@ -180,31 +145,7 @@ Assume lunch date **2026-07-28**, slots: main `meatballs`, vegetarian `pasta-pri
 }
 ```
 
-### 2. Regular lunch — vegetarian only
-
-`mainQuantity` 0, `vegetarianQuantity` 1.
-
-Same as (1) with `"mainQuantity": { "value": 0 }`, `"vegetarianQuantity": { "value": 1 }`.
-
-### 3. Regular lunch — main and vegetarian
-
-`mainQuantity` 1, `vegetarianQuantity` 2.
-
-### 4. Soup lunch — soup only
-
-`mealType` `soup`, `soupQuantity` 2, `dessertQuantity` 0, main/veg quantities 0.
-
-### 5. Soup lunch — dessert only
-
-`mealType` `soup`, `soupQuantity` 0, `dessertQuantity` 1.
-
-### 6. Soup lunch — soup and dessert
-
-`mealType` `soup`, `soupQuantity` 1, `dessertQuantity` 1.
-
-### 7. No lunch
-
-`mealType` `no_lunch`, all quantities 0, **no item-id properties**.
+#### No lunch (7 properties, no item IDs)
 
 ```json
 {
@@ -225,126 +166,80 @@ Same as (1) with `"mainQuantity": { "value": 0 }`, `"vegetarianQuantity": { "val
   }
 }
 ```
----
 
-## F. One-shot submission architecture
+Other combinations follow the same pattern:
 
-| Rule | Behavior |
-|------|----------|
-| Pre-submit | User edits draft freely; Helsinki window enforced (`menuInteractive` false when closed or already saved) |
-| Submit trigger | Single user action → build `ActiveDeclaration` → map to `ACTIVITY` |
-| Message type | **`ACTIVITY` only** — closes iframe per demo documentation |
-| No `SILENT_ACTIVITY` | Never used for this product |
-| Duplicate click | Bridge sets `submissionInFlight` / `hasPostedActivity`; ignore further submits |
-| Success | Mark `gameBusSubmitComplete`; lock UI (mirror `hasSavedDeclaration`); optional localStorage write non-authoritative |
-| Failure | Show error; allow retry only if parent did not accept (no local “saved” state) |
-| Post-success | No second `ACTIVITY`; repository `upsert` must not drive a second GameBus write |
-| Persistence | GameBus activity store is authoritative in embed mode; localStorage is for standalone GitHub Pages demo |
+| Case | `mealType` | Item IDs present | Property count |
+|------|-----------|------------------|----------------|
+| Regular, vegetarian only | `regular` | `vegetarianItemId` | 8 |
+| Regular, main and vegetarian | `regular` | `mainItemId`, `vegetarianItemId` | 9 |
+| Soup, soup only | `soup` | `soupItemId` | 8 |
+| Soup, dessert only | `soup` | `dessertItemId` | 8 |
+| Soup, soup and dessert | `soup` | `soupItemId`, `dessertItemId` | 9 |
 
-**Parent protocol (reference demo):**
-
-1. Child: `postMessage({ type: 'IFRAME_READY' }, '*')` on load (optionally `{ data: { height } }`).
-2. Parent: `postMessage({ type: 'TASK', data: { … activityTemplates, … } })`.
-3. Parent (optional): `postMessage({ type: 'INPUT_COLLECTIONS', data: { … } })`.
-4. Child: `postMessage({ type: 'ACTIVITY', data: { … } })` once.
-5. Parent closes modal on accepted `ACTIVITY`.
-
-Origin validation: production should use `event.origin` allowlist (`providerPari` → `http://localhost:5193` in test); demo uses `'*'` — tighten in implementation.
+The theoretical maximum of 11 properties requires positive quantities in both packages at once, which the mutually exclusive package rule prevents.
 
 ---
 
-## G. React integration architecture (proposed, not implemented)
+## C. Current repository implementation
 
-```
-src/gamebus/
-  types.ts              # EmbeddedTaskMessage, ACTIVITY payload TS types (mirror schemas.ts)
-  detectEmbed.ts        # isGameBusEmbed(): parent !== window || URL flag
-  bridge.ts             # subscribe message listener, post IFRAME_READY, hold task + input collections
-  mapDeclarationToActivity.ts  # ActiveDeclaration + DailyMealSlots → ACTIVITY data
-  submitGuard.ts        # in-flight + hasPosted flags
-  useGameBusEmbed.ts    # hook: ready state, task template ref, submitActivity(declaration)
-  index.ts              # public API
-```
+| Concern | Implementation on `main` |
+|---------|--------------------------|
+| Route | Default / empty hash → student mode (`src/routing/appMode.ts`) |
+| Target service date | `src/services/studentLunchServiceDate.ts` — first operational day after the Helsinki operational date, skipping weekends and explicitly closed days via `isOperationalServiceDay` |
+| Menu unavailable | Blocks the form and submission; the resolved `targetDate` is unchanged |
+| Deadline | `CANTEEN_CONFIG` 23:59:00 Europe/Helsinki on the calendar day before the target service; `submissionWindow` closes when `now >= deadline` (also once the service day itself begins) |
+| Flow | Edit → Review → Confirm in `src/hooks/useLunchSelection.ts` |
+| Submit states | `idle` / `sending` / `failed` / `success`; failure keeps the draft and allows retry |
+| Duplicate safety | Bridge in-flight and `hasPosted` guards reject a second post as `duplicate` |
+| Mapping | `mapStudentLunchCheckin` → `buildActivityMessage` → `ACTIVITY` with `start` = `submittedAt`, `end` = `+1 min` |
+| TASK validation | `resolveActivityProperties` matches templates by **slug**, requires all 7 always-required refs to be linked, and fails a submission if a needed item-ID ref is missing from the template |
+| Persistence (embedded) | The ACTIVITY is the only record written; the app does **not** write local storage in embedded mode |
+| Persistence (standalone) | `LocalStorageDeclarationRepository` only, for the GitHub Pages demo |
 
-**Hook integration (minimal touch to product):**
+### C.1 Internal legacy that is not part of the GameBus contract
 
-- `useLunchSelection.submit`: if `isGameBusEmbed()`, call `mapDeclarationToActivity` + `bridge.postActivity` instead of/in addition to `declarationRepository.upsertDeclaration`.
-- Standalone: unchanged localStorage path when `!isGameBusEmbed()`.
-- Inject `Clock` and optional `DeclarationRepository` remain as today for tests.
-
-**Modules:**
-
-| Module | Responsibility |
-|--------|----------------|
-| `types.ts` | Protocol typings aligned with Zod schema in demo |
-| `bridge.ts` | `window.addEventListener('message')`, state for TASK / INPUT_COLLECTIONS |
-| `mapDeclarationToActivity.ts` | Pure mapper from `ActiveDeclaration` + slots |
-| `submitGuard.ts` | `assertCanPost()`, `markPosting()`, `markPosted()` |
-| `useGameBusEmbed.ts` | Compose bridge + guard for React |
-| `detectEmbed.ts` | Mode switch for GitHub Pages vs iframe |
+`CANTEEN_CONFIG.studentId` (`demo-student-001`) still exists and keys the local storage record as `lunch-declaration-<studentId>-<lunchDate>`. It is a **standalone/demo implementation detail**, not an identity contract: it is never included in the ACTIVITY, and `mapStudentLunchCheckin.test.ts` asserts its absence. The `ActiveDeclaration` record likewise keeps local fields (`menuCycleWeek`, `menuVersion`, `includeInForecast`, `selections`) that are not sent to GameBus.
 
 ---
 
-## H. Routing and hosting
+## D. Manual / live GameBus work still required
 
-| Approach | Recommendation |
-|----------|----------------|
-| Dedicated `/embed/task` **inside React** | **Not required** — GameBus loads whatever URL is configured on the task (today `http://localhost:5193/embed/task` on the **host** app) |
-| Query param e.g. `?gamebus=1` | **Optional** for local testing when not in iframe |
-| **Iframe detection** | **Primary:** `window.parent !== window` → GameBus mode |
+None of this can be done from this repository, and none of it has been verified here.
 
-**Least complex reliable approach:**
+### D.1 Admin migration (manual)
 
-1. Build React lunch app as static assets (existing Vite build).
-2. Deploy so the **same origin** registered in GameBus (`providerPari`) serves the SPA at the task URL path (host responsibility: Svelte shell, static server rewrite, or CDN path).
-3. React detects embed context; no Svelte port of lunch UI.
+Modify the existing `studentLunchCheckin` template; do not delete old property templates yet.
 
-Port **5193** and SvelteKit are **demo/hosting choices**, not protocol requirements.
+| Current linked property | Action | Result |
+|-------------------------|--------|--------|
+| `targetDate` | retain | `targetDate` |
+| `submittedAt` | retain | `submittedAt` |
+| `comingStatus` | replace | `mealType` |
+| `selectedMain` | replace | `mainItemId` + `mainQuantity` |
+| `selectedVegetarianOrNoVeg` | replace | `vegetarianItemId` + `vegetarianQuantity` |
+| `selectedSoupOrNoSoup` | replace | `soupItemId` + `soupQuantity` |
+| `selectedDessertOrNoDessert` | replace | `dessertItemId` + `dessertQuantity` |
 
----
+Result: 7 required links plus 4 optional item-ID links. **Do not add a `timingStatus` link to this template.**
 
-## I. Open questions
+Full JSON Schemas: `STUDENT_LUNCH_CHECKIN_PROPERTY_SCHEMAS` in `src/gamebus/propertySchemas.ts`.
 
-### Blockers
+Until the admin templates match, live ingest will not accept what the repository mapper sends.
 
-| # | Question | Notes |
+### D.2 Verification checklist (live)
+
+1. Confirm the Pari embedded task's `activityTemplates[0]` slug is `studentLunchCheckin`.
+2. Confirm optional item-ID omission and enum validation pass on ingest.
+3. Confirm the stored activity is associated with the **authenticated participant** with no `studentId` property present.
+4. Confirm exactly one activity per completed declaration, and modal closure on accept.
+5. Production hardening: `postMessage` target origin allowlist instead of `'*'`, iframe and mobile checks.
+
+### D.3 Open questions
+
+| # | Question | Status |
 |---|----------|--------|
-| B1 | **GameBus admin:** when will `studentLunchCheckin` property templates be updated to section C? | Mapper cannot validate against live schemas until admin matches contract |
-| B2 | **Confirm** Pari embedded task `activityTemplates[0].reference === 'studentLunchCheckin'` | Audit showed `+1` not expanded |
+| 1 | Are `basePoints` / `totalPoints` required by platform rules, or only in-app UX? | Unresolved; nothing is sent today |
+| 2 | Exact production `postMessage` target origin | Unresolved; test environment used a localhost origin |
 
-### Non-blocking confirmations
-
-| # | Question |
-|---|----------|
-| N1 | Should `studentId` come from `INPUT_COLLECTIONS` / `/api/me` instead of `CANTEEN_CONFIG`? |
-| N2 | Exact `postMessage` target origin in production (localhost only vs deployed host)? |
-| N3 | Are `basePoints` / `totalPoints` on the activity required by platform rules, or only in-app UX? |
-
-### Safe assumptions (implement unless contradicted)
-
-- Property `obj` shape is `{ value: T }` per test-env export.
-- `TASK.data.activityTemplates[].reference` selects template for `data.template`.
-- `ACTIVITY` closes the task modal.
-- Item ids in GameBus match `foodCatalogue` ids in the React app for the pilot menu.
-
----
-
-## Reference: parent → child message handling (demo)
-
-From `gamebus-minigame-demo` `embed/task/+page.svelte`:
-
-- On mount: `IFRAME_READY`.
-- On `event.data.type === 'TASK'`: store task, default `selectedTemplate` to first `activityTemplates[].reference`.
-- On `INPUT_COLLECTIONS`: store resolved inputs.
-- Submit: `postMessage({ type: 'ACTIVITY', data: buildActivityPayload() })`.
-
-Child does **not** receive confirmation message in the demo; success is assumed when parent closes iframe. Implementation should treat close as success and optionally listen for future error events if the platform adds them.
-
----
-
-## Status (repo consolidation)
-
-- **One workflow:** `studentLunchCheckin` via `src/gamebus/mapStudentLunchCheckin.ts` (twelve logical properties; optional item IDs omitted when quantity is 0).
-- **Live GameBus** still has seven legacy linked properties until manual admin migration (`docs/current-state/ROADMAP.md`).
-- Item IDs in ACTIVITY match **generated catalogue slugs** from `reference/Example_menu.xlsx` (via `src/data/generated/`).
-- **`studentLunchCheckinV2` is not supported** in this repository.
+Resolved and no longer open: student identity comes from the authenticated GameBus user, so there is no question of sourcing a `studentId` from configuration.

@@ -39,6 +39,11 @@ Cannot be closed from this repo’s Vitest stack (no browser E2E):
 - Cross-account isolation and task reopen rules
 - Parent ACK after `postMessage` ACTIVITY
 
+### Contract documentation
+
+- [`../contracts/STUDENT_LUNCH_GAMEBUS.md`](../contracts/STUDENT_LUNCH_GAMEBUS.md) now separates approved product semantics, the canonical ACTIVITY contract, current implementation, and pending manual admin work. It documents the next-operational-service target (not calendar tomorrow), the 7 always-required + up to 4 conditional item-ID properties (maximum 11 links), and that Student Lunch has no `timingStatus` property and never sends `studentId`.
+- No live GameBus configuration was changed, and no live ingest has been verified from this repository.
+
 ### Still `@pending` in Gherkin (not silently invented)
 
 - Final business maximum quantity value (configured max remains in use)

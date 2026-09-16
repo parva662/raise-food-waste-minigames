@@ -2,9 +2,9 @@
 
 > Formerly root `NEXT_STEPS.md`. Content preserved; paths updated for the documentation layout.
 
-**Student workflow:** activity template **`studentLunchCheckin`** (twelve quantity-aware properties).  
-**Closeout workflow:** activity template **`wasteMeasurement`** (fifteen required properties — mapper implemented in repo).  
-**Chef workflow:** activity template **`chefForecast`** (twelve required properties + two optional links — mapper implemented in repo).
+- **Student workflow:** activity template **`studentLunchCheckin`** (seven always-required quantity-aware properties + up to four conditional item IDs — mapper implemented in repo).
+- **Closeout workflow:** activity template **`wasteMeasurement`** (fifteen required properties — mapper implemented in repo).
+- **Chef workflow:** activity template **`chefForecast`** (twelve required properties + two optional links — mapper implemented in repo).
 
 **References:** [`../contracts/STUDENT_LUNCH_GAMEBUS.md`](../contracts/STUDENT_LUNCH_GAMEBUS.md), [`../contracts/KITCHEN_FORECAST_GAMEBUS.md`](../contracts/KITCHEN_FORECAST_GAMEBUS.md), [`../contracts/SERVICE_CLOSEOUT_GAMEBUS.md`](../contracts/SERVICE_CLOSEOUT_GAMEBUS.md), [`../product/RAISE_BARLAUREA_MASTER_PLAN.md`](../product/RAISE_BARLAUREA_MASTER_PLAN.md), [`../archive/SPEC_LEGACY.md`](../archive/SPEC_LEGACY.md) (**HISTORICAL**).
 
@@ -108,8 +108,9 @@ Closeout embed URL: `https://parva662.github.io/raise-food-waste-minigames/#/ser
 | `soupQuantity` | required | integer, min 0, max 6 — always sent |
 | `dessertItemId` | **optional** | `string`, `minLength: 1` — omit when `dessertQuantity` is 0 |
 | `dessertQuantity` | required | integer, min 0, max 6 — always sent |
-| `timingStatus` | required | enum `on-time` \| `late` |
 | `submittedAt` | required | `string`, `format: date-time` |
+
+**Maximum 11 property links:** 7 always-required + 4 conditional item IDs. `timingStatus` belongs to `chefForecast` only and must **not** be linked here.
 
 **ACTIVITY property shape (confirmed):** `{ "template": "<ref>", "obj": { "value": <payload> } }` — not `{ "template": "<ref>", "value": <payload> }`.
 
@@ -132,7 +133,8 @@ Migrate the **existing** `studentLunchCheckin` activity template; do **not** del
 | `selectedVegetarianOrNoVeg` | unlink / replace | `vegetarianItemId` + `vegetarianQuantity` |
 | `selectedSoupOrNoSoup` | unlink / replace | `soupItemId` + `soupQuantity` |
 | `selectedDessertOrNoDessert` | unlink / replace | `dessertItemId` + `dessertQuantity` |
-| — | add property templates + links | `timingStatus` |
+
+Do **not** add a `timingStatus` template or link to `studentLunchCheckin`; the Student Lunch mapper never sends it.
 
 Full JSON Schemas and examples: `src/gamebus/propertySchemas.ts`.
 
@@ -231,7 +233,7 @@ Validate participant association, multi-user visibility, and organization bounda
 
 ## Still pending (manual / live)
 
-- GameBus admin: migrate `studentLunchCheckin` to twelve properties.
+- GameBus admin: migrate `studentLunchCheckin` to the 11-link set (7 required + 4 optional item IDs).
 - GameBus admin: migrate `chefForecast` to fourteen links (12 required + 2 optional; create `forecastDessert` only if missing).
 - Participant association without `studentId`/`chefId` on ACTIVITY (verify on test env).
 - Real food photography (`public/images/menu/items/<id>.webp`).

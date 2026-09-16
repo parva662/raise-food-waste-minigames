@@ -28,7 +28,7 @@ It is **not** a restaurant prediction or optimization system. Analysis remains s
 
 The student challenge has **two steps**:
 
-1. **Lunch declaration** — tomorrow’s meal choice via `studentLunchCheckin` (this repository, default route).
+1. **Lunch declaration** — meal choice for the next operational lunch service via `studentLunchCheckin` (this repository, default route).
 2. **Before/after plate photos and weights** — separate GameBus task (outside this minigame UI).
 
 Student declarations are a **research sample**. They are **not** the operational baseline for chef forecast accuracy.
