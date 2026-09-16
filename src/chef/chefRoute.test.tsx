@@ -27,8 +27,8 @@ describe('App routing', () => {
 
   it('student root loads student lunch UI', () => {
     render(<AppRouter />);
-    expect(document.title).toBe("Tomorrow's Lunch");
-    expect(screen.getByText(/Tomorrow.s lunch/)).toBeInTheDocument();
+    expect(document.title).toBe('Student Lunch');
+    expect(screen.getByText(/Next lunch service/)).toBeInTheDocument();
     expect(screen.queryByText('Kitchen forecast')).not.toBeInTheDocument();
   });
 
@@ -37,12 +37,12 @@ describe('App routing', () => {
     render(<AppRouter />);
     expect(document.title).toBe('Kitchen Forecast');
     expect(screen.getByText('Kitchen forecast')).toBeInTheDocument();
-    expect(screen.queryByText(/Tomorrow.s lunch/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/Next lunch service/)).not.toBeInTheDocument();
   });
 
   it('updates document title on hash navigation', () => {
     const { rerender } = render(<AppRouter />);
-    expect(document.title).toBe("Tomorrow's Lunch");
+    expect(document.title).toBe('Student Lunch');
 
     setHash('#/service-closeout');
     rerender(<AppRouter />);

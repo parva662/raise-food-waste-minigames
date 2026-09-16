@@ -74,8 +74,14 @@ describe('unified portion food UI', () => {
   });
 
   it('shows submission deadline in game header', () => {
-    render(<GameStatusHeader submissionWindow={submissionWindow} now={SUBMISSION_TIMES.midday} />);
-    expect(screen.getByText('Submit by 23:00')).toBeInTheDocument();
+    render(
+      <GameStatusHeader
+        submissionWindow={submissionWindow}
+        now={SUBMISSION_TIMES.midday}
+        lunchDate={FIXTURE_LUNCH_DATE}
+      />,
+    );
+    expect(screen.getByText('Submit by 23:59')).toBeInTheDocument();
     expect(screen.queryByText('20 base')).not.toBeInTheDocument();
   });
 
@@ -116,10 +122,17 @@ describe('saved status', () => {
         summaryLines={[]}
         hasSavedDeclaration
         updatedAt={SUBMISSION_TIMES.midday.toISOString()}
-        isSubmitDisabled
+        lunchDate={FIXTURE_LUNCH_DATE}
+        uiStep="review"
+        submitStatus="success"
+        submitError={null}
+        isReviewDisabled
+        isConfirmDisabled
         submissionWindow={getSubmissionWindowStatus(SUBMISSION_TIMES.midday, FIXTURE_LUNCH_DATE)}
         menuInteractive={false}
         onReset={() => undefined}
+        onEnterReview={() => undefined}
+        onExitReview={() => undefined}
         onSubmit={() => undefined}
       />,
     );

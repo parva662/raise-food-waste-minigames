@@ -1,19 +1,19 @@
 import { CANTEEN_CONFIG } from '../config/canteen';
 import type { SubmissionWindowStatus } from '../types/declaration';
 import { formatCountdown } from '../services/submissionWindow';
-import { getTomorrowIsoDate, formatDisplayDate } from '../utils/dates';
+import { formatDisplayDate } from '../utils/dates';
 
 interface GameStatusHeaderProps {
   submissionWindow: SubmissionWindowStatus;
   now: Date;
+  lunchDate: string | null;
 }
 
 function pad(value: number): string {
   return String(value).padStart(2, '0');
 }
 
-export function GameStatusHeader({ submissionWindow, now }: GameStatusHeaderProps) {
-  const tomorrowIso = getTomorrowIsoDate(now);
+export function GameStatusHeader({ submissionWindow, now, lunchDate }: GameStatusHeaderProps) {
   const countdown =
     submissionWindow.countdownTargetIso !== null
       ? formatCountdown(now, submissionWindow.countdownTargetIso)
@@ -24,10 +24,14 @@ export function GameStatusHeader({ submissionWindow, now }: GameStatusHeaderProp
     <header className="game-status-header">
       <div className="game-status-header__top">
         <div>
-          <p className="game-status-header__eyebrow">Tomorrow&apos;s lunch</p>
-          <time className="game-status-header__date" dateTime={tomorrowIso}>
-            {formatDisplayDate(tomorrowIso)}
-          </time>
+          <p className="game-status-header__eyebrow">Next lunch service</p>
+          {lunchDate ? (
+            <time className="game-status-header__date" dateTime={lunchDate}>
+              {formatDisplayDate(lunchDate)}
+            </time>
+          ) : (
+            <p className="game-status-header__date">Service date unavailable</p>
+          )}
         </div>
         {countdown !== null && submissionWindow.phase === 'open' && (
           <div className="game-status-header__countdown" aria-live="polite">

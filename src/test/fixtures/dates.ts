@@ -14,9 +14,9 @@ export const SUBMISSION_TIMES = {
   onTimeEarly: helsinki(FIXTURE_SUBMISSION_DAY, '17:59:59'),
   onTimeExact: helsinki(FIXTURE_SUBMISSION_DAY, '18:00:00'),
   lateJustAfter: helsinki(FIXTURE_SUBMISSION_DAY, '18:00:01'),
-  lateBeforeDeadline: helsinki(FIXTURE_SUBMISSION_DAY, '22:59:59'),
-  lateExact: helsinki(FIXTURE_SUBMISSION_DAY, '23:00:00'),
-  closedJustAfter: helsinki(FIXTURE_SUBMISSION_DAY, '23:00:01'),
+  lateBeforeDeadline: helsinki(FIXTURE_SUBMISSION_DAY, '23:58:59'),
+  lateExact: helsinki(FIXTURE_SUBMISSION_DAY, '23:59:00'),
+  closedJustAfter: helsinki(FIXTURE_SUBMISSION_DAY, '23:59:01'),
   midday: helsinki(FIXTURE_SUBMISSION_DAY, '12:00:00'),
   lateEvening: helsinki(FIXTURE_SUBMISSION_DAY, '19:00:00'),
 } as const;

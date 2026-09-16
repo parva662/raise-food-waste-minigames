@@ -2,7 +2,7 @@ export const CANTEEN_CONFIG = {
   studentId: 'demo-student-001',
   timezone: 'Europe/Helsinki',
   submissionDeadlineHour: 23,
-  submissionDeadlineMinute: 0,
+  submissionDeadlineMinute: 59,
   submissionDeadlineSecond: 0,
   menuCycleStartDate: '2026-01-06',
   menuValidityStartDate: '2026-07-27',

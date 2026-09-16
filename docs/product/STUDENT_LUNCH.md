@@ -17,12 +17,22 @@ Students declare attendance and intended lunch for the **next operational lunch 
 |------|------|--------|
 | **Approved acceptance rules** | [`../../features/student/student-lunch.feature`](../../features/student/student-lunch.feature) | **APPROVED PRODUCT TARGET** |
 | **GameBus contract** | [`../contracts/STUDENT_LUNCH_GAMEBUS.md`](../contracts/STUDENT_LUNCH_GAMEBUS.md) | **EXTERNAL / GAMEBUS CONTRACT** |
-| **Current implementation vs approved target** | [`../current-state/IMPLEMENTATION_STATUS.md`](../current-state/IMPLEMENTATION_STATUS.md) | **CURRENT IMPLEMENTATION** + known gaps |
+| **Current implementation vs approved target** | [`../current-state/IMPLEMENTATION_STATUS.md`](../current-state/IMPLEMENTATION_STATUS.md) | **CURRENT IMPLEMENTATION** |
 | **Engineering rules** | [`../../PROJECT_RULES.md`](../../PROJECT_RULES.md) | Process |
 | **Charter** | [`../../PROJECT_CHARTER.md`](../../PROJECT_CHARTER.md) | Scope |
 | **Legacy mixed spec** | [`../archive/SPEC_LEGACY.md`](../archive/SPEC_LEGACY.md) | **HISTORICAL** — do not treat as product truth over the `.feature` |
 
-Do **not** rewrite the approved `.feature` merely to match current code. Known differences are tracked in implementation status.
+Do **not** rewrite the approved `.feature` merely to match current code.
+
+---
+
+## Confirmed product highlights (see Gherkin for full rules)
+
+- Target = **next operational service** (skip weekends and explicitly closed / non-service days), not calendar tomorrow.
+- Menus are planned well in advance; **do not** redefine the service date by skipping a day only because menu data is missing.
+- Cutoff = **23:59:00 Europe/Helsinki** (open at 23:58:59; closed at exactly 23:59:00); open page must close without reload.
+- Meal packages **Regular / Soup / No lunch** are mutually exclusive; quantity steppers use whole numbers **0…configured max**; no blank-vs-zero UX.
+- Distinct **review** before final confirm; one-shot submission with failure/retry preserving entered values.
 
 ---
 
@@ -32,6 +42,7 @@ Do **not** rewrite the approved `.feature` merely to match current code. Known d
 |------|----------|
 | Route | Default / empty hash → student mode (`src/routing/appMode.ts`, `App.tsx`) |
 | Selection / submit | `src/hooks/useLunchSelection.ts` |
+| Service date | `src/services/studentLunchServiceDate.ts` |
 | Window / deadline | `src/config/canteen.ts`, `src/services/submissionWindow.ts` |
 | Menu / slots | `src/services/menuResolver.ts`, `src/services/mealSlots.ts` |
 | ACTIVITY mapping | `src/gamebus/mapStudentLunchCheckin.ts`, `src/gamebus/bridge.ts` |

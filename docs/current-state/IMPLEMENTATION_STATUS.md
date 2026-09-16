@@ -1,34 +1,50 @@
 # Implementation status (initial)
 
-**Baseline commit:** `019ce6637c2b75319b0c86a6a099b0645ec9ae4f` (`main`)
+**Baseline commit (pre-implementation docs):** `87748b36c3e02208c3cc33766a4003d33ef81819` (`main`)
 
-**Purpose:** Short distinction between **approved product targets**, **current code**, and **proposed** docs. Not a full gap analysis.
+**Purpose:** Distinguish **approved product targets**, **current code**, and **pending** decisions.
 
 ---
 
 ## Student Lunch
 
-### Approved product target
+### Approved product contract
 
-Canonical contract: [`../../features/student/student-lunch.feature`](../../features/student/student-lunch.feature) (**APPROVED PRODUCT TARGET**).
+Canonical: [`../../features/student/student-lunch.feature`](../../features/student/student-lunch.feature) (**APPROVED PRODUCT TARGET**).
 
-Explicitly approved (among other rules in that file):
+Confirmed highlights:
 
-- **Next operational lunch service** as the declaration target (not simply calendar tomorrow; weekends and explicitly closed service days skipped; valid menu required).
-- **23:59:00 Europe/Helsinki** cutoff (open before 23:59:00; closed exactly at 23:59:00; already-open page must respect the cutoff).
+- Next operational lunch service (skip weekends + explicitly closed/non-service days)
+- Do **not** redefine the service date by skipping a day only because menu data is missing
+- Cutoff **23:59:00 Europe/Helsinki** (open at 23:58:59; closed at exactly 23:59:00); open page updates without reload
+- Mutual Regular / Soup / No lunch packages; whole-number steppers 0…max; no blank-vs-zero UX
+- Distinct review before final confirm; one-shot submit; failure/retry preserves draft
 
-### Current implementation
+### Current implementation (this branch)
 
-- Route (standalone): default app at `/` (hash empty)
-- GameBus activity: `studentLunchCheckin`
-- Target date: Helsinki **calendar tomorrow** via `getTomorrowIsoDate()` in `useLunchSelection.ts`
-- Deadline: **23:00:00** Europe/Helsinki in `CANTEEN_CONFIG` / `submissionWindow.ts`
+| Area | Status |
+|------|--------|
+| Route | Default / empty hash → student mode |
+| Service date | `src/services/studentLunchServiceDate.ts` — next operational service; session-locked (midnight rollover still `@pending`) |
+| Cutoff | `CANTEEN_CONFIG` 23:59:00; `submissionWindow` closes with `now >= deadline` |
+| Review / confirm | Edit → Review → Confirm in `useLunchSelection` / `SelectionPanel` |
+| Submit states | `idle` / `sending` / `failed` / `success` with retry on failure |
+| Activity | `studentLunchCheckin` via `mapStudentLunchCheckin` / `tryPostActivity` |
 
-### Known gaps
+### Remaining LIVE GameBus verification only
 
-- Current target-date behaviour **differs** from the approved next-operational-service rule.
-- Current cutoff behaviour **differs** from the approved 23:59 rule.
-- **Detailed implementation gap analysis has not yet been completed** beyond the points above.
+Cannot be closed from this repo’s Vitest stack (no browser E2E):
+
+- Student A/B login → mission open → submit → GameBus persistence / mission complete
+- Cross-account isolation and task reopen rules
+- Parent ACK after `postMessage` ACTIVITY
+
+### Still `@pending` in Gherkin (not silently invented)
+
+- Final business maximum quantity value (configured max remains in use)
+- All-zero attending meal package validity (current code still requires ≥1 positive component on Regular/Soup)
+- Open-page behaviour across Helsinki midnight (service date is locked for the page session until product decides)
+- Future student dashboard / gamification (out of scope)
 
 ---
 
@@ -83,7 +99,7 @@ Explicitly approved (among other rules in that file):
 
 | | |
 |--|--|
-| **Status** | **No route or application module** found on `main` at baseline commit (not in `appMode.ts`). |
+| **Status** | **No route or application module** found on `main` at baseline (not in `appMode.ts`). |
 | **Evidence** | Only mentioned in proposed Trim Smart / future-work documentation, not as shipped game code. |
 
 ---
@@ -92,7 +108,7 @@ Explicitly approved (among other rules in that file):
 
 | | |
 |--|--|
-| **Status** | **No route or application module** found on `main` at baseline commit. |
+| **Status** | **No route or application module** found on `main` at baseline. |
 | **Evidence** | Described as a **separate future game** in [`../product/waste-challenges/TRIM_SMART.md`](../product/waste-challenges/TRIM_SMART.md) (proposed); not implemented in this repository. |
 
 ---

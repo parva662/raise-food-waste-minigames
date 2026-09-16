@@ -60,7 +60,7 @@ describe('service closeout routing', () => {
 
   it('student root remains unchanged', () => {
     render(<AppRouter />);
-    expect(screen.getByText(/Tomorrow.s lunch/)).toBeInTheDocument();
+    expect(screen.getByText(/Next lunch service/)).toBeInTheDocument();
   });
 
   it('chef route remains unchanged', () => {

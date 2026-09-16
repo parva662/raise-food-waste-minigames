@@ -39,7 +39,7 @@ export function getSubmissionPhase(now: Date, lunchDate: string): SubmissionPhas
   const lunchStart = lunchDayStart(lunchDate);
   const nowMs = now.getTime();
 
-  if (nowMs > deadlineEnd.getTime() || nowMs >= lunchStart.getTime()) {
+  if (nowMs >= deadlineEnd.getTime() || nowMs >= lunchStart.getTime()) {
     return 'closed';
   }
   return 'open';

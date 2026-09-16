@@ -1,5 +1,4 @@
 # APPROVED PRODUCT TARGET
-# Current implementation may differ.
 # Do not rewrite this specification merely to match existing code.
 # Implementation gaps are resolved separately.
 #
@@ -20,13 +19,21 @@ Feature: Student declares attendance and intended lunch for the next operational
     - The authenticated GameBus student is the person making the declaration.
     - A student can submit only for themself.
     - The target is the next operational service, not simply the next calendar day.
-    - Weekends and explicitly closed service days are skipped.
+    - Weekends and explicitly closed / non-service days are skipped.
+    - BarLaurea menus are planned well in advance; normal service-date resolution does
+      not skip an operational service merely because menu data is missing for that day.
+    - A technical failure to load required menu data may block the form, but must not
+      redefine the resolved next operational service date.
     - Europe/Helsinki is the operational timezone regardless of device timezone.
     - A declaration instance is open until 23:59:00 Europe/Helsinki on its declaration day.
     - Exactly at 23:59:00 the declaration is closed.
     - Before final submission the student may change their choices freely.
     - After successful final submission the declaration cannot be changed or submitted again.
-    - Blank and zero are different: blank means unanswered; 0 is a valid whole-number quantity.
+    - Regular lunch, Soup lunch, and No lunch are mutually exclusive packages.
+    - Quantities use whole numbers from 0 through a configured maximum.
+    - Zero is a valid quantity on the active package.
+    - Inactive-package quantity values remaining at 0 is normal and is not unanswered data.
+    - Student Lunch does not use a blank-vs-zero quantity UX; quantity controls are whole-number steppers.
     - Quantities use a configured maximum because the final business maximum is not yet fixed.
     - The existing Student Lunch mission must remain separate from the later plate-photo/weight mission.
 
@@ -37,7 +44,6 @@ Feature: Student declares attendance and intended lunch for the next operational
     And the student has been assigned the Student Lunch declaration mission
     And the declaration has not already been completed
     And the system has access to the operational service calendar
-    And the system has access to the menu data required to resolve the next service
 
   # ---------------------------------------------------------------------------
   # ENTRY, LOGIN, IDENTITY, AND OWNERSHIP
@@ -87,7 +93,6 @@ Feature: Student declares attendance and intended lunch for the next operational
     Scenario: A normal weekday resolves to the next operational service
       Given today is an open canteen day
       And a later operational service exists
-      And that service has a valid menu
       When the student opens the declaration
       Then the target service date is the next operational lunch service
       And the target date is shown to the student
@@ -96,8 +101,7 @@ Feature: Student declares attendance and intended lunch for the next operational
     Scenario: Friday skips the weekend and targets Monday
       Given today is Friday
       And Saturday and Sunday are not operational lunch-service days
-      And Monday is open
-      And Monday has a valid menu
+      And Monday is an operational service day
       When the student opens the declaration
       Then the target service date is Monday
       And no Saturday or Sunday service is offered
@@ -107,38 +111,38 @@ Feature: Student declares attendance and intended lunch for the next operational
       Given today is Friday
       And Saturday and Sunday are not operational lunch-service days
       And Monday is explicitly closed
-      And Tuesday is open
-      And Tuesday has a valid menu
+      And Tuesday is an operational service day
       When the student opens the declaration
       Then the target service date is Tuesday
       And Monday is not offered as a declaration target
 
     @calendar @closure
-    Scenario: Consecutive closed days are skipped until an operational service with a menu is found
-      Given the next three candidate service days are unavailable or closed
-      And the following candidate day is open
-      And the following candidate day has a valid menu
+    Scenario: Consecutive closed days are skipped until the next operational service
+      Given the next three candidate service days are explicitly closed or non-service days
+      And the following candidate day is an operational service day
       When the student opens the declaration
-      Then the target service date is the first later operational service with a valid menu
+      Then the target service date is that later operational service
 
-    @calendar @menu
-    Scenario: A service without a valid menu is not presented as a valid declaration target
-      Given the next candidate operational service has no valid menu
-      And a later operational service with a valid menu exists
+    @calendar @menu @technical
+    Scenario: Menu load failure blocks the form without changing the resolved service date
+      Given the next operational service date has already been resolved
+      And the menu data required to present that service cannot be loaded
       When the student opens the declaration
-      Then the service without a valid menu is not used as the target
-      And the later operational service with a valid menu is used
+      Then the target service date remains the resolved next operational service
+      And the declaration form is not shown
+      And submission is unavailable
+      And the student sees a clear menu-unavailable message
 
     @calendar @unavailable
-    Scenario: No upcoming operational service with a valid menu can be resolved
-      Given no upcoming operational service with a valid menu can be resolved
+    Scenario: No upcoming operational service can be resolved
+      Given no upcoming operational lunch service can be resolved from the service calendar
       When the student opens the declaration
       Then the declaration form is not shown
       And submission is unavailable
       And the student sees:
         """
         Lunch declaration is unavailable right now.
-        We couldn't find an upcoming service with an available menu.
+        We couldn't find an upcoming lunch service.
         Please check again later.
         """
 
@@ -284,7 +288,7 @@ Feature: Student declares attendance and intended lunch for the next operational
       When the student selects "Regular lunch"
       Then a Main quantity control is visible
       And a Vegetarian quantity control is visible
-      And both controls show that quantities are whole numbers
+      And both controls show that quantities are whole numbers from 0 through the configured maximum
 
     @regular @quantity
     Scenario Outline: A Regular lunch component may have a measured quantity of zero
@@ -292,7 +296,7 @@ Feature: Student declares attendance and intended lunch for the next operational
       When the student enters <mainQuantity> for Main
       And the student enters <vegetarianQuantity> for Vegetarian
       Then each entered zero is treated as the number zero
-      And no zero is treated as an unanswered field
+      And inactive Soup lunch package quantities remaining at 0 are not treated as unanswered data
 
       Examples:
         | mainQuantity | vegetarianQuantity |
@@ -327,7 +331,7 @@ Feature: Student declares attendance and intended lunch for the next operational
       When the student enters 1 for Soup
       And the student enters 0 for Dessert
       Then Dessert quantity is treated as measured zero
-      And Dessert quantity is not treated as blank
+      And inactive Regular lunch package quantities remaining at 0 are not treated as unanswered data
 
   # ---------------------------------------------------------------------------
   # NO LUNCH
@@ -382,18 +386,11 @@ Feature: Student declares attendance and intended lunch for the next operational
         | Dessert     | 5   | 5        |
 
     @validation @quantity
-    Scenario Outline: Blank quantity is not the same as zero
-      Given the student selected a meal package containing "<item>"
-      When the "<item>" quantity is left blank
-      Then the "<item>" field is considered unanswered
-      And the declaration cannot be finally submitted while that required quantity remains unanswered
-
-      Examples:
-        | item        |
-        | Main        |
-        | Vegetarian  |
-        | Soup        |
-        | Dessert     |
+    Scenario: Inactive package zeros are not treated as unanswered fields
+      Given the student selected "Regular lunch"
+      And Regular lunch quantities are set
+      Then Soup lunch and Dessert quantity values remaining at 0 do not block submission
+      And those inactive-package zeros are not treated as blank unanswered fields
 
     @validation @quantity
     Scenario Outline: Negative quantities are rejected

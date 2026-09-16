@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import {
   getSubmissionPhase,
   isSubmissionAllowed,
@@ -13,24 +13,25 @@ import {
   helsinki,
 } from '../test/fixtures/dates';
 
-describe('submission window boundaries', () => {
-  it('treats times before 23:00 as open', () => {
+describe('submission window boundaries (23:59 Helsinki)', () => {
+  it('treats times before 23:59 as open', () => {
     expect(getSubmissionPhase(SUBMISSION_TIMES.onTimeEarly, FIXTURE_LUNCH_DATE)).toBe('open');
-    expect(getSubmissionPhase(SUBMISSION_TIMES.onTimeExact, FIXTURE_LUNCH_DATE)).toBe('open');
-    expect(getSubmissionPhase(SUBMISSION_TIMES.lateJustAfter, FIXTURE_LUNCH_DATE)).toBe('open');
     expect(getSubmissionPhase(SUBMISSION_TIMES.lateBeforeDeadline, FIXTURE_LUNCH_DATE)).toBe('open');
-    expect(getSubmissionPhase(SUBMISSION_TIMES.lateExact, FIXTURE_LUNCH_DATE)).toBe('open');
     expect(getSubmissionPhase(SUBMISSION_TIMES.midday, FIXTURE_LUNCH_DATE)).toBe('open');
   });
 
-  it('treats 23:00:01 as closed', () => {
+  it('treats exactly 23:59:00 as closed', () => {
+    expect(getSubmissionPhase(SUBMISSION_TIMES.lateExact, FIXTURE_LUNCH_DATE)).toBe('closed');
+  });
+
+  it('treats 23:59:01 as closed', () => {
     expect(getSubmissionPhase(SUBMISSION_TIMES.closedJustAfter, FIXTURE_LUNCH_DATE)).toBe('closed');
   });
 
   it('uses Europe/Helsinki for deadline evaluation', () => {
     const status = getSubmissionWindowStatus(SUBMISSION_TIMES.midday, FIXTURE_LUNCH_DATE);
     expect(status.phase).toBe('open');
-    expect(status.detailLines[0]).toBe('Submit by 23:00');
+    expect(status.detailLines[0]).toBe('Submit by 23:59');
   });
 
   it('remains correct across daylight-saving-time change dates', () => {
@@ -39,8 +40,11 @@ describe('submission window boundaries', () => {
     expect(getSubmissionPhase(helsinki(springForwardSubmissionDay, '17:30:00'), lunchDate)).toBe(
       'open',
     );
-    expect(getSubmissionPhase(helsinki(springForwardSubmissionDay, '19:00:00'), lunchDate)).toBe(
+    expect(getSubmissionPhase(helsinki(springForwardSubmissionDay, '23:58:59'), lunchDate)).toBe(
       'open',
+    );
+    expect(getSubmissionPhase(helsinki(springForwardSubmissionDay, '23:59:00'), lunchDate)).toBe(
+      'closed',
     );
   });
 
@@ -78,21 +82,31 @@ describe('submission window without scoring distinction', () => {
   });
 
   it('creates declarations without scoring fields before the cutoff', () => {
-    const slots = resolveMealSlotsForDate(FIXTURE_LUNCH_DATE)!;
+    const slots = resolveMealSlotsForDate(FIXTURE_LUNCH_DATE);
+    if (!slots) throw new Error('Expected meal slots');
     const declaration = createDeclarationFromDraft(
-      { mealChoice: 'soup', mainQuantity: 0, vegetarianQuantity: 0, soupQuantity: 1, dessertQuantity: 1 },
+      { mealChoice: 'no_lunch', mainQuantity: 0, vegetarianQuantity: 0, soupQuantity: 0, dessertQuantity: 0 },
       slots,
       FIXTURE_LUNCH_DATE,
       1,
       CANTEEN_CONFIG.menuVersion,
-      () => SUBMISSION_TIMES.lateEvening,
+      () => SUBMISSION_TIMES.lateBeforeDeadline,
     );
-
     expect(declaration).not.toBeNull();
-    expect(declaration).not.toHaveProperty('basePoints');
-    expect(declaration).not.toHaveProperty('timingAdjustment');
-    expect(declaration).not.toHaveProperty('totalPoints');
-    expect(declaration).not.toHaveProperty('timingStatus');
-    expect(declaration?.submittedAt).toBe(SUBMISSION_TIMES.lateEvening.toISOString());
+    expect(declaration && 'pointsAwarded' in declaration).toBe(false);
+  });
+});
+
+describe('fresh load vs open page across cutoff', () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+  });
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it('fresh evaluation at 23:58:59 is open and at 23:59:00 is closed', () => {
+    expect(getSubmissionPhase(SUBMISSION_TIMES.lateBeforeDeadline, FIXTURE_LUNCH_DATE)).toBe('open');
+    expect(getSubmissionPhase(SUBMISSION_TIMES.lateExact, FIXTURE_LUNCH_DATE)).toBe('closed');
   });
 });

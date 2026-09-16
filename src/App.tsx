@@ -16,14 +16,22 @@ function App() {
     summaryLines,
     hasSavedDeclaration,
     isSubmitDisabled,
+    isReviewDisabled,
     initialized,
+    lunchDate,
+    calendarUnavailable,
     menuAvailability,
     mealSlots,
     submissionWindow,
     menuInteractive,
+    uiStep,
+    submitStatus,
+    submitError,
     activateMealChoice,
     adjustPortion,
     resetDraft,
+    enterReview,
+    exitReview,
     submit,
     clearSuccess,
     now,
@@ -39,25 +47,35 @@ function App() {
   const regularActive = mealChoice === 'regular';
   const soupActive = mealChoice === 'soup';
   const noLunchActive = mealChoice === 'no_lunch';
+  const showEditor = uiStep === 'edit' && !hasSavedDeclaration;
 
   return (
     <div className="app">
-      <GameStatusHeader submissionWindow={submissionWindow} now={now} />
+      <GameStatusHeader
+        submissionWindow={submissionWindow}
+        now={now}
+        lunchDate={lunchDate}
+      />
 
       <main className="app-main app-main--compact">
-        {menuAvailability.status === 'closed' && (
+        {calendarUnavailable && (
           <MenuStatusBanner
-            message="The canteen is closed on this date."
+            message="Lunch declaration is unavailable right now. We couldn't find an upcoming lunch service. Please check again later."
+          />
+        )}
+        {!calendarUnavailable && lunchDate && menuAvailability.status === 'closed' && (
+          <MenuStatusBanner
+            message="The canteen is closed on this service date."
             reason={menuAvailability.reason}
           />
         )}
-        {menuAvailability.status === 'unavailable' && (
-          <MenuStatusBanner message="Menu not available for this date." />
+        {!calendarUnavailable && lunchDate && menuAvailability.status === 'unavailable' && (
+          <MenuStatusBanner message="Menu data for this service could not be loaded. The service date is unchanged — please try again later." />
         )}
 
         <div className="app-layout">
           <div className="menu-column">
-            {menuAvailability.status === 'available' && mealSlots && (
+            {showEditor && menuAvailability.status === 'available' && mealSlots && (
               <div className="meal-sections">
                 <MealSection
                   sectionId="regular-lunch"
@@ -106,7 +124,7 @@ function App() {
                 <MealSection
                   sectionId="no-lunch"
                   title="No lunch"
-                  description="You will not eat at the canteen tomorrow."
+                  description="You will not eat at the canteen for the next service."
                   active={noLunchActive}
                   muted={anotherSectionActive && !noLunchActive}
                   onActivate={() => activateMealChoice('no_lunch')}
@@ -122,10 +140,17 @@ function App() {
               summaryLines={summaryLines}
               hasSavedDeclaration={hasSavedDeclaration}
               updatedAt={state.savedSnapshot?.updatedAt ?? null}
-              isSubmitDisabled={isSubmitDisabled}
+              lunchDate={lunchDate}
+              uiStep={uiStep}
+              submitStatus={submitStatus}
+              submitError={submitError}
+              isReviewDisabled={isReviewDisabled}
+              isConfirmDisabled={isSubmitDisabled}
               submissionWindow={submissionWindow}
               menuInteractive={menuInteractive}
               onReset={resetDraft}
+              onEnterReview={enterReview}
+              onExitReview={exitReview}
               onSubmit={submit}
               showActions
             />
@@ -133,17 +158,16 @@ function App() {
         </div>
       </main>
 
-      <SubmissionMessage
-        message={state.successMessage}
-        onDismiss={clearSuccess}
-      />
+      <SubmissionMessage message={state.successMessage} onDismiss={clearSuccess} />
 
-      {menuInteractive && (
+      {menuInteractive && uiStep === 'edit' && (
         <div className="mobile-action-bar" aria-label="Actions">
           <ActionButtons
+            showReset
             onReset={resetDraft}
-            onSubmit={submit}
-            isSubmitDisabled={isSubmitDisabled}
+            onPrimary={enterReview}
+            primaryLabel="Review declaration"
+            primaryDisabled={isReviewDisabled}
             variant="sticky"
           />
         </div>

@@ -1,37 +1,65 @@
-import { RotateCcw, Lock } from 'lucide-react';
+import { Lock } from 'lucide-react';
 
 interface ActionButtonsProps {
-  onReset: () => void;
-  onSubmit: () => void;
-  isSubmitDisabled: boolean;
+  onReset?: () => void;
+  onPrimary: () => void;
+  primaryLabel: string;
+  primaryDisabled: boolean;
+  secondaryLabel?: string;
+  onSecondary?: () => void;
+  secondaryDisabled?: boolean;
+  showReset?: boolean;
+  statusText?: string | null;
   variant?: 'panel' | 'sticky';
 }
 
 export function ActionButtons({
   onReset,
-  onSubmit,
-  isSubmitDisabled,
+  onPrimary,
+  primaryLabel,
+  primaryDisabled,
+  secondaryLabel,
+  onSecondary,
+  secondaryDisabled = false,
+  showReset = false,
+  statusText = null,
   variant = 'panel',
 }: ActionButtonsProps) {
   return (
     <div className={`action-buttons action-buttons--${variant}`}>
-      <button type="button" className="action-buttons__reset" onClick={onReset}>
-        <RotateCcw size={16} aria-hidden="true" />
-        Reset all
-      </button>
+      {showReset && onReset && (
+        <button type="button" className="action-buttons__reset" onClick={onReset}>
+          Reset all
+        </button>
+      )}
+      {secondaryLabel && onSecondary && (
+        <button
+          type="button"
+          className="action-buttons__reset"
+          onClick={onSecondary}
+          disabled={secondaryDisabled}
+        >
+          {secondaryLabel}
+        </button>
+      )}
       <button
         type="button"
         className="action-buttons__submit"
-        onClick={onSubmit}
-        disabled={isSubmitDisabled}
-        aria-label="Submit my lunch"
+        onClick={onPrimary}
+        disabled={primaryDisabled}
+        aria-label={primaryLabel}
       >
-        Submit my lunch
+        {primaryLabel}
       </button>
-      {variant === 'panel' && (
+      {statusText && (
+        <p className="action-buttons__lock-notice" role="status">
+          {statusText}
+        </p>
+      )}
+      {variant === 'panel' && !statusText && (
         <p className="action-buttons__lock-notice">
           <Lock size={12} aria-hidden="true" />
-          After you submit, your choice is final for this date.
+          After you confirm, your choice is final for this date.
         </p>
       )}
     </div>

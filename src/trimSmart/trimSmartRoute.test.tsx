@@ -51,7 +51,7 @@ describe('trim smart routing', () => {
   it('keeps student route unchanged', () => {
     setHash('');
     render(<AppRouter />);
-    expect(document.title).toBe("Tomorrow's Lunch");
+    expect(document.title).toBe('Student Lunch');
     expect(screen.queryByTestId('trim-smart-page')).not.toBeInTheDocument();
   });
 });

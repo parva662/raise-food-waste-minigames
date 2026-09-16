@@ -1,7 +1,7 @@
 import type { AppMode } from '../gamebus/appMode';
 
 const DOCUMENT_TITLES: Record<AppMode, string> = {
-  student: "Tomorrow's Lunch",
+  student: 'Student Lunch',
   chef: 'Kitchen Forecast',
   'service-closeout': 'Service Closeout',
   'chef-results': 'Chef Results',
