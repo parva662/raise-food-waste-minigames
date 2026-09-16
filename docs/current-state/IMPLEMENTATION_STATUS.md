@@ -58,8 +58,10 @@ Cannot be closed from this repo’s Vitest stack (no browser E2E):
 | | |
 |--|--|
 | **Status** | **Implemented** on `main` (`#/chef`, `chefForecast` ACTIVITY) |
-| **Approved target** | [`../../features/kitchen/kitchen-forecast.feature`](../../features/kitchen/kitchen-forecast.feature) |
-| **Migration / doc review** | Pending ([`../contracts/KITCHEN_FORECAST_GAMEBUS.md`](../contracts/KITCHEN_FORECAST_GAMEBUS.md), [`../archive/SPEC_LEGACY.md`](../archive/SPEC_LEGACY.md) §9) |
+| **Product specification** | **Approved** — [`../../features/kitchen/kitchen-forecast.feature`](../../features/kitchen/kitchen-forecast.feature) |
+| **Repository implementation** | **Complete for the pilot target**, except the deferred `@pending @rollover` scenario |
+| **Repository contracts / docs** | **Reviewed and aligned** ([`../contracts/KITCHEN_FORECAST_GAMEBUS.md`](../contracts/KITCHEN_FORECAST_GAMEBUS.md), [`../contracts/KITCHEN_FORECAST_ADMIN_SETUP.md`](../contracts/KITCHEN_FORECAST_ADMIN_SETUP.md)); [`../archive/SPEC_LEGACY.md`](../archive/SPEC_LEGACY.md) §9 stays **HISTORICAL** |
+| **Live GameBus setup** | **Pending** — manual admin template/link configuration and embedded end-to-end verification |
 
 ### Approved timing model — implemented
 

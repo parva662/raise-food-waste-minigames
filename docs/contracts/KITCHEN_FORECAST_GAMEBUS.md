@@ -314,7 +314,7 @@ Example `obj.value`: `"2026-07-28T12:00:00.000Z"`
 
 #### `confidence` — reuse (KEEP LINKED, OPTIONAL)
 
-Exact schema from `GAMEBUS_TEMPLATE_EXPORT.json`:
+Exact schema as recorded in the 2026-07-27 test-environment audit (export file not stored in this repository; verify in live admin):
 
 ```yaml
 $schema: https://json-schema.org/draft/2020-12/schema
@@ -333,7 +333,7 @@ Example `obj.value`: `0.75`
 
 #### `notes` — reuse (KEEP LINKED, OPTIONAL)
 
-Exact schema from `GAMEBUS_TEMPLATE_EXPORT.json`:
+Exact schema as recorded in the 2026-07-27 test-environment audit (export file not stored in this repository; verify in live admin):
 
 ```yaml
 $schema: https://json-schema.org/draft/2020-12/schema

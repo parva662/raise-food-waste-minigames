@@ -97,12 +97,11 @@ For a given authenticated actor + `targetDate`:
 
 ## Unresolved / pending
 
-Open product decisions, kept as `@pending` scenarios in the DRAFT Gherkin:
+One open product decision remains, kept as a `@pending` scenario in the approved acceptance specification:
 
 - **Open-page service-date rollover.** What happens to a page left open across a window boundary is deliberately deferred for the pilot.
 
-Also still outstanding, from existing docs:
+Also still outstanding:
 
-- Detailed doc migration review still pending (see implementation status).
-- Live GameBus template migration steps remain in the roadmap and admin setup guides.
+- Live GameBus template migration and embedded end-to-end verification remain manual work; see the roadmap and admin setup guides.
 - Do not invent new forecast business rules in this navigation page.

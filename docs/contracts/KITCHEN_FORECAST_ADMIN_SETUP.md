@@ -33,7 +33,7 @@
 | Display name | Chef forecast |
 | Admin ID | `019f9404-88f4-742a-9846-f9097610bae7` |
 
-**Export snapshot date:** 2026-07-27 (`GAMEBUS_TEMPLATE_EXPORT.json` / `GAMEBUS_CONFIG_SNAPSHOT.md`). Live admin may differ — search before creating duplicates.
+**Provenance of the values and statuses below:** a **test-environment** GameBus audit performed on **2026-07-27**. The original export and snapshot files are **not stored in this repository** and cannot be opened from here. Live admin may differ — always verify in live admin before creating or modifying templates, and search before creating duplicates.
 
 **ACTIVITY payload shape (confirmed):**
 
@@ -370,7 +370,7 @@ Example payload entry:
 
 ### 13. `confidence` — REUSE EXISTING (KEEP LINKED, OPTIONAL)
 
-Exact schema from `GAMEBUS_TEMPLATE_EXPORT.json`:
+Exact schema as recorded in the 2026-07-27 test-environment audit (export file not stored in this repository; verify in live admin):
 
 ```yaml
 $schema: https://json-schema.org/draft/2020-12/schema
@@ -395,7 +395,7 @@ Example payload entry (only when chef entered a value):
 
 ### 14. `notes` — REUSE EXISTING (KEEP LINKED, OPTIONAL)
 
-Exact schema from `GAMEBUS_TEMPLATE_EXPORT.json`:
+Exact schema as recorded in the 2026-07-27 test-environment audit (export file not stored in this repository; verify in live admin):
 
 ```yaml
 $schema: https://json-schema.org/draft/2020-12/schema
