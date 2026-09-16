@@ -5,11 +5,14 @@ import { ParticipantOverviewSection } from './components/participant/Participant
 import { ParticipantProgressSection } from './components/participant/ParticipantProgressSection';
 import { ParticipantTabNav, type ParticipantPrimaryTab } from './components/participant/ParticipantTabNav';
 import {
+  buildFixtureChefForecastsForCalculation,
   buildFixtureKitchenProgress,
   hasFixtureCloseoutForDate,
 } from './adapters/fixtureCalculationSource';
 import {
+  buildGroupCloseoutOnlyResults,
   buildParticipantKitchenProgress,
+  getParticipantEligibleForecastForDate,
   hasGroupCloseoutForDate,
 } from './adapters/groupCalculationSource';
 import { resolveChefResultsServiceDate } from '../services/operationalServiceCalendar';
@@ -23,10 +26,13 @@ import {
 import { useGameBusAuthenticatedUser } from './useGameBusAuthenticatedUser';
 import { useChefResultsData } from './useChefResultsData';
 import { useGameBusEmbed } from '../gamebus/useGameBusEmbed';
+import type { DailyServiceResults } from './types';
 
 /**
- * Participant-safe results view — own identifiable data + anonymous peer comparison.
+ * Participant-safe results view — own identifiable data + other-staff comparison.
  * Route: #/chef-results (GameBus participant menu target).
+ *
+ * Historical Progress is independent of the current service waiting/no-forecast state.
  */
 export function ChefResultsParticipantApp() {
   const { embedded, inputCollections, inputCollectionsReady } = useGameBusEmbed();
@@ -44,11 +50,11 @@ export function ChefResultsParticipantApp() {
   const resultsServiceDate = useMemo(() => resolveChefResultsServiceDate(now), [now]);
   const [primaryTab, setPrimaryTab] = useState<ParticipantPrimaryTab>('overview');
 
+  const canLoadParticipantData = !isEmbeddedLoading && (!embedded || inputCollectionsReady);
+  const canLoadProgress = canLoadParticipantData && Boolean(currentUserId || !embedded);
+
   const resultsState = useChefResultsData(resultsServiceDate);
-  const dailyResults = resultsState.status === 'ready' ? resultsState.dailyResults : null;
-  const ownResult = isEmbeddedLoading
-    ? null
-    : findParticipantDailyResult(currentUserId, resultsServiceDate, dailyResults);
+  const completeDailyResults = resultsState.status === 'ready' ? resultsState.dailyResults : null;
 
   const hasCloseout = useMemo(() => {
     if (isEmbeddedLoading) return false;
@@ -58,10 +64,55 @@ export function ChefResultsParticipantApp() {
     return hasFixtureCloseoutForDate(resultsServiceDate);
   }, [embedded, inputCollections, inputCollectionsReady, isEmbeddedLoading, resultsServiceDate]);
 
-  const hasCurrentResult = !isEmbeddedLoading && resultsState.status === 'ready' && ownResult !== null;
+  const closeoutOnlyResults = useMemo((): DailyServiceResults | null => {
+    if (!canLoadParticipantData || completeDailyResults || !hasCloseout) return null;
+    if (embedded && inputCollectionsReady) {
+      return buildGroupCloseoutOnlyResults(inputCollections, resultsServiceDate);
+    }
+    return null;
+  }, [
+    canLoadParticipantData,
+    completeDailyResults,
+    embedded,
+    hasCloseout,
+    inputCollections,
+    inputCollectionsReady,
+    resultsServiceDate,
+  ]);
 
-  const canLoadParticipantData = !isEmbeddedLoading && (!embedded || inputCollectionsReady);
-  const canLoadProgress = canLoadParticipantData && Boolean(currentUserId || !embedded);
+  const dailyResults = completeDailyResults ?? closeoutOnlyResults;
+  const ownResult = isEmbeddedLoading
+    ? null
+    : findParticipantDailyResult(currentUserId, resultsServiceDate, completeDailyResults);
+
+  const hasCurrentResult = !isEmbeddedLoading && completeDailyResults !== null && ownResult !== null;
+
+  const pendingForecast = useMemo(() => {
+    if (!canLoadParticipantData || hasCloseout || hasCurrentResult) return null;
+    if (embedded && inputCollectionsReady) {
+      return getParticipantEligibleForecastForDate(
+        inputCollections,
+        currentUserId,
+        resultsServiceDate,
+      );
+    }
+    return (
+      buildFixtureChefForecastsForCalculation().find(
+        (forecast) =>
+          forecast.userId === fixtureUserId && forecast.targetDate === resultsServiceDate,
+      ) ?? null
+    );
+  }, [
+    canLoadParticipantData,
+    currentUserId,
+    embedded,
+    fixtureUserId,
+    hasCloseout,
+    hasCurrentResult,
+    inputCollections,
+    inputCollectionsReady,
+    resultsServiceDate,
+  ]);
 
   const progressServicePoints = useMemo(() => {
     if (!canLoadProgress) return [];
@@ -92,8 +143,8 @@ export function ChefResultsParticipantApp() {
   }, [canLoadProgress, currentUserId, embedded, inputCollections, inputCollectionsReady]);
 
   const peerBenchmark =
-    dailyResults && ownResult
-      ? buildAnonymousPeerBenchmark(dailyResults.staffResults, currentUserId)
+    completeDailyResults && ownResult
+      ? buildAnonymousPeerBenchmark(completeDailyResults.staffResults, currentUserId)
       : null;
   const peerInsights =
     ownResult && peerBenchmark
@@ -133,6 +184,7 @@ export function ChefResultsParticipantApp() {
                   hasCloseout={hasCloseout}
                   ownResult={ownResult}
                   dailyResults={dailyResults}
+                  pendingForecast={pendingForecast}
                   peerBenchmark={peerBenchmark}
                   peerInsights={peerInsights}
                 />

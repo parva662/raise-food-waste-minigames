@@ -67,24 +67,29 @@ describe('buildAnonymousPeerBenchmark', () => {
     expect(benchmark.participantOverproductionRateGramsPerCustomer).toBe(1);
   });
 
-  it('requires at least three other staff before comparison is enabled', () => {
+  it('requires at least one other staff before comparison is enabled', () => {
     const participant = staffResult({ userId: 'you' });
-    const twoPeers = [
-      staffResult({ userId: 'peer-a' }),
-      staffResult({ userId: 'peer-b' }),
-    ];
 
-    const insufficient = buildAnonymousPeerBenchmark([participant, ...twoPeers], 'you');
-    expect(insufficient.peerCount).toBe(2);
-    expect(insufficient.canCompare).toBe(false);
-    expect(MIN_ANONYMOUS_PEER_COUNT).toBe(3);
+    const none = buildAnonymousPeerBenchmark([participant], 'you');
+    expect(none.peerCount).toBe(0);
+    expect(none.canCompare).toBe(false);
+    expect(MIN_ANONYMOUS_PEER_COUNT).toBe(1);
 
-    const sufficient = buildAnonymousPeerBenchmark(
-      [participant, ...twoPeers, staffResult({ userId: 'peer-c' })],
+    const onePeer = buildAnonymousPeerBenchmark(
+      [participant, staffResult({ userId: 'peer-a' })],
       'you',
     );
-    expect(sufficient.peerCount).toBe(3);
-    expect(sufficient.canCompare).toBe(true);
+    expect(onePeer.peerCount).toBe(1);
+    expect(onePeer.canCompare).toBe(true);
+    expect(onePeer.peerLabel).toBe('Other staff');
+
+    const twoPeers = buildAnonymousPeerBenchmark(
+      [participant, staffResult({ userId: 'peer-a' }), staffResult({ userId: 'peer-b' })],
+      'you',
+    );
+    expect(twoPeers.peerCount).toBe(2);
+    expect(twoPeers.canCompare).toBe(true);
+    expect(twoPeers.peerLabel).toBe('Other staff median');
   });
 
   it('normalizes surplus and shortage to grams per customer', () => {
@@ -156,16 +161,13 @@ describe('buildParticipantPeerComparisonInsights', () => {
     const benchmark = buildAnonymousPeerBenchmark([participant, ...peers], 'you');
     const insights = buildParticipantPeerComparisonInsights(participant, benchmark);
 
-    expect(insights.overproductionMessage).toMatch(/above the other-staff median/);
+    expect(insights.overproductionMessage).toMatch(/above the other-staff comparison/);
     expect(insights.customerMessage).toMatch(/closer to actual attendance/);
   });
 
   it('returns no insights when peer threshold is not met', () => {
     const participant = staffResult({ userId: 'you' });
-    const benchmark = buildAnonymousPeerBenchmark(
-      [participant, staffResult({ userId: 'peer-a' }), staffResult({ userId: 'peer-b' })],
-      'you',
-    );
+    const benchmark = buildAnonymousPeerBenchmark([participant], 'you');
     const insights = buildParticipantPeerComparisonInsights(participant, benchmark);
     expect(insights.overproductionMessage).toBeNull();
     expect(insights.shortageMessage).toBeNull();

@@ -6,9 +6,10 @@ import {
 
 /**
  * Minimum OTHER participating staff (excluding the authenticated user) before
- * showing anonymous peer median comparison.
+ * showing other-staff comparison. One peer is enough; the UI labels a single peer
+ * as "Other staff" and two-or-more peers as "Other staff median".
  */
-export const MIN_ANONYMOUS_PEER_COUNT = 3;
+export const MIN_ANONYMOUS_PEER_COUNT = 1;
 
 /** @deprecated Use MIN_ANONYMOUS_PEER_COUNT — kept for existing imports during transition. */
 export const MIN_ANONYMOUS_COMPARISON_PARTICIPANTS = MIN_ANONYMOUS_PEER_COUNT;
@@ -16,6 +17,8 @@ export const MIN_ANONYMOUS_COMPARISON_PARTICIPANTS = MIN_ANONYMOUS_PEER_COUNT;
 export type AnonymousPeerBenchmark = {
   peerCount: number;
   canCompare: boolean;
+  /** "Other staff" when peerCount === 1; "Other staff median" when peerCount >= 2. */
+  peerLabel: 'Other staff' | 'Other staff median';
   participantOverproductionRateGramsPerCustomer: number | null;
   peerOverproductionMedianGramsPerCustomer: number | null;
   participantShortageRateGramsPerCustomer: number | null;
@@ -68,6 +71,7 @@ export function buildAnonymousPeerBenchmark(
   return {
     peerCount: peers.length,
     canCompare: peers.length >= MIN_ANONYMOUS_PEER_COUNT,
+    peerLabel: peers.length >= 2 ? 'Other staff median' : 'Other staff',
     participantOverproductionRateGramsPerCustomer: participant
       ? surplusRateGramsPerCustomer(participant)
       : null,
@@ -97,12 +101,12 @@ function compareRatesMessage(
   const delta = participantRate - peerMedian;
   const tolerance = Math.max(peerMedian * 0.05, 0.1);
   if (Math.abs(delta) <= tolerance) {
-    return `Your ${metricLabel} was close to the other-staff median.`;
+    return `Your ${metricLabel} was close to the other-staff comparison.`;
   }
   if (delta < 0) {
-    return `Your ${metricLabel} was ${Math.abs(delta).toFixed(1)} g/customer below the other-staff median.`;
+    return `Your ${metricLabel} was ${Math.abs(delta).toFixed(1)} g/customer below the other-staff comparison.`;
   }
-  return `Your ${metricLabel} was ${delta.toFixed(1)} g/customer above the other-staff median.`;
+  return `Your ${metricLabel} was ${delta.toFixed(1)} g/customer above the other-staff comparison.`;
 }
 
 export function buildParticipantPeerComparisonInsights(
@@ -132,11 +136,11 @@ export function buildParticipantPeerComparisonInsights(
       benchmark.participantShortageRateGramsPerCustomer -
       benchmark.peerShortageMedianGramsPerCustomer;
     if (Math.abs(delta) <= 0.1) {
-      shortageMessage = 'Estimated shortage was close to the other-staff median.';
+      shortageMessage = 'Estimated shortage was close to the other-staff comparison.';
     } else if (delta < 0) {
-      shortageMessage = `Estimated shortage was ${Math.abs(delta).toFixed(1)} g/customer below the other-staff median.`;
+      shortageMessage = `Estimated shortage was ${Math.abs(delta).toFixed(1)} g/customer below the other-staff comparison.`;
     } else {
-      shortageMessage = `Estimated shortage was ${delta.toFixed(1)} g/customer above the other-staff median.`;
+      shortageMessage = `Estimated shortage was ${delta.toFixed(1)} g/customer above the other-staff comparison.`;
     }
   }
 

@@ -89,12 +89,12 @@ export function buildPeerCustomerComparisonMessage(
 ): string {
   const delta = participantError - peerMedianError;
   if (Math.abs(delta) <= CUSTOMER_ERROR_COMPARISON_TOLERANCE) {
-    return 'Your customer estimate was similar in accuracy to the other-staff median.';
+    return 'Your customer estimate was similar in accuracy to other staff.';
   }
   if (delta < 0) {
-    return 'Your customer estimate was closer to actual attendance than the other-staff median.';
+    return 'Your customer estimate was closer to actual attendance than other staff.';
   }
-  return 'Your customer estimate was further from actual attendance than the other-staff median.';
+  return 'Your customer estimate was further from actual attendance than other staff.';
 }
 
 export function buildPeerCustomerComparisonDetail(
@@ -105,5 +105,5 @@ export function buildPeerCustomerComparisonDetail(
   if (Math.abs(delta) <= CUSTOMER_ERROR_COMPARISON_TOLERANCE) {
     return null;
   }
-  return `Your customer estimate was ${participantError.toFixed(0)} customers off, compared with a median error of ${peerMedianError.toFixed(0)} customers for other staff.`;
+  return `Your customer estimate was ${participantError.toFixed(0)} customers off, compared with ${peerMedianError.toFixed(0)} customers for other staff.`;
 }

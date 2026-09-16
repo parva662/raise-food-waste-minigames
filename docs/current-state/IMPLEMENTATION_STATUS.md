@@ -98,8 +98,10 @@ Cannot be closed from this repo’s Vitest stack (no browser E2E):
 
 | | |
 |--|--|
-| **Status** | **Implemented** on `main` (`#/chef-results`; read-only UI, fixture-backed calculation engine) |
-| **Migration / doc review** | Pending ([`../archive/SPEC_LEGACY.md`](../archive/SPEC_LEGACY.md) §11; [`../product/KITCHEN_RESULTS.md`](../product/KITCHEN_RESULTS.md)) |
+| **Status** | **Implemented** on `main` (`#/chef-results`; shared calculation engine; GameBus group INPUT_COLLECTIONS when embedded; fixtures in standalone) |
+| **Gherkin** | [`../../features/kitchen/kitchen-results-participant.feature`](../../features/kitchen/kitchen-results-participant.feature) |
+| **Coverage** | [`../testing/KITCHEN_RESULTS_PARTICIPANT_ACCEPTANCE_COVERAGE.md`](../testing/KITCHEN_RESULTS_PARTICIPANT_ACCEPTANCE_COVERAGE.md) |
+| **Migration / doc review** | Legacy §11 is historical only; canonical product rules are in Gherkin + [`../product/KITCHEN_RESULTS.md`](../product/KITCHEN_RESULTS.md) |
 
 ---
 
@@ -107,8 +109,10 @@ Cannot be closed from this repo’s Vitest stack (no browser E2E):
 
 | | |
 |--|--|
-| **Status** | **Implemented** on `main` (`#/chef-results-admin`; hidden route, authorization TBD) |
-| **Migration / doc review** | Pending |
+| **Status** | **Implemented** on `main` (`#/chef-results-admin`; hidden route; partial closeout/forecast states supported; authorization TBD) |
+| **Gherkin** | [`../../features/kitchen/kitchen-results-admin.feature`](../../features/kitchen/kitchen-results-admin.feature) |
+| **Coverage** | [`../testing/KITCHEN_RESULTS_ADMIN_ACCEPTANCE_COVERAGE.md`](../testing/KITCHEN_RESULTS_ADMIN_ACCEPTANCE_COVERAGE.md) |
+| **Migration / doc review** | Authorization remains platform-enforced / `@pending` |
 
 ---
 

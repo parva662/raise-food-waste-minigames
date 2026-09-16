@@ -151,14 +151,14 @@ Full JSON Schemas and examples: `src/gamebus/propertySchemas.ts`.
 | GameBus exposure | Participant menu already opens `#/chef-results`; no config change required |
 | Data source (this phase) | Development fixtures only — closeout actuals, chef forecasts, portion weights, staff rotation |
 | Calculation model | Shared pure engine; per-staff simulation against shared observed service reality |
-| Participant privacy | Own identifiable results + anonymous team median/range only |
+| Participant privacy | Own identifiable results + de-identified other-staff comparison from 1 peer ("Other staff" / "Other staff median") |
 | Composite score / ranking | **Not approved** — no score, leaderboard, or winner language |
 | Admin authorization | **Not implemented** — route-level auth required before production |
 | Multi-user GameBus retrieval | **Not implemented** (next major phase) |
 | Fixture current user | Default `fixture-user-c`; dev selector + `sessionStorage` for calculation testing only |
 | **GameBus authenticated identity** | **Confirmed** — `inputCollectionPari.me` (`/api/me`); parses `id`, `firstName`, `lastName`; debug panel with `?gamebusDebug=1` only |
 
-**Participant (`#/chef-results`):** summary cards, category diverging visual, anonymous “How you compare”, weekly trend, lightweight “Kitchen progress”. No coworker names/IDs.
+**Participant (`#/chef-results`):** summary cards, category diverging visual, other-staff comparison, Week/Month/Year Progress (history independent of current waiting state), lightweight “Kitchen progress”. No coworker names/IDs.
 
 **Admin (`#/chef-results-admin`):** all-staff research table with real actor names when embedded; full calculation detail, weekly raw aggregation.
 

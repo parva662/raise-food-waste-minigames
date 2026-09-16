@@ -28,13 +28,13 @@ export function TeamComparisonSection({
     >
       <h3 className="kitchen-mgmt-surface__title">Compared with other staff</h3>
       <p className="kitchen-mgmt-snapshot-hint">
-        Anonymous comparison with other staff who forecast the same service. Individual results are
+        Compared with other staff who forecast the same service. Individual peer identities are
         never shown.
       </p>
 
       {!benchmark.canCompare ? (
         <p className="chef-results-peer-insufficient" data-testid="peer-comparison-unavailable">
-          Not enough other staff results for an anonymous comparison yet.
+          Not enough other staff results for a comparison yet.
         </p>
       ) : (
         <>
@@ -44,7 +44,13 @@ export function TeamComparisonSection({
                 <tr>
                   <th scope="col">Metric</th>
                   <th scope="col" className="kitchen-mgmt-table__num">You</th>
-                  <th scope="col" className="kitchen-mgmt-table__num">Other staff median</th>
+                  <th
+                    scope="col"
+                    className="kitchen-mgmt-table__num"
+                    data-testid="peer-comparison-label"
+                  >
+                    {benchmark.peerLabel}
+                  </th>
                 </tr>
               </thead>
               <tbody>

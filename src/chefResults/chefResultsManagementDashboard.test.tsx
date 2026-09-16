@@ -321,21 +321,25 @@ describe('kitchen management team overview and trends', () => {
     expect(screen.getByTestId('kitchen-mgmt-trend-panel-year')).toBeInTheDocument();
   });
 
-  it('hides trend chart when fewer than two chartable buckets in week view', async () => {
+  it('shows chart with one completed service and reserves trend language for two-plus', async () => {
     const user = userEvent.setup();
     render(<ChefResultsAdminApp />);
     await openTrendsTab(user);
     expect(screen.getByTestId('kitchen-mgmt-period-summary')).toBeInTheDocument();
-    const chartOrMessage = screen.queryByTestId('kitchen-mgmt-trend-chart');
+    const chart = screen.queryByTestId('kitchen-mgmt-trend-chart');
     const unavailable = screen.queryByTestId('kitchen-mgmt-chart-unavailable');
-    expect(chartOrMessage !== null || unavailable !== null).toBe(true);
+    expect(chart !== null || unavailable !== null).toBe(true);
     if (unavailable) {
-      expect(unavailable).toHaveTextContent(/Not enough completed services/i);
+      expect(unavailable).toHaveTextContent(/No completed services to chart/i);
     }
-    if (chartOrMessage) {
+    if (chart) {
       expect(screen.getByTestId('kitchen-mgmt-chart-legend')).toBeInTheDocument();
       expect(screen.getAllByTestId('kitchen-mgmt-chart-bar-surplus').length).toBeGreaterThan(0);
       expect(screen.getAllByTestId('kitchen-mgmt-chart-bar-shortage').length).toBeGreaterThan(0);
+      const singleNote = screen.queryByTestId('kitchen-mgmt-chart-single-point-note');
+      if (singleNote) {
+        expect(singleNote).toHaveTextContent(/One completed service/i);
+      }
     }
   });
 });

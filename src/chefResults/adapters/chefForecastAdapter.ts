@@ -44,6 +44,10 @@ export function gameBusChefForecastToCalculationInput(
     return null;
   }
 
+  // Approved Kitchen Forecast rule: soup and dessert are one soup-menu quantity.
+  // Pilot activities may omit forecastDessert; never invent a deliberate zero dessert.
+  const resolvedDessertQuantity = dessertQuantity ?? soupQuantity;
+
   return {
     userId: forecast.actorId,
     userName: forecast.actorName,
@@ -52,6 +56,6 @@ export function gameBusChefForecastToCalculationInput(
     main: categoryInput('main', itemIdFor('main'), mainQuantity),
     vegetarian: categoryInput('vegetarian', itemIdFor('vegetarian'), vegetarianQuantity),
     soup: categoryInput('soup', itemIdFor('soup'), soupQuantity),
-    dessert: categoryInput('dessert', itemIdFor('dessert'), dessertQuantity ?? 0),
+    dessert: categoryInput('dessert', itemIdFor('dessert'), resolvedDessertQuantity),
   };
 }

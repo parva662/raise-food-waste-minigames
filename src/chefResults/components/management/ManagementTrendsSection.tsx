@@ -50,18 +50,16 @@ function TeamTrendChart({
 }) {
   const chartBuckets = getChartableProgressBuckets(buckets);
 
-  if (chartBuckets.length < 2) {
+  if (chartBuckets.length === 0) {
     return (
       <div className="kitchen-mgmt-chart-empty" data-testid="kitchen-mgmt-chart-unavailable">
-        <p>Not enough completed services to show a trend yet.</p>
-        <p>
-          Trend visualization will appear after at least two completed service periods are
-          available.
-        </p>
+        <p>No completed services to chart yet.</p>
+        <p>A chart will appear after at least one completed service is available.</p>
       </div>
     );
   }
 
+  const showTrend = chartBuckets.length >= 2;
   const maxRate = Math.max(
     ...chartBuckets.flatMap((bucket) => [
       bucket.overproductionRateGramsPerCustomer ?? 0,
@@ -74,7 +72,14 @@ function TeamTrendChart({
 
   return (
     <figure className="kitchen-mgmt-chart" data-testid="kitchen-mgmt-trend-chart">
-      <figcaption className="kitchen-mgmt-chart__caption">Trend</figcaption>
+      <figcaption className="kitchen-mgmt-chart__caption">
+        {showTrend ? 'Trend' : 'Completed service'}
+      </figcaption>
+      {!showTrend ? (
+        <p className="kitchen-mgmt-snapshot-hint" data-testid="kitchen-mgmt-chart-single-point-note">
+          One completed service is shown. Trend comparison appears after a second completed service.
+        </p>
+      ) : null}
       <div className="kitchen-mgmt-chart-legend" data-testid="kitchen-mgmt-chart-legend">
         <span className="kitchen-mgmt-chart-legend__item kitchen-mgmt-chart-legend__item--surplus">
           Estimated surplus

@@ -152,12 +152,101 @@ export function buildGroupDailyServiceResults(
   return calculateDailyServiceResults(closeout, participation, forecasts);
 }
 
+/** Closeout-only observed reality when no eligible staff forecasts exist for the date. */
+export function buildGroupCloseoutOnlyResults(
+  inputCollections: GameBusInputCollectionsPayload | null,
+  serviceDate: string,
+): DailyServiceResults | null {
+  const { wasteMeasurements } = parseGroupKitchenActivities(inputCollections);
+  const wasteMeasurement = selectWasteMeasurementForDate(wasteMeasurements, serviceDate);
+  if (!wasteMeasurement) return null;
+
+  const closeout = gameBusWasteMeasurementToCalculationInput(wasteMeasurement);
+  return calculateDailyServiceResults(
+    closeout,
+    { targetDate: serviceDate, participantUserIds: [] },
+    [],
+  );
+}
+
+export function getGroupAdminServiceDates(
+  inputCollections: GameBusInputCollectionsPayload | null,
+): readonly string[] {
+  const { chefForecasts, wasteMeasurements } = parseGroupKitchenActivities(inputCollections);
+  const dates = new Set<string>();
+  for (const forecast of chefForecasts) {
+    dates.add(forecast.targetDate);
+  }
+  for (const measurement of wasteMeasurements) {
+    dates.add(measurement.serviceDate);
+  }
+  return [...dates].sort();
+}
+
+export type AdminServicePartialState =
+  | { kind: 'complete'; dailyResults: DailyServiceResults }
+  | { kind: 'closeout_only'; dailyResults: DailyServiceResults }
+  | {
+      kind: 'forecast_only';
+      serviceDate: string;
+      staffForecasts: readonly ChefForecastForCalculation[];
+    }
+  | { kind: 'empty'; serviceDate: string };
+
+export function resolveAdminServicePartialState(
+  inputCollections: GameBusInputCollectionsPayload | null,
+  serviceDate: string,
+): AdminServicePartialState {
+  const { chefForecasts, wasteMeasurements } = parseGroupKitchenActivities(inputCollections);
+  const wasteMeasurement = selectWasteMeasurementForDate(wasteMeasurements, serviceDate);
+  const forecasts = selectForecastsForDate(chefForecasts, serviceDate)
+    .map(gameBusChefForecastToCalculationInput)
+    .filter((forecast): forecast is ChefForecastForCalculation => forecast !== null);
+
+  if (wasteMeasurement && forecasts.length > 0) {
+    const closeout = gameBusWasteMeasurementToCalculationInput(wasteMeasurement);
+    const participation = participationFromForecasts(serviceDate, forecasts);
+    return {
+      kind: 'complete',
+      dailyResults: calculateDailyServiceResults(closeout, participation, forecasts),
+    };
+  }
+
+  if (wasteMeasurement) {
+    const closeoutOnly = buildGroupCloseoutOnlyResults(inputCollections, serviceDate);
+    if (closeoutOnly) {
+      return { kind: 'closeout_only', dailyResults: closeoutOnly };
+    }
+  }
+
+  if (forecasts.length > 0) {
+    return { kind: 'forecast_only', serviceDate, staffForecasts: forecasts };
+  }
+
+  return { kind: 'empty', serviceDate };
+}
+
 export function hasGroupCloseoutForDate(
   inputCollections: GameBusInputCollectionsPayload | null,
   serviceDate: string,
 ): boolean {
   const { wasteMeasurements } = parseGroupKitchenActivities(inputCollections);
   return selectWasteMeasurementForDate(wasteMeasurements, serviceDate) !== null;
+}
+
+/** Eligible forecast for one authenticated actor on a target date, ignoring closeout presence. */
+export function getParticipantEligibleForecastForDate(
+  inputCollections: GameBusInputCollectionsPayload | null,
+  authenticatedUserId: string,
+  serviceDate: string,
+): ChefForecastForCalculation | null {
+  if (!authenticatedUserId) return null;
+  const { chefForecasts } = parseGroupKitchenActivities(inputCollections);
+  const selected = selectForecastsForDate(chefForecasts, serviceDate).find(
+    (forecast) => forecast.actorId === authenticatedUserId,
+  );
+  if (!selected) return null;
+  return gameBusChefForecastToCalculationInput(selected);
 }
 
 export function buildAllGroupDailyServiceResults(

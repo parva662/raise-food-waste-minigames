@@ -163,12 +163,26 @@ describe('participant dashboard sections', () => {
     expect(section).not.toHaveTextContent('Peer A');
   });
 
-  it('shows insufficient peers message when fewer than three other staff', () => {
+  it('shows Other staff label with exactly one other staff member', () => {
     const participant = staffResult();
     const benchmark = buildAnonymousPeerBenchmark(
       [participant, { ...participant, userId: 'peer-a' }],
       participant.userId,
     );
+    const insights = buildParticipantPeerComparisonInsights(participant, benchmark);
+
+    render(
+      <TeamComparisonSection participant={participant} benchmark={benchmark} insights={insights} />,
+    );
+
+    expect(screen.getByTestId('peer-comparison-table')).toBeInTheDocument();
+    expect(screen.getByTestId('peer-comparison-label')).toHaveTextContent('Other staff');
+    expect(screen.queryByTestId('peer-comparison-unavailable')).not.toBeInTheDocument();
+  });
+
+  it('shows insufficient peers message when no other staff exist', () => {
+    const participant = staffResult();
+    const benchmark = buildAnonymousPeerBenchmark([participant], participant.userId);
     const insights = buildParticipantPeerComparisonInsights(participant, benchmark);
 
     render(

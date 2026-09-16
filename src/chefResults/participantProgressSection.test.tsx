@@ -107,10 +107,11 @@ describe('ParticipantProgressSection', () => {
 
     render(<ParticipantProgressSection servicePoints={points} asOfServiceDate="2026-07-28" />);
 
-    expect(screen.getByTestId('progress-chart-unavailable')).toHaveTextContent(
-      /Not enough completed services/i,
+    expect(screen.getByTestId('progress-bar-chart')).toBeInTheDocument();
+    expect(screen.getByTestId('progress-trend-chart-svg')).toBeInTheDocument();
+    expect(screen.getByTestId('progress-chart-single-point-note')).toHaveTextContent(
+      /One completed service/i,
     );
-    expect(screen.queryByTestId('progress-trend-chart-svg')).not.toBeInTheDocument();
     expect(screen.getByTestId('progress-period-summary')).toBeInTheDocument();
   });
 
