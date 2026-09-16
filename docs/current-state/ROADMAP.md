@@ -46,18 +46,19 @@ Chef embed URL: `https://parva662.github.io/raise-food-waste-minigames/#/chef`
 | Item | Status |
 |------|--------|
 | Route `#/service-closeout` | **Complete** |
-| Input Collection canonical key | `serviceCloseoutInput` |
-| Legacy plural key | `serviceCloseoutInputs` — temporarily accepted for backwards compatibility |
-| **chefForecast retrieval** | **Complete** — `kitchenGroupInput.activities` (`GET /groups/activities`, group kitchen forecasts) |
-| `GameBusChefForecast` read model | Parsed from inbound activities; read-only in closeout UI |
-| Forecast selection | Exact `targetDate` match; duplicate testing activities → latest valid submission |
+| Input Collection (group kitchen activities) | `kitchenGroupInput.activities` (`GET /groups/activities`) |
+| Authenticated recorder | `inputCollectionPari.me` (read-only Recorded by); `activity.actor` on ACTIVITY |
+| **chefForecast retrieval** | **Complete** — filter `chefForecast` from `kitchenGroupInput.activities`; exact `targetDate`; eligible KF rules |
+| `GameBusChefForecast` read model | Parsed from inbound activities; read-only in closeout UI (authenticated-user context today) |
+| Forecast selection | Exact `targetDate` + actor eligibility; latest eligible wins; later ineligible cannot replace |
 | GameBus ACTIVITY output | **Complete** — one `wasteMeasurement` per Finalize (fifteen required properties) |
 | Embed behaviour | One Finalize → one ACTIVITY → iframe closes via normal GameBus behaviour |
 | Waste units | UI grams; GameBus persistence kg (`grams / 1000` at mapper boundary) |
 | Quantity properties | `preparedMainQuantity`, `preparedVegetarianQuantity`, `preparedSoupQuantity`, `preparedDessertQuantity` = actual kitchen prepared portions |
 | Portion weights | Reference/calculation data in app only — **not** posted to GameBus |
-| Actor identity | Authenticated GameBus user (`activity.actor`) — no separate head-chef property on ACTIVITY |
-| Daily result calculation | **Implemented** — `#/chef-results` (fixture-backed simulation engine) |
+| Actor identity | Authenticated GameBus user (`activity.actor`) — no `headChefUserId` / chef selector |
+| Gherkin / coverage | [`../../features/kitchen/service-closeout.feature`](../../features/kitchen/service-closeout.feature); [`../testing/SERVICE_CLOSEOUT_ACCEPTANCE_COVERAGE.md`](../testing/SERVICE_CLOSEOUT_ACCEPTANCE_COVERAGE.md) |
+| Daily result calculation | **Implemented** — `#/chef-results` (shared engine; embedded group data when available; fixtures in standalone) |
 
 Closeout embed URL: `https://parva662.github.io/raise-food-waste-minigames/#/service-closeout`
 
@@ -149,7 +150,7 @@ Full JSON Schemas and examples: `src/gamebus/propertySchemas.ts`.
 | Route `#/chef-results` | **Implemented** — participant-safe view (GameBus menu target) |
 | Route `#/chef-results-admin` | **Implemented** — hidden admin/research all-staff view |
 | GameBus exposure | Participant menu already opens `#/chef-results`; no config change required |
-| Data source (this phase) | Development fixtures only — closeout actuals, chef forecasts, portion weights, staff rotation |
+| Data source (this phase) | Embedded: `kitchenGroupInput` + `inputCollectionPari.me` when present; standalone: development fixtures |
 | Calculation model | Shared pure engine; per-staff simulation against shared observed service reality |
 | Participant privacy | Own identifiable results + de-identified other-staff comparison from 1 peer ("Other staff" / "Other staff median") |
 | Composite score / ranking | **Not approved** — no score, leaderboard, or winner language |

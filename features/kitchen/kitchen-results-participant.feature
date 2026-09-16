@@ -280,12 +280,13 @@ Feature: Kitchen staff review their own forecast simulation results
 
     @pending @metrics @observed-reality @edge
     Scenario: Measured overproduction greater than prepared weight is unresolved for results
-      Given Service Closeout validation intends overproduction grams ≤ preparedQuantity × portionWeight
+      Given Service Closeout rejects overproduction grams greater than preparedQuantity × portionWeight
+        before a wasteMeasurement can be finalized
       And a results calculation nevertheless receives measured overproduction greater than
-        actualPreparedWeight
-      Then the product team must decide whether to reject the closeout, clamp demand at zero,
+        actualPreparedWeight from non-closeout or malformed data
+      Then the product team must decide whether to reject the closeout parse, clamp demand at zero,
         allow negative demand, or surface a diagnostic
-      And the pilot must not invent that rule silently
+      And the pilot must not invent that rule silently for the results engine
 
     @units @metrics
     Scenario: Calculation units stay consistent across grams and kilograms

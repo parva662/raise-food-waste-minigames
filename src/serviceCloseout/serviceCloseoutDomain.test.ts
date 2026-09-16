@@ -76,6 +76,11 @@ describe('service closeout domain', () => {
     expect(result.ok).toBe(true);
   });
 
+  it('accepts waste equal to prepared weight and rejects one gram above', () => {
+    expect(validateOverproductionAgainstPrepared(10, 120, 1200).ok).toBe(true);
+    expect(validateOverproductionAgainstPrepared(10, 120, 1201).ok).toBe(false);
+  });
+
   it('requires zero waste when prepared quantity is zero', () => {
     expect(validateOverproductionAgainstPrepared(0, 120, 0).ok).toBe(true);
     expect(validateOverproductionAgainstPrepared(0, 120, 50).ok).toBe(false);
@@ -160,6 +165,12 @@ describe('normalizeCloseoutKg', () => {
     );
     const normalized = normalizeCloseoutKg(closeout);
     expect(normalized.main.overproductionKg).toBe(0);
+  });
+
+  it('converts one gram to 0.001 kg at the unit boundary', () => {
+    expect(gramsToKilograms(1)).toBe(0.001);
+    expect(gramsToKilograms(500)).toBe(0.5);
+    expect(gramsToKilograms(1000)).toBe(1);
   });
 
   it('uses fixture normalized closeouts with kg waste values', () => {

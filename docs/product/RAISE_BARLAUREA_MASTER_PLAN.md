@@ -59,16 +59,16 @@ Chef form UX (repository): all five numeric fields start **blank** (unanswered);
 
 **Chef forecast is compared with whole-canteen operational data**, not with student declarations.
 
-There is **no kitchen scoring or results dashboard with composite scores** in this phase. Service closeout posts one `wasteMeasurement` ACTIVITY in embed mode. **`#/chef-results`** is the participant-safe results view (own data + anonymous team comparison; no ranking). **`#/chef-results-admin`** preserves the full all-staff fixture research view (hidden; route-level authorization still required). Full multi-user GameBus-backed results are the next major phase.
+There is **no kitchen scoring or results dashboard with composite scores** in this phase. Service closeout posts one `wasteMeasurement` ACTIVITY in embed mode. **`#/chef-results`** is the participant-safe results view (own data + other-staff comparison; no ranking; Helsinki midnight dashboard date). **`#/chef-results-admin`** is the management/research view (hidden; route-level authorization still required). Embedded results read group kitchen activities from `kitchenGroupInput` when available.
 
 ### 2.3 BarLaurea kitchen operations (closeout)
 
 - **One restaurant** (BarLaurea), **one lunch service per `targetDate`**.
-- Kitchen staff **rotate** across days; **head chef rotates** and is recorded on closeout as `headChefUserId` (not on `chefForecast`).
-- All participating staff use the same **`#/chef`** forecast game; the head chef also submits a personal forecast.
-- **One shared service closeout** per `targetDate` records actual customers, prepared portions, standard portion weights, and overproduction waste. UI entry for overproduction is **grams**; normalized representation may use **kg**.
-- **Submitted forecast (read-only):** closeout retrieves the authenticated user's `chefForecast` activities via GameBus Input Collection (`serviceCloseoutInput.chefForecasts`; legacy `serviceCloseoutInputs` accepted temporarily). `activity.actor` identifies the forecast owner. Forecast is matched by exact `targetDate` and shown read-only beside actual entry; actual production is entered separately.
-- **Finalize (embed):** one `wasteMeasurement` ACTIVITY per Finalize; iframe closes via normal GameBus behaviour. Waste UI uses grams; GameBus stores kg. Quantity properties are actual prepared portions. Portion weights are not persisted on the activity.
+- Kitchen staff **rotate** across days. The authenticated GameBus user who finalizes closeout is identified by GameBus `activity.actor`. There is **no** separate `headChefUserId` / head-chef selector on the closeout ACTIVITY.
+- All participating staff use the same **`#/chef`** forecast game; each submits a personal forecast when participating.
+- **One shared service closeout** per `targetDate` records actual customers, prepared portions, standard portion weights (app reference only), and overproduction waste. UI entry for overproduction is **grams**; GameBus stores **kg**.
+- **Submitted forecast (read-only):** closeout reads `chefForecast` activities via `kitchenGroupInput.activities`. Current implementation shows the authenticated user's eligible forecast for the exact `targetDate` (display of all staff vs own remains `@pending`). Forecast is never copied into actual fields.
+- **Finalize (embed):** one `wasteMeasurement` ACTIVITY per Finalize; iframe closes via normal GameBus behaviour. Quantity properties are actual prepared portions. Portion weights are not persisted on the activity.
 - Main, Vegetarian, Soup, and Dessert remain **independent** categories.
 - Future individual daily results link **`userId` + `targetDate`**; weekly results aggregate finalized daily results (staff may participate on different days). **No team model.**
 
@@ -81,7 +81,7 @@ There is **no kitchen scoring or results dashboard with composite scores** in th
 | `/` (default) | `studentLunchCheckin` | Implemented |
 | `#/chef` | `chefForecast` | Implemented (v1) |
 | `#/service-closeout` | `wasteMeasurement` | **Complete** (manually verified end-to-end) |
-| `#/chef-results` | _(none — read-only page)_ | **Implemented** (participant-safe; fixture-backed) |
+| `#/chef-results` | _(none — read-only page)_ | **Implemented** (participant-safe; embedded group data + standalone fixtures) |
 | `#/chef-results-admin` | _(none — read-only page)_ | **Implemented** (admin/research; hidden; auth TBD) |
 
 Do **not** create `chefForecastV2` or `studentLunchCheckinV2`.
@@ -115,12 +115,13 @@ Result is based on **actual canteen operational data**, not student declarations
 - Student lunch declaration (`studentLunchCheckin`).
 - Chef kitchen forecast minigame (`#/chef` → `chefForecast`).
 - **Service closeout** (`#/service-closeout`):
-  - reads `chefForecast` via Input Collection `serviceCloseoutInput` (legacy `serviceCloseoutInputs` alias);
+  - reads `chefForecast` via `kitchenGroupInput.activities`;
   - writes one `wasteMeasurement` ACTIVITY per Finalize;
   - manually verified: real menu date, all item IDs, prepared quantities, kg waste conversion, `submittedAt`, authenticated actor, iframe close.
-- **Chef results** — participant view `#/chef-results` (GameBus menu target; own results + anonymous comparison) and admin view `#/chef-results-admin` (all-staff research; authorization TBD). Shared fixture-backed calculation engine; no composite score. Authenticated GameBus identity is read from `inputCollectionPari.me` (`id`, `firstName`, `lastName`); fixture profiles still drive calculation UI until Raoul's cross-user endpoint is available.
+- **Chef results** — participant view `#/chef-results` (GameBus menu target; own results + other-staff comparison; Helsinki midnight date) and admin view `#/chef-results-admin` (research; authorization TBD). Shared calculation engine; embedded group activities when available; fixtures in standalone; no composite score. Authenticated GameBus identity from `inputCollectionPari.me`.
 - GameBus ACTIVITY mappers for `studentLunchCheckin`, `chefForecast`, and `wasteMeasurement`.
 - Contract: `docs/contracts/SERVICE_CLOSEOUT_GAMEBUS.md`.
+- Acceptance Gherkin: `features/kitchen/service-closeout.feature`.
 
 **Known non-blocking GameBus issue:** My Activities may display `overproductionDessertKg` with the wrong label (“Overproduction meat (kg)”) while persisting the correct dessert value. GameBus display/configuration investigation — not an application defect.
 

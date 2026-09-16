@@ -90,7 +90,10 @@ Cannot be closed from this repo’s Vitest stack (no browser E2E):
 | | |
 |--|--|
 | **Status** | **Implemented** on `main` (`#/service-closeout`, `wasteMeasurement` ACTIVITY) |
-| **Migration / doc review** | Pending ([`../contracts/SERVICE_CLOSEOUT_GAMEBUS.md`](../contracts/SERVICE_CLOSEOUT_GAMEBUS.md), [`../archive/SPEC_LEGACY.md`](../archive/SPEC_LEGACY.md) §10) |
+| **Gherkin** | [`../../features/kitchen/service-closeout.feature`](../../features/kitchen/service-closeout.feature) |
+| **Coverage** | [`../testing/SERVICE_CLOSEOUT_ACCEPTANCE_COVERAGE.md`](../testing/SERVICE_CLOSEOUT_ACCEPTANCE_COVERAGE.md) |
+| **Contract** | [`../contracts/SERVICE_CLOSEOUT_GAMEBUS.md`](../contracts/SERVICE_CLOSEOUT_GAMEBUS.md) |
+| **Notes** | Synthetic forecast fallback still enabled for pilot; production authorization remains platform-dependent |
 
 ---
 

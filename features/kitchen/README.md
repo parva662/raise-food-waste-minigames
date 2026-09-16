@@ -5,6 +5,7 @@ Gherkin acceptance specs for Kitchen Forecast, Service Closeout, and related kit
 | File | Status |
 |------|--------|
 | [`kitchen-forecast.feature`](kitchen-forecast.feature) | **APPROVED PRODUCT TARGET** — the only remaining `@pending` scenario is the open-page rollover edge case, deliberately deferred for the pilot |
+| [`service-closeout.feature`](service-closeout.feature) | **APPROVED PRODUCT TARGET** — remaining `@pending` tags are open product/platform questions |
 | [`kitchen-results-participant.feature`](kitchen-results-participant.feature) | **APPROVED PRODUCT TARGET** — remaining `@pending` tags are calculation/identity edge cases only |
 | [`kitchen-results-admin.feature`](kitchen-results-admin.feature) | **APPROVED PRODUCT TARGET** — admin authorization remains `@pending` / platform |
 

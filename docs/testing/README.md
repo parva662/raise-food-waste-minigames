@@ -16,3 +16,9 @@ The `.feature` file remains the product source of truth. That matrix only maps i
 |---------|---------|-----------------|
 | Participant `#/chef-results` | [`../../features/kitchen/kitchen-results-participant.feature`](../../features/kitchen/kitchen-results-participant.feature) | [`KITCHEN_RESULTS_PARTICIPANT_ACCEPTANCE_COVERAGE.md`](KITCHEN_RESULTS_PARTICIPANT_ACCEPTANCE_COVERAGE.md) |
 | Admin `#/chef-results-admin` | [`../../features/kitchen/kitchen-results-admin.feature`](../../features/kitchen/kitchen-results-admin.feature) | [`KITCHEN_RESULTS_ADMIN_ACCEPTANCE_COVERAGE.md`](KITCHEN_RESULTS_ADMIN_ACCEPTANCE_COVERAGE.md) |
+
+## Service Closeout
+
+Traceability from the approved Gherkin to Vitest coverage:
+
+[`SERVICE_CLOSEOUT_ACCEPTANCE_COVERAGE.md`](SERVICE_CLOSEOUT_ACCEPTANCE_COVERAGE.md)

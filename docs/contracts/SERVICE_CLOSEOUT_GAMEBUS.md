@@ -28,12 +28,14 @@
 - Input Collection `kitchenGroupInput.activities` retrieves group kitchen activities (`GET /groups/activities`).
 - Service Closeout filters **only** `chefForecast` template activities; `wasteMeasurement` and unrelated templates are ignored.
 - Parsed into `GameBusChefForecast`; matched by exact `targetDate` only (no cross-date fallback).
-- Multiple kitchen staff may submit forecasts for the same service date — all exact-date forecasts are shown read-only (one row per actor per category).
-- When `SERVICE_CLOSEOUT_CONFIG.syntheticForecastFallbackEnabled` is true and no real exact-date forecast exists, a labelled synthetic test forecast is shown (never posted).
+- Eligible Kitchen Forecast retrieval rules apply (exact date; eligibility windows; latest eligible per actor; later ineligible cannot replace eligible).
+- **Display set (own vs all staff):** master plan and current UI show authenticated-user "Submitted forecast" context; older contract wording mentioned all exact-date staff forecasts. The approved display set remains an open product question (`@pending` in Gherkin). Current implementation resolves the authenticated user's eligible forecast only.
+- When `SERVICE_CLOSEOUT_CONFIG.syntheticForecastFallbackEnabled` is true and no real exact-date forecast exists for that resolution path, a labelled synthetic test forecast is shown (never posted). **Must be false before production data collection.**
 - Displayed **read-only** in the closeout UI.
 - Forecast values are **not** copied into `wasteMeasurement`.
 
-Authenticated recorder identity: read-only **Recorded by** from `inputCollectionPari.me`. The GameBus `activity.actor` on finalize remains authoritative for persistence. The former **Head chef today** selector is removed.
+Authenticated recorder identity: read-only **Recorded by** from `inputCollectionPari.me`. The GameBus `activity.actor` on finalize remains authoritative for persistence. The former **Head chef today** selector is removed. There is no `headChefUserId` / `chefId` property on `wasteMeasurement`.
+
 
 `chefForecast` remains a separate activity (forecast before service). `wasteMeasurement` is final observed service data after service.
 
