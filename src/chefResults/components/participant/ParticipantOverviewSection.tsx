@@ -10,6 +10,7 @@ import { TeamComparisonSection } from './TeamComparisonSection';
 interface ParticipantOverviewSectionProps {
   resultsReady: boolean;
   hasCloseout: boolean;
+  isServiceDay: boolean;
   ownResult: StaffDailyResult | null;
   dailyResults: DailyServiceResults | null;
   pendingForecast: ChefForecastForCalculation | null;
@@ -49,6 +50,7 @@ function PendingForecastSummary({ forecast }: { forecast: ChefForecastForCalcula
 export function ParticipantOverviewSection({
   resultsReady,
   hasCloseout,
+  isServiceDay,
   ownResult,
   dailyResults,
   pendingForecast,
@@ -56,6 +58,19 @@ export function ParticipantOverviewSection({
   peerInsights,
 }: ParticipantOverviewSectionProps) {
   const observed: ObservedServiceReality | null = dailyResults?.observed ?? null;
+
+  if (!isServiceDay) {
+    return (
+      <div className="participant-overview" data-testid="participant-overview-tab">
+        <div className="kitchen-mgmt-surface" data-testid="participant-no-service-day">
+          <p className="kitchen-mgmt-snapshot-message">No kitchen service is scheduled for this date.</p>
+          <p className="kitchen-mgmt-snapshot-hint">
+            You can still review your previous results in Progress.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="participant-overview" data-testid="participant-overview-tab">

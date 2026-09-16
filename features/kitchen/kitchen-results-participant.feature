@@ -133,34 +133,89 @@ Feature: Kitchen staff review their own forecast simulation results
   # SERVICE DATE SHOWN
   # ---------------------------------------------------------------------------
 
-  Rule: The participant dashboard presents results for service dates with available data
+  Rule: The participant dashboard date is the current Europe/Helsinki calendar day
+
+    The Kitchen Results participant dashboard is not the Kitchen Forecast entry game.
+    Dashboard date semantics are independent of Kitchen Forecast 08:00 / 08:30 windows.
+
+    At any instant:
+      dashboardCalendarDate = current Europe/Helsinki calendar date
+
+    Boundary:
+      23:59:59.999 Helsinki → still the old calendar date
+      00:00:00.000 Helsinki → new calendar date immediately
+
+    There is no 08:30 transition for the dashboard date.
 
     @calendar @service-date @timezone
-    Scenario: Result service dates are Europe/Helsinki operational calendar dates
-      Given results are shown for one or more service dates
-      Then each service date is an Europe/Helsinki operational calendar date
-      And device timezone must not redefine the operational service date
+    Scenario: Dashboard date is the current Europe/Helsinki calendar date
+      Given the participant opens the Kitchen Staff Dashboard
+      Then the dashboard service date is the current Europe/Helsinki calendar date
+      And device timezone must not redefine that calendar date
 
-    @pending @calendar @service-date
-    Scenario: How the participant dashboard chooses its default / current service date is unresolved
-      Given canonical product documentation requires results joined by userId + targetDate and
-        waiting/empty states for missing forecast or closeout, but does not unambiguously define
-        the default service date shown on open
-      And historical documentation mentions "latest available finalized result" while current
-        application code may derive a time-based operational results date related to Kitchen
-        Forecast windows
-      Then the product team must decide whether the participant default is:
-        | option |
-        | latest available finalized calculable result for that participant |
-        | a time-derived current operational results date (with explicit time bands) |
-        | another approved rule |
-      And whether Friday→Monday, weekend, explicit closures, missing menu data, and
-        closeout-not-yet-finalized affect that default
-      And the pilot must not treat current application code as the approved specification
+    @calendar @service-date @midnight
+    Scenario Outline: Dashboard date rolls at Helsinki midnight and ignores the 08:30 forecast switch
+      Given the current Europe/Helsinki wall-clock is <helsinkiTime> on <calendarDay>
+      When the participant dashboard date is resolved
+      Then the dashboard calendar date is "<expectedDate>"
+      And the Kitchen Forecast 08:30 target-date rule is not used for that resolution
+
+      Examples:
+        | calendarDay | helsinkiTime | expectedDate |
+        | Monday      | 23:59:59     | Monday       |
+        | Tuesday     | 00:00:00     | Tuesday      |
+        | Tuesday     | 08:29:59     | Tuesday      |
+        | Tuesday     | 08:30:00     | Tuesday      |
+        | Tuesday     | 23:59:59     | Tuesday      |
+
+    @calendar @service-date @weekend
+    Scenario Outline: Weekend calendar dates show No service today
+      Given the current Europe/Helsinki calendar date is <day>
+      When the participant opens the Kitchen Staff Dashboard
+      Then the dashboard header shows that calendar date
+      And the status is "No service today"
+      And Overview explains that no kitchen service is scheduled for this date
+      And Progress remains available for earlier completed results
+      And yesterday is not presented as today
+
+      Examples:
+        | day      |
+        | Saturday |
+        | Sunday   |
+
+    @calendar @service-date @closure
+    Scenario: An explicitly closed weekday shows No service today for that date
+      Given Monday is explicitly configured as closed
+      And the current Europe/Helsinki calendar date is that Monday
+      When the participant opens the Kitchen Staff Dashboard
+      Then the dashboard header shows that Monday
+      And the status is "No service today"
+      And Overview explains that no kitchen service is scheduled for this date
+      And Progress remains available
+
+    @calendar @service-date @menu
+    Scenario: Missing menu data does not make an operational weekday a non-service day
+      Given the current Europe/Helsinki calendar date is an ordinary weekday
+      And menu data for that weekday is unavailable
+      When the participant dashboard date and service-day status are resolved
+      Then the dashboard calendar date remains that weekday
+      And the day is still treated as an operational service day
+      And the status is not "No service today" merely because menu data is missing
+
+    @calendar @service-date @midnight @open-page
+    Scenario: An open dashboard updates across Helsinki midnight without reload
+      Given the participant dashboard is open on Monday at 23:59:59 Europe/Helsinki
+      And historical Progress contains completed services
+      When the Europe/Helsinki clock advances to Tuesday 00:00:00 without a page reload
+      Then the header date changes from Monday to Tuesday
+      And Overview reevaluates Tuesday
+      And historical Progress remains visible
+      And no stale Monday dashboard-date state remains
 
     @availability @service-date
     Scenario: Waiting for closeout is required when the shown date has forecast but no finalized closeout
       Given the participant dashboard is showing service date D
+      And D is an operational service day
       And the authenticated kitchen-staff member has an eligible forecast for D
       And D has no finalized Service Closeout
       Then the waiting-for-closeout state is shown

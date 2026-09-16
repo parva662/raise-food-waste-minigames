@@ -15,7 +15,11 @@ import {
   getParticipantEligibleForecastForDate,
   hasGroupCloseoutForDate,
 } from './adapters/groupCalculationSource';
-import { resolveChefResultsServiceDate } from '../services/operationalServiceCalendar';
+import {
+  isOperationalServiceDay,
+  msUntilNextHelsinkiMidnight,
+  resolveChefResultsServiceDate,
+} from '../services/operationalServiceCalendar';
 import { getFixtureCurrentUserId } from './currentUserContext';
 import { findParticipantDailyResult } from './participantWeekData';
 import { buildParticipantProgressServicePoints } from './participantProgressData';
@@ -29,9 +33,62 @@ import { useGameBusEmbed } from '../gamebus/useGameBusEmbed';
 import type { DailyServiceResults } from './types';
 
 /**
+ * Keep the participant dashboard clock aligned to Europe/Helsinki midnight without
+ * relying on a fixed 24h timer (DST-safe) or waiting for a full page reload.
+ */
+function useHelsinkiDashboardClock(): Date {
+  const [now, setNow] = useState(() => new Date());
+
+  useEffect(() => {
+    let midnightTimeoutId: number | undefined;
+    let cancelled = false;
+
+    const refresh = () => {
+      if (cancelled) return;
+      setNow(new Date());
+    };
+
+    const scheduleMidnight = () => {
+      if (midnightTimeoutId !== undefined) {
+        window.clearTimeout(midnightTimeoutId);
+      }
+      const delayMs = Math.max(msUntilNextHelsinkiMidnight(new Date()) + 1, 25);
+      midnightTimeoutId = window.setTimeout(() => {
+        refresh();
+        scheduleMidnight();
+      }, delayMs);
+    };
+
+    const onVisibility = () => {
+      if (document.visibilityState === 'visible') {
+        refresh();
+        scheduleMidnight();
+      }
+    };
+
+    scheduleMidnight();
+    // Safety net when browsers throttle background timers.
+    const intervalId = window.setInterval(refresh, 60_000);
+    document.addEventListener('visibilitychange', onVisibility);
+
+    return () => {
+      cancelled = true;
+      if (midnightTimeoutId !== undefined) {
+        window.clearTimeout(midnightTimeoutId);
+      }
+      window.clearInterval(intervalId);
+      document.removeEventListener('visibilitychange', onVisibility);
+    };
+  }, []);
+
+  return now;
+}
+
+/**
  * Participant-safe results view — own identifiable data + other-staff comparison.
  * Route: #/chef-results (GameBus participant menu target).
  *
+ * Dashboard date = current Europe/Helsinki calendar day (midnight rollover).
  * Historical Progress is independent of the current service waiting/no-forecast state.
  */
 export function ChefResultsParticipantApp() {
@@ -41,31 +98,40 @@ export function ChefResultsParticipantApp() {
   const fixtureUserId = getFixtureCurrentUserId();
   const currentUserId = embedded ? authenticatedUser?.id ?? '' : fixtureUserId;
 
-  const [now, setNow] = useState(() => new Date());
-  useEffect(() => {
-    const interval = window.setInterval(() => setNow(new Date()), 30_000);
-    return () => window.clearInterval(interval);
-  }, []);
-
+  const now = useHelsinkiDashboardClock();
   const resultsServiceDate = useMemo(() => resolveChefResultsServiceDate(now), [now]);
+  const isServiceDay = useMemo(
+    () => isOperationalServiceDay(resultsServiceDate),
+    [resultsServiceDate],
+  );
   const [primaryTab, setPrimaryTab] = useState<ParticipantPrimaryTab>('overview');
 
   const canLoadParticipantData = !isEmbeddedLoading && (!embedded || inputCollectionsReady);
   const canLoadProgress = canLoadParticipantData && Boolean(currentUserId || !embedded);
 
-  const resultsState = useChefResultsData(resultsServiceDate);
-  const completeDailyResults = resultsState.status === 'ready' ? resultsState.dailyResults : null;
+  const resultsState = useChefResultsData(isServiceDay ? resultsServiceDate : '');
+  const completeDailyResults =
+    isServiceDay && resultsState.status === 'ready' ? resultsState.dailyResults : null;
 
   const hasCloseout = useMemo(() => {
-    if (isEmbeddedLoading) return false;
+    if (!isServiceDay || isEmbeddedLoading) return false;
     if (embedded && inputCollectionsReady) {
       return hasGroupCloseoutForDate(inputCollections, resultsServiceDate);
     }
     return hasFixtureCloseoutForDate(resultsServiceDate);
-  }, [embedded, inputCollections, inputCollectionsReady, isEmbeddedLoading, resultsServiceDate]);
+  }, [
+    embedded,
+    inputCollections,
+    inputCollectionsReady,
+    isEmbeddedLoading,
+    isServiceDay,
+    resultsServiceDate,
+  ]);
 
   const closeoutOnlyResults = useMemo((): DailyServiceResults | null => {
-    if (!canLoadParticipantData || completeDailyResults || !hasCloseout) return null;
+    if (!isServiceDay || !canLoadParticipantData || completeDailyResults || !hasCloseout) {
+      return null;
+    }
     if (embedded && inputCollectionsReady) {
       return buildGroupCloseoutOnlyResults(inputCollections, resultsServiceDate);
     }
@@ -77,18 +143,21 @@ export function ChefResultsParticipantApp() {
     hasCloseout,
     inputCollections,
     inputCollectionsReady,
+    isServiceDay,
     resultsServiceDate,
   ]);
 
   const dailyResults = completeDailyResults ?? closeoutOnlyResults;
-  const ownResult = isEmbeddedLoading
-    ? null
-    : findParticipantDailyResult(currentUserId, resultsServiceDate, completeDailyResults);
+  const ownResult =
+    !isServiceDay || isEmbeddedLoading
+      ? null
+      : findParticipantDailyResult(currentUserId, resultsServiceDate, completeDailyResults);
 
-  const hasCurrentResult = !isEmbeddedLoading && completeDailyResults !== null && ownResult !== null;
+  const hasCurrentResult =
+    isServiceDay && !isEmbeddedLoading && completeDailyResults !== null && ownResult !== null;
 
   const pendingForecast = useMemo(() => {
-    if (!canLoadParticipantData || hasCloseout || hasCurrentResult) return null;
+    if (!isServiceDay || !canLoadParticipantData || hasCloseout || hasCurrentResult) return null;
     if (embedded && inputCollectionsReady) {
       return getParticipantEligibleForecastForDate(
         inputCollections,
@@ -111,6 +180,7 @@ export function ChefResultsParticipantApp() {
     hasCurrentResult,
     inputCollections,
     inputCollectionsReady,
+    isServiceDay,
     resultsServiceDate,
   ]);
 
@@ -153,11 +223,13 @@ export function ChefResultsParticipantApp() {
 
   const dashboardStatus: DashboardStatus = isEmbeddedLoading
     ? 'loading'
-    : hasCurrentResult
-      ? 'result-ready'
-      : hasCloseout
-        ? 'no-forecast'
-        : 'waiting-closeout';
+    : !isServiceDay
+      ? 'no-service'
+      : hasCurrentResult
+        ? 'result-ready'
+        : hasCloseout
+          ? 'no-forecast'
+          : 'waiting-closeout';
 
   return (
     <div
@@ -180,8 +252,9 @@ export function ChefResultsParticipantApp() {
             if (tab === 'overview') {
               return (
                 <ParticipantOverviewSection
-                  resultsReady={resultsState.status === 'ready'}
+                  resultsReady={isServiceDay && resultsState.status === 'ready'}
                   hasCloseout={hasCloseout}
+                  isServiceDay={isServiceDay}
                   ownResult={ownResult}
                   dailyResults={dailyResults}
                   pendingForecast={pendingForecast}

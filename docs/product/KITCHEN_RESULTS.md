@@ -33,13 +33,17 @@ Two surfaces exist in the current repository:
 
 ### Locked product rules (this audit)
 
-- Historical Progress is independent of the current service waiting / no-forecast state.
+- Participant dashboard date = current Europe/Helsinki calendar day; rolls at **midnight**, not at Kitchen Forecast 08:30.
+- Weekend / explicitly closed weekday → header shows that calendar date with status **No service today**; Progress remains available.
+- Missing menu does not make an operational weekday a non-service day.
+- Historical Progress is independent of the current service waiting / no-forecast / no-service state.
 - Progress chart: 0 observations → empty; 1 → show data (no trend claim); 2+ → chart + trend.
 - Other-staff comparison from **one** peer onward; label "Other staff" (1) / "Other staff median" (2+).
 - Missing forecast is omitted from aggregation (not zero performance).
 - Closeout without personal forecast still shows actual kitchen outcome.
 - Forecast without closeout preserves dashboard structure and may show submitted forecast; metrics pending.
 - Admin partial data must not collapse to a single empty paragraph.
+- Admin keeps its historical service-date selector (not a "today dashboard").
 - No composite score, ranking, or winner language.
 - Shared calculation engine for participant and admin for the same actor + targetDate.
 

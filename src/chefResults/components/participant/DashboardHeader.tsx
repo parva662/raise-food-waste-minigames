@@ -1,11 +1,12 @@
-import { CheckCircle2, Clock3, FileQuestion } from 'lucide-react';
+import { CheckCircle2, Clock3, FileQuestion, Ban } from 'lucide-react';
 import { formatServiceDateLong } from '../../displayFormat';
 
 export type DashboardStatus =
   | 'loading'
   | 'result-ready'
   | 'waiting-closeout'
-  | 'no-forecast';
+  | 'no-forecast'
+  | 'no-service';
 
 interface DashboardHeaderProps {
   serviceDate: string;
@@ -21,6 +22,10 @@ const STATUS_COPY: Record<Exclude<DashboardStatus, 'loading'>, { label: string; 
     },
     'no-forecast': {
       label: 'No forecast for this service',
+      className: 'chef-results-status-chip--neutral',
+    },
+    'no-service': {
+      label: 'No service today',
       className: 'chef-results-status-chip--neutral',
     },
   };
@@ -48,7 +53,7 @@ export function DashboardHeader({ serviceDate, status }: DashboardHeaderProps) {
       >
         <div className="chef-results-dashboard-header__meta-block">
           <span className="kitchen-mgmt-date-picker__title">Service date</span>
-          <p className="chef-results-dashboard-header__date-value">
+          <p className="chef-results-dashboard-header__date-value" data-testid="dashboard-calendar-date">
             {formatServiceDateLong(serviceDate)}
           </p>
         </div>
@@ -70,8 +75,12 @@ export function DashboardHeader({ serviceDate, status }: DashboardHeaderProps) {
             >
               {status === 'result-ready' ? (
                 <CheckCircle2 size={14} aria-hidden="true" />
-              ) : status === 'no-forecast' ? (
-                <FileQuestion size={14} aria-hidden="true" />
+              ) : status === 'no-forecast' || status === 'no-service' ? (
+                status === 'no-service' ? (
+                  <Ban size={14} aria-hidden="true" />
+                ) : (
+                  <FileQuestion size={14} aria-hidden="true" />
+                )
               ) : (
                 <Clock3 size={14} aria-hidden="true" />
               )}

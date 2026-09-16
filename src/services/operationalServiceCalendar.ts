@@ -1,11 +1,12 @@
 import { parseISO } from 'date-fns';
-import { toZonedTime } from 'date-fns-tz';
+import { fromZonedTime, toZonedTime } from 'date-fns-tz';
 import { CANTEEN_CONFIG } from '../config/canteen';
 import { isBeforeChefWindowSwitch } from './chefForecastWindow';
 import { addDaysToIsoDate, getOperationalDateIso } from '../utils/dates';
 import { isExplicitlyClosedServiceDate } from './menuResolver';
 
 const MAX_CALENDAR_STEPS = 366;
+const OPERATIONAL_TIMEZONE = CANTEEN_CONFIG.timezone;
 
 export class OperationalCalendarError extends Error {
   constructor(message: string) {
@@ -15,7 +16,7 @@ export class OperationalCalendarError extends Error {
 }
 
 function isWeekend(isoDate: string): boolean {
-  const zoned = toZonedTime(parseISO(isoDate), CANTEEN_CONFIG.timezone);
+  const zoned = toZonedTime(parseISO(isoDate), OPERATIONAL_TIMEZONE);
   const dayIndex = zoned.getDay();
   return dayIndex === 0 || dayIndex === 6;
 }
@@ -80,10 +81,26 @@ export function resolveChefForecastServiceDate(now: Date = new Date()): string {
 }
 
 /**
- * Canonical Chef Results service date — the operational day immediately before the
- * service currently being forecast.
+ * Kitchen Results participant dashboard calendar date (Europe/Helsinki).
+ *
+ * This is the current Helsinki calendar day. It rolls at exactly 00:00:00 Helsinki and
+ * does NOT follow the Kitchen Forecast 08:30 target-date switch.
+ *
+ * Whether that calendar day is an operational service day is a separate question —
+ * see {@link isOperationalServiceDay}.
  */
 export function resolveChefResultsServiceDate(now: Date = new Date()): string {
-  const forecastTargetDate = resolveChefForecastServiceDate(now);
-  return resolvePreviousOperationalDay(forecastTargetDate);
+  return getOperationalDateIso(now);
+}
+
+/** Instant of the next Europe/Helsinki local midnight after `now`. */
+export function getNextHelsinkiMidnightInstant(now: Date = new Date()): Date {
+  const today = getOperationalDateIso(now);
+  const tomorrow = addDaysToIsoDate(today, 1);
+  return fromZonedTime(`${tomorrow} 00:00:00.000`, OPERATIONAL_TIMEZONE);
+}
+
+/** Milliseconds until the next Europe/Helsinki local midnight (never negative). */
+export function msUntilNextHelsinkiMidnight(now: Date = new Date()): number {
+  return Math.max(0, getNextHelsinkiMidnightInstant(now).getTime() - now.getTime());
 }
