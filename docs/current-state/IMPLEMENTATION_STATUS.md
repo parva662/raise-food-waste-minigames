@@ -127,6 +127,8 @@ Canonical: [`../product/waste-challenges/KITCHEN_DAY.md`](../product/waste-chall
 
 **CURRENT IMPLEMENTATION on `feature/kitchen-day-v1`:** Phases 1–5 at `#/kitchen-day`: participant-specific session lock (TASK + `inputCollectionPari.me`), student/chef dashboards, session-level `wastePracticeReview`. One TASK must list `trimSmart` + `rescueAndReuse` + `portionPrecision` (see [`KITCHEN_DAY_TASK.md`](../contracts/KITCHEN_DAY_TASK.md)); review posts require `wastePracticeReview` on the current TASK. `#/waste/trim-smart` remains v1. Live posting is guarded: **LIVE E2E BLOCKED BY GAMEBUS ADMIN ALIGNMENT**.
 
+**v1 product-review baseline:** The current Kitchen Day student/tutor UX, including the vertical Session Review at `#/kitchen-day/review`, is the approved product-review checkpoint for v1. This is a product-review baseline, not a production release.
+
 **APPROVED TARGET:** connected Kitchen Day (Trim Smart + Rescue & Reuse + Portion Precision + one session-level chef review).
 
 Gherkin: [`../../features/waste-challenges/`](../../features/waste-challenges/) — all **APPROVED PRODUCT TARGET**. Intentional `@pending`: percentile / ranking sufficient-data rule.
