@@ -1,12 +1,14 @@
 import { buildKitchenDayTrimSmartActivityMessage } from '../gamebus/buildKitchenDayTrimSmartActivityMessage';
 import { buildPortionPrecisionActivityMessage } from '../gamebus/buildPortionPrecisionActivityMessage';
 import { buildRescueAndReuseActivityMessage } from '../gamebus/buildRescueAndReuseActivityMessage';
+import { buildWastePracticeReviewActivityMessage } from '../gamebus/buildWastePracticeReviewActivityMessage';
 import { getGameBusTask } from '../gamebus/bridge';
 import type { ActivityMessage, TaskData } from '../gamebus/types';
 import { KITCHEN_DAY_LIVE_BLOCK_REASON, canPostKitchenDayToGameBus } from './liveIntegration';
 import type {
   KitchenDayPortionEntry,
   KitchenDayRescueEntry,
+  KitchenDayReviewEntry,
   KitchenDayTrimEntry,
 } from './types';
 
@@ -77,5 +79,13 @@ export function tryPostKitchenDayPortion(entry: KitchenDayPortionEntry): Kitchen
     getGameBusTask(),
     (task) => buildPortionPrecisionActivityMessage(task, entry),
     `portion:${entry.sessionId}:${entry.recipeId}:${entry.submittedAt}`,
+  );
+}
+
+export function tryPostKitchenDayReview(entry: KitchenDayReviewEntry): KitchenDayPostResult {
+  return tryPostKitchenDayActivity(
+    getGameBusTask(),
+    (task) => buildWastePracticeReviewActivityMessage(task, entry),
+    `review:${entry.sessionId}`,
   );
 }

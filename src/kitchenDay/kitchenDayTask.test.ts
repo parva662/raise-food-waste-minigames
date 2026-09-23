@@ -1,10 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { kitchenDayTaskFixture } from '../gamebus/kitchenDayTaskFixtures';
+import { kitchenDayChefTaskFixture, kitchenDayTaskFixture } from '../gamebus/kitchenDayTaskFixtures';
 import { trimSmartTaskFixture } from '../gamebus/trimSmartTaskFixtures';
 import {
   assertKitchenDayTask,
   missingKitchenDayTaskTemplates,
   selectKitchenDayActivityTemplate,
+  selectWastePracticeReviewTemplate,
 } from './kitchenDayTask';
 
 describe('Kitchen Day multi-template TASK', () => {
@@ -26,6 +27,13 @@ describe('Kitchen Day multi-template TASK', () => {
     ]);
     expect(() => assertKitchenDayTask(trimSmartTaskFixture)).toThrow(
       /missing required activity templates: rescueAndReuse, portionPrecision/,
+    );
+  });
+
+  it('selects wastePracticeReview only when that template is on the TASK', () => {
+    expect(selectWastePracticeReviewTemplate(kitchenDayChefTaskFixture)).toBe('wastePracticeReview');
+    expect(() => selectWastePracticeReviewTemplate(kitchenDayTaskFixture)).toThrow(
+      /wastePracticeReview/,
     );
   });
 });

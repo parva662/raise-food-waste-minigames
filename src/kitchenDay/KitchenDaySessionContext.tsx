@@ -23,12 +23,19 @@ import { ensureKitchenDayLockedSession } from './session/lock';
 import {
   buildKitchenDayReadModel,
   mergeKitchenDayRecords,
+  parsePersistedReviewEntry,
 } from './read/kitchenDayReadModel';
-import { tryPostKitchenDayPortion, tryPostKitchenDayRescue, tryPostKitchenDayTrim } from './postKitchenDayActivity';
+import {
+  tryPostKitchenDayPortion,
+  tryPostKitchenDayRescue,
+  tryPostKitchenDayReview,
+  tryPostKitchenDayTrim,
+} from './postKitchenDayActivity';
 import type {
   KitchenDayLockedSession,
   KitchenDayPortionEntry,
   KitchenDayRescueEntry,
+  KitchenDayReviewEntry,
   KitchenDayTrimEntry,
 } from './types';
 
@@ -43,12 +50,15 @@ interface KitchenDaySessionValue {
   trimEntries: KitchenDayTrimEntry[];
   rescueEntries: KitchenDayRescueEntry[];
   portionEntries: KitchenDayPortionEntry[];
+  reviews: KitchenDayReviewEntry[];
   recordedIngredientIds: string[];
   commitTrimEntry: (entry: KitchenDayTrimEntry) => KitchenDayCommitResult;
   commitRescueEntry: (entry: KitchenDayRescueEntry) => KitchenDayCommitResult;
   commitPortionEntry: (entry: KitchenDayPortionEntry) => KitchenDayCommitResult;
+  commitReview: (entry: KitchenDayReviewEntry) => KitchenDayCommitResult;
   findTrimByIngredientId: (ingredientId: string) => KitchenDayTrimEntry | undefined;
   findRescueByIngredientId: (ingredientId: string) => KitchenDayRescueEntry | undefined;
+  findReviewBySessionId: (sessionId: string) => KitchenDayReviewEntry | undefined;
 }
 
 const KitchenDaySessionContext = createContext<KitchenDaySessionValue | null>(null);
@@ -57,11 +67,17 @@ function readPersistedForSession(sessionId: string): {
   trimEntries: KitchenDayTrimEntry[];
   rescueEntries: KitchenDayRescueEntry[];
   portionEntries: KitchenDayPortionEntry[];
+  reviews: KitchenDayReviewEntry[];
 } {
   const payload = getGameBusInputCollections();
   const actorId = getAuthenticatedGameBusUser(payload)?.id ?? null;
   const activities = extractGroupActivities(getRawKitchenGroupActivitiesInput(payload));
-  return buildKitchenDayReadModel(activities, { sessionId, actorId });
+  return {
+    ...buildKitchenDayReadModel(activities, { sessionId, actorId }),
+    reviews: activities
+      .map((activity) => parsePersistedReviewEntry(activity))
+      .filter((entry): entry is KitchenDayReviewEntry => entry !== null),
+  };
 }
 
 export function KitchenDaySessionProvider({
@@ -98,11 +114,13 @@ export function KitchenDaySessionProvider({
   const [localTrim, setLocalTrim] = useState<KitchenDayTrimEntry[]>([]);
   const [localRescue, setLocalRescue] = useState<KitchenDayRescueEntry[]>([]);
   const [localPortion, setLocalPortion] = useState<KitchenDayPortionEntry[]>([]);
+  const [localReviews, setLocalReviews] = useState<KitchenDayReviewEntry[]>([]);
   const [persisted, setPersisted] = useState(() =>
     session ? readPersistedForSession(session.sessionId) : {
       trimEntries: [] as KitchenDayTrimEntry[],
       rescueEntries: [] as KitchenDayRescueEntry[],
       portionEntries: [] as KitchenDayPortionEntry[],
+      reviews: [] as KitchenDayReviewEntry[],
     },
   );
 
@@ -152,6 +170,15 @@ export function KitchenDaySessionProvider({
           left.recipeId === right.recipeId && left.submittedAt === right.submittedAt,
       ),
     [localPortion, persisted.portionEntries],
+  );
+  const reviews = useMemo(
+    () =>
+      mergeKitchenDayRecords(
+        localReviews,
+        persisted.reviews,
+        (left, right) => left.sessionId === right.sessionId,
+      ),
+    [localReviews, persisted.reviews],
   );
 
   const recordedIngredientIds = useMemo(
@@ -208,6 +235,25 @@ export function KitchenDaySessionProvider({
     return { ok: true, mode: 'local' };
   }, []);
 
+  const commitReview = useCallback((entry: KitchenDayReviewEntry): KitchenDayCommitResult => {
+    if (reviews.some((item) => item.sessionId === entry.sessionId)) {
+      return { ok: false, reason: 'duplicate_review', keepDraft: true };
+    }
+    if (isGameBusEmbed()) {
+      const posted = tryPostKitchenDayReview(entry);
+      if (!posted.ok) {
+        return { ok: false, reason: posted.reason, keepDraft: true };
+      }
+      return { ok: true, mode: 'posted_awaiting_persist' };
+    }
+    setLocalReviews((current) =>
+      current.some((item) => item.sessionId === entry.sessionId)
+        ? current
+        : [...current, { ...entry, source: 'local' }],
+    );
+    return { ok: true, mode: 'local' };
+  }, [reviews]);
+
   const findTrimByIngredientId = useCallback(
     (ingredientId: string) => trimEntries.find((entry) => entry.ingredientId === ingredientId),
     [trimEntries],
@@ -215,6 +261,10 @@ export function KitchenDaySessionProvider({
   const findRescueByIngredientId = useCallback(
     (ingredientId: string) => rescueEntries.find((entry) => entry.ingredientId === ingredientId),
     [rescueEntries],
+  );
+  const findReviewBySessionId = useCallback(
+    (sessionId: string) => reviews.find((entry) => entry.sessionId === sessionId),
+    [reviews],
   );
 
   const value = useMemo<KitchenDaySessionValue>(
@@ -224,24 +274,30 @@ export function KitchenDaySessionProvider({
       trimEntries,
       rescueEntries,
       portionEntries,
+      reviews,
       recordedIngredientIds,
       commitTrimEntry,
       commitRescueEntry,
       commitPortionEntry,
+      commitReview,
       findTrimByIngredientId,
       findRescueByIngredientId,
+      findReviewBySessionId,
     }),
     [
       session,
       trimEntries,
       rescueEntries,
       portionEntries,
+      reviews,
       recordedIngredientIds,
       commitTrimEntry,
       commitRescueEntry,
       commitPortionEntry,
+      commitReview,
       findTrimByIngredientId,
       findRescueByIngredientId,
+      findReviewBySessionId,
     ],
   );
 

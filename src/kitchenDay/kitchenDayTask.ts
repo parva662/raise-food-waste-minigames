@@ -40,3 +40,11 @@ export function selectKitchenDayActivityTemplate(
   assertKitchenDayTask(task);
   return selectActivityTemplate(task, slug).reference;
 }
+
+export function selectWastePracticeReviewTemplate(task: TaskData): string {
+  const slugs = listTaskActivityTemplateSlugs(task);
+  if (!slugs.includes('wastePracticeReview')) {
+    throw new Error('TASK is missing required activity template: wastePracticeReview');
+  }
+  return selectActivityTemplate(task, 'wastePracticeReview').reference;
+}

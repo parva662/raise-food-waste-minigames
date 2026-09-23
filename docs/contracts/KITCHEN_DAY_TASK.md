@@ -15,7 +15,7 @@ The iframe receives **one** `TASK` (later TASK messages are ignored by `src/game
 
 Do **not** split Kitchen Day into three embeds. Embedded `sessionId` is one student + one Kitchen Day: `kitchen-day:<taskId>:<actorId>:<sessionDate>`. Do not persist actor id as a Kitchen Day activity property.
 
-`wastePracticeReview` stays on the chef-feedback task (Phase 5). It is not required on the student Kitchen Day TASK.
+`wastePracticeReview` stays on the chef-feedback task. It is not required on the student Kitchen Day TASK. Review posts validate that template on the current TASK before building the ACTIVITY.
 
 ## Evidence (inspected, not inferred)
 
@@ -27,4 +27,5 @@ Do **not** split Kitchen Day into three embeds. Embedded `sessionId` is one stud
 
 - Embedded Kitchen Day waits for a valid TASK **and** `inputCollectionPari.me`, then locks `sessionId` / `sessionDate` once. Later TASK or INPUT_COLLECTIONS refreshes cannot replace them.
 - Builders call `selectKitchenDayActivityTemplate(task, slug)` and fail if any of the three templates is missing.
+- Review builders call `selectWastePracticeReviewTemplate(task)` and fail if `wastePracticeReview` is missing.
 - `KITCHEN_DAY_LIVE_INTEGRATION_READY` remains `false` until live property schemas match the slug contract.

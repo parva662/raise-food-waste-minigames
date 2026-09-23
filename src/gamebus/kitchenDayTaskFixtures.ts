@@ -1,6 +1,7 @@
 import { KITCHEN_DAY_TRIM_REQUIRED_REFS } from './mapKitchenDayTrimSmart';
 import { PORTION_PRECISION_REQUIRED_REFS } from './mapPortionPrecision';
 import { RESCUE_AND_REUSE_REQUIRED_REFS } from './mapRescueAndReuse';
+import { WASTE_PRACTICE_REVIEW_REQUIRED_REFS } from './mapWastePracticeReview';
 import type { TaskData } from './types';
 
 function linked(refs: readonly string[]) {
@@ -50,4 +51,21 @@ export const kitchenDayTaskFixture: TaskData = {
   inputCollections: [],
   propertyTemplates: [],
   taskRules: [],
+};
+
+export const kitchenDayChefTaskFixture: TaskData = {
+  ...kitchenDayTaskFixture,
+  id: 'kitchen-day-chef-task-1',
+  title: 'Kitchen Day chef review',
+  url: 'http://localhost:5173/#/kitchen-day/chef',
+  activityTemplates: [
+    ...kitchenDayTaskFixture.activityTemplates,
+    {
+      id: 'kd-review',
+      slug: 'wastePracticeReview',
+      name: 'Waste practice review',
+      providers: [],
+      linkedProperties: linked(WASTE_PRACTICE_REVIEW_REQUIRED_REFS),
+    },
+  ],
 };

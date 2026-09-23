@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 import { getGameBusInputCollections } from '../gamebus/bridge';
 import { extractGroupActivities, getRawKitchenGroupActivitiesInput } from '../gamebus/groupActivities';
 import { useReadyKitchenDaySession } from './KitchenDaySessionContext';
+import { KitchenDayChefReviewForm } from './KitchenDayChefReviewForm';
 import { SessionEvidence } from './SessionEvidence';
 import { buildKitchenDayChefSessions, findKitchenDayChefSession } from './read/chefSessions';
 import { kitchenDayChefHashFor, parseKitchenDaySelectedSessionId } from './routes';
@@ -19,7 +20,8 @@ function sessionsFromLocalAndGroup(local: KitchenDayChefSession | null): Kitchen
 }
 
 export function KitchenDayChefView({ selectedSessionId }: { selectedSessionId: string | null }) {
-  const { session, trimEntries, rescueEntries, portionEntries } = useReadyKitchenDaySession();
+  const { session, trimEntries, rescueEntries, portionEntries, findReviewBySessionId } =
+    useReadyKitchenDaySession();
   const sessions = useMemo(() => {
     const local: KitchenDayChefSession | null =
       trimEntries.length + rescueEntries.length + portionEntries.length > 0
@@ -31,11 +33,21 @@ export function KitchenDayChefView({ selectedSessionId }: { selectedSessionId: s
             trimEntries,
             rescueEntries,
             portionEntries,
-            review: null,
+            review: findReviewBySessionId(session.sessionId) ?? null,
           }
         : null;
-    return sessionsFromLocalAndGroup(local);
-  }, [portionEntries, rescueEntries, session.sessionDate, session.sessionId, trimEntries]);
+    return sessionsFromLocalAndGroup(local).map((item) => ({
+      ...item,
+      review: item.review ?? findReviewBySessionId(item.sessionId) ?? null,
+    }));
+  }, [
+    findReviewBySessionId,
+    portionEntries,
+    rescueEntries,
+    session.sessionDate,
+    session.sessionId,
+    trimEntries,
+  ]);
 
   const selected = findKitchenDayChefSession(sessions, selectedSessionId);
 
@@ -83,6 +95,7 @@ export function KitchenDayChefView({ selectedSessionId }: { selectedSessionId: s
             portionEntries={selected.portionEntries}
             testIdPrefix="kitchen-day-chef"
           />
+          <KitchenDayChefReviewForm selected={selected} />
         </div>
       ) : selectedSessionId ? (
         <p className="kd-helper">That student session was not found.</p>
