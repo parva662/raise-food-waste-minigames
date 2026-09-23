@@ -33,7 +33,7 @@ Within one Kitchen Day session, a student does **not** create more than one Trim
 | `ingredientId` | yes | non-empty string; keys reuse join and kitchen-reference lookup |
 | `ingredientName` | yes | non-empty string |
 | `ingredientCategory` | yes | locked enum: `root` \| `leafy` \| `fruit` \| `stem` \| `herbs` \| `other` |
-| `ingredientWeightGrams` | yes | number ≥ 0 — starting weight before preparation |
+| `ingredientWeightGrams` | yes | number > 0 (`exclusiveMinimum: 0`) — starting weight before preparation |
 | `trimTechniques` | yes | live plural slug; one selected technique. **Do not** rename to `trimTechnique`. |
 | `estimatedWasteGrams` | yes | number ≥ 0 |
 | `actualWasteGrams` | yes | number ≥ 0 |
@@ -136,6 +136,7 @@ This is **not** a platform blocker and is **not** a new API.
 - Keep `trimTechniques`
 - Link `duration`
 - Ensure `estimatedWasteGrams` and `actualWasteGrams` are linked
+- Set `ingredientWeightGrams` to `exclusiveMinimum: 0` (starting weight > 0; waste fields stay `minimum: 0`)
 - Do not use `practice` or `participantWasteGrams` for new target posts
 
 ### Rescue & Reuse
