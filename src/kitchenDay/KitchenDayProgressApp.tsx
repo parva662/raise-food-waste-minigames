@@ -22,7 +22,7 @@ export function KitchenDayProgressApp() {
         <div className="kitchen-mgmt-header__main">
           <h1 className="kitchen-mgmt-header__title">Kitchen Day Progress</h1>
           <p className="kitchen-mgmt-header__lead">
-            Your own Kitchen Day performance over time. This is not a competitive board.
+            Your own Kitchen Day performance over time.
           </p>
         </div>
       </header>
