@@ -122,6 +122,8 @@ One review per student Kitchen Day / session. Not one judgement per activity or 
 
 Reuse the existing kitchen group-activities path (`kitchenGroupInput.activities` → `GET /groups/activities`, `src/gamebus/groupActivities.ts`). Filter to Kitchen Day templates. Group client-side by actor, template, `sessionId`, `sessionDate`, `ingredientId`, `recipeId`.
 
+**TASK:** one Custom Embed task lists `trimSmart`, `rescueAndReuse`, and `portionPrecision`. Evidence and client rules: [`../../contracts/KITCHEN_DAY_TASK.md`](../../contracts/KITCHEN_DAY_TASK.md).
+
 This is **not** a platform blocker and is **not** a new API.
 
 ---

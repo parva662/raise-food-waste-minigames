@@ -9,8 +9,18 @@ import { parseKitchenDaySection } from './routes';
 import { KitchenDayTrimView } from './trim/KitchenDayTrimView';
 import { KITCHEN_DAY_LIVE_BLOCK_REASON, canPostKitchenDayToGameBus } from './liveIntegration';
 
+function KitchenDayInitializing() {
+  return (
+    <div className="kd-page" data-testid="kitchen-day-initializing">
+      <h1 className="kd-header__title">Kitchen Day</h1>
+      <p className="kd-card__copy">Waiting for the GameBus task before locking this session.</p>
+    </div>
+  );
+}
+
 function KitchenDayBody() {
   const { session } = useKitchenDaySession();
+  if (!session) return <KitchenDayInitializing />;
   const [section, setSection] = useState(() => parseKitchenDaySection());
 
   useEffect(() => {
@@ -42,10 +52,18 @@ function KitchenDayBody() {
   );
 }
 
+function KitchenDayGate() {
+  const { status } = useKitchenDaySession();
+  if (status === 'initializing') {
+    return <KitchenDayInitializing />;
+  }
+  return <KitchenDayBody />;
+}
+
 export function KitchenDayApp() {
   return (
     <KitchenDaySessionProvider>
-      <KitchenDayBody />
+      <KitchenDayGate />
     </KitchenDaySessionProvider>
   );
 }

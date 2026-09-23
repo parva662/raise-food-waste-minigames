@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { buildKitchenDayTrimSmartActivityMessage } from './buildKitchenDayTrimSmartActivityMessage';
+import { kitchenDayTaskFixture } from './kitchenDayTaskFixtures';
 import { mapKitchenDayTrimSmart, orderedKitchenDayTrimPropertyRefs } from './mapKitchenDayTrimSmart';
 import type { KitchenDayTrimEntry } from '../kitchenDay/types';
 
@@ -17,6 +18,7 @@ const entry: KitchenDayTrimEntry = {
   durationMinutes: 3,
   preparationStartedAt: '2026-09-23T10:00:00.000Z',
   preparationEndedAt: '2026-09-23T10:03:00.000Z',
+  source: 'local',
 };
 
 describe('Kitchen Day Trim mapper contract', () => {
@@ -45,7 +47,7 @@ describe('Kitchen Day Trim mapper contract', () => {
   });
 
   it('uses the real preparation interval for ACTIVITY start and end', () => {
-    const message = buildKitchenDayTrimSmartActivityMessage(entry);
+    const message = buildKitchenDayTrimSmartActivityMessage(kitchenDayTaskFixture, entry);
     expect(message.data.start).toBe(entry.preparationStartedAt);
     expect(message.data.end).toBe(entry.preparationEndedAt);
     expect(message.data.template).toBe('trimSmart');

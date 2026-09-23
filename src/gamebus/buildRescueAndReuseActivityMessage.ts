@@ -1,5 +1,6 @@
 import type { KitchenDayRescueEntry } from '../kitchenDay/types';
-import type { ActivityMessage } from './types';
+import { selectKitchenDayActivityTemplate } from '../kitchenDay/kitchenDayTask';
+import type { ActivityMessage, TaskData } from './types';
 import {
   mapRescueAndReuse,
   orderedRescueAndReusePropertyRefs,
@@ -7,14 +8,16 @@ import {
 } from './mapRescueAndReuse';
 
 export function buildRescueAndReuseActivityMessage(
+  task: TaskData,
   entry: KitchenDayRescueEntry,
 ): ActivityMessage {
+  const template = selectKitchenDayActivityTemplate(task, 'rescueAndReuse');
   const values = mapRescueAndReuse(entry);
   const start = new Date(entry.submittedAt);
   return {
     type: 'ACTIVITY',
     data: {
-      template: 'rescueAndReuse',
+      template,
       start: start.toISOString(),
       end: start.toISOString(),
       properties: orderedRescueAndReusePropertyRefs().map((ref) => ({

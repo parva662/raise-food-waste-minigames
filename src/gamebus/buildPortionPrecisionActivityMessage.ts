@@ -1,5 +1,6 @@
 import type { KitchenDayPortionEntry } from '../kitchenDay/types';
-import type { ActivityMessage } from './types';
+import { selectKitchenDayActivityTemplate } from '../kitchenDay/kitchenDayTask';
+import type { ActivityMessage, TaskData } from './types';
 import {
   mapPortionPrecision,
   orderedPortionPrecisionPropertyRefs,
@@ -7,14 +8,16 @@ import {
 } from './mapPortionPrecision';
 
 export function buildPortionPrecisionActivityMessage(
+  task: TaskData,
   entry: KitchenDayPortionEntry,
 ): ActivityMessage {
+  const template = selectKitchenDayActivityTemplate(task, 'portionPrecision');
   const values = mapPortionPrecision(entry);
   const start = new Date(entry.submittedAt);
   return {
     type: 'ACTIVITY',
     data: {
-      template: 'portionPrecision',
+      template,
       start: start.toISOString(),
       end: start.toISOString(),
       properties: orderedPortionPrecisionPropertyRefs().map((ref) => ({

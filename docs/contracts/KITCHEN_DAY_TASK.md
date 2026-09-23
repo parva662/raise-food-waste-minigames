@@ -1,0 +1,30 @@
+# Kitchen Day — GameBus TASK architecture
+
+**Status:** Encoded on `feature/kitchen-day-v1`. Not production-activated.  
+**LIVE E2E BLOCKED BY GAMEBUS ADMIN ALIGNMENT.**
+
+## Decision
+
+**One Custom Embed TASK contains all three Kitchen Day activity templates:**
+
+- `trimSmart`
+- `rescueAndReuse`
+- `portionPrecision`
+
+The iframe receives **one** `TASK` (later TASK messages are ignored by `src/gamebus/bridge.ts`). The child posts multiple `ACTIVITY` messages, each naming the matching template.
+
+Do **not** split Kitchen Day into three embeds. A task-derived `sessionId` must stay shared.
+
+`wastePracticeReview` stays on the chef-feedback task (Phase 5). It is not required on the student Kitchen Day TASK.
+
+## Evidence (inspected, not inferred)
+
+1. Live foodtracker TASK payloads already use `activityTemplates: TaskActivityTemplate[]`.
+2. Live chef-mission **service-closeout** embed `01a081a9-4fee-7772-b1c6-bdfc7a362ecb` lists **three** templates on one `USER_TRIGGERED_EMBEDDED` task: `chefForecast`, `kitchenServiceCloseout`, `wasteMeasurement`.
+3. Existing Trim Smart v1 already posts **multiple** `ACTIVITY` messages from one TASK (`tryPostTrimSmartActivity` + per-attempt keys). There is no GameBus ACK; parent modal close is not treated as required for every post.
+
+## Client rules
+
+- Embedded Kitchen Day waits for TASK, then locks `sessionId` / `sessionDate` once.
+- Builders call `selectKitchenDayActivityTemplate(task, slug)` and fail if any of the three templates is missing.
+- `KITCHEN_DAY_LIVE_INTEGRATION_READY` remains `false` until live property schemas match the slug contract.
