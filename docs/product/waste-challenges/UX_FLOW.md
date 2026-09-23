@@ -1,50 +1,45 @@
 # Kitchen Day — UX flow
 
 > **APPROVED PRODUCT TARGET**. Trim Smart v1 remains a standalone CURRENT IMPLEMENTATION at `#/waste/trim-smart`.
+>
+> Visual language: [`../UI_STANDARD.md`](../UI_STANDARD.md). GameBus menu URLs: [`../../contracts/KITCHEN_DAY_ROUTES.md`](../../contracts/KITCHEN_DAY_ROUTES.md).
 
 **Slug authority:** [`GAMEBUS_SLUG_CONTRACT.md`](GAMEBUS_SLUG_CONTRACT.md).
 
 ## 1. Context
 
-Working kitchen: wet hands, scale nearby, time pressure. Minimal typing, large tap targets, units always visible, impossible values blocked.
+Working kitchen: wet hands, scale nearby, time pressure. Minimal typing, large tap targets, units always visible, impossible values blocked. No internal IDs or debug copy.
 
-## 2. Shell
+## 2. Pages
 
 ```text
-[ Trim Smart ]  [ Reuse ]  [ Portion Precision ]  [ My day ]
+Student activity   #/kitchen-day
+  [ Trim Smart ]  [ Reuse ]  [ Portion Precision ]
+  Session review  (current Kitchen Day only)
+
+Student progress   #/kitchen-day-progress   (separate left-menu page)
+Tutor dashboard    #/kitchen-day-tutor      (separate left-menu page)
 ```
 
-Shared `sessionId` + `sessionDate` (Europe/Helsinki). Exact route/hash structure is an implementation choice.
-
-- Many **different** Trim ingredients; the same ingredient is not entered twice.
-- Reuse opens from a Trim entry that has `actualWasteGrams` and joins by `sessionId` + `ingredientId`.
-- Portion Precision: one submit per recipe.
-- "My day" is read-only.
+- Activity page: practical work only. No Progress tab. No tutor functions.
+- Session review: current locked session, read-only summaries, tutor assessment if already submitted.
+- Progress: own history, Overview / Progress tabs, approved comparisons only. No leaderboard or percentile copy.
+- Tutor: student/session list, evidence, then qualitative scores (0–5). System metrics support judgement; they do not set the scores.
 
 ## 3. Trim Smart
 
-Ingredient (locked category labels) → Technique (`trimTechniques`) → Estimate → Timed prepare (`duration`) → Actual waste → system comparison → reuse / another ingredient / My day.
+Ingredient (locked category labels) → Technique → Estimate → Timed prepare → Actual waste → formatted comparison → reuse / another ingredient / session review.
 
-Category UI labels: Root vegetables, Leafy vegetables, Fruit vegetables, Stem vegetables, Herbs, Other. Posted values stay `root` / `leafy` / `fruit` / `stem` / `herbs` / `other`.
-
-Validation: starting weight > 0; estimate and actual in 0 … starting weight; zero estimate/actual allowed.
-
-Initially compare to chef-seeded reference by `ingredientId`. Later use historical Trim data when adequate, else seed. No percentile copy until the sufficient-data rule is agreed.
+Timer: instruction + Start; “Preparation in progress” + elapsed time + Finish; formatted duration + Continue. Never show `idle` / `running` / `finished`.
 
 ## 4. Reuse
 
-How much of this ingredient's waste can be reused? Where (free text)? Show calculated discarded remainder. Save. No status question. No duplicated ingredient name/category/weight fields.
+Ingredient, actual waste, reusable amount, destination, discarded remainder. Saved record is a success/read-only state.
 
 ## 5. Portion Precision
 
-Select recipe → required lines from recipe dataset (read-only) → actuals into `recipeComposition` → required `finalRecipeWeightGrams` → one submit. No category question.
+Recipe → each line: name, Target, Actual + unit in the control, human result (Exact / *n* g over / *n* g under) → final recipe weight → save.
 
-## 6. Dashboards
+## 6. Retrieval
 
-Student "My day" and chef session view are **read-only** evidence surfaces. Chef adds one pair of 0–5 scores and optional feedback at end of session.
-
-Load via existing group-activities client.
-
-## 7. UX non-goals
-
-Separate apps; reuse follow-up; skipping final recipe weight; storing calculated analytics as facts; per-ingredient chef scores; same ingredient twice in one session.
+Existing `kitchenGroupInput.activities` path. No new API.

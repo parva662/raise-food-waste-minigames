@@ -29,7 +29,7 @@ Stored: `sessionId`, `sessionDate`, `submittedAt`, `timeEfficiencyScore`, `prepa
 
 **DEPRECATED:** `reviewedActivityId`, `reviewedGame`, `reasonCode`, `freeTextNote`, `unusualEvent`, `serviceDate`.
 
-Route/hash/submit handler are implementation details using existing app routing.
+Student progress is `#/kitchen-day-progress`. Tutor review is `#/kitchen-day-tutor`. Session review on the activity page is current Kitchen Day only.
 
 ## 4. Retrieval
 

@@ -49,6 +49,18 @@ Feature: Kitchen Day connected session
       When the student tries to start another ingredient preparation entry for "Carrot"
       Then a second carrot preparation entry is not created in that session
 
+  Rule: Kitchen Day activity is separate from progress and tutor pages
+
+    Scenario: The activity page has practical modules only
+      When the student opens Kitchen Day
+      Then Trim Smart, Reuse, and Portion Precision are available
+      And Progress and tutor dashboards are not part of that navigation
+
+    Scenario: Session review is the current Kitchen Day only
+      When the student opens session review
+      Then only the current session records are shown
+      And the session identity is not shown as an internal id
+
   Rule: Dashboards are read-only
 
     Scenario: The student overview does not change recorded facts

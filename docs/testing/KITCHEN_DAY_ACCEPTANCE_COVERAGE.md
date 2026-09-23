@@ -19,6 +19,6 @@ Implementation: `feature/kitchen-day-v1` (`#/kitchen-day`)
 | Embed waits for TASK / session locked once | `KitchenDaySessionContext.test.tsx` | |
 | Multi-template TASK validation | `kitchenDayTask.test.ts` | |
 | Persist hydration / reload / duplicate after reload | `kitchenDayReadModel.test.ts`, `KitchenDaySessionContext.test.tsx` | Participant reads fail closed on missing/mismatched actor |
-| Student / chef dashboards | `kitchenDay.dashboard.test.tsx` | Read-only completed evidence; chef groups actor + sessionId |
+| Student / tutor dashboards | `kitchenDay.dashboard.test.tsx`, `kitchenDay.pages.test.tsx` | Activity nav excludes tutor/progress; `#/kitchen-day-progress` and `#/kitchen-day-tutor` |
 | Chef review UI / wastePracticeReview | `kitchenDay.review.test.tsx`, `mapWastePracticeReview.test.ts`, `review/scores.test.ts` | Session-level scores 0–5; one review per session; live post still blocked |
 | Percentile / ranking | `@pending` | Sufficient-data rule not agreed |
