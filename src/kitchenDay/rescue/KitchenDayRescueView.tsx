@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
 import { discardedWasteGrams } from '../trim/derived';
+import { formatGrams } from '../format';
 import { useReadyKitchenDaySession } from '../KitchenDaySessionContext';
 import { canSaveRescueSuggestion, parseReusableWasteGrams, parseReuseDestination } from './validation';
 
@@ -17,10 +18,13 @@ export function KitchenDayRescueView() {
     [completedTrim, ingredientId],
   );
   const existing = ingredientId ? findRescueByIngredientId(ingredientId) : undefined;
-  const reusable = trim ? parseReusableWasteGrams(reusableRaw, trim.actualWasteGrams) : { ok: false as const, issue: 'invalid' as const };
+  const reusable = trim
+    ? parseReusableWasteGrams(reusableRaw, trim.actualWasteGrams)
+    : { ok: false as const, issue: 'invalid' as const };
   const dest = parseReuseDestination(destination);
   const discarded =
     trim && reusable.ok ? discardedWasteGrams(trim.actualWasteGrams, reusable.value) : null;
+  const complete = Boolean(saved || existing);
 
   function save() {
     if (!trim || !reusable.ok || !dest.ok || existing) return;
@@ -41,12 +45,12 @@ export function KitchenDayRescueView() {
 
   if (completedTrim.length === 0) {
     return (
-      <section className="kd-card kd-card--rescue" data-testid="kitchen-day-rescue">
-        <h2 className="kd-card__title">Reuse</h2>
-        <p data-testid="kitchen-day-rescue-empty">
-          Record an ingredient preparation entry with actual waste first. Reuse is not a separate inventory.
+      <section className="kitchen-day-card" data-testid="kitchen-day-rescue">
+        <h2 className="kitchen-day-card__title">Reuse</h2>
+        <p className="kitchen-day-card__copy" data-testid="kitchen-day-rescue-empty">
+          Record an ingredient preparation entry with actual waste first.
         </p>
-        <a className="kd-button kd-button--primary" href="#/kitchen-day">
+        <a className="kitchen-day-button kitchen-day-button--primary" href="#/kitchen-day">
           Go to Trim Smart
         </a>
       </section>
@@ -54,12 +58,12 @@ export function KitchenDayRescueView() {
   }
 
   return (
-    <section className="kd-card kd-card--rescue" data-testid="kitchen-day-rescue">
-      <h2 className="kd-card__title">Reuse suggestion</h2>
-      <label className="kd-field">
+    <section className="kitchen-day-card" data-testid="kitchen-day-rescue">
+      <h2 className="kitchen-day-card__title">Reuse suggestion</h2>
+      <label className="kitchen-day-field">
         <span>Ingredient</span>
         <select
-          className="kd-input"
+          className="kitchen-day-input"
           data-testid="kitchen-day-rescue-ingredient"
           value={ingredientId}
           onChange={(event) => {
@@ -68,6 +72,7 @@ export function KitchenDayRescueView() {
             setDestination('');
             setSaved(false);
           }}
+          disabled={complete}
         >
           {completedTrim.map((entry) => (
             <option key={entry.ingredientId} value={entry.ingredientId}>
@@ -79,63 +84,74 @@ export function KitchenDayRescueView() {
 
       {trim ? (
         <p data-testid="kitchen-day-rescue-actual-waste">
-          Actual waste from preparation: {trim.actualWasteGrams} g
+          Actual waste {formatGrams(trim.actualWasteGrams)}
         </p>
       ) : null}
 
-      <label className="kd-field">
-        <span>How much of that waste can be reused?</span>
-        <div className="kd-input-row">
-          <input
-            className="kd-input kd-input--numeric"
-            inputMode="decimal"
-            data-testid="kitchen-day-reusable-waste"
-            value={reusableRaw}
-            onChange={(event) => setReusableRaw(event.target.value)}
-          />
-          <span className="kd-unit">g</span>
+      {complete && existing ? (
+        <div className="kitchen-day-success" data-testid="kitchen-day-rescue-saved">
+          <p>Reuse suggestion saved for this ingredient.</p>
+          <p>Reusable {formatGrams(existing.reusableWasteGrams)}</p>
+          <p>Destination {existing.reuseDestination}</p>
+          {trim ? (
+            <p data-testid="kitchen-day-discarded-waste">
+              Discarded {formatGrams(discardedWasteGrams(trim.actualWasteGrams, existing.reusableWasteGrams))}
+            </p>
+          ) : null}
         </div>
-      </label>
-      {!reusable.ok && reusableRaw !== '' ? (
-        <p className="kd-error" data-testid="kitchen-day-reusable-error">
-          Reusable amount must be 0 g up to the actual waste.
-        </p>
-      ) : null}
-
-      <label className="kd-field">
-        <span>Where should it be used?</span>
-        <textarea
-          className="kd-input"
-          data-testid="kitchen-day-reuse-destination"
-          value={destination}
-          onChange={(event) => setDestination(event.target.value)}
-          rows={3}
-        />
-      </label>
-
-      {discarded != null ? (
-        <p data-testid="kitchen-day-discarded-waste">Discarded waste {discarded} g</p>
-      ) : null}
-
-      {saved || existing ? (
-        <p data-testid="kitchen-day-rescue-saved">Reuse suggestion saved for this ingredient.</p>
       ) : (
-        <button
-          type="button"
-          className="kd-button kd-button--primary"
-          data-testid="kitchen-day-save-rescue"
-          disabled={
-            !trim ||
-            !canSaveRescueSuggestion({
-              reusableRaw,
-              destinationRaw: destination,
-              actualWasteGrams: trim.actualWasteGrams,
-            })
-          }
-          onClick={save}
-        >
-          Save reuse
-        </button>
+        <>
+          <label className="kitchen-day-field">
+            <span>Reusable amount</span>
+            <div className="kitchen-day-input-row">
+              <input
+                className="kitchen-day-input kitchen-day-input--numeric"
+                inputMode="decimal"
+                data-testid="kitchen-day-reusable-waste"
+                value={reusableRaw}
+                onChange={(event) => setReusableRaw(event.target.value)}
+              />
+              <span className="kitchen-day-unit">g</span>
+            </div>
+          </label>
+          {!reusable.ok && reusableRaw !== '' ? (
+            <p className="kitchen-day-error" data-testid="kitchen-day-reusable-error">
+              Reusable amount must be 0 g up to the actual waste.
+            </p>
+          ) : null}
+
+          <label className="kitchen-day-field">
+            <span>Reuse destination</span>
+            <textarea
+              className="kitchen-day-input"
+              data-testid="kitchen-day-reuse-destination"
+              value={destination}
+              onChange={(event) => setDestination(event.target.value)}
+              rows={3}
+            />
+          </label>
+
+          {discarded != null ? (
+            <p data-testid="kitchen-day-discarded-waste">Discarded {formatGrams(discarded)}</p>
+          ) : null}
+
+          <button
+            type="button"
+            className="kitchen-day-button kitchen-day-button--primary"
+            data-testid="kitchen-day-save-rescue"
+            disabled={
+              !trim ||
+              !canSaveRescueSuggestion({
+                reusableRaw,
+                destinationRaw: destination,
+                actualWasteGrams: trim.actualWasteGrams,
+              })
+            }
+            onClick={save}
+          >
+            Save reuse
+          </button>
+        </>
       )}
     </section>
   );

@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
 import { useReadyKitchenDaySession } from '../KitchenDaySessionContext';
+import { formatPortionDeviation } from './copy';
 import { evaluatePortionLine } from './deviations';
 import { getRecipeReference, listRecipeReferences } from './recipes';
 import {
@@ -42,12 +43,12 @@ export function KitchenDayPortionView() {
   }
 
   return (
-    <section className="kd-card kd-card--portion" data-testid="kitchen-day-portion">
-      <h2 className="kd-card__title">Portion Precision</h2>
-      <label className="kd-field">
+    <section className="kitchen-day-card" data-testid="kitchen-day-portion">
+      <h2 className="kitchen-day-card__title">Portion Precision</h2>
+      <label className="kitchen-day-field">
         <span>Recipe</span>
         <select
-          className="kd-input"
+          className="kitchen-day-input"
           data-testid="kitchen-day-recipe-select"
           value={recipeId}
           onChange={(event) => {
@@ -68,7 +69,7 @@ export function KitchenDayPortionView() {
 
       {recipe ? (
         <div data-testid={`kitchen-day-recipe-${recipe.recipeId}`}>
-          <ul className="kd-recipe-lines">
+          <ul className="kitchen-day-session-list">
             {recipe.lines.map((line) => {
               const actual = parseActualAmount(actuals[line.ingredientId] ?? '');
               const outcome =
@@ -80,19 +81,30 @@ export function KitchenDayPortionView() {
                       unit: line.unit,
                     })
                   : null;
+              const copy =
+                actual.ok
+                  ? formatPortionDeviation(line, {
+                      ingredientId: line.ingredientId,
+                      ingredientName: line.ingredientName,
+                      actualAmount: actual.value,
+                      unit: line.unit,
+                    })
+                  : null;
               return (
-                <li key={line.ingredientId} data-testid={`kitchen-day-recipe-line-${line.ingredientId}`}>
-                  <div className="kd-recipe-line__required">
-                    <strong>{line.ingredientName}</strong>
-                    <span data-testid={`kitchen-day-required-${line.ingredientId}`}>
-                      Required {line.requiredAmount} {line.unit}
-                    </span>
-                  </div>
-                  <label className="kd-field">
-                    <span>Actual amount</span>
-                    <div className="kd-input-row">
+                <li
+                  key={line.ingredientId}
+                  className="kitchen-day-recipe-line"
+                  data-testid={`kitchen-day-recipe-line-${line.ingredientId}`}
+                >
+                  <div className="kitchen-day-recipe-line__name">{line.ingredientName}</div>
+                  <p data-testid={`kitchen-day-required-${line.ingredientId}`}>
+                    Target: {line.requiredAmount} {line.unit}
+                  </p>
+                  <label className="kitchen-day-field">
+                    <span>Actual</span>
+                    <div className="kitchen-day-input-row">
                       <input
-                        className="kd-input kd-input--numeric"
+                        className="kitchen-day-input kitchen-day-input--numeric"
                         inputMode="decimal"
                         data-testid={`kitchen-day-actual-${line.ingredientId}`}
                         value={actuals[line.ingredientId] ?? ''}
@@ -103,34 +115,36 @@ export function KitchenDayPortionView() {
                           }))
                         }
                       />
-                      <span className="kd-unit">{line.unit}</span>
+                      <span className="kitchen-day-unit">{line.unit}</span>
                     </div>
                   </label>
-                  {outcome ? (
-                    <p data-testid={`kitchen-day-deviation-${line.ingredientId}`}>{outcome}</p>
+                  {copy ? (
+                    <p data-testid={`kitchen-day-deviation-${line.ingredientId}`} data-outcome={outcome ?? ''}>
+                      {copy}
+                    </p>
                   ) : null}
                 </li>
               );
             })}
           </ul>
 
-          <label className="kd-field">
+          <label className="kitchen-day-field">
             <span>Final recipe weight</span>
-            <div className="kd-input-row">
+            <div className="kitchen-day-input-row">
               <input
-                className="kd-input kd-input--numeric"
+                className="kitchen-day-input kitchen-day-input--numeric"
                 inputMode="decimal"
                 data-testid="kitchen-day-final-recipe-weight"
                 value={finalWeightRaw}
                 onChange={(event) => setFinalWeightRaw(event.target.value)}
               />
-              <span className="kd-unit">g</span>
+              <span className="kitchen-day-unit">g</span>
             </div>
           </label>
 
           <button
             type="button"
-            className="kd-button kd-button--primary"
+            className="kitchen-day-button kitchen-day-button--primary"
             data-testid="kitchen-day-submit-portion"
             disabled={
               !canSubmitPortion({
@@ -147,7 +161,9 @@ export function KitchenDayPortionView() {
       ) : null}
 
       {savedName ? (
-        <p data-testid="kitchen-day-portion-saved">{savedName} recorded for this kitchen day.</p>
+        <p className="kitchen-day-success" data-testid="kitchen-day-portion-saved">
+          {savedName} recorded for this kitchen day.
+        </p>
       ) : null}
     </section>
   );

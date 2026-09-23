@@ -104,4 +104,4 @@ export interface KitchenDayChefSession {
   review: KitchenDayReviewEntry | null;
 }
 
-export type KitchenDaySection = 'trim' | 'reuse' | 'portion' | 'my-day' | 'chef';
+export type KitchenDaySection = 'trim' | 'reuse' | 'portion' | 'review';

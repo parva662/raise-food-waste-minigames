@@ -5,10 +5,10 @@ import type { KitchenDayChefSession, KitchenDayReviewEntry } from './types';
 
 function ReviewReadback({ review }: { review: KitchenDayReviewEntry }) {
   return (
-    <section className="kd-card" data-testid="kitchen-day-review-submitted">
-      <h3 className="kd-subtitle">Chef review</h3>
-      <p className="kd-helper">This Kitchen Day already has a session review.</p>
-      <dl className="kd-meta">
+    <section className="chef-results-panel" data-testid="kitchen-day-review-submitted">
+      <h3 className="chef-results-panel__title">Tutor assessment</h3>
+      <p className="chef-results-panel__intro">This Kitchen Day already has a session review.</p>
+      <dl className="chef-results-metrics chef-results-metrics--compact">
         <div>
           <dt>Time efficiency</dt>
           <dd data-testid="kitchen-day-review-time-value">{review.timeEfficiencyScore}</dd>
@@ -44,52 +44,51 @@ export function KitchenDayChefReviewForm({ selected }: { selected: KitchenDayChe
   const parsedQuality = parseKitchenDayReviewScore(qualityScore);
 
   return (
-    <section className="kd-card" data-testid="kitchen-day-review-form">
-      <h3 className="kd-subtitle">Chef review</h3>
-      <p className="kd-card__copy">
-        One qualitative review for this student session. System waste comparison does not prefill these
-        scores.
+    <section className="chef-results-panel" data-testid="kitchen-day-review-form">
+      <h3 className="chef-results-panel__title">Tutor assessment</h3>
+      <p className="chef-results-panel__intro">
+        Use the performance evidence above. These scores are your judgement and are not prefilled.
       </p>
-      <p className="kd-helper" data-testid="kitchen-day-review-unscored">
+      <p className="chef-results-empty" data-testid="kitchen-day-review-unscored">
         Scores stay unanswered until you enter 0–5. Zero is a valid score.
       </p>
-      <label className="kd-field">
+      <label className="kitchen-day-field">
         Time efficiency (0–5)
         <input
-          className="kd-input kd-input--numeric"
+          className="kitchen-day-input kitchen-day-input--numeric"
           data-testid="kitchen-day-review-time"
           inputMode="numeric"
           value={timeScore}
           onChange={(event) => setTimeScore(event.target.value)}
         />
       </label>
-      <label className="kd-field">
+      <label className="kitchen-day-field">
         Preparation quality (0–5)
         <input
-          className="kd-input kd-input--numeric"
+          className="kitchen-day-input kitchen-day-input--numeric"
           data-testid="kitchen-day-review-quality"
           inputMode="numeric"
           value={qualityScore}
           onChange={(event) => setQualityScore(event.target.value)}
         />
       </label>
-      <label className="kd-field">
-        Chef feedback (optional)
+      <label className="kitchen-day-field">
+        Feedback (optional)
         <textarea
-          className="kd-input"
+          className="kitchen-day-input"
           data-testid="kitchen-day-review-feedback"
           value={feedback}
           onChange={(event) => setFeedback(event.target.value)}
         />
       </label>
       {error ? (
-        <p className="kd-error" data-testid="kitchen-day-review-error">
+        <p className="kitchen-day-error" data-testid="kitchen-day-review-error">
           {error}
         </p>
       ) : null}
       <button
         type="button"
-        className="kd-button kd-button--primary"
+        className="kitchen-day-button kitchen-day-button--primary"
         data-testid="kitchen-day-review-submit"
         onClick={() => {
           if (!parsedTime.ok || !parsedQuality.ok) {
