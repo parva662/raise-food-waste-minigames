@@ -3,7 +3,7 @@ import { cleanup, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it } from 'vitest';
 import { ingestInputCollectionsForTests, resetGameBusBridgeForTests } from '../gamebus/bridge';
-import { KitchenDayApp } from './KitchenDayApp';
+import { AppRouter } from '../AppRouter';
 import { KitchenDaySessionProvider } from './KitchenDaySessionContext';
 import { MyDayView } from './MyDayView';
 
@@ -115,10 +115,11 @@ describe('Kitchen Day student and chef dashboards', () => {
     await waitFor(() => {
       expect(screen.getByTestId('kitchen-day-trim-carrot')).toBeInTheDocument();
     });
-    expect(screen.getByTestId('kitchen-day-overview')).toHaveTextContent('Read-only');
+    expect(screen.getByTestId('kitchen-day-overview')).toHaveTextContent('cannot be edited');
     expect(screen.getByTestId('kitchen-day-rescue-carrot')).toBeInTheDocument();
     expect(screen.getByTestId('kitchen-day-portion-mayonnaise')).toBeInTheDocument();
-    expect(screen.getByTestId('kitchen-day-waste-percent-carrot')).toHaveTextContent('9%');
+    expect(screen.getByTestId('kitchen-day-waste-percent-carrot')).toHaveTextContent('9.0%');
+    expect(screen.queryByText(/kitchen-day:/)).not.toBeInTheDocument();
     expect(screen.queryByTestId('kitchen-day-trim-onion')).not.toBeInTheDocument();
     expect(screen.queryByTestId('kitchen-day-trim-unfinished')).not.toBeInTheDocument();
     expect(screen.queryByRole('textbox')).not.toBeInTheDocument();
@@ -126,14 +127,15 @@ describe('Kitchen Day student and chef dashboards', () => {
 
   it('lets the chef open one student session grouped by participant and sessionId', async () => {
     const user = userEvent.setup();
-    setHash('#/kitchen-day/chef');
-    render(<KitchenDayApp />);
+    setHash('#/kitchen-day-tutor');
+    render(<AppRouter />);
     ingestInputCollectionsForTests(groupCollections);
     await waitFor(() => {
       expect(screen.getByTestId(`kitchen-day-chef-session-${sessionOne}`)).toBeInTheDocument();
     });
     expect(screen.getByTestId(`kitchen-day-chef-session-${sessionTwo}`)).toBeInTheDocument();
-    expect(screen.getByTestId('kitchen-day-no-leaderboard')).toBeInTheDocument();
+    expect(screen.getByTestId('kitchen-day-tutor-page')).toBeInTheDocument();
+    expect(screen.queryByText(/leaderboard/i)).not.toBeInTheDocument();
     await user.click(screen.getByTestId(`kitchen-day-chef-session-${sessionOne}`));
     await waitFor(() => {
       expect(screen.getByTestId('kitchen-day-chef-selected')).toBeInTheDocument();

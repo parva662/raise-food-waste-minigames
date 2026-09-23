@@ -4,7 +4,6 @@ import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { AppRouter } from '../AppRouter';
 import { getAppMode } from '../gamebus/appMode';
-import { KITCHEN_DAY_LIVE_BLOCK_REASON } from './liveIntegration';
 
 function setHash(hash: string) {
   window.location.hash = hash;
@@ -42,9 +41,10 @@ describe('Kitchen Day connected flow', () => {
     render(<AppRouter />);
     expect(getAppMode()).toBe('kitchen-day');
     expect(screen.getByTestId('kitchen-day-page')).toBeInTheDocument();
-    expect(screen.getByTestId('kitchen-day-live-blocked')).toHaveTextContent(
-      KITCHEN_DAY_LIVE_BLOCK_REASON,
-    );
+    expect(screen.queryByTestId('kitchen-day-live-blocked')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('kitchen-day-nav-chef')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('kitchen-day-nav-my-day')).not.toBeInTheDocument();
+    expect(screen.getByTestId('kitchen-day-nav-review')).toBeInTheDocument();
   });
 
   it('records Trim, reuse, and Portion on the same session', async () => {
@@ -52,11 +52,11 @@ describe('Kitchen Day connected flow', () => {
     render(<AppRouter />);
     const sessionLabel = screen.getByTestId('kitchen-day-header-session').textContent;
     await recordCarrot(user);
-    expect(screen.getByTestId('kitchen-day-waste-percent')).toHaveTextContent('9%');
+    expect(screen.getByTestId('kitchen-day-waste-percent')).toHaveTextContent('9.0%');
     expect(screen.getByTestId('kitchen-day-reference-comparison')).toHaveTextContent(
-      'Better than the kitchen reference',
+      /percentage points/,
     );
-    expect(screen.getByTestId('kitchen-day-no-percentile')).toBeInTheDocument();
+    expect(screen.queryByText(/idle|percentile|LIVE E2E/i)).not.toBeInTheDocument();
 
     await user.click(screen.getByTestId('kitchen-day-nav-reuse'));
     expect(screen.getByTestId('kitchen-day-rescue-actual-waste')).toHaveTextContent('450 g');
@@ -74,7 +74,7 @@ describe('Kitchen Day connected flow', () => {
     await user.type(screen.getByTestId('kitchen-day-final-recipe-weight'), '1850');
     await user.click(screen.getByTestId('kitchen-day-submit-portion'));
 
-    await user.click(screen.getByTestId('kitchen-day-nav-my-day'));
+    await user.click(screen.getByTestId('kitchen-day-nav-review'));
     expect(screen.getByTestId('kitchen-day-trim-carrot')).toBeInTheDocument();
     expect(screen.getByTestId('kitchen-day-rescue-carrot')).toBeInTheDocument();
     expect(screen.getByTestId('kitchen-day-portion-mayonnaise')).toBeInTheDocument();

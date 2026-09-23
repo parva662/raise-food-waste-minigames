@@ -115,7 +115,7 @@ describe('Kitchen Day session initialization and hydration', () => {
     await waitFor(() => {
       expect(screen.getByTestId('kitchen-day-page')).toBeInTheDocument();
     });
-    expect(screen.getByTestId('kitchen-day-header-session')).toHaveTextContent(/one student session/);
+    expect(screen.getByTestId('kitchen-day-header-session')).toHaveTextContent(/2026-09-23|September|Wednesday/);
   });
 
   it('does not replace a locked session when a later TASK or participant refresh arrives', async () => {

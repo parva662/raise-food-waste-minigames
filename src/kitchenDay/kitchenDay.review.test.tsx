@@ -3,7 +3,7 @@ import { cleanup, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it } from 'vitest';
 import { ingestInputCollectionsForTests, resetGameBusBridgeForTests } from '../gamebus/bridge';
-import { KitchenDayApp } from './KitchenDayApp';
+import { AppRouter } from '../AppRouter';
 
 const sessionOne = 'kitchen-day:kitchen-day-task-1:user-1:2026-09-23';
 
@@ -44,8 +44,8 @@ describe('Kitchen Day session-level chef review', () => {
 
   it('keeps chef scores unanswered until entered and accepts 0 without module scores', async () => {
     const user = userEvent.setup();
-    setHash(`#/kitchen-day/chef?sessionId=${encodeURIComponent(sessionOne)}`);
-    render(<KitchenDayApp />);
+    setHash(`#/kitchen-day-tutor?sessionId=${encodeURIComponent(sessionOne)}`);
+    render(<AppRouter />);
     ingestInputCollectionsForTests({
       kitchenGroupInput: { activities: baseActivities },
       inputCollectionPari: { me: { id: 'chef-1', firstName: 'Chef', lastName: 'One' } },
@@ -57,7 +57,7 @@ describe('Kitchen Day session-level chef review', () => {
     expect(screen.getByTestId('kitchen-day-chef-reference-carrot')).toBeInTheDocument();
     expect(screen.queryByTestId('kitchen-day-review-time-value')).not.toBeInTheDocument();
     expect(screen.queryByText(/module score/i)).not.toBeInTheDocument();
-    expect(screen.getByTestId('kitchen-day-no-leaderboard')).toBeInTheDocument();
+    expect(screen.queryByText(/leaderboard|percentile/i)).not.toBeInTheDocument();
 
     await user.click(screen.getByTestId('kitchen-day-review-submit'));
     expect(screen.getByTestId('kitchen-day-review-error')).toBeInTheDocument();
@@ -81,8 +81,8 @@ describe('Kitchen Day session-level chef review', () => {
   });
 
   it('shows an existing review read-only instead of creating another', async () => {
-    setHash(`#/kitchen-day/chef?sessionId=${encodeURIComponent(sessionOne)}`);
-    render(<KitchenDayApp />);
+    setHash(`#/kitchen-day-tutor?sessionId=${encodeURIComponent(sessionOne)}`);
+    render(<AppRouter />);
     ingestInputCollectionsForTests({
       kitchenGroupInput: {
         activities: [
