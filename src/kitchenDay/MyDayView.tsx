@@ -1,10 +1,10 @@
 import { discardedWasteGrams } from './trim/derived';
 import { INGREDIENT_CATEGORY_LABELS } from './trim/categories';
-import { useKitchenDaySession } from './KitchenDaySessionContext';
+import { useReadyKitchenDaySession } from './KitchenDaySessionContext';
 
 export function MyDayView() {
   const { session, trimEntries, rescueEntries, portionEntries, findRescueByIngredientId } =
-    useKitchenDaySession();
+    useReadyKitchenDaySession();
 
   return (
     <section className="kd-card" data-testid="kitchen-day-overview">

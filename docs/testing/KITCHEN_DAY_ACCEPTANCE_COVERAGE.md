@@ -16,5 +16,8 @@ Implementation: `feature/kitchen-day-v1` (`#/kitchen-day`)
 | Rescue join + reusable bounds + destination + discarded | `rescue/validation.test.ts`, flow | |
 | Portion recipe stub, composition, deviations, final weight | `portion/deviations.test.ts`, flow | |
 | Mapper exact property sets | `src/gamebus/mapKitchenDay*.test.ts`, `mapRescueAndReuse.test.ts`, `mapPortionPrecision.test.ts` | |
+| Embed waits for TASK / session locked once | `KitchenDaySessionContext.test.tsx` | |
+| Multi-template TASK validation | `kitchenDayTask.test.ts` | |
+| Persist hydration / reload / duplicate after reload | `kitchenDayReadModel.test.ts`, `KitchenDaySessionContext.test.tsx` | |
 | Chef review UI / wastePracticeReview | not in this branch | Phase 5 |
 | Percentile / ranking | `@pending` | Sufficient-data rule not agreed |

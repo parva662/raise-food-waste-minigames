@@ -1,11 +1,11 @@
 import { useMemo, useState } from 'react';
 import { discardedWasteGrams } from '../trim/derived';
-import { useKitchenDaySession } from '../KitchenDaySessionContext';
-import { tryPostKitchenDayRescue } from '../postKitchenDayActivity';
+import { useReadyKitchenDaySession } from '../KitchenDaySessionContext';
 import { canSaveRescueSuggestion, parseReusableWasteGrams, parseReuseDestination } from './validation';
 
 export function KitchenDayRescueView() {
-  const { session, trimEntries, findRescueByIngredientId, addRescueEntry } = useKitchenDaySession();
+  const { session, trimEntries, findRescueByIngredientId, commitRescueEntry } =
+    useReadyKitchenDaySession();
   const completedTrim = trimEntries;
   const [ingredientId, setIngredientId] = useState(completedTrim[0]?.ingredientId ?? '');
   const [reusableRaw, setReusableRaw] = useState('');
@@ -32,10 +32,11 @@ export function KitchenDayRescueView() {
       reuseDestination: dest.value,
       submittedAt: new Date().toISOString(),
     };
-    const result = addRescueEntry(entry);
+    const result = commitRescueEntry({ ...entry, source: 'local' });
     if (!result.ok) return;
-    tryPostKitchenDayRescue(entry);
-    setSaved(true);
+    if (result.mode === 'local') {
+      setSaved(true);
+    }
   }
 
   if (completedTrim.length === 0) {

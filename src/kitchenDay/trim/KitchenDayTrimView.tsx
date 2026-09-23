@@ -2,9 +2,8 @@ import { useMemo, useState } from 'react';
 import { getGameBusInputCollections } from '../../gamebus/bridge';
 import { extractGroupActivities, getRawKitchenGroupActivitiesInput } from '../../gamebus/groupActivities';
 import { normalizeIngredientId } from '../../trimSmart/ingredientId';
-import { kitchenDayIngredientIdFromName, useKitchenDaySession } from '../KitchenDaySessionContext';
+import { kitchenDayIngredientIdFromName, useReadyKitchenDaySession } from '../KitchenDaySessionContext';
 import { isIngredientAlreadyRecorded } from '../session/ingredientUniqueness';
-import { tryPostKitchenDayTrim } from '../postKitchenDayActivity';
 import { historicalTrimSamplesFromGroupActivities } from '../read/selectKitchenDayActivities';
 import { TRIM_TECHNIQUES, type KitchenDayIngredientCategory, type TrimTechnique } from '../types';
 import { ingredientCategoryOptions } from './categories';
@@ -61,7 +60,7 @@ function stepLabel(step: TrimStep): string {
 }
 
 export function KitchenDayTrimView() {
-  const { session, recordedIngredientIds, addTrimEntry } = useKitchenDaySession();
+  const { session, recordedIngredientIds, commitTrimEntry } = useReadyKitchenDaySession();
   const [step, setStep] = useState<TrimStep>('category');
   const [category, setCategory] = useState<KitchenDayIngredientCategory | ''>('');
   const [ingredientName, setIngredientName] = useState('');
@@ -126,15 +125,20 @@ export function KitchenDayTrimView() {
       preparationStartedAt: timer.startedAt,
       preparationEndedAt: timer.endedAt,
     };
-    const saved = addTrimEntry(entry);
+    const saved = commitTrimEntry({ ...entry, source: 'local' });
     if (!saved.ok) {
-      setSubmitError('This ingredient is already recorded today.');
+      setSubmitError(
+        saved.reason === 'duplicate_ingredient'
+          ? 'This ingredient is already recorded today.'
+          : saved.reason,
+      );
       setSubmitting(false);
       return;
     }
-    tryPostKitchenDayTrim(entry);
     setSubmitting(false);
-    setStep('result');
+    if (saved.mode === 'local') {
+      setStep('result');
+    }
   }
 
   const resultPercent =

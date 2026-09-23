@@ -18,6 +18,7 @@ describe('Rescue and Reuse mapper contract', () => {
       reusableWasteGrams: 500,
       reuseDestination: 'Carrot soup tomorrow',
       submittedAt: '2026-09-23T10:10:00.000Z',
+      source: 'local',
     });
     expect(Object.keys(values)).toEqual([...orderedRescueAndReusePropertyRefs()]);
     expect(values).not.toHaveProperty('ingredientName');

@@ -1,6 +1,5 @@
 import { useMemo, useState } from 'react';
-import { useKitchenDaySession } from '../KitchenDaySessionContext';
-import { tryPostKitchenDayPortion } from '../postKitchenDayActivity';
+import { useReadyKitchenDaySession } from '../KitchenDaySessionContext';
 import { evaluatePortionLine } from './deviations';
 import { getRecipeReference, listRecipeReferences } from './recipes';
 import {
@@ -11,7 +10,7 @@ import {
 } from './validation';
 
 export function KitchenDayPortionView() {
-  const { session, addPortionEntry } = useKitchenDaySession();
+  const { session, commitPortionEntry } = useReadyKitchenDaySession();
   const recipes = listRecipeReferences();
   const [recipeId, setRecipeId] = useState('');
   const [actuals, setActuals] = useState<Record<string, string>>({});
@@ -33,8 +32,9 @@ export function KitchenDayPortionView() {
       recipeComposition: composition,
       finalRecipeWeightGrams: finalWeight.value,
     };
-    addPortionEntry(entry);
-    tryPostKitchenDayPortion(entry);
+    const result = commitPortionEntry({ ...entry, source: 'local' });
+    if (!result.ok) return;
+    if (result.mode !== 'local') return;
     setSavedName(recipe.recipeName);
     setRecipeId('');
     setActuals({});

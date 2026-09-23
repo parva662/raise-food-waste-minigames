@@ -1,3 +1,5 @@
+export type KitchenDayRecordSource = 'local' | 'persisted';
+
 export interface KitchenDayLockedSession {
   sessionId: string;
   sessionDate: string;
@@ -46,6 +48,8 @@ export interface KitchenDayTrimEntry {
   durationMinutes: number;
   preparationStartedAt: string;
   preparationEndedAt: string;
+  source: KitchenDayRecordSource;
+  persistId?: string;
 }
 
 export interface KitchenDayRescueEntry {
@@ -55,6 +59,8 @@ export interface KitchenDayRescueEntry {
   reusableWasteGrams: number;
   reuseDestination: string;
   submittedAt: string;
+  source: KitchenDayRecordSource;
+  persistId?: string;
 }
 
 export interface RecipeCompositionLine {
@@ -72,6 +78,8 @@ export interface KitchenDayPortionEntry {
   recipeName: string;
   recipeComposition: RecipeCompositionLine[];
   finalRecipeWeightGrams: number;
+  source: KitchenDayRecordSource;
+  persistId?: string;
 }
 
 export type KitchenDaySection = 'trim' | 'reuse' | 'portion' | 'my-day';

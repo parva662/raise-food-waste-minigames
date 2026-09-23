@@ -22,6 +22,7 @@ describe('Portion Precision mapper contract', () => {
         { ingredientId: 'yogurt', ingredientName: 'Yogurt', actualAmount: 1000, unit: 'g' },
       ],
       finalRecipeWeightGrams: 1850,
+      source: 'local',
     });
     expect(values.recipeComposition.value[0]).toEqual({
       ingredientId: 'yogurt',

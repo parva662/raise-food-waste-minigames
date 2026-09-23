@@ -125,7 +125,7 @@ Canonical: [`../product/waste-challenges/KITCHEN_DAY.md`](../product/waste-chall
 
 **CURRENT IMPLEMENTATION on `main`:** Trim Smart v1 only (`#/waste/trim-smart`, Ingredient → Practice → Measure, `practice` / `participantWasteGrams` / old categories).
 
-**CURRENT IMPLEMENTATION on `feature/kitchen-day-v1`:** Phases 1–4 at `#/kitchen-day` (shared session, target Trim Smart, Rescue & Reuse, Portion Precision). `#/waste/trim-smart` remains v1 so production GameBus tasks stay unchanged. Live GameBus posting is guarded: **LIVE E2E BLOCKED BY GAMEBUS ADMIN ALIGNMENT**.
+**CURRENT IMPLEMENTATION on `feature/kitchen-day-v1`:** Phases 1–4 at `#/kitchen-day` plus integration hardening: embed waits for TASK before locking session; one TASK must list `trimSmart` + `rescueAndReuse` + `portionPrecision` (see [`KITCHEN_DAY_TASK.md`](../contracts/KITCHEN_DAY_TASK.md)); submitted records hydrate from `kitchenGroupInput.activities`. `#/waste/trim-smart` remains v1. Live posting is guarded: **LIVE E2E BLOCKED BY GAMEBUS ADMIN ALIGNMENT**.
 
 **APPROVED TARGET:** connected Kitchen Day (Trim Smart + Rescue & Reuse + Portion Precision + one session-level chef review).
 
