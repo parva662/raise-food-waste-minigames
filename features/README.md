@@ -3,7 +3,7 @@
 | Path | Status |
 |------|--------|
 | [`student/student-lunch.feature`](student/student-lunch.feature) | **APPROVED PRODUCT TARGET** |
-| [`waste-challenges/trim-smart.feature`](waste-challenges/trim-smart.feature) | **WORKING / PROPOSED** (not Trim Smart v1) |
+| [`waste-challenges/`](waste-challenges/) (five Kitchen Day features) | **APPROVED PRODUCT TARGET** (not Trim Smart v1 CURRENT IMPLEMENTATION) |
 | [`kitchen/kitchen-forecast.feature`](kitchen/kitchen-forecast.feature) | **APPROVED PRODUCT TARGET** (one `@pending` rollover edge case deferred) |
 | [`kitchen/service-closeout.feature`](kitchen/service-closeout.feature) | **APPROVED PRODUCT TARGET** |
 | [`kitchen/kitchen-results-participant.feature`](kitchen/kitchen-results-participant.feature) | **APPROVED PRODUCT TARGET** |

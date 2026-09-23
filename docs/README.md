@@ -51,6 +51,7 @@ No single legacy root file competes with this structure.
 | **APPROVED PRODUCT TARGET** | Agreed behavior the application should satisfy. |
 | **CURRENT IMPLEMENTATION** | Behavior that can be verified from current source on `main`. |
 | **WORKING / PROPOSED** | Design or draft not yet approved or implemented. |
+| **FINAL PRODUCT MODEL** | Product logic and property names are settled and locked; not yet implemented in code. |
 | **HISTORICAL** | Retained for context only; may contradict current product or code. |
 | **EXTERNAL / GAMEBUS CONTRACT** | Integration requirement; verify against live GameBus templates and ingest, not only this repo. |
 
@@ -69,8 +70,15 @@ docs/
 │   ├── WASTE_CHALLENGES.md
 │   ├── RAISE_BARLAUREA_MASTER_PLAN.md
 │   └── waste-challenges/
+│       ├── KITCHEN_DAY.md
+│       ├── GAMEBUS_SLUG_CONTRACT.md
 │       ├── TRIM_SMART.md
-│       └── TRIM_SMART_DATA_MODEL.md
+│       ├── TRIM_SMART_DATA_MODEL.md
+│       ├── RESCUE_AND_REUSE.md
+│       ├── PORTION_PRECISION.md
+│       ├── CHEF_REVIEW.md
+│       ├── UX_FLOW.md
+│       └── IMPLEMENTATION_BLUEPRINT.md
 ├── contracts/
 │   ├── STUDENT_LUNCH_GAMEBUS.md
 │   ├── KITCHEN_FORECAST_GAMEBUS.md
@@ -85,7 +93,7 @@ docs/
 features/
 ├── student/student-lunch.feature          ← APPROVED PRODUCT TARGET
 ├── kitchen/kitchen-forecast.feature       ← APPROVED PRODUCT TARGET
-└── waste-challenges/trim-smart.feature    ← WORKING / PROPOSED (not v1)
+└── waste-challenges/*.feature             ← APPROVED PRODUCT TARGET (not Trim Smart v1)
 ```
 
 ---
@@ -98,10 +106,17 @@ features/
 | [`product/KITCHEN_FORECAST.md`](product/KITCHEN_FORECAST.md) | Kitchen Forecast navigation |
 | [`product/SERVICE_CLOSEOUT.md`](product/SERVICE_CLOSEOUT.md) | Service Closeout navigation |
 | [`product/KITCHEN_RESULTS.md`](product/KITCHEN_RESULTS.md) | Staff + management results |
-| [`product/WASTE_CHALLENGES.md`](product/WASTE_CHALLENGES.md) | Practical kitchen family overview |
+| [`product/WASTE_CHALLENGES.md`](product/WASTE_CHALLENGES.md) | Practical kitchen family overview (Kitchen Day modules) |
 | [`product/RAISE_BARLAUREA_MASTER_PLAN.md`](product/RAISE_BARLAUREA_MASTER_PLAN.md) | Study / system master plan |
-| [`product/waste-challenges/TRIM_SMART.md`](product/waste-challenges/TRIM_SMART.md) | Trim Smart mixed CURRENT + proposed |
-| [`product/waste-challenges/TRIM_SMART_DATA_MODEL.md`](product/waste-challenges/TRIM_SMART_DATA_MODEL.md) | Trim Smart data model mixed |
+| [`product/waste-challenges/KITCHEN_DAY.md`](product/waste-challenges/KITCHEN_DAY.md) | Kitchen Day orchestration — **APPROVED PRODUCT TARGET** |
+| [`product/waste-challenges/GAMEBUS_SLUG_CONTRACT.md`](product/waste-challenges/GAMEBUS_SLUG_CONTRACT.md) | Locked GameBus slugs + admin checklist |
+| [`product/waste-challenges/TRIM_SMART.md`](product/waste-challenges/TRIM_SMART.md) | Trim Smart — CURRENT v1 + approved target |
+| [`product/waste-challenges/TRIM_SMART_DATA_MODEL.md`](product/waste-challenges/TRIM_SMART_DATA_MODEL.md) | Trim data model |
+| [`product/waste-challenges/RESCUE_AND_REUSE.md`](product/waste-challenges/RESCUE_AND_REUSE.md) | Reuse (`sessionId` + `ingredientId`) |
+| [`product/waste-challenges/PORTION_PRECISION.md`](product/waste-challenges/PORTION_PRECISION.md) | Portion Precision |
+| [`product/waste-challenges/CHEF_REVIEW.md`](product/waste-challenges/CHEF_REVIEW.md) | Read-only dashboards + session chef review |
+| [`product/waste-challenges/UX_FLOW.md`](product/waste-challenges/UX_FLOW.md) | Kitchen Day UX |
+| [`product/waste-challenges/IMPLEMENTATION_BLUEPRINT.md`](product/waste-challenges/IMPLEMENTATION_BLUEPRINT.md) | Phases 0–6 |
 
 ---
 
@@ -132,7 +147,7 @@ features/
 |-------------|----------------|--------|
 | Student Lunch | [`../features/student/student-lunch.feature`](../features/student/student-lunch.feature) | **APPROVED PRODUCT TARGET** |
 | Kitchen Forecast | [`../features/kitchen/kitchen-forecast.feature`](../features/kitchen/kitchen-forecast.feature) | **APPROVED PRODUCT TARGET** — one `@pending` rollover edge case deferred |
-| Trim Smart (target redesign) | [`../features/waste-challenges/trim-smart.feature`](../features/waste-challenges/trim-smart.feature) | **WORKING / PROPOSED** — not v1 |
+| Kitchen Day (five features) | [`../features/waste-challenges/`](../features/waste-challenges/) | **APPROVED PRODUCT TARGET** — not Trim Smart v1 |
 
 ---
 

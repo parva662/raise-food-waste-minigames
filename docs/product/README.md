@@ -10,6 +10,6 @@ Canonical human-readable product pages live here. Start from [`../README.md`](..
 | [`KITCHEN_RESULTS.md`](KITCHEN_RESULTS.md) | Staff + management results |
 | [`WASTE_CHALLENGES.md`](WASTE_CHALLENGES.md) | Practical kitchen family |
 | [`RAISE_BARLAUREA_MASTER_PLAN.md`](RAISE_BARLAUREA_MASTER_PLAN.md) | Study / system master plan |
-| [`waste-challenges/`](waste-challenges/) | Trim Smart product + data-model docs |
+| [`waste-challenges/`](waste-challenges/) | Kitchen Day — **APPROVED PRODUCT TARGET** (slug contract, Trim, Reuse, Portion Precision, dashboards, UX, blueprint) |
 
 Acceptance Gherkin lives under [`../../features/`](../../features/). GameBus contracts live under [`../contracts/`](../contracts/).

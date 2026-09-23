@@ -36,7 +36,7 @@ Games run in an iframe; GameBus supplies **TASK** data and **INPUT_COLLECTIONS**
 | **Students** | Lunch declaration; future plate observation mission; future progress/gamification as agreed outside current scope |
 | **Kitchen staff / chefs** | Kitchen forecast; service closeout; participant results views |
 | **Chef / authorized kitchen staff** | Same operational games plus management/research dashboard views where enabled |
-| **Teachers / practical kitchen participants** | Trim Smart and future practical challenge games |
+| **Teachers / practical kitchen participants** | Kitchen Day practical modules (Trim & Waste / Reuse / Portioning) |
 
 ---
 
@@ -50,11 +50,14 @@ Games run in an iframe; GameBus supplies **TASK** data and **INPUT_COLLECTIONS**
 - **Kitchen Staff Dashboard (Chef Results)** — participant-safe forecast feedback; read-only in app.
 - **Kitchen Management Dashboard** — broader staff/research view; route hidden pending production auth.
 
-### Practical teaching games (kitchen lab)
+### Practical kitchen day (teaching lab) — connected modules, not three games
 
-- **Trim Smart** — **implemented** on `main`: multi-ingredient preparation session, one `trimSmart` ACTIVITY per recorded ingredient (`#/waste/trim-smart`).
-- **Improving Portion Control** — **not implemented** in this repository at the current baseline (no dedicated route in application routing).
-- **Rescue & Reuse** — **not implemented** in this repository at the current baseline; referenced only in proposed Trim Smart follow-on documentation.
+Orchestration: [`docs/product/waste-challenges/KITCHEN_DAY.md`](./docs/product/waste-challenges/KITCHEN_DAY.md) (**APPROVED PRODUCT TARGET**). Slugs: [`docs/product/waste-challenges/GAMEBUS_SLUG_CONTRACT.md`](./docs/product/waste-challenges/GAMEBUS_SLUG_CONTRACT.md).
+
+- **Trim Smart** — **CURRENT IMPLEMENTATION** v1 on `main` (`#/waste/trim-smart`, Ingredient → Practice → Measure). Target: estimate → timed prep → actual waste; locked category enum; multiple **different** ingredients per session (same ingredient once).
+- **Rescue & Reuse** — **not implemented**; join `sessionId` + `ingredientId`; reusable amount + free-text destination.
+- **Portion Precision** — **not implemented**; one activity per recipe; `recipeComposition`; required amounts from stub recipe JSON later replaced by the real source.
+- **Dashboards + chef review** — **not implemented**; read-only overviews; one end-of-session review (two 0–5 scores + optional feedback); existing `GET /groups/activities`.
 
 ### Student missions (broader study)
 
@@ -76,7 +79,7 @@ Games run in an iframe; GameBus supplies **TASK** data and **INPUT_COLLECTIONS**
 ## System boundaries
 
 - **In scope:** Custom embed UIs, client-side validation, mapping to GameBus ACTIVITY payloads, standalone demo modes, GitHub Pages deployment, automated unit/integration tests (Vitest).
-- **Out of scope (unless explicitly added):** GameBus server administration, live template editing, cross-user activity APIs (some flows still fixture-backed), badge/result engines, Rescue & Reuse and Portion Control apps until implemented.
+- **Out of scope (unless explicitly added):** GameBus server administration, live template editing, badge/result engines, Kitchen Day Reuse / Portioning / Overview apps until implemented. Kitchen Day dashboard retrieval uses the existing `kitchenGroupInput` / `GET /groups/activities` client already in this repo.
 - **Authority:** [`PROJECT_RULES.md`](./PROJECT_RULES.md) for engineering process; **approved** `.feature` files for product targets; **source on `main`** for what is actually built; GameBus contracts under [`docs/contracts/`](./docs/contracts/); product pages under [`docs/product/`](./docs/product/).
 
 ---

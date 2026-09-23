@@ -239,6 +239,16 @@ Validate participant association, multi-user visibility, and organization bounda
 - Participant association without `studentId`/`chefId` on ACTIVITY (verify on test env).
 - Real food photography (`public/images/menu/items/<id>.webp`).
 
-## Out of scope this phase
+## Kitchen Day (approved target — not implemented)
 
-- Deploy; daily result calculation; badges/dashboards.
+See [`../product/waste-challenges/IMPLEMENTATION_BLUEPRINT.md`](../product/waste-challenges/IMPLEMENTATION_BLUEPRINT.md).
+
+0. GameBus admin alignment
+1. Shared session / shell
+2. Trim Smart target migration
+3. Rescue & Reuse
+4. Portion Precision
+5. Student/chef dashboards + session-level chef review
+6. Tests / build / deploy verification 
+
+CURRENT IMPLEMENTATION remains Trim Smart v1 only.

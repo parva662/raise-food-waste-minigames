@@ -1,37 +1,37 @@
-# Waste challenges (practical kitchen games)
+# Waste challenges / Kitchen Day (practical kitchen)
 
-**Documentation role:** Family overview for practical teaching / kitchen-lab games.
-**Status labels matter:** do not treat **WORKING / PROPOSED** material as shipped product.
+**APPROVED PRODUCT TARGET** for product logic and property names. Not implemented as Kitchen Day on `main`.
+
+**CURRENT IMPLEMENTATION:** Trim Smart v1 only (Ingredient → Practice → Measure).
+
+Canonical orchestration: [`waste-challenges/KITCHEN_DAY.md`](waste-challenges/KITCHEN_DAY.md).
+Property slugs: [`waste-challenges/GAMEBUS_SLUG_CONTRACT.md`](waste-challenges/GAMEBUS_SLUG_CONTRACT.md).
 
 ---
 
 ## Family
 
-| Game | Status (from existing docs / source) | Where to read |
-|------|--------------------------------------|---------------|
-| **Trim Smart** | **Implemented** on `main` (`#/waste/trim-smart`, `trimSmart` ACTIVITY). Mixed CURRENT vs **WORKING / PROPOSED** target redesign docs. | [`waste-challenges/TRIM_SMART.md`](waste-challenges/TRIM_SMART.md), [`waste-challenges/TRIM_SMART_DATA_MODEL.md`](waste-challenges/TRIM_SMART_DATA_MODEL.md), [`../../features/waste-challenges/trim-smart.feature`](../../features/waste-challenges/trim-smart.feature) (**WORKING / PROPOSED** Gherkin — not v1) |
-| **Improving Portion Control** | **Not implemented** in this repository at the documented baseline (no dedicated route/module). | Mentioned only in proposed Trim Smart / future-work material |
-| **Rescue & Reuse** | **Not implemented** in this repository; described as a separate future game in proposed Trim Smart docs. | Proposed sections in Trim Smart product/data-model docs |
+| Module | Status | Where to read |
+|--------|--------|---------------|
+| Kitchen Day | **APPROVED PRODUCT TARGET** | [`waste-challenges/KITCHEN_DAY.md`](waste-challenges/KITCHEN_DAY.md) |
+| Trim Smart | **CURRENT IMPLEMENTATION** v1; target approved | [`waste-challenges/TRIM_SMART.md`](waste-challenges/TRIM_SMART.md) |
+| Rescue & Reuse | Not implemented | [`waste-challenges/RESCUE_AND_REUSE.md`](waste-challenges/RESCUE_AND_REUSE.md) |
+| Portion Precision | Not implemented | [`waste-challenges/PORTION_PRECISION.md`](waste-challenges/PORTION_PRECISION.md) |
+| Dashboards + chef review | Not implemented | [`waste-challenges/CHEF_REVIEW.md`](waste-challenges/CHEF_REVIEW.md) |
 
-Confirm short status also in [`../current-state/IMPLEMENTATION_STATUS.md`](../current-state/IMPLEMENTATION_STATUS.md).
-
----
-
-## Authority
-
-| Kind | Path |
-|------|------|
-| Product navigation (this page) | `docs/product/WASTE_CHALLENGES.md` |
-| Trim Smart mixed CURRENT + proposed | `docs/product/waste-challenges/TRIM_SMART.md` |
-| Trim Smart data model mixed | `docs/product/waste-challenges/TRIM_SMART_DATA_MODEL.md` |
-| Proposed Trim Smart acceptance scenarios | `features/waste-challenges/trim-smart.feature` (**not** approved product target) |
-| Current code | `src/trimSmart/` |
-
-Proposed Trim Smart Gherkin is **not** an approved product contract and must not be presented as current v1 behaviour.
+Acceptance: [`../../features/waste-challenges/`](../../features/waste-challenges/).
 
 ---
 
-## Related
+## Design boundaries
 
-- Charter: [`../../PROJECT_CHARTER.md`](../../PROJECT_CHARTER.md)
-- Docs index: [`../README.md`](../README.md)
+| Concern | Owner |
+|---------|--------|
+| Estimate / actual waste / system vs reference | Trim Smart |
+| Reuse suggestion (`sessionId` + `ingredientId`) | Rescue & Reuse |
+| `recipeComposition` + final recipe weight | Portion Precision |
+| Read-only overviews + one session chef review | Dashboards / chef review |
+
+**@pending:** percentile / ranking sufficient-data rule.
+
+Do-not-use names: see the slug contract.

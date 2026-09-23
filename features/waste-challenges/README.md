@@ -1,8 +1,15 @@
-# Practical kitchen / waste challenge features
+# Kitchen Day acceptance specs
 
-| Spec | Status |
+All files below are **APPROVED PRODUCT TARGET**. They are **not** the Trim Smart v1 CURRENT IMPLEMENTATION on `main`.
+
+| File | Topic |
 |------|--------|
-| [`trim-smart.feature`](trim-smart.feature) | **WORKING / PROPOSED** target Gherkin — **not** deployed Trim Smart v1 |
+| [`kitchen-day.feature`](kitchen-day.feature) | Connected session, uniqueness, read-only dashboards |
+| [`trim-smart.feature`](trim-smart.feature) | Ingredient preparation |
+| [`rescue-and-reuse.feature`](rescue-and-reuse.feature) | Reuse joined by `sessionId` + `ingredientId` |
+| [`portion-precision.feature`](portion-precision.feature) | Recipe-level `recipeComposition` |
+| [`chef-review.feature`](chef-review.feature) | Read-only overviews + one session-level chef review |
 
-Product overview: [`../../docs/product/WASTE_CHALLENGES.md`](../../docs/product/WASTE_CHALLENGES.md).
-Current v1 status: [`../../docs/current-state/IMPLEMENTATION_STATUS.md`](../../docs/current-state/IMPLEMENTATION_STATUS.md) and `src/trimSmart/`.
+Slug contract: [`../../docs/product/waste-challenges/GAMEBUS_SLUG_CONTRACT.md`](../../docs/product/waste-challenges/GAMEBUS_SLUG_CONTRACT.md)
+
+Intentional `@pending`: percentile / ranking sufficient-data rule (analytics).
