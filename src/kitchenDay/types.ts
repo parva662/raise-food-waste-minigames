@@ -82,4 +82,26 @@ export interface KitchenDayPortionEntry {
   persistId?: string;
 }
 
-export type KitchenDaySection = 'trim' | 'reuse' | 'portion' | 'my-day';
+export interface KitchenDayReviewEntry {
+  sessionId: string;
+  sessionDate: string;
+  submittedAt: string;
+  timeEfficiencyScore: number;
+  preparationQualityScore: number;
+  chefFeedback?: string;
+  source: KitchenDayRecordSource;
+  persistId?: string;
+}
+
+export interface KitchenDayChefSession {
+  actorId: string;
+  actorName: string;
+  sessionId: string;
+  sessionDate: string;
+  trimEntries: KitchenDayTrimEntry[];
+  rescueEntries: KitchenDayRescueEntry[];
+  portionEntries: KitchenDayPortionEntry[];
+  review: KitchenDayReviewEntry | null;
+}
+
+export type KitchenDaySection = 'trim' | 'reuse' | 'portion' | 'my-day' | 'chef';

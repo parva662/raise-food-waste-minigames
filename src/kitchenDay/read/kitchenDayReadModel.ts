@@ -2,9 +2,11 @@ import { getActivityTemplateReference } from '../../gamebus/groupActivities';
 import { isKitchenDayIngredientCategory } from '../trim/categories';
 import { isTrimTechnique } from '../trim/techniques';
 import { isPortionUnit } from '../portion/validation';
+import { isKitchenDayReviewScore } from '../review/scores';
 import type {
   KitchenDayPortionEntry,
   KitchenDayRescueEntry,
+  KitchenDayReviewEntry,
   KitchenDayTrimEntry,
   RecipeCompositionLine,
 } from '../types';
@@ -29,6 +31,13 @@ export function readActivityActorId(activity: unknown): string | null {
   if (!isRecord(activity) || !isRecord(activity.actor)) return null;
   return typeof activity.actor.id === 'string' && activity.actor.id.length > 0
     ? activity.actor.id
+    : null;
+}
+
+export function readActivityActorName(activity: unknown): string | null {
+  if (!isRecord(activity) || !isRecord(activity.actor)) return null;
+  return typeof activity.actor.name === 'string' && activity.actor.name.length > 0
+    ? activity.actor.name
     : null;
 }
 
@@ -179,6 +188,37 @@ export function parsePersistedPortionEntry(activity: unknown): KitchenDayPortion
     recipeName,
     recipeComposition,
     finalRecipeWeightGrams,
+    source: 'persisted',
+    persistId: readActivityId(activity) ?? undefined,
+  };
+}
+
+export function parsePersistedReviewEntry(activity: unknown): KitchenDayReviewEntry | null {
+  if (getActivityTemplateReference(activity) !== 'wastePracticeReview') return null;
+  const sessionId = readActivityPropertyString(activity, 'sessionId');
+  const sessionDate = readActivityPropertyString(activity, 'sessionDate');
+  const submittedAt = readActivityPropertyString(activity, 'submittedAt');
+  const timeEfficiencyScore = readActivityPropertyNumber(activity, 'timeEfficiencyScore');
+  const preparationQualityScore = readActivityPropertyNumber(activity, 'preparationQualityScore');
+  const chefFeedback = readActivityPropertyString(activity, 'chefFeedback');
+  if (
+    !sessionId ||
+    !sessionDate ||
+    !submittedAt ||
+    timeEfficiencyScore == null ||
+    preparationQualityScore == null ||
+    !isKitchenDayReviewScore(timeEfficiencyScore) ||
+    !isKitchenDayReviewScore(preparationQualityScore)
+  ) {
+    return null;
+  }
+  return {
+    sessionId,
+    sessionDate,
+    submittedAt,
+    timeEfficiencyScore,
+    preparationQualityScore,
+    ...(chefFeedback ? { chefFeedback } : {}),
     source: 'persisted',
     persistId: readActivityId(activity) ?? undefined,
   };

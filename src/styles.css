@@ -4964,6 +4964,11 @@ ul {
   margin: 1.25rem 0 0.5rem;
 }
 
+.kd-evidence {
+  display: grid;
+  gap: 0.25rem;
+}
+
 @media (max-width: 640px) {
   .kd-nav {
     grid-template-columns: 1fr 1fr;

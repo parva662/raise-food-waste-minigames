@@ -5,6 +5,7 @@ const ITEMS: { section: KitchenDayHashSection; label: string; testId: string }[]
   { section: 'reuse', label: 'Reuse', testId: 'kitchen-day-nav-reuse' },
   { section: 'portion', label: 'Portion Precision', testId: 'kitchen-day-nav-portion' },
   { section: 'my-day', label: 'My day', testId: 'kitchen-day-nav-my-day' },
+  { section: 'chef', label: 'Chef', testId: 'kitchen-day-nav-chef' },
 ];
 
 export function KitchenDayNav({ section }: { section: KitchenDayHashSection }) {

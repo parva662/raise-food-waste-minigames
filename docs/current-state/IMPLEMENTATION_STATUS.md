@@ -125,7 +125,7 @@ Canonical: [`../product/waste-challenges/KITCHEN_DAY.md`](../product/waste-chall
 
 **CURRENT IMPLEMENTATION on `main`:** Trim Smart v1 only (`#/waste/trim-smart`, Ingredient → Practice → Measure, `practice` / `participantWasteGrams` / old categories).
 
-**CURRENT IMPLEMENTATION on `feature/kitchen-day-v1`:** Phases 1–4 at `#/kitchen-day` plus integration hardening: embed waits for TASK before locking session; one TASK must list `trimSmart` + `rescueAndReuse` + `portionPrecision` (see [`KITCHEN_DAY_TASK.md`](../contracts/KITCHEN_DAY_TASK.md)); submitted records hydrate from `kitchenGroupInput.activities`. `#/waste/trim-smart` remains v1. Live posting is guarded: **LIVE E2E BLOCKED BY GAMEBUS ADMIN ALIGNMENT**.
+**CURRENT IMPLEMENTATION on `feature/kitchen-day-v1`:** Phases 1–5 at `#/kitchen-day`: participant-specific session lock (TASK + `inputCollectionPari.me`), student/chef dashboards, session-level `wastePracticeReview`. One TASK must list `trimSmart` + `rescueAndReuse` + `portionPrecision` (see [`KITCHEN_DAY_TASK.md`](../contracts/KITCHEN_DAY_TASK.md)); review posts require `wastePracticeReview` on the current TASK. `#/waste/trim-smart` remains v1. Live posting is guarded: **LIVE E2E BLOCKED BY GAMEBUS ADMIN ALIGNMENT**.
 
 **APPROVED TARGET:** connected Kitchen Day (Trim Smart + Rescue & Reuse + Portion Precision + one session-level chef review).
 
@@ -138,7 +138,7 @@ Implementation order: Phase 0 GameBus admin → 1 session/shell → 2 Trim targe
 | Trim Smart | v1 standalone | Target flow at `#/kitchen-day`; v1 kept at `#/waste/trim-smart` | Estimate → timed prep → actual; locked category enum; unique `ingredientId` per session |
 | Rescue & Reuse | none | `#/kitchen-day/reuse` | Join `sessionId` + `ingredientId`; `reusableWasteGrams` + free-text `reuseDestination` |
 | Portion Precision | none | `#/kitchen-day/portion` | One activity per recipe; `recipeComposition`; [`PORTION_PRECISION.md`](../product/waste-challenges/PORTION_PRECISION.md) |
-| Dashboards + chef review | none | Lightweight local My day only | Read-only overviews; one `wastePracticeReview` per session; existing `groupActivities.ts` |
+| Dashboards + chef review | none | `#/kitchen-day/my-day`, `#/kitchen-day/chef` | Read-only overviews; one `wastePracticeReview` per student session; existing `groupActivities.ts` |
 
 ---
 

@@ -5,7 +5,8 @@ import { KitchenDaySessionProvider, useKitchenDaySession } from './KitchenDaySes
 import { MyDayView } from './MyDayView';
 import { KitchenDayPortionView } from './portion/KitchenDayPortionView';
 import { KitchenDayRescueView } from './rescue/KitchenDayRescueView';
-import { parseKitchenDaySection } from './routes';
+import { KitchenDayChefView } from './KitchenDayChefView';
+import { parseKitchenDaySection, parseKitchenDaySelectedSessionId } from './routes';
 import { KitchenDayTrimView } from './trim/KitchenDayTrimView';
 import { KITCHEN_DAY_LIVE_BLOCK_REASON, canPostKitchenDayToGameBus } from './liveIntegration';
 
@@ -24,9 +25,15 @@ function KitchenDayBody() {
   const { session } = useKitchenDaySession();
   if (!session) return <KitchenDayInitializing />;
   const [section, setSection] = useState(() => parseKitchenDaySection());
+  const [selectedSessionId, setSelectedSessionId] = useState(() =>
+    parseKitchenDaySelectedSessionId(),
+  );
 
   useEffect(() => {
-    const sync = () => setSection(parseKitchenDaySection());
+    const sync = () => {
+      setSection(parseKitchenDaySection());
+      setSelectedSessionId(parseKitchenDaySelectedSessionId());
+    };
     window.addEventListener('hashchange', sync);
     return () => window.removeEventListener('hashchange', sync);
   }, []);
@@ -50,6 +57,7 @@ function KitchenDayBody() {
       {section === 'reuse' ? <KitchenDayRescueView /> : null}
       {section === 'portion' ? <KitchenDayPortionView /> : null}
       {section === 'my-day' ? <MyDayView /> : null}
+      {section === 'chef' ? <KitchenDayChefView selectedSessionId={selectedSessionId} /> : null}
     </div>
   );
 }

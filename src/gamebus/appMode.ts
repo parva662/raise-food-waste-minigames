@@ -93,6 +93,7 @@ export function getExpectedActivityRef(): string {
     const section = parseKitchenDaySection();
     if (section === 'reuse') return RESCUE_AND_REUSE_ACTIVITY_REF;
     if (section === 'portion') return PORTION_PRECISION_ACTIVITY_REF;
+    if (section === 'chef') return 'wastePracticeReview';
     return TRIM_SMART_ACTIVITY_REF;
   }
   return STUDENT_ACTIVITY_REF;
