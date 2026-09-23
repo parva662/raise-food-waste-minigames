@@ -249,13 +249,21 @@ export function KitchenDayTrimView() {
       {step === 'technique' ? (
         <div data-testid="kitchen-day-trim-step-technique">
           <h2 className="kitchen-day-card__title">Trimming technique</h2>
-          <div className="kitchen-day-chip-grid">
+          <div
+            className="kitchen-day-chip-grid kitchen-day-chip-grid--techniques"
+            data-testid="kitchen-day-technique-list"
+          >
             {TRIM_TECHNIQUES.map((value) => (
               <button
                 key={value}
                 type="button"
-                className={technique === value ? 'kitchen-day-chip kitchen-day-chip--active' : 'kitchen-day-chip'}
+                className={
+                  technique === value
+                    ? 'kitchen-day-chip kitchen-day-chip--compact kitchen-day-chip--active'
+                    : 'kitchen-day-chip kitchen-day-chip--compact'
+                }
                 data-testid={`kitchen-day-technique-${value}`}
+                aria-pressed={technique === value}
                 onClick={() => setTechnique(value)}
               >
                 {TRIM_TECHNIQUE_LABELS[value]}

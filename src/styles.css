@@ -4809,6 +4809,11 @@ ul {
   margin: var(--spacing-md) 0;
 }
 
+.kitchen-day-chip-grid--techniques {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--spacing-xs);
+}
+
 .kitchen-day-chip,
 .kitchen-day-button {
   min-height: 3rem;
@@ -4829,6 +4834,17 @@ ul {
   background: var(--color-primary-light);
   border-color: var(--color-primary);
   color: var(--color-primary-dark);
+}
+
+.kitchen-day-chip--compact {
+  min-height: 2.75rem;
+  padding: var(--spacing-xs) var(--spacing-sm);
+  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: visible;
+  white-space: normal;
 }
 
 .kitchen-day-field {
@@ -5130,10 +5146,20 @@ ul {
   font-weight: 600;
 }
 
+@media (min-width: 768px) {
+  .kitchen-day-chip-grid--techniques {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+  }
+}
+
 @media (max-width: 640px) {
   .kitchen-day-activity__nav,
   .kitchen-day-chip-grid {
     grid-template-columns: 1fr;
+  }
+
+  .kitchen-day-chip-grid.kitchen-day-chip-grid--techniques {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .kitchen-day-input-row {
