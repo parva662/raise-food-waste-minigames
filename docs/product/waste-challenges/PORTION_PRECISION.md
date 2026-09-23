@@ -20,15 +20,37 @@ All actual measurements live in **one** property: `recipeComposition`. No per-in
 
 Each `recipeComposition` entry: `ingredientId`, `ingredientName`, `actualAmount`, `unit`. `actualAmount` is nested, not a GameBus property.
 
+Accuracy, error, and final-weight deviation are **derived at display time**. They are not stored on the activity.
+
 ## 4. Recipe data outside GameBus
 
-Required amounts, ids, names, and units come from the recipe source (local stub JSON keyed by `recipeId` now; real BarLaurea source later). They are **not** copied into the activity. Students cannot edit required amounts. Comparison is exact required vs actual; no tolerance band.
+Required amounts, recipe identity, and expected final weight come from the current recipe reference (professional clean workbook extract now; a future BarLaurea source can use the same adapter). They are **not** copied into the activity. Students cannot edit required amounts.
 
-## 5. Example
+Expected final weight comes from the recipe reference (`Kypsä_kokonaispaino` in the source workbook). Do not infer it from the sum of ingredient targets. Yield (`Saanto`) is retained in the source materials for reference only.
 
-Recipe dataset: yogurt 1000 g, lemon juice 100 g, salt 8 g, pepper 2 g.
+If the recipe reference later needs versioning, document the version used for recalculation. Do not invent new GameBus properties for derived metrics.
 
-Posted: one activity with `recipeComposition` actuals and `finalRecipeWeightGrams` 1850.
+## 5. Derived comparison
+
+Comparison is exact required vs actual; no tolerance band.
+
+Ingredient signed deviation (when target > 0):
+
+`((actual − target) / target) × 100`
+
+Shown as Exact, or *n.n*% over / under. Absolute gram difference is also shown where useful.
+
+Whole-recipe ingredient error is **weighted** by target mass:
+
+`sum(|actual − target|) / sum(target) × 100`
+
+Ingredient accuracy is `max(0, 100 − that error)`. Tiny ingredients do not dominate the recipe result.
+
+Final-weight deviation uses the recipe reference expected final weight:
+
+`|recorded final weight − expected final weight| / expected final weight × 100`
+
+These two recipe metrics stay separate. There is **no** automatic combined score and **no** automatic tutor score.
 
 ## 6. Journey
 
@@ -36,11 +58,11 @@ Select recipe → see required lines → enter `actualAmount` per line → enter
 
 ## 7. Chef review
 
-Evidence only. No separate chef score.
+Evidence only: ingredient accuracy, final-weight deviation, and line-level deviations support judgement. The tutor still enters `timeEfficiencyScore` and `preparationQualityScore`. No separate automatic chef score.
 
 ## 8. GameBus admin
 
-Create/link `recipeComposition`. Confirm `recipeId`, `recipeName`, `finalRecipeWeightGrams`. Unlink top-level `ingredientId`, `ingredientName`, `ingredientCategory`, `ingredientWeightGrams`.
+Create/link `recipeComposition`. Confirm `sessionId`, `sessionDate`, `submittedAt`, `recipeId`, `recipeName`, `finalRecipeWeightGrams`. Unlink top-level `ingredientId`, `ingredientName`, `ingredientCategory`, `ingredientWeightGrams`. Do not add derived metric properties.
 
 ## 9. Deprecated names
 

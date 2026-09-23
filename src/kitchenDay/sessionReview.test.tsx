@@ -50,15 +50,15 @@ const portionEntries: KitchenDayPortionEntry[] = [
     sessionId,
     sessionDate: '2026-09-23',
     submittedAt: '2026-09-23T11:00:00.000Z',
-    recipeId: 'mayonnaise',
-    recipeName: 'Mayonnaise',
-    finalRecipeWeightGrams: 200,
+    recipeId: '1',
+    recipeName: 'Ankanrinta FLOW',
+    finalRecipeWeightGrams: 13100,
     source: 'local',
     recipeComposition: [
-      { ingredientId: 'yogurt', ingredientName: 'Yogurt', actualAmount: 1000, unit: 'g' },
-      { ingredientId: 'lemon-juice', ingredientName: 'Lemon juice', actualAmount: 1000, unit: 'g' },
-      { ingredientId: 'salt', ingredientName: 'Salt', actualAmount: 3, unit: 'g' },
-      { ingredientId: 'pepper', ingredientName: 'Pepper', actualAmount: 2, unit: 'g' },
+      { ingredientId: 'ankka-rintafilee', ingredientName: 'ANKKA, RINTAFILEE', actualAmount: 11250, unit: 'g' },
+      { ingredientId: 'rosmariini-tuore-100g', ingredientName: 'Rosmariini tuore 100g', actualAmount: 495, unit: 'g' },
+      { ingredientId: 'berner-merisuola-keskikarkea-25', ingredientName: 'Berner Merisuola keskikarkea 25', actualAmount: 900, unit: 'g' },
+      { ingredientId: 'meira-luomu-mustapippuri', ingredientName: 'Meira Luomu mustapippuri', actualAmount: 450, unit: 'g' },
     ],
   },
 ];
@@ -126,17 +126,20 @@ describe('Session review presentation', () => {
     expect(screen.getByTestId('kitchen-day-rescue-potato').textContent).toMatch(/Reusable/);
     expect(screen.getByTestId('kitchen-day-rescue-potato').textContent).toMatch(/Soup/);
 
-    expect(screen.getByTestId('kitchen-day-portion-target-mayonnaise-yogurt')).toHaveTextContent('1000 g');
-    expect(screen.getByTestId('kitchen-day-portion-actual-mayonnaise-yogurt')).toHaveTextContent('1000 g');
-    expect(screen.getByTestId('kitchen-day-deviation-mayonnaise-yogurt')).toHaveTextContent('Exact');
-    expect(screen.getByTestId('kitchen-day-portion-target-mayonnaise-lemon-juice')).toHaveTextContent('100 g');
-    expect(screen.getByTestId('kitchen-day-portion-actual-mayonnaise-lemon-juice')).toHaveTextContent('1000 g');
-    expect(screen.getByTestId('kitchen-day-deviation-mayonnaise-lemon-juice')).toHaveTextContent('900 g over');
-    expect(screen.getByTestId('kitchen-day-portion-target-mayonnaise-salt')).toHaveTextContent('8 g');
-    expect(screen.getByTestId('kitchen-day-portion-actual-mayonnaise-salt')).toHaveTextContent('3 g');
-    expect(screen.getByTestId('kitchen-day-deviation-mayonnaise-salt')).toHaveTextContent('5 g under');
-    expect(screen.getByText('Final recipe weight: 200 g')).toBeInTheDocument();
-    expect(portion.textContent).not.toMatch(/Yogurt 1000 g 1000 g ExactLemon/i);
+    expect(screen.getByTestId('kitchen-day-portion-accuracy-1')).toHaveTextContent('96.3%');
+    expect(screen.getByTestId('kitchen-day-portion-expected-final-1')).toHaveTextContent('13500 g');
+    expect(screen.getByTestId('kitchen-day-portion-final-deviation-1')).toHaveTextContent('3.0%');
+    expect(screen.getByTestId('kitchen-day-portion-target-1-ankka-rintafilee')).toHaveTextContent('11250 g');
+    expect(screen.getByTestId('kitchen-day-portion-actual-1-ankka-rintafilee')).toHaveTextContent('11250 g');
+    expect(screen.getByTestId('kitchen-day-deviation-1-ankka-rintafilee')).toHaveTextContent('Exact');
+    expect(screen.getByTestId('kitchen-day-portion-difference-1-rosmariini-tuore-100g')).toHaveTextContent('45 g over');
+    expect(screen.getByTestId('kitchen-day-deviation-1-rosmariini-tuore-100g')).toHaveTextContent('10.0% over');
+    expect(screen.getByTestId('kitchen-day-portion-difference-1-meira-luomu-mustapippuri')).toHaveTextContent(
+      '450 g under',
+    );
+    expect(screen.getByTestId('kitchen-day-deviation-1-meira-luomu-mustapippuri')).toHaveTextContent('50.0% under');
+    expect(screen.getByTestId('kitchen-day-portion-target-1-ankka-rintafilee')).not.toHaveTextContent('ANKKA');
+    expect(screen.getByTestId('kitchen-day-portion-accuracy-1')).not.toHaveTextContent('Ingredient accuracy');
 
     expect(tutor).toHaveTextContent('Tutor assessment');
     expect(tutor).toHaveTextContent('4 / 5');

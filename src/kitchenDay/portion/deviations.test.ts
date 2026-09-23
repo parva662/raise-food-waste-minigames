@@ -4,11 +4,12 @@ import { getRecipeReference } from './recipes';
 import { buildRecipeComposition, canSubmitPortion } from './validation';
 
 describe('Portion Precision', () => {
-  it('loads required amounts from the stub recipe dataset', () => {
-    const mayonnaise = getRecipeReference('mayonnaise');
-    expect(mayonnaise?.recipeName).toBe('Mayonnaise');
-    expect(mayonnaise?.lines.find((line) => line.ingredientId === 'yogurt')).toMatchObject({
-      requiredAmount: 1000,
+  it('loads required amounts from the generated recipe reference', () => {
+    const recipe = getRecipeReference('1');
+    expect(recipe?.recipeName).toBe('Ankanrinta FLOW');
+    expect(recipe?.expectedFinalWeightGrams).toBe(13500);
+    expect(recipe?.lines.find((line) => line.ingredientId === 'ankka-rintafilee')).toMatchObject({
+      requiredAmount: 11250,
       unit: 'g',
     });
   });
@@ -47,20 +48,19 @@ describe('Portion Precision', () => {
   });
 
   it('requires every actual and a final recipe weight', () => {
-    const recipe = getRecipeReference('mayonnaise')!;
+    const recipe = getRecipeReference('1')!;
     const complete = {
-      yogurt: '1000',
-      'lemon-juice': '100',
-      salt: '8',
-      pepper: '2',
+      'ankka-rintafilee': '11250',
+      'rosmariini-tuore-100g': '450',
+      'berner-merisuola-keskikarkea-25': '900',
+      'meira-luomu-mustapippuri': '900',
     };
     expect(buildRecipeComposition(recipe, complete)?.[0]).toMatchObject({
-      ingredientId: 'yogurt',
-      ingredientName: 'Yogurt',
-      actualAmount: 1000,
+      ingredientId: 'ankka-rintafilee',
+      actualAmount: 11250,
       unit: 'g',
     });
     expect(canSubmitPortion({ recipe, actualsByIngredientId: complete, finalWeightRaw: '' })).toBe(false);
-    expect(canSubmitPortion({ recipe, actualsByIngredientId: complete, finalWeightRaw: '1850' })).toBe(true);
+    expect(canSubmitPortion({ recipe, actualsByIngredientId: complete, finalWeightRaw: '13500' })).toBe(true);
   });
 });

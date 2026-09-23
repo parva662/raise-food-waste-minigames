@@ -1,0 +1,94 @@
+{
+  "sourceWorkbook": "reference/kitchen-day/kitchen_day_recipe_reference_clean.xlsx",
+  "summaryRows": 191,
+  "ingredientRows": 1763,
+  "recipesImported": 190,
+  "ingredientRowsImported": 1741,
+  "excludedRecipes": 1,
+  "excludedIngredientRows": 13,
+  "exclusions": [
+    {
+      "reason": "invalid_target_weight",
+      "recipeId": "16",
+      "recipeName": "Chili sin Carne M,G",
+      "ingredientName": "Mustapippuri, jauhettu"
+    },
+    {
+      "reason": "invalid_target_weight",
+      "recipeId": "25",
+      "recipeName": "Flowtoberfest Currywurst-kastike",
+      "ingredientName": "Capsi Mustapippuri rouhittu 400g"
+    },
+    {
+      "reason": "invalid_target_weight",
+      "recipeId": "25",
+      "recipeName": "Flowtoberfest Currywurst-kastike",
+      "ingredientName": "JOZO 600g Hieno suola ilman"
+    },
+    {
+      "reason": "invalid_target_weight",
+      "recipeId": "25",
+      "recipeName": "Flowtoberfest Currywurst-kastike",
+      "ingredientName": "Menu 500g Chilijauhe 500g"
+    },
+    {
+      "reason": "invalid_target_weight",
+      "recipeId": "25",
+      "recipeName": "Flowtoberfest Currywurst-kastike",
+      "ingredientName": "Salliselta Paprikajauhe 380g"
+    },
+    {
+      "reason": "invalid_target_weight",
+      "recipeId": "31",
+      "recipeName": "Flowtoberfest Vaniljajäätelö",
+      "ingredientName": "Menu 65g Vaniljatanko"
+    },
+    {
+      "reason": "invalid_expected_final_weight",
+      "recipeId": "54",
+      "recipeName": "Jenni testaa"
+    },
+    {
+      "reason": "invalid_target_weight",
+      "recipeId": "98",
+      "recipeName": "Liha-makaronilaatikko L",
+      "ingredientName": "Ruokasuola, jodioitu"
+    },
+    {
+      "reason": "invalid_target_weight",
+      "recipeId": "127",
+      "recipeName": "Palak Paneer juustocurry L,G",
+      "ingredientName": "Rypsiöljy"
+    },
+    {
+      "reason": "invalid_target_weight",
+      "recipeId": "133",
+      "recipeName": "Pannukakku L",
+      "ingredientName": "Kaneli, jauhettu"
+    },
+    {
+      "reason": "invalid_target_weight",
+      "recipeId": "133",
+      "recipeName": "Pannukakku L",
+      "ingredientName": "Kardemumma, jauhettu"
+    },
+    {
+      "reason": "invalid_target_weight",
+      "recipeId": "136",
+      "recipeName": "Pasta Bolognese M",
+      "ingredientName": "Ruokasuola, jodioitu"
+    },
+    {
+      "reason": "invalid_target_weight",
+      "recipeId": "163",
+      "recipeName": "Teemaviikko PRA225SN B1",
+      "ingredientName": "Menu valkosipulimurska 600g"
+    },
+    {
+      "reason": "invalid_target_weight",
+      "recipeId": "164",
+      "recipeName": "Teemaviikko PRA225SN B1",
+      "ingredientName": "Chili punainen 50g Hollanti 1lk"
+    }
+  ]
+}

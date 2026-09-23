@@ -14,7 +14,8 @@ Implementation: `feature/kitchen-day-v1` (`#/kitchen-day`)
 | Timer start/finish/duration | `trim/timer.test.ts` | |
 | Waste % and seeded/historical/fallback comparison | `trim/derived.test.ts`, `trim/reference.test.ts` | No percentile copy |
 | Rescue join + reusable bounds + destination + discarded | `rescue/validation.test.ts`, flow | |
-| Portion recipe stub, composition, deviations, final weight | `portion/deviations.test.ts`, flow | |
+| Portion recipe reference, composition, deviations, final weight | `portion/deviations.test.ts`, `portion/recipes.test.ts`, `portion/metrics.test.ts`, flow | Generated extract; weighted accuracy; expected final weight from reference |
+| Recipe workbook extraction | `scripts/kitchen-day/extractRecipes.test.ts` | Invalid rows excluded; XLSX not loaded in the browser |
 | Mapper exact property sets | `src/gamebus/mapKitchenDay*.test.ts`, `mapRescueAndReuse.test.ts`, `mapPortionPrecision.test.ts`, `mapWastePracticeReview.test.ts` | |
 | Embed waits for TASK / session locked once | `KitchenDaySessionContext.test.tsx` | |
 | Multi-template TASK validation | `kitchenDayTask.test.ts` | |

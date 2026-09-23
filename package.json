@@ -12,7 +12,8 @@
     "test:coverage": "vitest run --coverage",
     "menu:inspect": "tsx scripts/menu/inspect-cli.ts",
     "menu:convert": "tsx scripts/menu/convert-cli.ts",
-    "menu:check": "tsx scripts/menu/check-cli.ts"
+    "menu:check": "tsx scripts/menu/check-cli.ts",
+    "kitchen-day:recipes": "tsx scripts/kitchen-day/extract-cli.ts"
   },
   "dependencies": {
     "date-fns": "^4.4.0",

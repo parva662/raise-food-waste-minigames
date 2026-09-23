@@ -128,6 +128,10 @@ export function KitchenDayPortionView() {
             })}
           </ul>
 
+          <p data-testid="kitchen-day-expected-final-weight">
+            Expected final weight: {recipe.expectedFinalWeightGrams} g
+          </p>
+
           <label className="kitchen-day-field">
             <span>Final recipe weight</span>
             <div className="kitchen-day-input-row">

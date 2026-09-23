@@ -1,20 +1,20 @@
 import { describe, expect, it } from 'vitest';
-import { formatPortionDeviation } from './copy';
+import { formatFinalWeightDifference, formatPortionDeviation } from './copy';
 
 describe('Portion Precision user-facing copy', () => {
   const required = {
     ingredientId: 'yogurt',
     ingredientName: 'Yogurt',
-    requiredAmount: 1000,
+    requiredAmount: 100,
     unit: 'g' as const,
   };
 
-  it('uses human labels instead of machine outcomes', () => {
+  it('uses percentage deviation labels', () => {
     expect(
       formatPortionDeviation(required, {
         ingredientId: 'yogurt',
         ingredientName: 'Yogurt',
-        actualAmount: 1000,
+        actualAmount: 100,
         unit: 'g',
       }),
     ).toBe('Exact');
@@ -22,17 +22,23 @@ describe('Portion Precision user-facing copy', () => {
       formatPortionDeviation(required, {
         ingredientId: 'yogurt',
         ingredientName: 'Yogurt',
-        actualAmount: 1020,
+        actualAmount: 110,
         unit: 'g',
       }),
-    ).toBe('20 g over');
+    ).toBe('10.0% over');
     expect(
       formatPortionDeviation(required, {
         ingredientId: 'yogurt',
         ingredientName: 'Yogurt',
-        actualAmount: 800,
+        actualAmount: 75,
         unit: 'g',
       }),
-    ).toBe('200 g under');
+    ).toBe('25.0% under');
+  });
+
+  it('formats final-weight difference from the expected reference weight', () => {
+    expect(formatFinalWeightDifference(1850, 1850)).toBe('Exact');
+    expect(formatFinalWeightDifference(1890, 1850)).toBe('40 g over');
+    expect(formatFinalWeightDifference(1810, 1850)).toBe('40 g under');
   });
 });

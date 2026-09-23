@@ -1,3 +1,4 @@
+import generatedRecipes from '../../data/generated/kitchen-day-recipes.json';
 import type { PortionUnit } from '../types';
 
 export interface RecipeReferenceLine {
@@ -10,35 +11,43 @@ export interface RecipeReferenceLine {
 export interface RecipeReference {
   recipeId: string;
   recipeName: string;
+  expectedFinalWeightGrams: number;
   lines: RecipeReferenceLine[];
 }
 
-export const KITCHEN_DAY_RECIPE_STUBS: RecipeReference[] = [
-  {
-    recipeId: 'mayonnaise',
-    recipeName: 'Mayonnaise',
-    lines: [
-      { ingredientId: 'yogurt', ingredientName: 'Yogurt', requiredAmount: 1000, unit: 'g' },
-      { ingredientId: 'lemon-juice', ingredientName: 'Lemon juice', requiredAmount: 100, unit: 'g' },
-      { ingredientId: 'salt', ingredientName: 'Salt', requiredAmount: 8, unit: 'g' },
-      { ingredientId: 'pepper', ingredientName: 'Pepper', requiredAmount: 2, unit: 'g' },
-    ],
-  },
-  {
-    recipeId: 'herb-oil',
-    recipeName: 'Herb oil',
-    lines: [
-      { ingredientId: 'rapeseed-oil', ingredientName: 'Rapeseed oil', requiredAmount: 2, unit: 'dL' },
-      { ingredientId: 'parsley', ingredientName: 'Parsley', requiredAmount: 40, unit: 'g' },
-      { ingredientId: 'garlic', ingredientName: 'Garlic', requiredAmount: 10, unit: 'g' },
-    ],
-  },
-];
+interface GeneratedIngredient {
+  ingredientId: string;
+  ingredientName: string;
+  targetWeightGrams: number;
+}
+
+interface GeneratedRecipe {
+  recipeId: string;
+  recipeName: string;
+  expectedFinalWeightGrams: number;
+  ingredients: GeneratedIngredient[];
+}
+
+function toRecipeReference(recipe: GeneratedRecipe): RecipeReference {
+  return {
+    recipeId: recipe.recipeId,
+    recipeName: recipe.recipeName,
+    expectedFinalWeightGrams: recipe.expectedFinalWeightGrams,
+    lines: recipe.ingredients.map((ingredient) => ({
+      ingredientId: ingredient.ingredientId,
+      ingredientName: ingredient.ingredientName,
+      requiredAmount: ingredient.targetWeightGrams,
+      unit: 'g',
+    })),
+  };
+}
+
+const recipeReferences: RecipeReference[] = generatedRecipes.recipes.map(toRecipeReference);
 
 export function listRecipeReferences(): RecipeReference[] {
-  return KITCHEN_DAY_RECIPE_STUBS;
+  return recipeReferences;
 }
 
 export function getRecipeReference(recipeId: string): RecipeReference | null {
-  return KITCHEN_DAY_RECIPE_STUBS.find((recipe) => recipe.recipeId === recipeId) ?? null;
+  return recipeReferences.find((recipe) => recipe.recipeId === recipeId) ?? null;
 }

@@ -11,7 +11,7 @@ Feature: Portion Precision recipe measurement
 
   Background:
     Given a kitchen day session is active for the student
-    And required recipe amounts are read from a local stub recipe dataset keyed by recipe id
+    And required recipe amounts and the expected final weight are read from the current recipe reference keyed by recipe id
 
   Rule: One activity is one prepared recipe
 
@@ -78,3 +78,66 @@ Feature: Portion Precision recipe measurement
       And submitted a Portion Precision activity for "Mayonnaise"
       When the student opens the kitchen day overview
       Then both records are visible for the same kitchen day
+
+  Rule: Ingredient deviation is a percentage of the required amount
+
+    Scenario Outline: The line shows how far the actual amount is from the target
+      Given the recipe requires 100 grams of lemon juice
+      When the student records <actual> grams as the actual amount used
+      Then the ingredient deviation is shown as "<copy>"
+      And the absolute gram difference remains visible
+
+      Examples:
+        | actual | copy        |
+        | 100    | Exact       |
+        | 110    | 10.0% over  |
+        | 75     | 25.0% under |
+
+  Rule: Whole-recipe ingredient accuracy is weighted by target mass
+
+    Scenario: All ingredients match
+      Given every ingredient actual matches its target
+      Then ingredient accuracy is 100.0%
+      And ingredient error is 0.0%
+
+    Scenario: A small ingredient does not dominate the recipe result
+      Given a high-mass ingredient is slightly off
+      And a tiny ingredient is far off
+      Then ingredient error uses the total absolute gram difference divided by the total target mass
+      And the tiny ingredient does not receive equal influence
+
+  Rule: Final-weight deviation uses the recipe reference
+
+    Scenario: Expected final weight comes from the recipe reference
+      When the comparison is shown
+      Then the expected final weight is the recipe reference value
+      And it is not inferred from the sum of ingredient targets
+
+    Scenario Outline: Final-weight deviation is shown separately from ingredient accuracy
+      Given the recipe reference expected final weight is 1850 grams
+      When the student records a final recipe weight of <actual> grams
+      Then the final-weight difference is "<difference>"
+      And the final-weight deviation is "<deviation>"
+      And ingredient accuracy remains a separate figure
+
+      Examples:
+        | actual | difference  | deviation |
+        | 1850   | Exact       | 0.0%      |
+        | 1890   | 40 g over   | 2.2%      |
+        | 1810   | 40 g under  | 2.2%      |
+
+  Rule: Metrics are derived, not stored
+
+    Scenario: Derived figures are not part of the posted activity
+      When the student submits a Portion Precision activity
+      Then the activity stores only the recorded recipe composition and final recipe weight
+      And ingredient accuracy is calculated later from those records and the current recipe reference
+      And final-weight deviation is calculated later from the recorded final weight and the current recipe reference
+
+  Rule: Tutor judgement is not automatic
+
+    Scenario: System metrics do not set tutor scores
+      When a tutor opens the student evidence
+      Then ingredient accuracy and final-weight deviation are visible
+      And time efficiency and preparation quality are still entered by the tutor
+      And no automatic tutor score is created

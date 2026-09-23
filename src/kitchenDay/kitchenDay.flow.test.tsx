@@ -66,18 +66,20 @@ describe('Kitchen Day connected flow', () => {
     await user.click(screen.getByTestId('kitchen-day-save-rescue'));
 
     await user.click(screen.getByTestId('kitchen-day-nav-portion'));
-    await user.selectOptions(screen.getByTestId('kitchen-day-recipe-select'), 'mayonnaise');
-    await user.type(screen.getByTestId('kitchen-day-actual-yogurt'), '1000');
-    await user.type(screen.getByTestId('kitchen-day-actual-lemon-juice'), '100');
-    await user.type(screen.getByTestId('kitchen-day-actual-salt'), '8');
-    await user.type(screen.getByTestId('kitchen-day-actual-pepper'), '2');
-    await user.type(screen.getByTestId('kitchen-day-final-recipe-weight'), '1850');
+    await user.selectOptions(screen.getByTestId('kitchen-day-recipe-select'), '1');
+    await user.type(screen.getByTestId('kitchen-day-actual-ankka-rintafilee'), '11250');
+    await user.type(screen.getByTestId('kitchen-day-actual-rosmariini-tuore-100g'), '450');
+    await user.type(screen.getByTestId('kitchen-day-actual-berner-merisuola-keskikarkea-25'), '900');
+    await user.type(screen.getByTestId('kitchen-day-actual-meira-luomu-mustapippuri'), '900');
+    await user.type(screen.getByTestId('kitchen-day-final-recipe-weight'), '13500');
     await user.click(screen.getByTestId('kitchen-day-submit-portion'));
 
     await user.click(screen.getByTestId('kitchen-day-nav-review'));
     expect(screen.getByTestId('kitchen-day-trim-carrot')).toBeInTheDocument();
     expect(screen.getByTestId('kitchen-day-rescue-carrot')).toBeInTheDocument();
-    expect(screen.getByTestId('kitchen-day-portion-mayonnaise')).toBeInTheDocument();
+    expect(screen.getByTestId('kitchen-day-portion-1')).toBeInTheDocument();
+    expect(screen.getByTestId('kitchen-day-portion-accuracy-1')).toHaveTextContent('100.0%');
+    expect(screen.getByTestId('kitchen-day-portion-final-deviation-1')).toHaveTextContent('0.0%');
     expect(screen.getByTestId('kitchen-day-header-session')).toHaveTextContent(sessionLabel ?? '');
   });
 

@@ -99,6 +99,20 @@ export function KitchenDayProgressApp() {
             values={points.flatMap((point) => (point.durationMinutes == null ? [] : [point.durationMinutes]))}
           />
           <Sparkline
+            label="Ingredient accuracy"
+            testId="kitchen-day-progress-accuracy-trend"
+            values={points.flatMap((point) =>
+              point.ingredientAccuracyPercent == null ? [] : [point.ingredientAccuracyPercent],
+            )}
+          />
+          <Sparkline
+            label="Final-weight deviation"
+            testId="kitchen-day-progress-final-deviation-trend"
+            values={points.flatMap((point) =>
+              point.finalWeightDeviationPercent == null ? [] : [point.finalWeightDeviationPercent],
+            )}
+          />
+          <Sparkline
             label="Tutor time efficiency"
             testId="kitchen-day-progress-time-trend"
             values={points.flatMap((point) =>
@@ -117,6 +131,12 @@ export function KitchenDayProgressApp() {
               <li key={point.sessionId}>
                 {formatSessionDate(point.sessionDate)}
                 {point.wastePercent != null ? ` · ${formatWastePercent(point.wastePercent)}` : ''}
+                {point.ingredientAccuracyPercent != null
+                  ? ` · Ingredient accuracy ${formatWastePercent(point.ingredientAccuracyPercent)}`
+                  : ''}
+                {point.finalWeightDeviationPercent != null
+                  ? ` · Final-weight deviation ${formatWastePercent(point.finalWeightDeviationPercent)}`
+                  : ''}
               </li>
             ))}
           </ul>

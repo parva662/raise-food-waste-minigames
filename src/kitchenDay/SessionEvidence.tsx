@@ -4,7 +4,13 @@ import { discardedWasteGrams, wastePercentage } from './trim/derived';
 import { TRIM_TECHNIQUE_LABELS } from './trim/techniques';
 import { compareToKitchenReference } from './trim/reference';
 import { historicalTrimSamplesFromGroupActivities } from './read/selectKitchenDayActivities';
-import { formatPortionDeviation } from './portion/copy';
+import {
+  formatFinalWeightDifference,
+  formatMetricPercent,
+  formatPortionDeviation,
+  formatPortionDifference,
+} from './portion/copy';
+import { buildPortionRecipeMetrics } from './portion/metrics';
 import { getRecipeReference } from './portion/recipes';
 import {
   formatDurationFromMinutes,
@@ -139,6 +145,7 @@ export function SessionEvidence({
           <ul className="kitchen-day-evidence-list" data-testid={`${testIdPrefix}-portion-list`}>
             {portionEntries.map((entry) => {
               const recipe = getRecipeReference(entry.recipeId);
+              const metrics = buildPortionRecipeMetrics(entry, recipe);
               return (
                 <li
                   key={`${entry.recipeId}-${entry.submittedAt}`}
@@ -146,6 +153,40 @@ export function SessionEvidence({
                   data-testid={`${testIdPrefix}-portion-${entry.recipeId}`}
                 >
                   <h4 className="kitchen-day-evidence-card__title">{entry.recipeName}</h4>
+                  <dl className="kitchen-day-facts">
+                    <Fact
+                      label="Ingredient accuracy"
+                      value={formatMetricPercent(metrics.recipeIngredientAccuracyPercent)}
+                      testId={`${testIdPrefix}-portion-accuracy-${entry.recipeId}`}
+                    />
+                    <Fact
+                      label="Ingredient error"
+                      value={formatMetricPercent(metrics.recipeIngredientErrorPercent)}
+                    />
+                    <Fact
+                      label="Expected final weight"
+                      value={
+                        metrics.expectedFinalWeightGrams == null
+                          ? '—'
+                          : formatGrams(metrics.expectedFinalWeightGrams)
+                      }
+                      testId={`${testIdPrefix}-portion-expected-final-${entry.recipeId}`}
+                    />
+                    <Fact
+                      label="Recorded final weight"
+                      value={formatGrams(metrics.recordedFinalWeightGrams)}
+                    />
+                    <Fact
+                      label="Final-weight deviation"
+                      value={formatMetricPercent(metrics.finalWeightDeviationPercent)}
+                      testId={`${testIdPrefix}-portion-final-deviation-${entry.recipeId}`}
+                    />
+                  </dl>
+                  {metrics.expectedFinalWeightGrams != null ? (
+                    <p className="kitchen-day-evidence-note">
+                      Difference {formatFinalWeightDifference(metrics.recordedFinalWeightGrams, metrics.expectedFinalWeightGrams)}
+                    </p>
+                  ) : null}
                   <div className="kitchen-day-portion-table-wrap">
                     <table className="kitchen-day-portion-table">
                       <thead>
@@ -153,7 +194,8 @@ export function SessionEvidence({
                           <th scope="col">Ingredient</th>
                           <th scope="col">Target</th>
                           <th scope="col">Actual</th>
-                          <th scope="col">Result</th>
+                          <th scope="col">Difference</th>
+                          <th scope="col">Deviation %</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -161,7 +203,6 @@ export function SessionEvidence({
                           const required = recipe?.lines.find(
                             (item) => item.ingredientId === line.ingredientId,
                           );
-                          const copy = required ? formatPortionDeviation(required, line) : '—';
                           return (
                             <tr key={line.ingredientId}>
                               <th scope="row">{line.ingredientName}</th>
@@ -171,8 +212,11 @@ export function SessionEvidence({
                               <td data-testid={`${testIdPrefix}-portion-actual-${entry.recipeId}-${line.ingredientId}`}>
                                 {line.actualAmount} {line.unit}
                               </td>
+                              <td data-testid={`${testIdPrefix}-portion-difference-${entry.recipeId}-${line.ingredientId}`}>
+                                {required ? formatPortionDifference(required, line) : '—'}
+                              </td>
                               <td data-testid={`${testIdPrefix}-deviation-${entry.recipeId}-${line.ingredientId}`}>
-                                {copy}
+                                {required ? formatPortionDeviation(required, line) : '—'}
                               </td>
                             </tr>
                           );
@@ -180,9 +224,6 @@ export function SessionEvidence({
                       </tbody>
                     </table>
                   </div>
-                  <p className="kitchen-day-evidence-note">
-                    Final recipe weight: {formatGrams(entry.finalRecipeWeightGrams)}
-                  </p>
                 </li>
               );
             })}

@@ -5189,7 +5189,11 @@ ul {
   }
 
   .kitchen-day-portion-table td:nth-of-type(3)::before {
-    content: 'Result';
+    content: 'Difference';
+  }
+
+  .kitchen-day-portion-table td:nth-of-type(4)::before {
+    content: 'Deviation %';
   }
 }
 

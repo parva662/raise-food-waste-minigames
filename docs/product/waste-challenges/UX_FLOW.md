@@ -38,7 +38,9 @@ Ingredient, actual waste, reusable amount, destination, discarded remainder. Sav
 
 ## 5. Portion Precision
 
-Recipe → each line: name, Target, Actual + unit in the control, human result (Exact / *n* g over / *n* g under) → final recipe weight → save.
+Recipe → each line: name, Target, Actual + unit in the control, human result (Exact / *n.n*% over / *n.n*% under, plus gram difference) → expected final weight from the recipe reference → recorded final recipe weight → save.
+
+Review, Progress, and Tutor show ingredient accuracy and final-weight deviation as separate derived figures. They do not combine into one score and do not set tutor scores.
 
 ## 6. Retrieval
 

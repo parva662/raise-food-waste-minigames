@@ -139,7 +139,7 @@ Implementation order: Phase 0 GameBus admin → 1 session/shell → 2 Trim targe
 |--------|-----------|-----------------------------|--------|
 | Trim Smart | v1 standalone | Target flow at `#/kitchen-day`; v1 kept at `#/waste/trim-smart` | Estimate → timed prep → actual; locked category enum; unique `ingredientId` per session |
 | Rescue & Reuse | none | `#/kitchen-day/reuse` | Join `sessionId` + `ingredientId`; `reusableWasteGrams` + free-text `reuseDestination` |
-| Portion Precision | none | `#/kitchen-day/portion` | One activity per recipe; `recipeComposition`; [`PORTION_PRECISION.md`](../product/waste-challenges/PORTION_PRECISION.md) |
+| Portion Precision | none | `#/kitchen-day/portion` | Professional recipe reference extract; derived ingredient accuracy + final-weight deviation; [`PORTION_PRECISION.md`](../product/waste-challenges/PORTION_PRECISION.md) |
 | Dashboards + tutor review | none | `#/kitchen-day/review`, `#/kitchen-day-progress`, `#/kitchen-day-tutor` | Current-session review; student history; tutor evidence + `wastePracticeReview` |
 
 ---

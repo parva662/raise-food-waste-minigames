@@ -34,5 +34,9 @@ describe('Portion Precision mapper contract', () => {
     expect(values).not.toHaveProperty('ingredientName');
     expect(values).not.toHaveProperty('ingredientCategory');
     expect(values).not.toHaveProperty('actualIngredientWeightGrams');
+    expect(values).not.toHaveProperty('recipeIngredientAccuracyPercent');
+    expect(values).not.toHaveProperty('recipeIngredientErrorPercent');
+    expect(values).not.toHaveProperty('finalWeightDeviationPercent');
+    expect(values).not.toHaveProperty('expectedFinalWeightGrams');
   });
 });
