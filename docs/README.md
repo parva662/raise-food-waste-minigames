@@ -114,7 +114,7 @@ features/
 | [`product/waste-challenges/TRIM_SMART_DATA_MODEL.md`](product/waste-challenges/TRIM_SMART_DATA_MODEL.md) | Trim data model |
 | [`product/waste-challenges/RESCUE_AND_REUSE.md`](product/waste-challenges/RESCUE_AND_REUSE.md) | Reuse (`sessionId` + `ingredientId`) |
 | [`product/waste-challenges/PORTION_PRECISION.md`](product/waste-challenges/PORTION_PRECISION.md) | Portion Precision |
-| [`product/waste-challenges/CHEF_REVIEW.md`](product/waste-challenges/CHEF_REVIEW.md) | Read-only dashboards + session chef review |
+| [`product/waste-challenges/CHEF_REVIEW.md`](product/waste-challenges/CHEF_REVIEW.md) | Session Review, Student Progress, tutor assessment |
 | [`product/waste-challenges/UX_FLOW.md`](product/waste-challenges/UX_FLOW.md) | Kitchen Day UX |
 | [`product/UI_STANDARD.md`](product/UI_STANDARD.md) | Shared application visual language |
 | [`product/waste-challenges/IMPLEMENTATION_BLUEPRINT.md`](product/waste-challenges/IMPLEMENTATION_BLUEPRINT.md) | Phases 0–6 |
@@ -130,6 +130,7 @@ features/
 | [`contracts/SERVICE_CLOSEOUT_GAMEBUS.md`](contracts/SERVICE_CLOSEOUT_GAMEBUS.md) | `wasteMeasurement` |
 | [`contracts/KITCHEN_FORECAST_ADMIN_SETUP.md`](contracts/KITCHEN_FORECAST_ADMIN_SETUP.md) | Admin checklist |
 | [`contracts/KITCHEN_DAY_ROUTES.md`](contracts/KITCHEN_DAY_ROUTES.md) | Kitchen Day GameBus left-menu URLs |
+| [`contracts/KITCHEN_DAY_TASK.md`](contracts/KITCHEN_DAY_TASK.md) | One student TASK with three templates; tutor TASK for `wastePracticeReview` |
 
 ---
 

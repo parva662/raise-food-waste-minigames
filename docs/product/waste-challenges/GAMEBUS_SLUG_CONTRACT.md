@@ -19,7 +19,7 @@ Payload shape: each property posts `{ "value": … }` (plus `unit` where the sch
 | Ingredient preparation (Trim Smart) | `trimSmart` |
 | Rescue & Reuse | `rescueAndReuse` |
 | Portion Precision | `portionPrecision` |
-| End-of-session chef review | `wastePracticeReview` |
+| Tutor assessment | `wastePracticeReview` |
 
 ---
 
@@ -95,7 +95,9 @@ One activity = one prepared recipe. Not one activity per ingredient line.
 | `actualAmount` | Actual amount used (nested — **not** a GameBus property) |
 | `unit` | Unit from the recipe dataset |
 
-Required recipe amounts are **not** copied into GameBus. They come from the recipe source dataset (stub JSON now; real BarLaurea source later).
+Required recipe amounts and expected final weight are **not** copied into GameBus. They come from the generated recipe reference (`generated-data/kitchen-day/recipes.json`, produced from `reference/kitchen-day/kitchen_day_recipe_reference_clean.xlsx`). A future BarLaurea source can replace that extract behind the same adapter.
+
+**Do not post:** ingredient accuracy, ingredient error, expected final weight, final-weight deviation, or any combined Portion score. Those are derived on read.
 
 This activity does **not** use `ingredientCategory`.
 
@@ -103,7 +105,9 @@ This activity does **not** use `ingredientCategory`.
 
 ---
 
-## `wastePracticeReview` — one end-of-session chef review
+## `wastePracticeReview` — one end-of-session tutor assessment
+
+The GameBus activity slug remains `wastePracticeReview`. The product UI wording is Tutor assessment.
 
 One review per student Kitchen Day / session. Not one judgement per activity or ingredient.
 
@@ -163,7 +167,7 @@ This is **not** a platform blocker and is **not** a new API.
 - Confirm `finalRecipeWeightGrams`
 - Unlink obsolete top-level: `ingredientId`, `ingredientName`, `ingredientCategory`, `ingredientWeightGrams`
 
-### Chef review
+### Tutor assessment (`wastePracticeReview`)
 
 - Make `wastePracticeReview` session-level
 - Keep: `sessionId`, `sessionDate`, `submittedAt`, `timeEfficiencyScore`, `preparationQualityScore`, `chefFeedback`
@@ -185,6 +189,7 @@ This is **not** a platform blocker and is **not** a new API.
 | `reuseMethod` | Replaced by `reuseDestination` |
 | `discardedWasteGrams` | Calculated on read |
 | `wastePercentage`, kitchen averages, percentiles | Calculated analytics — never stored |
+| Portion accuracy / error / final-weight deviation | Derived from `recipeComposition`, `finalRecipeWeightGrams`, and the current recipe reference |
 | `recipeIngredientLines` | Required amounts live outside GameBus |
 | `actualIngredientWeightGrams` | Nested as `recipeComposition[].actualAmount` |
 | `menuItemId`, `menuItemName` | Use `recipeId` / `recipeName` |

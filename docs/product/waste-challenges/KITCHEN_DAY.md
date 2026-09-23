@@ -20,9 +20,10 @@ Students record practical kitchen work on one operational day (Europe/Helsinki).
 Kitchen day (student actor + sessionId + sessionDate)
   ├── Ingredient preparation entry (1..n different ingredients)  → trimSmart
   │     └── Reuse suggestion (0..1 per ingredient)               → rescueAndReuse
-  ├── Portion Precision entry (0..n recipes)                     → portionPrecision
-  ├── Student dashboard (read-only)
-  └── One chef review at end of session                          → wastePracticeReview
+  ├── Portion Precision entry (0..n recipes/components)          → portionPrecision
+  ├── Session Review (current Kitchen Day only, read-only)
+  ├── Student Progress (own history, separate page)
+  └── One tutor assessment at end of session                     → wastePracticeReview
 ```
 
 | Module | Activity |
@@ -30,8 +31,8 @@ Kitchen day (student actor + sessionId + sessionDate)
 | Trim Smart | `trimSmart` |
 | Rescue & Reuse | `rescueAndReuse` |
 | Portion Precision | `portionPrecision` |
-| End-of-session chef review | `wastePracticeReview` |
-| Student / chef dashboards | read-only — no extra activity |
+| Tutor assessment | `wastePracticeReview` (GameBus slug; UI wording is Tutor) |
+| Session Review / Student Progress / Tutor dashboard | read-only evidence — no extra measurement activity |
 
 | Identifier | Role |
 |------------|------|
@@ -71,19 +72,23 @@ See [`PORTION_PRECISION.md`](PORTION_PRECISION.md).
 
 One activity per prepared recipe. Stored: `sessionId`, `sessionDate`, `submittedAt`, `recipeId`, `recipeName`, `recipeComposition`, `finalRecipeWeightGrams`.
 
-Required amounts come from the recipe dataset (stub JSON now). Not copied into GameBus. `ingredientCategory` is not used.
+Required amounts and expected final weight come from the generated recipe reference (`npm run kitchen-day:recipes` from `reference/kitchen-day/kitchen_day_recipe_reference_clean.xlsx`). They are not copied into GameBus. Expected final weight is `Kypsä_kokonaispaino`, not `Saanto` and not the sum of ingredient targets. Ingredient accuracy and final-weight deviation are derived on read. `ingredientCategory` is not used. A future BarLaurea source can use the same adapter.
 
-## 6. Dashboards
+## 6. Session Review, Student Progress, Tutor dashboard
 
-Read-only aggregates of the student's completed Kitchen Day. Loaded with the existing `kitchenGroupInput` / `GET /groups/activities` client. **Not** a retrieval blocker.
+Read-only surfaces over completed Kitchen Day records. Loaded with the existing `kitchenGroupInput` / `GET /groups/activities` client. **Not** a retrieval blocker.
 
-## 7. Chef review
+- Session Review (`#/kitchen-day/review`) is the current locked session only.
+- Student Progress (`#/kitchen-day-progress`) is own history.
+- Tutor dashboard (`#/kitchen-day-tutor`) is evidence plus one optional tutor assessment.
 
-See [`CHEF_REVIEW.md`](CHEF_REVIEW.md). **One** session-level review: `timeEfficiencyScore`, `preparationQualityScore`, optional `chefFeedback`. Modules are evidence only. No per-activity or per-ingredient chef scores.
+## 7. Tutor assessment
+
+See [`CHEF_REVIEW.md`](CHEF_REVIEW.md). **One** session-level `wastePracticeReview`: `timeEfficiencyScore`, `preparationQualityScore`, optional `chefFeedback`. Modules are evidence only. System metrics do not set those scores. No per-activity or per-ingredient tutor scores.
 
 ## 8. Kitchen reference (analytics)
 
-Initially chef-seeded data keyed by `ingredientId`. Later accumulated Trim Smart data for that ingredient, falling back to seed when history is inadequate. Do not store averages, waste %, or percentiles. Percentile / ranking stays off until a sufficient-data rule is agreed (**@pending** analytics decision).
+Initially seeded kitchen reference data keyed by `ingredientId`. Later accumulated Trim Smart data for that ingredient, falling back to seed when history is inadequate. Do not store averages, waste %, or percentiles. Percentile / ranking stays off until a sufficient-data rule is agreed (**@pending** analytics decision).
 
 ## 9. Non-goals
 
@@ -92,7 +97,7 @@ Initially chef-seeded data keyed by `ingredientId`. Later accumulated Trim Smart
 - `sourceActivityId` / `preparationEntryId`
 - Reuse status / later confirmation
 - One Portion activity per ingredient line
-- One chef review or score per activity / ingredient
+- One tutor assessment or score per activity / ingredient
 - Storing calculated analytics
 - Inventing a Kitchen Day retrieval endpoint
 

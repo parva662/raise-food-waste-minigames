@@ -36,6 +36,15 @@ Field mapping:
 
 A recipe is imported only when it has an id, a name, an expected final weight greater than 0, and at least one valid ingredient. An ingredient is imported only when it has a usable name and a target weight greater than 0. Invalid rows are excluded and counted in the extraction report; missing weights are not invented.
 
+Current clean-workbook extract (`generated-data/kitchen-day/extraction-report.json`):
+
+- 191 recipe summary rows → **190 imported**
+- 1763 ingredient rows → **1741 imported**
+- 1 recipe excluded (`54` “Jenni testaa”, invalid expected final weight)
+- 13 ingredient rows excluded (missing/zero target weight)
+
+The browser never parses the Excel files.
+
 Historical Session Review, Progress, and Tutor figures are recalculated from persisted `recipeComposition` + `finalRecipeWeightGrams` and the **current** generated reference. If recipe-reference versioning becomes necessary, document the extract version rather than adding GameBus properties.
 
 A future BarLaurea API can replace the generated JSON behind the same `RecipeReference` adapter.

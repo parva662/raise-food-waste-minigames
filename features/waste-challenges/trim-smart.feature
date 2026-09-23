@@ -116,16 +116,16 @@ Feature: Ingredient preparation in a kitchen day
         | -1     |
         | 5001   |
 
-  Rule: System comparison is not a chef score
+  Rule: System comparison is not a tutor assessment
 
-    Scenario: Initial comparison uses chef-seeded reference data
-      Given chef-seeded reference waste for ingredient "carrot" is 12 percent
+    Scenario: Initial comparison uses seeded kitchen reference data
+      Given seeded kitchen reference waste for ingredient "carrot" is 12 percent
       And the student recorded a calculated waste of 9 percent
       When the comparison is shown
       Then the system indicates the student performed better than the kitchen reference
       And the comparison is keyed by ingredient id
       And the comparison is not stored on the entry
-      And the comparison is not a chef score
+      And the comparison is not a tutor assessment
 
     Scenario: Later comparison uses accumulated Trim Smart data when available
       Given accumulated kitchen-day Trim Smart data exists for ingredient "carrot"
@@ -136,7 +136,7 @@ Feature: Ingredient preparation in a kitchen day
     Scenario: Missing history falls back to seeded reference data
       Given accumulated kitchen-day Trim Smart data is unavailable for ingredient "carrot"
       When the comparison is shown
-      Then the system uses the chef-seeded reference data for that ingredient
+      Then the system uses the seeded kitchen reference data for that ingredient
 
     @pending
     Scenario: Percentile messaging waits for an agreed sufficient-data rule

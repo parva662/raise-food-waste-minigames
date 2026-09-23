@@ -8,7 +8,7 @@
 
 After a Trim Smart entry records `actualWasteGrams`, the student records how much of **that ingredient's** waste can be reused and where.
 
-Not a scored mini-game. First-release chef review does not score this module separately.
+Not a scored mini-game. First-release tutor assessment does not score this module separately.
 
 ## 2. Connection
 
@@ -43,7 +43,7 @@ Do **not** duplicate `ingredientName`, `ingredientCategory`, or `ingredientWeigh
 2. No reuse status, later confirmation, inventory, or "was it used?" tracking.
 3. `reusableWasteGrams` is 0 … that Trim entry's `actualWasteGrams`.
 4. Each Trim ingredient may have at most one reuse suggestion.
-5. No reuse points or reuse chef score.
+5. No reuse points or reuse tutor score.
 
 ## 5. Journey
 
@@ -58,7 +58,7 @@ Complete Trim through `actualWasteGrams` → enter reusable amount and destinati
 | Duplicated ingredient name/category/weight | Read from Trim |
 | `reuseMethod` | `reuseDestination` |
 | Stored `discardedWasteGrams` | Calculated |
-| Separate chef score | Evidence only |
+| Separate tutor score | Evidence only |
 
 ## 7. GameBus admin
 

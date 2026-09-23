@@ -125,11 +125,11 @@ Canonical: [`../product/waste-challenges/KITCHEN_DAY.md`](../product/waste-chall
 
 **CURRENT IMPLEMENTATION on `main`:** Trim Smart v1 only (`#/waste/trim-smart`, Ingredient → Practice → Measure, `practice` / `participantWasteGrams` / old categories).
 
-**CURRENT IMPLEMENTATION on `feature/kitchen-day-v1`:** Phases 1–5 at `#/kitchen-day`: participant-specific session lock (TASK + `inputCollectionPari.me`), student/chef dashboards, session-level `wastePracticeReview`. One TASK must list `trimSmart` + `rescueAndReuse` + `portionPrecision` (see [`KITCHEN_DAY_TASK.md`](../contracts/KITCHEN_DAY_TASK.md)); review posts require `wastePracticeReview` on the current TASK. `#/waste/trim-smart` remains v1. Live posting is guarded: **LIVE E2E BLOCKED BY GAMEBUS ADMIN ALIGNMENT**.
+**CURRENT IMPLEMENTATION on `feature/kitchen-day-v1`:** Phases 1–6 (repository) at `#/kitchen-day`: participant-specific session lock (TASK + `inputCollectionPari.me`), Trim / Reuse / Portion, Session Review, Student Progress, Tutor dashboard, session-level `wastePracticeReview`, professional recipe extract, derived Portion metrics. One student TASK must list `trimSmart` + `rescueAndReuse` + `portionPrecision` (see [`KITCHEN_DAY_TASK.md`](../contracts/KITCHEN_DAY_TASK.md)); review posts require `wastePracticeReview` on the tutor TASK. `#/waste/trim-smart` remains v1. Live posting is guarded: **LIVE E2E BLOCKED BY GAMEBUS ADMIN ALIGNMENT**.
 
 **v1 product-review baseline:** The current Kitchen Day student/tutor UX, including the vertical Session Review at `#/kitchen-day/review`, is the approved product-review checkpoint for v1. This is a product-review baseline, not a production release.
 
-**APPROVED TARGET:** connected Kitchen Day (Trim Smart + Rescue & Reuse + Portion Precision + one session-level chef review).
+**APPROVED TARGET:** connected Kitchen Day (Trim Smart + Rescue & Reuse + Portion Precision + one session-level tutor assessment).
 
 Gherkin: [`../../features/waste-challenges/`](../../features/waste-challenges/) — all **APPROVED PRODUCT TARGET**. Intentional `@pending`: percentile / ranking sufficient-data rule.
 

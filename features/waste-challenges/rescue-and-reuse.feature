@@ -75,7 +75,7 @@ Feature: Reuse suggestions connected to ingredient preparation
       When the student saves a reuse suggestion
       Then the student is not asked for a reuse status
       And nobody is asked later whether the reuse actually happened
-      And no reuse chef score is awarded
+      And no reuse tutor score is awarded
 
   Rule: Each ingredient may have its own suggestion
 

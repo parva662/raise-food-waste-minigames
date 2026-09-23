@@ -4,11 +4,11 @@ All files below are **APPROVED PRODUCT TARGET**. They are **not** the Trim Smart
 
 | File | Topic |
 |------|--------|
-| [`kitchen-day.feature`](kitchen-day.feature) | Connected session, uniqueness, read-only dashboards |
+| [`kitchen-day.feature`](kitchen-day.feature) | Connected session, uniqueness, Session Review / Tutor evidence |
 | [`trim-smart.feature`](trim-smart.feature) | Ingredient preparation |
 | [`rescue-and-reuse.feature`](rescue-and-reuse.feature) | Reuse joined by `sessionId` + `ingredientId` |
-| [`portion-precision.feature`](portion-precision.feature) | Recipe-level `recipeComposition` |
-| [`chef-review.feature`](chef-review.feature) | Read-only overviews + one session-level chef review |
+| [`portion-precision.feature`](portion-precision.feature) | Recipe-level `recipeComposition` + derived metrics |
+| [`chef-review.feature`](chef-review.feature) | Session Review, Progress, one session-level tutor assessment (`wastePracticeReview`) |
 
 Slug contract: [`../../docs/product/waste-challenges/GAMEBUS_SLUG_CONTRACT.md`](../../docs/product/waste-challenges/GAMEBUS_SLUG_CONTRACT.md)
 

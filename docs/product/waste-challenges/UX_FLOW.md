@@ -28,7 +28,7 @@ Tutor dashboard    #/kitchen-day-tutor      (separate left-menu page)
 
 ## 3. Trim Smart
 
-Ingredient (locked category labels) → Technique → Estimate → Timed prepare → Actual waste → formatted comparison → reuse / another ingredient / session review.
+Ingredient (locked category labels) → Technique (ten fixed one-tap choices; compact grid on small screens) → Estimate → Timed prepare → Actual waste → formatted comparison → reuse / another ingredient / Session Review.
 
 Timer: instruction + Start; “Preparation in progress” + elapsed time + Finish; formatted duration + Continue. Never show `idle` / `running` / `finished`.
 

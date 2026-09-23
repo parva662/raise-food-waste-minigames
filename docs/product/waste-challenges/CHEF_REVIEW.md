@@ -1,6 +1,8 @@
-# Student dashboard and chef review
+# Session Review, Student Progress, and tutor assessment
 
-> **APPROVED PRODUCT TARGET**. Not implemented on `main`.
+> **APPROVED PRODUCT TARGET**. Not implemented on `main`. Encoded on `feature/kitchen-day-v1`.
+>
+> Filename is historical. Product wording is **Tutor** / **Tutor assessment**. The GameBus activity slug remains `wastePracticeReview`.
 >
 > [`KITCHEN_DAY.md`](KITCHEN_DAY.md) · [`GAMEBUS_SLUG_CONTRACT.md`](GAMEBUS_SLUG_CONTRACT.md).
 
@@ -8,20 +10,25 @@
 
 | Layer | Content |
 |-------|---------|
-| System performance | Calculated waste % vs chef-seeded reference, later vs historical Trim data by `ingredientId`. Percentile / ranking **@pending** a sufficient-data rule. |
-| Chef qualitative | One end-of-session review: `timeEfficiencyScore`, `preparationQualityScore`, optional `chefFeedback` |
+| System performance | Calculated waste % vs seeded kitchen reference, later vs historical Trim data by `ingredientId`; Portion ingredient accuracy and final-weight deviation from the current recipe reference. Percentile / ranking **@pending** a sufficient-data rule. |
+| Tutor assessment | One end-of-session review: `timeEfficiencyScore`, `preparationQualityScore`, optional `chefFeedback` |
 
-System comparison never pre-fills chef scores. Analytics are never stored as activity properties.
+System comparison never pre-fills tutor scores. Analytics are never stored as activity properties. There is no automatic combined Portion score.
 
-## 2. Student dashboard
+## 2. Student surfaces
 
-Read-only list of that student's completed Kitchen Day (`sessionId` / `sessionDate`). No activity posted.
+| Surface | Route | Scope |
+|---------|-------|-------|
+| Session Review | `#/kitchen-day/review` | Current locked Kitchen Day only; read-only |
+| Student Progress | `#/kitchen-day-progress` | Own history; Overview / Progress; no leaderboard |
 
-## 3. Chef review — one per session
+Neither posts measurement activities. Progress does not invent ranking.
 
-The chef opens a student's completed Kitchen Day, inspects Trim / reuse / Portion as **evidence**, enters the two 0–5 scores and optional feedback, and submits **one** `wastePracticeReview`.
+## 3. Tutor dashboard — one assessment per session
 
-Not one review per activity. Not one score per ingredient. Trim, reuse, and Portion do not receive separate first-release chef scores.
+The tutor opens a student's completed Kitchen Day on `#/kitchen-day-tutor`, inspects Trim / reuse / Portion as **evidence**, enters the two 0–5 scores and optional feedback, and submits **one** `wastePracticeReview`.
+
+Not one review per activity. Not one score per ingredient. Trim, reuse, and Portion do not receive separate first-release tutor scores.
 
 Stored: `sessionId`, `sessionDate`, `submittedAt`, `timeEfficiencyScore`, `preparationQualityScore`, optional `chefFeedback`.
 
@@ -29,7 +36,7 @@ Stored: `sessionId`, `sessionDate`, `submittedAt`, `timeEfficiencyScore`, `prepa
 
 **DEPRECATED:** `reviewedActivityId`, `reviewedGame`, `reasonCode`, `freeTextNote`, `unusualEvent`, `serviceDate`.
 
-Student progress is `#/kitchen-day-progress`. Tutor review is `#/kitchen-day-tutor`. Session review on the activity page is current Kitchen Day only.
+Tutor “on behalf of student” GameBus registration is unresolved until the live tutor mechanism is inspected. Do not invent it.
 
 ## 4. Retrieval
 
@@ -39,4 +46,4 @@ Student progress is `#/kitchen-day-progress`. Tutor review is `#/kitchen-day-tut
 
 ## 5. Non-goals
 
-Automatic score from waste %; competitive leaderboard; per-module review pages; reuse verification.
+Automatic score from waste % or Portion metrics; competitive leaderboard; per-module review pages; reuse verification.

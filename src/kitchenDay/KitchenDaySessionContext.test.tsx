@@ -179,7 +179,7 @@ describe('Kitchen Day session initialization and hydration', () => {
     expect(screen.getByTestId('kd-ids')).toHaveTextContent('carrot');
   });
 
-  it('reconstructs My Day and blocks the same ingredient after reload', async () => {
+  it('reconstructs Session Review and blocks the same ingredient after reload', async () => {
     const session = {
       sessionId: 'kitchen-day:kitchen-day-task-1:user-1:2026-09-23',
       sessionDate: '2026-09-23',

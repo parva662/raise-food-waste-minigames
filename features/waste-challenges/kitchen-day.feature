@@ -5,7 +5,7 @@
 #
 @kitchen-day @waste-challenges
 Feature: Kitchen Day connected session
-  As a student or chef in a practical kitchen
+  As a student or tutor in a practical kitchen
   I want one kitchen-day session that holds preparation, reuse, and portioning records together
   So that the work is reviewed as one day rather than as separate games
 
@@ -63,21 +63,21 @@ Feature: Kitchen Day connected session
 
   Rule: Dashboards are read-only
 
-    Scenario: The student overview does not change recorded facts
+    Scenario: Session Review does not change recorded facts
       Given the student has completed kitchen-day records
-      When the student opens the kitchen day overview
+      When the student opens Session Review
       Then the records are shown
       And the student cannot edit submitted measurements there
 
-    Scenario: The chef overview does not change recorded facts
+    Scenario: The Tutor dashboard does not change recorded facts
       Given the student has completed kitchen-day records
-      When the chef opens that student's kitchen day
+      When the tutor opens that student's kitchen day
       Then the records are shown as evidence
-      And the chef cannot edit the student's measurements
+      And the tutor cannot edit the student's measurements
 
   Rule: Retrieval uses the existing group activities path
 
     Scenario: Kitchen day records are loaded with existing group activities
-      When a student or chef opens a kitchen-day overview
+      When a student or tutor opens a kitchen-day evidence surface
       Then the records are retrieved through the existing group activities mechanism
       And no new retrieval endpoint is required

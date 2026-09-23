@@ -10,7 +10,7 @@
 1. Multiple **different** `trimSmart` activities per student Kitchen Day.
 2. Same `ingredientId` is **not** posted twice in one session.
 3. Store only §3 facts; calculate analytics on read.
-4. Chef judgement is one session-level `wastePracticeReview`, not per Trim entry.
+4. Tutor judgement is one session-level `wastePracticeReview`, not per Trim entry.
 5. v1 activities stay readable; do not rewrite them in place.
 
 ### 1.1 Calculated (never stored)
@@ -36,8 +36,8 @@ Pointers: `src/gamebus/mapTrimSmart.ts`, `src/trimSmart/`.
 | Relationship | Key |
 |--------------|-----|
 | `trimSmart` → `rescueAndReuse` | `sessionId` + `ingredientId` |
-| Session chef review | same `sessionId` + `sessionDate` + actor |
-| Dashboards / history | existing `GET /groups/activities` via `kitchenGroupInput` |
+| Session tutor assessment | same `sessionId` + `sessionDate` + actor |
+| Session Review / Progress / Tutor dashboard | existing `GET /groups/activities` via `kitchenGroupInput` |
 
 Do **not** use `sourceActivityId` or `preparationEntryId`.
 

@@ -56,9 +56,9 @@ These two recipe metrics stay separate. There is **no** automatic combined score
 
 Select recipe → see required lines → enter `actualAmount` per line → enter final recipe weight → submit one activity.
 
-## 7. Chef review
+## 7. Tutor assessment
 
-Evidence only: ingredient accuracy, final-weight deviation, and line-level deviations support judgement. The tutor still enters `timeEfficiencyScore` and `preparationQualityScore`. No separate automatic chef score.
+Evidence only: ingredient accuracy, final-weight deviation, and line-level deviations support judgement. The tutor still enters `timeEfficiencyScore` and `preparationQualityScore`. No separate automatic tutor score.
 
 ## 8. GameBus admin
 

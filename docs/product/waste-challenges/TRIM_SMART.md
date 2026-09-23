@@ -8,7 +8,7 @@
 
 ## 1. Purpose
 
-Estimate waste before preparation, measure actual waste after, and compare to kitchen reference data. System comparison is **not** a chef score.
+Estimate waste before preparation, measure actual waste after, and compare to kitchen reference data. System comparison is **not** a tutor assessment.
 
 ## 2. Place in Kitchen Day
 
@@ -23,12 +23,12 @@ Standalone route, no estimate step, no timer, no reference comparison. Posts `pr
 ## 4. Target flow
 
 1. Category (`ingredientCategory`) + name → `ingredientId` + starting weight (`ingredientWeightGrams`).
-2. Technique → `trimTechniques` (plural live slug).
+2. Technique → `trimTechniques` (plural live slug; the ten locked values are one-tap buttons, compact on small screens).
 3. Estimate → `estimatedWasteGrams`.
 4. Timed preparation → `duration` (student does not type minutes).
 5. Actual waste → `actualWasteGrams`.
 6. See calculated waste % and reference comparison.
-7. Optional reuse for this ingredient, another **different** ingredient, or the dashboard.
+7. Optional reuse for this ingredient, another **different** ingredient, or Session Review.
 
 Worked example (stored facts): Carrot / `root` / 5000 g / `trimming` / estimate 600 g / actual 450 g / timed `duration`. Waste % 9% and the reference comparison are calculated, not stored.
 
@@ -47,14 +47,14 @@ Do not post `vegetables`, `roots`, or `fruits`.
 
 ## 6. Calculated (never stored)
 
-Waste %; estimate error; comparison to chef-seeded then historical data by `ingredientId`; discarded waste after reuse.
+Waste %; estimate error; comparison to seeded then historical kitchen reference data by `ingredientId`; discarded waste after reuse.
 
 Percentile / ranking messaging is **@pending** until a sufficient-data rule is agreed.
 
-## 7. Chef review
+## 7. Tutor assessment
 
-One end-of-session review for the whole Kitchen Day. This module is evidence, not a separate chef score.
+One end-of-session `wastePracticeReview` for the whole Kitchen Day. This module is evidence, not a separate tutor score.
 
 ## 8. Non-goals
 
-One ingredient only per day; same ingredient twice per session; chef score from waste %; storing analytics; renaming `trimTechniques`.
+One ingredient only per day; same ingredient twice per session; tutor score from waste %; storing analytics; renaming `trimTechniques`.

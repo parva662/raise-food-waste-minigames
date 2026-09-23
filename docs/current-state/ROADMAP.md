@@ -239,16 +239,16 @@ Validate participant association, multi-user visibility, and organization bounda
 - Participant association without `studentId`/`chefId` on ACTIVITY (verify on test env).
 - Real food photography (`public/images/menu/items/<id>.webp`).
 
-## Kitchen Day (approved target — not implemented)
+## Kitchen Day (approved target — encoded on `feature/kitchen-day-v1`, not on `main`)
 
 See [`../product/waste-challenges/IMPLEMENTATION_BLUEPRINT.md`](../product/waste-challenges/IMPLEMENTATION_BLUEPRINT.md).
 
-0. GameBus admin alignment
-1. Shared session / shell
-2. Trim Smart target migration
-3. Rescue & Reuse
-4. Portion Precision
-5. Student/chef dashboards + session-level chef review
-6. Tests / build / deploy verification 
+0. GameBus admin alignment — **open** (live schemas, TASK, left-menu routes, embedded E2E)
+1. Shared session / shell — done on the feature branch
+2. Trim Smart target migration — done on the feature branch
+3. Rescue & Reuse — done on the feature branch
+4. Portion Precision + recipe extract — done on the feature branch
+5. Session Review / Student Progress / Tutor dashboard + `wastePracticeReview` — done on the feature branch
+6. Repository tests / build — done on the feature branch
 
-CURRENT IMPLEMENTATION remains Trim Smart v1 only.
+`main` CURRENT IMPLEMENTATION remains Trim Smart v1 only. Next step after this branch is **LIVE GAMEBUS ALIGNMENT**, not further product redesign.
