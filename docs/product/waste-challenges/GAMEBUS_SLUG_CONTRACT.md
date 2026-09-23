@@ -6,6 +6,8 @@
 Exact activity + property **slugs** for client mappers. Not a product brief.
 Payload shape: each property posts `{ "value": … }` (plus `unit` where the schema requires it, e.g. `duration`).
 
+`sessionId` is an opaque application identity. In embedded Kitchen Day it is generated deterministically as `kitchen-day:<taskId>:<actorId>:<sessionDate>` from the TASK, authenticated `inputCollectionPari.me`, and the locked Helsinki session date. It uniquely identifies one student Kitchen Day. Do **not** add `studentId` / `participantId` / actor id as Kitchen Day activity properties.
+
 **Rule:** no Kitchen Day code, spec, or Gherkin may use a property name that is not listed here as a locked slug.
 
 ---

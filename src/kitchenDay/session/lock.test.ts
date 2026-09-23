@@ -26,4 +26,15 @@ describe('Kitchen Day session lock', () => {
     expect(reused).toEqual(locked);
     expect(reused.sessionDate).toBe('2026-09-14');
   });
+
+  it('locks an embedded session with the authenticated participant', () => {
+    const session = ensureKitchenDayLockedSession(null, {
+      embedded: true,
+      taskId: 'kitchen-day-task-1',
+      actorId: 'user-1',
+      now: new Date('2026-09-22T20:30:00.000Z'),
+    });
+    expect(session.sessionDate).toBe('2026-09-22');
+    expect(session.sessionId).toBe('kitchen-day:kitchen-day-task-1:user-1:2026-09-22');
+  });
 });

@@ -6,6 +6,7 @@ export function ensureKitchenDayLockedSession(
   options: {
     embedded: boolean;
     taskId: string | undefined;
+    actorId?: string | undefined;
     now?: Date;
   },
 ): KitchenDayLockedSession {
@@ -16,6 +17,7 @@ export function ensureKitchenDayLockedSession(
   const sessionId = buildKitchenDaySessionId({
     embedded: options.embedded,
     taskId: options.taskId,
+    actorId: options.actorId,
     sessionDate,
   });
   return { sessionId, sessionDate };

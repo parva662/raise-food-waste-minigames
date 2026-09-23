@@ -7,7 +7,7 @@ import {
   parsePersistedTrimEntry,
 } from './kitchenDayReadModel';
 
-const sessionId = 'kitchen-day:task-1:2026-09-23';
+const sessionId = 'kitchen-day:task-1:user-1:2026-09-23';
 
 function trimActivity(overrides: Record<string, unknown> = {}) {
   return {
@@ -92,6 +92,35 @@ describe('Kitchen Day read model', () => {
       { sessionId, actorId: 'user-1' },
     );
     expect(model.trimEntries).toHaveLength(1);
+  });
+
+  it('accepts a matching actor when participant-scoped reading requests actorId', () => {
+    const model = buildKitchenDayReadModel([trimActivity()], { sessionId, actorId: 'user-1' });
+    expect(model.trimEntries).toHaveLength(1);
+  });
+
+  it('rejects another actor when participant-scoped reading requests actorId', () => {
+    const model = buildKitchenDayReadModel([trimActivity({ actor: { id: 'user-2', name: 'Other' } })], {
+      sessionId,
+      actorId: 'user-1',
+    });
+    expect(model.trimEntries).toHaveLength(0);
+  });
+
+  it('rejects a missing actor when participant-scoped reading requests actorId', () => {
+    const model = buildKitchenDayReadModel([trimActivity({ actor: undefined })], {
+      sessionId,
+      actorId: 'user-1',
+    });
+    expect(model.trimEntries).toHaveLength(0);
+  });
+
+  it('rejects a malformed actor when participant-scoped reading requests actorId', () => {
+    const model = buildKitchenDayReadModel([trimActivity({ actor: { name: 'Student' } })], {
+      sessionId,
+      actorId: 'user-1',
+    });
+    expect(model.trimEntries).toHaveLength(0);
   });
 
   it('deduplicates local copies once the persisted record exists', () => {

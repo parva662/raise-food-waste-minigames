@@ -13,6 +13,23 @@ Feature: Kitchen Day connected session
     Given a kitchen day session is active for the student
     And the session has a session id and a Europe/Helsinki session date
 
+  Rule: One Kitchen Day session per student
+
+    Scenario: Two students on the same task and date receive different session ids
+      Given two authenticated students share one Kitchen Day TASK on the same operational date
+      When each student locks an embedded session
+      Then their session ids are different
+
+    Scenario: The same student, task, and date stay stable
+      Given an authenticated student already locked an embedded Kitchen Day session
+      When the TASK or authenticated-user payload refreshes
+      Then the locked session id and session date do not change
+
+    Scenario: Participant hydration cannot ingest another actor
+      Given group activities include another student's completed records
+      When the authenticated student hydrates their Kitchen Day
+      Then only records whose actor matches that student are shown
+
   Rule: One connected day, not three standalone games
 
     Scenario: Modules share the same session

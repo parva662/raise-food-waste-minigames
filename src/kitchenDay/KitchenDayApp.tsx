@@ -13,7 +13,9 @@ function KitchenDayInitializing() {
   return (
     <div className="kd-page" data-testid="kitchen-day-initializing">
       <h1 className="kd-header__title">Kitchen Day</h1>
-      <p className="kd-card__copy">Waiting for the GameBus task before locking this session.</p>
+      <p className="kd-card__copy">
+        Waiting for the GameBus task and authenticated participant before locking this session.
+      </p>
     </div>
   );
 }
@@ -35,7 +37,7 @@ function KitchenDayBody() {
         <p className="kd-header__eyebrow">Practical kitchen</p>
         <h1 className="kd-header__title">Kitchen Day</h1>
         <p className="kd-header__meta" data-testid="kitchen-day-header-session">
-          {session.sessionDate} · one shared session
+          {session.sessionDate} · one student session
         </p>
         {!canPostKitchenDayToGameBus() ? (
           <p className="kd-live-banner" data-testid="kitchen-day-live-blocked">

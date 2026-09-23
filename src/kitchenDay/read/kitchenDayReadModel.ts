@@ -204,7 +204,7 @@ export function buildKitchenDayReadModel(
   for (const activity of activities) {
     if (options.actorId) {
       const actorId = readActivityActorId(activity);
-      if (actorId && actorId !== options.actorId) continue;
+      if (actorId !== options.actorId) continue;
     }
     const trim = parsePersistedTrimEntry(activity);
     if (trim && trim.sessionId === options.sessionId) {

@@ -36,7 +36,7 @@ Kitchen day (student actor + sessionId + sessionDate)
 | Identifier | Role |
 |------------|------|
 | GameBus actor | The student |
-| `sessionId` | One student kitchen session |
+| `sessionId` | Opaque key for one student Kitchen Day. Embedded form: task + authenticated participant + locked session date |
 | `sessionDate` | Europe/Helsinki operational date |
 | `ingredientId` | Unique Trim entry within a session; reuse join; kitchen-reference key |
 | `recipeId` | One Portion Precision recipe |

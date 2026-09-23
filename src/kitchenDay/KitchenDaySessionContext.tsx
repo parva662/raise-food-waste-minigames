@@ -74,9 +74,21 @@ export function KitchenDaySessionProvider({
   initialSession?: KitchenDayLockedSession;
 }) {
   const embedded = isGameBusEmbed();
+  const tryLockEmbeddedSession = useCallback((): KitchenDayLockedSession | null => {
+    const task = getGameBusTask();
+    const actorId = getAuthenticatedGameBusUser(getGameBusInputCollections())?.id;
+    if (!task?.id || !actorId) return null;
+    return ensureKitchenDayLockedSession(null, {
+      embedded: true,
+      taskId: task.id,
+      actorId,
+      now: now ?? new Date(),
+    });
+  }, [now]);
+
   const [session, setSession] = useState<KitchenDayLockedSession | null>(() => {
     if (initialSession) return initialSession;
-    if (embedded) return null;
+    if (embedded) return tryLockEmbeddedSession();
     return ensureKitchenDayLockedSession(null, {
       embedded: false,
       taskId: undefined,
@@ -97,33 +109,18 @@ export function KitchenDaySessionProvider({
   useEffect(() => {
     if (!embedded) return;
     const stopHandshake = startGameBusHandshake();
-    const unsubscribe = subscribeGameBusTask((task) => {
-      setSession((current) => {
-        if (current) return current;
-        if (!task?.id) return null;
-        return ensureKitchenDayLockedSession(null, {
-          embedded: true,
-          taskId: task.id,
-          now: now ?? new Date(),
-        });
-      });
-    });
-    const existing = getGameBusTask();
-    if (existing?.id) {
-      setSession((current) =>
-        current ??
-        ensureKitchenDayLockedSession(null, {
-          embedded: true,
-          taskId: existing.id,
-          now: now ?? new Date(),
-        }),
-      );
-    }
+    const lockOnce = () => {
+      setSession((current) => current ?? tryLockEmbeddedSession());
+    };
+    const unsubscribeTask = subscribeGameBusTask(() => lockOnce());
+    const unsubscribeInputs = subscribeGameBusInputCollections(lockOnce);
+    lockOnce();
     return () => {
-      unsubscribe();
+      unsubscribeTask();
+      unsubscribeInputs();
       stopHandshake();
     };
-  }, [embedded, now]);
+  }, [embedded, tryLockEmbeddedSession]);
 
   useEffect(() => {
     if (!session) return;

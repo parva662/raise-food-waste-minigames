@@ -7,7 +7,7 @@ Implementation: `feature/kitchen-day-v1` (`#/kitchen-day`)
 
 | Area | Covered in repo | Notes |
 |------|-----------------|-------|
-| Shared sessionId / Helsinki sessionDate | `src/kitchenDay/session/*.test.ts`, `kitchenDay.flow.test.tsx` | Locked session across midnight |
+| Participant-specific sessionId / Helsinki sessionDate | `src/kitchenDay/session/*.test.ts`, `KitchenDaySessionContext.test.tsx` | Two students on the same TASK/date get different ids; same student stays stable; session locked across midnight |
 | Multiple different ingredients | `ingredientUniqueness.test.ts`, flow | |
 | Duplicate same ingredient blocked | uniqueness + flow | |
 | Trim categories / weight / estimate / technique / actual | `trim/validation.test.ts` | |
@@ -18,6 +18,6 @@ Implementation: `feature/kitchen-day-v1` (`#/kitchen-day`)
 | Mapper exact property sets | `src/gamebus/mapKitchenDay*.test.ts`, `mapRescueAndReuse.test.ts`, `mapPortionPrecision.test.ts` | |
 | Embed waits for TASK / session locked once | `KitchenDaySessionContext.test.tsx` | |
 | Multi-template TASK validation | `kitchenDayTask.test.ts` | |
-| Persist hydration / reload / duplicate after reload | `kitchenDayReadModel.test.ts`, `KitchenDaySessionContext.test.tsx` | |
+| Persist hydration / reload / duplicate after reload | `kitchenDayReadModel.test.ts`, `KitchenDaySessionContext.test.tsx` | Participant reads fail closed on missing/mismatched actor |
 | Chef review UI / wastePracticeReview | not in this branch | Phase 5 |
 | Percentile / ranking | `@pending` | Sufficient-data rule not agreed |

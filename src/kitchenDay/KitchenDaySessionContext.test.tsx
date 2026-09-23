@@ -40,7 +40,7 @@ const persistedCollections = {
         actor: { id: 'user-1', name: 'Student' },
         template: { slug: 'trimSmart' },
         properties: [
-          { template: { slug: 'sessionId' }, value: { value: 'kitchen-day:kitchen-day-task-1:2026-09-23' } },
+          { template: { slug: 'sessionId' }, value: { value: 'kitchen-day:kitchen-day-task-1:user-1:2026-09-23' } },
           { template: { slug: 'sessionDate' }, value: { value: '2026-09-23' } },
           { template: { slug: 'submittedAt' }, value: { value: '2026-09-23T10:03:00.000Z' } },
           { template: { slug: 'ingredientId' }, value: { value: 'carrot' } },
@@ -58,7 +58,7 @@ const persistedCollections = {
         actor: { id: 'user-1' },
         template: { slug: 'rescueAndReuse' },
         properties: [
-          { template: { slug: 'sessionId' }, value: { value: 'kitchen-day:kitchen-day-task-1:2026-09-23' } },
+          { template: { slug: 'sessionId' }, value: { value: 'kitchen-day:kitchen-day-task-1:user-1:2026-09-23' } },
           { template: { slug: 'sessionDate' }, value: { value: '2026-09-23' } },
           { template: { slug: 'ingredientId' }, value: { value: 'carrot' } },
           { template: { slug: 'reusableWasteGrams' }, value: { value: 200 } },
@@ -71,7 +71,7 @@ const persistedCollections = {
         actor: { id: 'user-1' },
         template: { slug: 'portionPrecision' },
         properties: [
-          { template: { slug: 'sessionId' }, value: { value: 'kitchen-day:kitchen-day-task-1:2026-09-23' } },
+          { template: { slug: 'sessionId' }, value: { value: 'kitchen-day:kitchen-day-task-1:user-1:2026-09-23' } },
           { template: { slug: 'sessionDate' }, value: { value: '2026-09-23' } },
           { template: { slug: 'submittedAt' }, value: { value: '2026-09-23T11:00:00.000Z' } },
           { template: { slug: 'recipeId' }, value: { value: 'mayonnaise' } },
@@ -102,19 +102,23 @@ describe('Kitchen Day session initialization and hydration', () => {
     setHash('');
   });
 
-  it('shows initializing in embed before TASK and locks the session once TASK arrives', async () => {
+  it('shows initializing in embed until TASK and authenticated user both exist', async () => {
     vi.spyOn(detectEmbed, 'isGameBusEmbed').mockReturnValue(true);
     setHash('#/kitchen-day');
     render(<KitchenDayApp />);
     expect(screen.getByTestId('kitchen-day-initializing')).toBeInTheDocument();
     ingestTaskForTests(kitchenDayTaskFixture);
+    expect(screen.getByTestId('kitchen-day-initializing')).toBeInTheDocument();
+    ingestInputCollectionsForTests({
+      inputCollectionPari: { me: { id: 'user-1', firstName: 'Student', lastName: 'One' } },
+    });
     await waitFor(() => {
       expect(screen.getByTestId('kitchen-day-page')).toBeInTheDocument();
     });
-    expect(screen.getByTestId('kitchen-day-header-session')).toHaveTextContent(/one shared session/);
+    expect(screen.getByTestId('kitchen-day-header-session')).toHaveTextContent(/one student session/);
   });
 
-  it('does not replace a locked session when a later TASK is ignored', async () => {
+  it('does not replace a locked session when a later TASK or participant refresh arrives', async () => {
     vi.spyOn(detectEmbed, 'isGameBusEmbed').mockReturnValue(true);
     render(
       <KitchenDaySessionProvider now={new Date('2026-09-23T10:00:00.000Z')}>
@@ -123,14 +127,21 @@ describe('Kitchen Day session initialization and hydration', () => {
     );
     expect(screen.getByTestId('kd-status')).toHaveTextContent('initializing');
     ingestTaskForTests(kitchenDayTaskFixture);
+    expect(screen.getByTestId('kd-status')).toHaveTextContent('initializing');
+    ingestInputCollectionsForTests({
+      inputCollectionPari: { me: { id: 'user-1', firstName: 'Student', lastName: 'One' } },
+    });
     await waitFor(() => {
       expect(screen.getByTestId('kd-session-id')).toHaveTextContent(
-        'kitchen-day:kitchen-day-task-1:2026-09-23',
+        'kitchen-day:kitchen-day-task-1:user-1:2026-09-23',
       );
     });
     ingestTaskForTests({ ...kitchenDayTaskFixture, id: 'other-task' });
+    ingestInputCollectionsForTests({
+      inputCollectionPari: { me: { id: 'user-9', firstName: 'Other', lastName: 'Student' } },
+    });
     expect(screen.getByTestId('kd-session-id')).toHaveTextContent(
-      'kitchen-day:kitchen-day-task-1:2026-09-23',
+      'kitchen-day:kitchen-day-task-1:user-1:2026-09-23',
     );
   });
 
@@ -138,11 +149,13 @@ describe('Kitchen Day session initialization and hydration', () => {
     const locked = ensureKitchenDayLockedSession(null, {
       embedded: true,
       taskId: 'kitchen-day-task-1',
+      actorId: 'user-1',
       now: new Date('2026-09-22T20:30:00.000Z'),
     });
     const reused = ensureKitchenDayLockedSession(locked, {
       embedded: true,
       taskId: 'kitchen-day-task-1',
+      actorId: 'user-1',
       now: new Date('2026-09-22T21:30:00.000Z'),
     });
     expect(reused.sessionDate).toBe('2026-09-22');
@@ -151,7 +164,7 @@ describe('Kitchen Day session initialization and hydration', () => {
 
   it('hydrates Trim, Rescue, and Portion after reload from group activities', async () => {
     const session = {
-      sessionId: 'kitchen-day:kitchen-day-task-1:2026-09-23',
+      sessionId: 'kitchen-day:kitchen-day-task-1:user-1:2026-09-23',
       sessionDate: '2026-09-23',
     };
     render(
@@ -168,7 +181,7 @@ describe('Kitchen Day session initialization and hydration', () => {
 
   it('reconstructs My Day and blocks the same ingredient after reload', async () => {
     const session = {
-      sessionId: 'kitchen-day:kitchen-day-task-1:2026-09-23',
+      sessionId: 'kitchen-day:kitchen-day-task-1:user-1:2026-09-23',
       sessionDate: '2026-09-23',
     };
     function CommitProbe() {
@@ -217,5 +230,51 @@ describe('Kitchen Day session initialization and hydration', () => {
     expect(screen.getByTestId('kitchen-day-portion-mayonnaise')).toBeInTheDocument();
     screen.getByTestId('kd-try-duplicate').click();
     expect(document.body.dataset.duplicate).toBe('duplicate_ingredient');
+  });
+
+  it('does not hydrate another participant\'s records into the authenticated student session', async () => {
+    const session = {
+      sessionId: 'kitchen-day:kitchen-day-task-1:user-1:2026-09-23',
+      sessionDate: '2026-09-23',
+    };
+    render(
+      <KitchenDaySessionProvider initialSession={session}>
+        <Probe />
+      </KitchenDaySessionProvider>,
+    );
+    ingestInputCollectionsForTests({
+      kitchenGroupInput: {
+        activities: [
+          persistedCollections.kitchenGroupInput.activities[0],
+          {
+            ...persistedCollections.kitchenGroupInput.activities[0],
+            id: 'act-other',
+            actor: { id: 'user-2', name: 'Other' },
+            properties: [
+              {
+                template: { slug: 'sessionId' },
+                value: { value: 'kitchen-day:kitchen-day-task-1:user-1:2026-09-23' },
+              },
+              { template: { slug: 'sessionDate' }, value: { value: '2026-09-23' } },
+              { template: { slug: 'submittedAt' }, value: { value: '2026-09-23T10:03:00.000Z' } },
+              { template: { slug: 'ingredientId' }, value: { value: 'onion' } },
+              { template: { slug: 'ingredientName' }, value: { value: 'Onion' } },
+              { template: { slug: 'ingredientCategory' }, value: { value: 'root' } },
+              { template: { slug: 'ingredientWeightGrams' }, value: { value: 800 } },
+              { template: { slug: 'trimTechniques' }, value: { value: 'dice' } },
+              { template: { slug: 'estimatedWasteGrams' }, value: { value: 80 } },
+              { template: { slug: 'actualWasteGrams' }, value: { value: 70 } },
+              { template: { slug: 'duration' }, obj: { value: 2, unit: 'minutes' } },
+            ],
+          },
+        ],
+      },
+      inputCollectionPari: persistedCollections.inputCollectionPari,
+    });
+    await waitFor(() => {
+      expect(screen.getByTestId('kd-trim-count')).toHaveTextContent('1');
+    });
+    expect(screen.getByTestId('kd-ids')).toHaveTextContent('carrot');
+    expect(screen.getByTestId('kd-ids')).not.toHaveTextContent('onion');
   });
 });
