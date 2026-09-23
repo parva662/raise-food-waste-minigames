@@ -1,4 +1,9 @@
-import { kitchenDayHashMatches, parseKitchenDaySection } from '../kitchenDay/routes';
+import {
+  kitchenDayHashMatches,
+  kitchenDayProgressHashMatches,
+  kitchenDayTutorHashMatches,
+  parseKitchenDaySection,
+} from '../kitchenDay/routes';
 
 export type AppMode =
   | 'student'
@@ -7,7 +12,9 @@ export type AppMode =
   | 'chef-results'
   | 'chef-results-admin'
   | 'trim-smart'
-  | 'kitchen-day';
+  | 'kitchen-day'
+  | 'kitchen-day-progress'
+  | 'kitchen-day-tutor';
 
 export const STUDENT_ACTIVITY_REF = 'studentLunchCheckin';
 export const CHEF_ACTIVITY_REF = 'chefForecast';
@@ -15,27 +22,17 @@ export const WASTE_MEASUREMENT_ACTIVITY_REF = 'wasteMeasurement';
 export const TRIM_SMART_ACTIVITY_REF = 'trimSmart';
 export const RESCUE_AND_REUSE_ACTIVITY_REF = 'rescueAndReuse';
 export const PORTION_PRECISION_ACTIVITY_REF = 'portionPrecision';
+export const WASTE_PRACTICE_REVIEW_ACTIVITY_REF = 'wastePracticeReview';
 
-/** GameBus activity reference for service closeout submission. */
 export const SERVICE_CLOSEOUT_ACTIVITY_REF = WASTE_MEASUREMENT_ACTIVITY_REF;
-
-/** GitHub Pages–safe hash route for the chef forecast view. */
 export const CHEF_HASH_ROUTE = '#/chef';
-
-/** Hash route for the service closeout view. */
 export const SERVICE_CLOSEOUT_HASH_ROUTE = '#/service-closeout';
-
-/** Hash route for participant chef results (GameBus participant menu). */
 export const CHEF_RESULTS_HASH_ROUTE = '#/chef-results';
-
-/** Hidden admin/research route — route-level authorization required before production. */
 export const CHEF_RESULTS_ADMIN_HASH_ROUTE = '#/chef-results-admin';
-
-/** Trim Smart practical kitchen challenge (participant). */
 export const TRIM_SMART_HASH_ROUTE = '#/waste/trim-smart';
-
-/** Connected Kitchen Day target (feature branch; not production). */
 export const KITCHEN_DAY_HASH_ROUTE = '#/kitchen-day';
+export const KITCHEN_DAY_PROGRESS_HASH_ROUTE = '#/kitchen-day-progress';
+export const KITCHEN_DAY_TUTOR_HASH_ROUTE = '#/kitchen-day-tutor';
 
 function trimSmartHashMatches(hash: string): boolean {
   const raw = hash.startsWith('#') ? hash.slice(1) : hash;
@@ -49,6 +46,12 @@ export function getAppMode(): AppMode {
   const hash = window.location.hash;
   if (trimSmartHashMatches(hash)) {
     return 'trim-smart';
+  }
+  if (kitchenDayProgressHashMatches(hash)) {
+    return 'kitchen-day-progress';
+  }
+  if (kitchenDayTutorHashMatches(hash)) {
+    return 'kitchen-day-tutor';
   }
   if (kitchenDayHashMatches(hash)) {
     return 'kitchen-day';
@@ -89,11 +92,16 @@ export function getExpectedActivityRef(): string {
   if (mode === 'trim-smart') {
     return TRIM_SMART_ACTIVITY_REF;
   }
+  if (mode === 'kitchen-day-tutor') {
+    return WASTE_PRACTICE_REVIEW_ACTIVITY_REF;
+  }
+  if (mode === 'kitchen-day-progress') {
+    return TRIM_SMART_ACTIVITY_REF;
+  }
   if (mode === 'kitchen-day') {
     const section = parseKitchenDaySection();
     if (section === 'reuse') return RESCUE_AND_REUSE_ACTIVITY_REF;
     if (section === 'portion') return PORTION_PRECISION_ACTIVITY_REF;
-    if (section === 'chef') return 'wastePracticeReview';
     return TRIM_SMART_ACTIVITY_REF;
   }
   return STUDENT_ACTIVITY_REF;

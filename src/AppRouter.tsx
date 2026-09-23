@@ -6,6 +6,8 @@ import { ChefResultsParticipantApp } from './chefResults/ChefResultsParticipantA
 import { ServiceCloseoutApp } from './serviceCloseout/ServiceCloseoutApp';
 import { TrimSmartApp } from './trimSmart/TrimSmartApp';
 import { KitchenDayApp } from './kitchenDay/KitchenDayApp';
+import { KitchenDayProgressApp } from './kitchenDay/KitchenDayProgressApp';
+import { KitchenDayTutorApp } from './kitchenDay/KitchenDayTutorApp';
 import { getAppMode, type AppMode } from './gamebus/appMode';
 import { applyDocumentTitle } from './routing/documentTitle';
 
@@ -45,6 +47,14 @@ export function AppRouter() {
 
   if (mode === 'kitchen-day') {
     return <KitchenDayApp />;
+  }
+
+  if (mode === 'kitchen-day-progress') {
+    return <KitchenDayProgressApp />;
+  }
+
+  if (mode === 'kitchen-day-tutor') {
+    return <KitchenDayTutorApp />;
   }
 
   return <App />;

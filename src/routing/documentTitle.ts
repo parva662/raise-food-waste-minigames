@@ -8,6 +8,8 @@ const DOCUMENT_TITLES: Record<AppMode, string> = {
   'chef-results-admin': 'Kitchen Management Dashboard',
   'trim-smart': 'Trim Smart',
   'kitchen-day': 'Kitchen Day',
+  'kitchen-day-progress': 'Kitchen Day Progress',
+  'kitchen-day-tutor': 'Kitchen Day Tutor',
 };
 
 export function getDocumentTitleForMode(mode: AppMode): string {

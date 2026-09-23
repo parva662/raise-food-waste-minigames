@@ -9,5 +9,7 @@ describe('document title routing', () => {
     expect(getDocumentTitleForMode('chef-results')).toBe('Chef Results');
     expect(getDocumentTitleForMode('chef-results-admin')).toBe('Kitchen Management Dashboard');
     expect(getDocumentTitleForMode('kitchen-day')).toBe('Kitchen Day');
+    expect(getDocumentTitleForMode('kitchen-day-progress')).toBe('Kitchen Day Progress');
+    expect(getDocumentTitleForMode('kitchen-day-tutor')).toBe('Kitchen Day Tutor');
   });
 });

@@ -20,11 +20,13 @@ import { getAuthenticatedGameBusUser } from '../gamebus/inputCollections';
 import { normalizeIngredientId } from '../trimSmart/ingredientId';
 import { isIngredientAlreadyRecorded } from './session/ingredientUniqueness';
 import { ensureKitchenDayLockedSession } from './session/lock';
+import { buildKitchenDayChefSessions } from './read/chefSessions';
 import {
   buildKitchenDayReadModel,
   mergeKitchenDayRecords,
   parsePersistedReviewEntry,
 } from './read/kitchenDayReadModel';
+import type { KitchenDayChefSession } from './types';
 import {
   tryPostKitchenDayPortion,
   tryPostKitchenDayRescue,
@@ -51,6 +53,7 @@ interface KitchenDaySessionValue {
   rescueEntries: KitchenDayRescueEntry[];
   portionEntries: KitchenDayPortionEntry[];
   reviews: KitchenDayReviewEntry[];
+  groupSessions: KitchenDayChefSession[];
   recordedIngredientIds: string[];
   commitTrimEntry: (entry: KitchenDayTrimEntry) => KitchenDayCommitResult;
   commitRescueEntry: (entry: KitchenDayRescueEntry) => KitchenDayCommitResult;
@@ -68,6 +71,7 @@ function readPersistedForSession(sessionId: string): {
   rescueEntries: KitchenDayRescueEntry[];
   portionEntries: KitchenDayPortionEntry[];
   reviews: KitchenDayReviewEntry[];
+  groupSessions: KitchenDayChefSession[];
 } {
   const payload = getGameBusInputCollections();
   const actorId = getAuthenticatedGameBusUser(payload)?.id ?? null;
@@ -77,6 +81,7 @@ function readPersistedForSession(sessionId: string): {
     reviews: activities
       .map((activity) => parsePersistedReviewEntry(activity))
       .filter((entry): entry is KitchenDayReviewEntry => entry !== null),
+    groupSessions: buildKitchenDayChefSessions(activities),
   };
 }
 
@@ -121,6 +126,7 @@ export function KitchenDaySessionProvider({
       rescueEntries: [] as KitchenDayRescueEntry[],
       portionEntries: [] as KitchenDayPortionEntry[],
       reviews: [] as KitchenDayReviewEntry[],
+      groupSessions: [] as KitchenDayChefSession[],
     },
   );
 
@@ -275,6 +281,7 @@ export function KitchenDaySessionProvider({
       rescueEntries,
       portionEntries,
       reviews,
+      groupSessions: persisted.groupSessions,
       recordedIngredientIds,
       commitTrimEntry,
       commitRescueEntry,
@@ -290,6 +297,7 @@ export function KitchenDaySessionProvider({
       rescueEntries,
       portionEntries,
       reviews,
+      persisted.groupSessions,
       recordedIngredientIds,
       commitTrimEntry,
       commitRescueEntry,
