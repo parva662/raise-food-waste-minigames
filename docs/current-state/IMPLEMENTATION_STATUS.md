@@ -125,9 +125,11 @@ Canonical: [`../product/waste-challenges/KITCHEN_DAY.md`](../product/waste-chall
 
 **CURRENT IMPLEMENTATION on `main`:** Trim Smart v1 only (`#/waste/trim-smart`, Ingredient → Practice → Measure, `practice` / `participantWasteGrams` / old categories).
 
-**CURRENT IMPLEMENTATION on `feature/kitchen-day-v1`:** Phases 1–6 (repository) at `#/kitchen-day`: participant-specific session lock (TASK + `inputCollectionPari.me`), Trim / Reuse / Portion, Session Review, Student Progress, Tutor dashboard, session-level `wastePracticeReview`, professional recipe extract, derived Portion metrics. One student TASK must list `trimSmart` + `rescueAndReuse` + `portionPrecision` (see [`KITCHEN_DAY_TASK.md`](../contracts/KITCHEN_DAY_TASK.md)); review posts require `wastePracticeReview` on the tutor TASK. `#/waste/trim-smart` remains v1. Live posting is guarded: **LIVE E2E BLOCKED BY GAMEBUS ADMIN ALIGNMENT**.
+**CURRENT IMPLEMENTATION on `feature/kitchen-day-v1`:** Phases 1–6 at `#/kitchen-day`: participant-specific session lock (TASK + `inputCollectionPari.me`), Trim / Reuse / Portion, Session Review, Student Progress, Tutor dashboard, session-level `wastePracticeReview`, professional recipe extract, derived Portion metrics. One student TASK must list `trimSmart` + `rescueAndReuse` + `portionPrecision` (see [`KITCHEN_DAY_TASK.md`](../contracts/KITCHEN_DAY_TASK.md)); review posts require `wastePracticeReview` on the tutor TASK. `#/waste/trim-smart` remains v1.
 
-**v1 product-review baseline:** The current Kitchen Day student/tutor UX, including the vertical Session Review at `#/kitchen-day/review`, is the approved product-review checkpoint for v1. This is a product-review baseline, not a production release.
+**Live GameBus (foodtracker.gamebus.eu):** Student Kitchen Day activity schemas and properties were **manually verified** on `https://foodtracker.gamebus.eu`. Student posting is **enabled** for Trim / Rescue / Portion (`KITCHEN_DAY_STUDENT_LIVE_INTEGRATION_READY = true`). Tutor `wastePracticeReview` posting remains **blocked** (`KITCHEN_DAY_TUTOR_LIVE_INTEGRATION_READY = false`) until trainer-on-behalf-of-student semantics are confirmed. Routes are ready for production deployment as Custom Embed Pages. This is **not** a claim of tutor live end-to-end success.
+
+**v1 product-review baseline:** The current Kitchen Day student/tutor UX, including the vertical Session Review at `#/kitchen-day/review`, is the approved product-review checkpoint for v1.
 
 **APPROVED TARGET:** connected Kitchen Day (Trim Smart + Rescue & Reuse + Portion Precision + one session-level tutor assessment).
 

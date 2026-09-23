@@ -131,7 +131,7 @@ export function KitchenDayTrimView() {
       setSubmitError(
         saved.reason === 'duplicate_ingredient'
           ? 'This ingredient is already recorded today.'
-          : saved.reason,
+          : 'This ingredient could not be saved.',
       );
       setSubmitting(false);
       return;

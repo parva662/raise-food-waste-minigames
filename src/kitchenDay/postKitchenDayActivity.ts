@@ -4,7 +4,12 @@ import { buildRescueAndReuseActivityMessage } from '../gamebus/buildRescueAndReu
 import { buildWastePracticeReviewActivityMessage } from '../gamebus/buildWastePracticeReviewActivityMessage';
 import { getGameBusTask } from '../gamebus/bridge';
 import type { ActivityMessage, TaskData } from '../gamebus/types';
-import { KITCHEN_DAY_LIVE_BLOCK_REASON, canPostKitchenDayToGameBus } from './liveIntegration';
+import {
+  KITCHEN_DAY_STUDENT_LIVE_BLOCK_REASON,
+  KITCHEN_DAY_TUTOR_LIVE_BLOCK_REASON,
+  canPostKitchenDayStudentActivity,
+  canPostKitchenDayTutorReview,
+} from './liveIntegration';
 import type {
   KitchenDayPortionEntry,
   KitchenDayRescueEntry,
@@ -28,9 +33,11 @@ export function tryPostKitchenDayActivity(
   task: TaskData | null,
   messageBuilder: (task: TaskData) => ActivityMessage,
   attemptKey: string,
+  canPost: boolean,
+  blockReason: string,
 ): KitchenDayPostResult {
-  if (!canPostKitchenDayToGameBus()) {
-    return { ok: false, reason: KITCHEN_DAY_LIVE_BLOCK_REASON };
+  if (!canPost) {
+    return { ok: false, reason: blockReason };
   }
   if (!task) {
     return { ok: false, reason: 'no_task' };
@@ -63,6 +70,8 @@ export function tryPostKitchenDayTrim(entry: KitchenDayTrimEntry): KitchenDayPos
     getGameBusTask(),
     (task) => buildKitchenDayTrimSmartActivityMessage(task, entry),
     `trim:${entry.sessionId}:${entry.ingredientId}`,
+    canPostKitchenDayStudentActivity(),
+    KITCHEN_DAY_STUDENT_LIVE_BLOCK_REASON,
   );
 }
 
@@ -71,6 +80,8 @@ export function tryPostKitchenDayRescue(entry: KitchenDayRescueEntry): KitchenDa
     getGameBusTask(),
     (task) => buildRescueAndReuseActivityMessage(task, entry),
     `rescue:${entry.sessionId}:${entry.ingredientId}`,
+    canPostKitchenDayStudentActivity(),
+    KITCHEN_DAY_STUDENT_LIVE_BLOCK_REASON,
   );
 }
 
@@ -79,6 +90,8 @@ export function tryPostKitchenDayPortion(entry: KitchenDayPortionEntry): Kitchen
     getGameBusTask(),
     (task) => buildPortionPrecisionActivityMessage(task, entry),
     `portion:${entry.sessionId}:${entry.recipeId}:${entry.submittedAt}`,
+    canPostKitchenDayStudentActivity(),
+    KITCHEN_DAY_STUDENT_LIVE_BLOCK_REASON,
   );
 }
 
@@ -87,5 +100,7 @@ export function tryPostKitchenDayReview(entry: KitchenDayReviewEntry): KitchenDa
     getGameBusTask(),
     (task) => buildWastePracticeReviewActivityMessage(task, entry),
     `review:${entry.sessionId}`,
+    canPostKitchenDayTutorReview(),
+    KITCHEN_DAY_TUTOR_LIVE_BLOCK_REASON,
   );
 }

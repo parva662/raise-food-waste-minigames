@@ -1,7 +1,9 @@
 # Kitchen Day — GameBus TASK architecture
 
-**Status:** Encoded on `feature/kitchen-day-v1`. Not production-activated.  
-**LIVE E2E BLOCKED BY GAMEBUS ADMIN ALIGNMENT.**
+**Status:** Encoded on `feature/kitchen-day-v1`. Production routes are ready for Custom Embed Pages.
+**Active GameBus environment:** `https://foodtracker.gamebus.eu`
+**Student schemas:** Manually verified on foodtracker. Student `trimSmart` / `rescueAndReuse` / `portionPrecision` posting is enabled.
+**Tutor review:** `wastePracticeReview` posting remains blocked until trainer-on-behalf-of-student semantics are confirmed. Do not treat this as tutor live E2E success.
 
 ## Decision
 
@@ -28,4 +30,5 @@ Do **not** split Kitchen Day into three embeds. Embedded `sessionId` is one stud
 - Embedded Kitchen Day waits for a valid TASK **and** `inputCollectionPari.me`, then locks `sessionId` / `sessionDate` once. Later TASK or INPUT_COLLECTIONS refreshes cannot replace them.
 - Builders call `selectKitchenDayActivityTemplate(task, slug)` and fail if any of the three templates is missing.
 - Review builders call `selectWastePracticeReviewTemplate(task)` and fail if `wastePracticeReview` is missing.
-- `KITCHEN_DAY_LIVE_INTEGRATION_READY` remains `false` until live property schemas match the slug contract.
+- `KITCHEN_DAY_STUDENT_LIVE_INTEGRATION_READY` is `true` after manual verification of the student activity/property setup on foodtracker.
+- `KITCHEN_DAY_TUTOR_LIVE_INTEGRATION_READY` remains `false` until the trainer → student submission mechanism is confirmed.

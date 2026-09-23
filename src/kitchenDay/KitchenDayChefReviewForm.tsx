@@ -105,7 +105,13 @@ export function KitchenDayChefReviewForm({ selected }: { selected: KitchenDayChe
             source: 'local',
           });
           if (!result.ok) {
-            setError(result.reason);
+            setError(
+              result.reason === 'tutor_live_blocked'
+                ? 'Tutor assessment cannot be submitted from this page yet.'
+                : result.reason === 'duplicate_review'
+                  ? 'This Kitchen Day already has a session review.'
+                  : 'The review could not be saved.',
+            );
           }
         }}
       >
