@@ -1,6 +1,6 @@
 # Kitchen Day — implementation blueprint
 
-> **APPROVED PRODUCT TARGET**. No application code in this freeze.
+> **APPROVED PRODUCT TARGET**. Application code for Phases 1–4 lives on `feature/kitchen-day-v1` (`#/kitchen-day`). Not merged to `main`. Live posting remains blocked until Phase 0.
 >
 > Slug authority: [`GAMEBUS_SLUG_CONTRACT.md`](GAMEBUS_SLUG_CONTRACT.md).
 

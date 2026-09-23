@@ -123,7 +123,9 @@ Cannot be closed from this repo’s Vitest stack (no browser E2E):
 
 Canonical: [`../product/waste-challenges/KITCHEN_DAY.md`](../product/waste-challenges/KITCHEN_DAY.md) and [`GAMEBUS_SLUG_CONTRACT.md`](../product/waste-challenges/GAMEBUS_SLUG_CONTRACT.md) — **APPROVED PRODUCT TARGET**.
 
-**CURRENT IMPLEMENTATION:** Trim Smart v1 only (`#/waste/trim-smart`, Ingredient → Practice → Measure, `practice` / `participantWasteGrams` / old categories).
+**CURRENT IMPLEMENTATION on `main`:** Trim Smart v1 only (`#/waste/trim-smart`, Ingredient → Practice → Measure, `practice` / `participantWasteGrams` / old categories).
+
+**CURRENT IMPLEMENTATION on `feature/kitchen-day-v1`:** Phases 1–4 at `#/kitchen-day` (shared session, target Trim Smart, Rescue & Reuse, Portion Precision). `#/waste/trim-smart` remains v1 so production GameBus tasks stay unchanged. Live GameBus posting is guarded: **LIVE E2E BLOCKED BY GAMEBUS ADMIN ALIGNMENT**.
 
 **APPROVED TARGET:** connected Kitchen Day (Trim Smart + Rescue & Reuse + Portion Precision + one session-level chef review).
 
@@ -131,12 +133,12 @@ Gherkin: [`../../features/waste-challenges/`](../../features/waste-challenges/) 
 
 Implementation order: Phase 0 GameBus admin → 1 session/shell → 2 Trim target → 3 Rescue → 4 Portion → 5 dashboards + session review → 6 tests/build/deploy.
 
-| Module | On `main` | Target |
-|--------|-----------|--------|
-| Trim Smart | v1 standalone | Estimate → timed prep → actual; locked category enum; unique `ingredientId` per session |
-| Rescue & Reuse | none | Join `sessionId` + `ingredientId`; `reusableWasteGrams` + free-text `reuseDestination` |
-| Portion Precision | none | One activity per recipe; `recipeComposition`; [`PORTION_PRECISION.md`](../product/waste-challenges/PORTION_PRECISION.md) |
-| Dashboards + chef review | none | Read-only overviews; one `wastePracticeReview` per session; existing `groupActivities.ts` |
+| Module | On `main` | On `feature/kitchen-day-v1` | Target |
+|--------|-----------|-----------------------------|--------|
+| Trim Smart | v1 standalone | Target flow at `#/kitchen-day`; v1 kept at `#/waste/trim-smart` | Estimate → timed prep → actual; locked category enum; unique `ingredientId` per session |
+| Rescue & Reuse | none | `#/kitchen-day/reuse` | Join `sessionId` + `ingredientId`; `reusableWasteGrams` + free-text `reuseDestination` |
+| Portion Precision | none | `#/kitchen-day/portion` | One activity per recipe; `recipeComposition`; [`PORTION_PRECISION.md`](../product/waste-challenges/PORTION_PRECISION.md) |
+| Dashboards + chef review | none | Lightweight local My day only | Read-only overviews; one `wastePracticeReview` per session; existing `groupActivities.ts` |
 
 ---
 

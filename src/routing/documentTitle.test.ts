@@ -8,5 +8,6 @@ describe('document title routing', () => {
     expect(getDocumentTitleForMode('service-closeout')).toBe('Service Closeout');
     expect(getDocumentTitleForMode('chef-results')).toBe('Chef Results');
     expect(getDocumentTitleForMode('chef-results-admin')).toBe('Kitchen Management Dashboard');
+    expect(getDocumentTitleForMode('kitchen-day')).toBe('Kitchen Day');
   });
 });

@@ -5,6 +5,7 @@ import { ChefResultsAdminApp } from './chefResults/ChefResultsAdminApp';
 import { ChefResultsParticipantApp } from './chefResults/ChefResultsParticipantApp';
 import { ServiceCloseoutApp } from './serviceCloseout/ServiceCloseoutApp';
 import { TrimSmartApp } from './trimSmart/TrimSmartApp';
+import { KitchenDayApp } from './kitchenDay/KitchenDayApp';
 import { getAppMode, type AppMode } from './gamebus/appMode';
 import { applyDocumentTitle } from './routing/documentTitle';
 
@@ -40,6 +41,10 @@ export function AppRouter() {
 
   if (mode === 'trim-smart') {
     return <TrimSmartApp />;
+  }
+
+  if (mode === 'kitchen-day') {
+    return <KitchenDayApp />;
   }
 
   return <App />;
