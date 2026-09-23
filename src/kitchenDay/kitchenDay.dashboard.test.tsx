@@ -116,9 +116,12 @@ describe('Kitchen Day student and chef dashboards', () => {
       expect(screen.getByTestId('kitchen-day-trim-carrot')).toBeInTheDocument();
     });
     expect(screen.getByTestId('kitchen-day-overview')).toHaveTextContent('cannot be edited');
+    expect(screen.getByTestId('kitchen-day-review-status')).toHaveTextContent('Kitchen Day complete');
+    expect(screen.getByTestId('kitchen-day-evidence')).toHaveClass('kitchen-day-evidence');
     expect(screen.getByTestId('kitchen-day-rescue-carrot')).toBeInTheDocument();
     expect(screen.getByTestId('kitchen-day-portion-mayonnaise')).toBeInTheDocument();
     expect(screen.getByTestId('kitchen-day-waste-percent-carrot')).toHaveTextContent('9.0%');
+    expect(screen.getByTestId('kitchen-day-trim-carrot').textContent).not.toMatch(/Carrotroot/i);
     expect(screen.queryByText(/kitchen-day:/)).not.toBeInTheDocument();
     expect(screen.queryByTestId('kitchen-day-trim-onion')).not.toBeInTheDocument();
     expect(screen.queryByTestId('kitchen-day-trim-unfinished')).not.toBeInTheDocument();

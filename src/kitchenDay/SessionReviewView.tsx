@@ -12,14 +12,25 @@ export function SessionReviewView() {
 
   return (
     <section className="kitchen-day-card" data-testid="kitchen-day-overview">
-      <h2 className="kitchen-day-card__title">Session review</h2>
-      <p className="kitchen-day-card__copy">This Kitchen Day only. Submitted measurements cannot be edited here.</p>
-      <p data-testid="kitchen-day-session-meta">{formatSessionDate(session.sessionDate)}</p>
-      {missing.length > 0 ? (
-        <p className="kitchen-day-helper">Still to record: {missing.join(', ')}.</p>
-      ) : (
-        <p className="kitchen-day-helper">All required modules have at least one completed record.</p>
-      )}
+      <header className="kitchen-day-review-header">
+        <h2 className="kitchen-day-card__title">Session review</h2>
+        <p className="kitchen-day-card__copy">This Kitchen Day only. Submitted measurements cannot be edited here.</p>
+        <p data-testid="kitchen-day-session-meta">{formatSessionDate(session.sessionDate)}</p>
+        {missing.length > 0 ? (
+          <div className="kitchen-day-review-status" data-testid="kitchen-day-review-status">
+            <p>Still to complete:</p>
+            <ul>
+              {missing.map((item) => (
+                <li key={item}>{item}</li>
+              ))}
+            </ul>
+          </div>
+        ) : (
+          <p className="kitchen-day-review-status kitchen-day-review-status--complete" data-testid="kitchen-day-review-status">
+            ✓ Kitchen Day complete
+          </p>
+        )}
+      </header>
       <SessionEvidence
         trimEntries={trimEntries}
         rescueEntries={rescueEntries}

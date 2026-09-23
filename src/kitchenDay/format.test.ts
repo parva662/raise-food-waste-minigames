@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   formatDurationFromMinutes,
   formatGrams,
+  formatReferenceDelta,
   formatWastePercent,
 } from './format';
 
@@ -18,6 +19,11 @@ describe('Kitchen Day numeric formatting', () => {
     expect(formatDurationFromMinutes(3 + 5 / 60)).toBe('3 min 5 sec');
     expect(formatDurationFromMinutes(3)).toBe('3 min');
     expect(formatDurationFromMinutes(0.17281666666666667)).toBe('10 sec');
+  });
+
+  it('formats reference comparison as human-readable points', () => {
+    expect(formatReferenceDelta(4.5, 15)).toBe('10.5 percentage points below reference');
+    expect(formatReferenceDelta(17.6, 12)).toBe('5.6 percentage points above reference');
   });
 
   it('formats weights without raw floating-point output', () => {

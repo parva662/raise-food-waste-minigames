@@ -25,7 +25,15 @@ export function formatDurationFromMinutes(durationMinutes: number): string {
 }
 
 export function formatScore(score: number): string {
-  return String(score);
+  return `${score} / 5`;
+}
+
+export function formatReferenceDelta(studentWastePercent: number, referenceWastePercent: number): string {
+  const delta = studentWastePercent - referenceWastePercent;
+  const points = Math.abs(delta).toFixed(1);
+  if (delta < 0) return `${points} percentage points below reference`;
+  if (delta > 0) return `${points} percentage points above reference`;
+  return 'Same as the kitchen reference';
 }
 
 export function formatSessionDate(isoDate: string): string {
