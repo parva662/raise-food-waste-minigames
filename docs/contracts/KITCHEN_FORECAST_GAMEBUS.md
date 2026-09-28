@@ -424,4 +424,4 @@ Comparison uses **whole-canteen operational data**, not student declarations.
 | `src/products/kitchen-forecast/config.ts` | Max quantity (1000) and deadline config |
 | `src/products/kitchen-forecast/gamebus/mapChefForecast.ts` | Property value mapper |
 | `src/products/kitchen-forecast/gamebus/buildChefActivityMessage.ts` | ACTIVITY builder |
-| `src/platform/gamebus/propertySchemas.ts` | `CHEF_FORECAST_PROPERTY_SCHEMAS` |
+| This document | Canonical `chefForecast` property schemas |

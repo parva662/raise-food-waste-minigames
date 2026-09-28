@@ -1,14 +1,14 @@
 import { useEffect, useState } from 'react';
-import { KitchenDayNav } from '@/products/kitchen-skills-challenge/surfaces/challenge/KitchenSkillsNav';
-import { KitchenDaySessionProvider, useKitchenDaySession } from '@/products/kitchen-skills-challenge/domain/session/KitchenSkillsSessionContext';
-import { KitchenDayPortionView } from '@/products/kitchen-skills-challenge/surfaces/challenge/PortionView';
-import { KitchenDayRescueView } from '@/products/kitchen-skills-challenge/surfaces/challenge/ReuseView';
+import { KitchenSkillsNav } from '@/products/kitchen-skills-challenge/surfaces/challenge/KitchenSkillsNav';
+import { KitchenSkillsSessionProvider, useKitchenSkillsSession } from '@/products/kitchen-skills-challenge/domain/session/KitchenSkillsSessionContext';
+import { KitchenSkillsPortionView } from '@/products/kitchen-skills-challenge/surfaces/challenge/PortionView';
+import { KitchenSkillsReuseView } from '@/products/kitchen-skills-challenge/surfaces/challenge/ReuseView';
 import { parseKitchenDaySection } from '@/app/routes';
 import { SessionReviewView } from '@/products/kitchen-skills-challenge/surfaces/challenge/SessionReviewView';
-import { KitchenDayTrimView } from '@/products/kitchen-skills-challenge/surfaces/challenge/TrimView';
+import { KitchenSkillsTrimView } from '@/products/kitchen-skills-challenge/surfaces/challenge/TrimView';
 import { formatSessionDate } from '@/products/kitchen-skills-challenge/format';
 
-function KitchenDayInitializing() {
+function KitchenSkillsInitializing() {
   return (
     <div className="kitchen-mgmt-page kitchen-day-activity" data-testid="kitchen-day-initializing">
       <header className="kitchen-mgmt-header">
@@ -21,8 +21,8 @@ function KitchenDayInitializing() {
   );
 }
 
-function KitchenDayBody() {
-  const { session } = useKitchenDaySession();
+function KitchenSkillsBody() {
+  const { session } = useKitchenSkillsSession();
   const [section, setSection] = useState(() => parseKitchenDaySection());
 
   useEffect(() => {
@@ -31,7 +31,7 @@ function KitchenDayBody() {
     return () => window.removeEventListener('hashchange', sync);
   }, []);
 
-  if (!session) return <KitchenDayInitializing />;
+  if (!session) return <KitchenSkillsInitializing />;
 
   return (
     <div className="kitchen-mgmt-page kitchen-day-activity" data-testid="kitchen-day-page">
@@ -44,10 +44,10 @@ function KitchenDayBody() {
           </p>
         </div>
       </header>
-      <KitchenDayNav section={section} />
-      {section === 'trim' ? <KitchenDayTrimView /> : null}
-      {section === 'reuse' ? <KitchenDayRescueView /> : null}
-      {section === 'portion' ? <KitchenDayPortionView /> : null}
+      <KitchenSkillsNav section={section} />
+      {section === 'trim' ? <KitchenSkillsTrimView /> : null}
+      {section === 'reuse' ? <KitchenSkillsReuseView /> : null}
+      {section === 'portion' ? <KitchenSkillsPortionView /> : null}
       {section === 'review' ? <SessionReviewView /> : null}
       {section !== 'review' ? (
         <a className="kitchen-day-review-link" href="#/kitchen-day/review" data-testid="kitchen-day-nav-review">
@@ -58,20 +58,18 @@ function KitchenDayBody() {
   );
 }
 
-function KitchenDayGate() {
-  const { status } = useKitchenDaySession();
+function KitchenSkillsGate() {
+  const { status } = useKitchenSkillsSession();
   if (status === 'initializing') {
-    return <KitchenDayInitializing />;
+    return <KitchenSkillsInitializing />;
   }
-  return <KitchenDayBody />;
+  return <KitchenSkillsBody />;
 }
 
 export function KitchenSkillsChallengeApp() {
   return (
-    <KitchenDaySessionProvider>
-      <KitchenDayGate />
-    </KitchenDaySessionProvider>
+    <KitchenSkillsSessionProvider>
+      <KitchenSkillsGate />
+    </KitchenSkillsSessionProvider>
   );
 }
-
-export { KitchenSkillsChallengeApp as KitchenDayApp };

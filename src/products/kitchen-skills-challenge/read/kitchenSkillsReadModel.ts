@@ -1,13 +1,13 @@
 import { getActivityTemplateReference } from '@/platform/gamebus/groupActivities';
-import { isKitchenDayIngredientCategory } from '@/products/kitchen-skills-challenge/domain/trim/categories';
+import { isKitchenSkillsIngredientCategory } from '@/products/kitchen-skills-challenge/domain/trim/categories';
 import { isTrimTechnique } from '@/products/kitchen-skills-challenge/domain/trim/techniques';
 import { isPortionUnit } from '@/products/kitchen-skills-challenge/domain/portion/validation';
-import { isKitchenDayReviewScore } from '@/products/kitchen-skills-challenge/domain/assessment/scores';
+import { isKitchenSkillsReviewScore } from '@/products/kitchen-skills-challenge/domain/assessment/scores';
 import type {
-  KitchenDayPortionEntry,
-  KitchenDayRescueEntry,
-  KitchenDayReviewEntry,
-  KitchenDayTrimEntry,
+  KitchenSkillsPortionEntry,
+  KitchenSkillsRescueEntry,
+  KitchenSkillsReviewEntry,
+  KitchenSkillsTrimEntry,
   RecipeCompositionLine,
 } from '@/products/kitchen-skills-challenge/domain/types';
 import {
@@ -57,7 +57,7 @@ function readIso(activity: unknown, key: 'start' | 'end'): string | null {
   return activity[key];
 }
 
-export function parsePersistedTrimEntry(activity: unknown): KitchenDayTrimEntry | null {
+export function parsePersistedTrimEntry(activity: unknown): KitchenSkillsTrimEntry | null {
   if (getActivityTemplateReference(activity) !== 'trimSmart') return null;
   const ingredientCategory = readActivityPropertyString(activity, 'ingredientCategory');
   const trimTechniques = readActivityPropertyString(activity, 'trimTechniques');
@@ -82,7 +82,7 @@ export function parsePersistedTrimEntry(activity: unknown): KitchenDayTrimEntry 
     actualWasteGrams == null ||
     durationMinutes == null ||
     !ingredientCategory ||
-    !isKitchenDayIngredientCategory(ingredientCategory) ||
+    !isKitchenSkillsIngredientCategory(ingredientCategory) ||
     !trimTechniques ||
     !isTrimTechnique(trimTechniques)
   ) {
@@ -107,7 +107,7 @@ export function parsePersistedTrimEntry(activity: unknown): KitchenDayTrimEntry 
   };
 }
 
-export function parsePersistedRescueEntry(activity: unknown): KitchenDayRescueEntry | null {
+export function parsePersistedRescueEntry(activity: unknown): KitchenSkillsRescueEntry | null {
   if (getActivityTemplateReference(activity) !== 'rescueAndReuse') return null;
   const sessionId = readActivityPropertyString(activity, 'sessionId');
   const sessionDate = readActivityPropertyString(activity, 'sessionDate');
@@ -160,7 +160,7 @@ function parseComposition(value: unknown): RecipeCompositionLine[] | null {
   return lines;
 }
 
-export function parsePersistedPortionEntry(activity: unknown): KitchenDayPortionEntry | null {
+export function parsePersistedPortionEntry(activity: unknown): KitchenSkillsPortionEntry | null {
   if (getActivityTemplateReference(activity) !== 'portionPrecision') return null;
   const sessionId = readActivityPropertyString(activity, 'sessionId');
   const sessionDate = readActivityPropertyString(activity, 'sessionDate');
@@ -193,7 +193,7 @@ export function parsePersistedPortionEntry(activity: unknown): KitchenDayPortion
   };
 }
 
-export function parsePersistedReviewEntry(activity: unknown): KitchenDayReviewEntry | null {
+export function parsePersistedReviewEntry(activity: unknown): KitchenSkillsReviewEntry | null {
   if (getActivityTemplateReference(activity) !== 'wastePracticeReview') return null;
   const sessionId = readActivityPropertyString(activity, 'sessionId');
   const sessionDate = readActivityPropertyString(activity, 'sessionDate');
@@ -207,8 +207,8 @@ export function parsePersistedReviewEntry(activity: unknown): KitchenDayReviewEn
     !submittedAt ||
     timeEfficiencyScore == null ||
     preparationQualityScore == null ||
-    !isKitchenDayReviewScore(timeEfficiencyScore) ||
-    !isKitchenDayReviewScore(preparationQualityScore)
+    !isKitchenSkillsReviewScore(timeEfficiencyScore) ||
+    !isKitchenSkillsReviewScore(preparationQualityScore)
   ) {
     return null;
   }
@@ -224,22 +224,22 @@ export function parsePersistedReviewEntry(activity: unknown): KitchenDayReviewEn
   };
 }
 
-export interface KitchenDayReadModel {
-  trimEntries: KitchenDayTrimEntry[];
-  rescueEntries: KitchenDayRescueEntry[];
-  portionEntries: KitchenDayPortionEntry[];
+export interface KitchenSkillsReadModel {
+  trimEntries: KitchenSkillsTrimEntry[];
+  rescueEntries: KitchenSkillsRescueEntry[];
+  portionEntries: KitchenSkillsPortionEntry[];
 }
 
-export function buildKitchenDayReadModel(
+export function buildKitchenSkillsReadModel(
   activities: readonly unknown[],
   options: {
     sessionId: string;
     actorId?: string | null;
   },
-): KitchenDayReadModel {
-  const trimEntries: KitchenDayTrimEntry[] = [];
-  const rescueEntries: KitchenDayRescueEntry[] = [];
-  const portionEntries: KitchenDayPortionEntry[] = [];
+): KitchenSkillsReadModel {
+  const trimEntries: KitchenSkillsTrimEntry[] = [];
+  const rescueEntries: KitchenSkillsRescueEntry[] = [];
+  const portionEntries: KitchenSkillsPortionEntry[] = [];
 
   for (const activity of activities) {
     if (options.actorId) {
@@ -265,7 +265,7 @@ export function buildKitchenDayReadModel(
   return { trimEntries, rescueEntries, portionEntries };
 }
 
-export function mergeKitchenDayRecords<T extends { persistId?: string }>(
+export function mergeKitchenSkillsRecords<T extends { persistId?: string }>(
   local: readonly T[],
   persisted: readonly T[],
   sameRecord: (left: T, right: T) => boolean,

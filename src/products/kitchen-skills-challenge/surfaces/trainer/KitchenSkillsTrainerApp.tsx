@@ -1,16 +1,16 @@
 import { useEffect, useMemo, useState } from 'react';
-import { KitchenDayChefReviewForm } from '@/products/kitchen-skills-challenge/surfaces/trainer/KitchenSkillsTrainerReviewForm';
-import { KitchenDaySessionProvider, useKitchenDaySession } from '@/products/kitchen-skills-challenge/domain/session/KitchenSkillsSessionContext';
+import { KitchenSkillsTrainerReviewForm } from '@/products/kitchen-skills-challenge/surfaces/trainer/KitchenSkillsTrainerReviewForm';
+import { KitchenSkillsSessionProvider, useKitchenSkillsSession } from '@/products/kitchen-skills-challenge/domain/session/KitchenSkillsSessionContext';
 import { SessionEvidence } from '@/products/kitchen-skills-challenge/surfaces/shared/SessionEvidence';
 import { formatSessionDate } from '@/products/kitchen-skills-challenge/format';
-import { findKitchenDayChefSession } from '@/products/kitchen-skills-challenge/read/chefSessions';
+import { findKitchenSkillsTrainerSession } from '@/products/kitchen-skills-challenge/read/trainerSessions';
 import {
   kitchenDayTutorHashFor,
   parseKitchenDaySelectedSessionId,
 } from '@/app/routes';
 
-function KitchenDayTutorBody() {
-  const { session, findReviewBySessionId, groupSessions } = useKitchenDaySession();
+function KitchenSkillsTrainerBody() {
+  const { session, findReviewBySessionId, groupSessions } = useKitchenSkillsSession();
   const sessions = groupSessions;
   const [selectedSessionId, setSelectedSessionId] = useState(() => parseKitchenDaySelectedSessionId());
 
@@ -28,7 +28,7 @@ function KitchenDayTutorBody() {
       })),
     [findReviewBySessionId, sessions],
   );
-  const selected = findKitchenDayChefSession(listed, selectedSessionId);
+  const selected = findKitchenSkillsTrainerSession(listed, selectedSessionId);
 
   if (!session) {
     return (
@@ -83,7 +83,7 @@ function KitchenDayTutorBody() {
             portionEntries={selected.portionEntries}
             testIdPrefix="kitchen-day-chef"
           />
-          <KitchenDayChefReviewForm selected={selected} />
+          <KitchenSkillsTrainerReviewForm selected={selected} />
         </div>
       ) : selectedSessionId ? (
         <p className="chef-results-empty">That student session was not found.</p>
@@ -96,10 +96,8 @@ function KitchenDayTutorBody() {
 
 export function KitchenSkillsTrainerApp() {
   return (
-    <KitchenDaySessionProvider>
-      <KitchenDayTutorBody />
-    </KitchenDaySessionProvider>
+    <KitchenSkillsSessionProvider>
+      <KitchenSkillsTrainerBody />
+    </KitchenSkillsSessionProvider>
   );
 }
-
-export { KitchenSkillsTrainerApp as KitchenDayTutorApp };

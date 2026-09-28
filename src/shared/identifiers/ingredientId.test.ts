@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { normalizeIngredientId } from '@/shared/ingredientId';
+import { normalizeIngredientId } from '@/shared/identifiers/ingredientId';
 
 describe('normalizeIngredientId', () => {
   it('slugifies simple names', () => {

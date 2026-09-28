@@ -2,11 +2,11 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { fromZonedTime } from 'date-fns-tz';
 import { helsinki } from '@/test/fixtures/dates';
 import { mockExplicitClosures } from '@/test/fixtures/serviceCalendar';
+import { resolveChefForecastServiceDate } from '@/products/kitchen-forecast/chefForecastWindow';
 import {
   isOperationalServiceDay,
   msUntilNextHelsinkiMidnight,
-  resolveChefForecastServiceDate,
-  resolveChefResultsServiceDate,
+  resolveForecastResultsServiceDate,
 } from '@/shared/calendar/operationalServiceCalendar';
 
 const DATES = {
@@ -39,39 +39,39 @@ describe('Kitchen Results participant dashboard calendar date', () => {
       '12:00:00',
       '23:59:59',
     ] as const) {
-      expect(resolveChefResultsServiceDate(helsinki(DATES.tuesday, time))).toBe(DATES.tuesday);
+      expect(resolveForecastResultsServiceDate(helsinki(DATES.tuesday, time))).toBe(DATES.tuesday);
     }
   });
 
   it('rolls the dashboard date at Helsinki midnight, not at 08:30', () => {
-    expect(resolveChefResultsServiceDate(helsinki(DATES.monday, '23:59:59'))).toBe(DATES.monday);
-    expect(resolveChefResultsServiceDate(helsinki(DATES.tuesday, '00:00:00'))).toBe(DATES.tuesday);
-    expect(resolveChefResultsServiceDate(helsinki(DATES.tuesday, '08:29:59'))).toBe(DATES.tuesday);
-    expect(resolveChefResultsServiceDate(helsinki(DATES.tuesday, '08:30:00'))).toBe(DATES.tuesday);
-    expect(resolveChefResultsServiceDate(helsinki(DATES.tuesday, '23:59:59'))).toBe(DATES.tuesday);
+    expect(resolveForecastResultsServiceDate(helsinki(DATES.monday, '23:59:59'))).toBe(DATES.monday);
+    expect(resolveForecastResultsServiceDate(helsinki(DATES.tuesday, '00:00:00'))).toBe(DATES.tuesday);
+    expect(resolveForecastResultsServiceDate(helsinki(DATES.tuesday, '08:29:59'))).toBe(DATES.tuesday);
+    expect(resolveForecastResultsServiceDate(helsinki(DATES.tuesday, '08:30:00'))).toBe(DATES.tuesday);
+    expect(resolveForecastResultsServiceDate(helsinki(DATES.tuesday, '23:59:59'))).toBe(DATES.tuesday);
   });
 
   it('keeps Kitchen Forecast 08:30 target switching unchanged and decoupled', () => {
     expect(resolveChefForecastServiceDate(helsinki(DATES.monday, '08:29:59'))).toBe(DATES.monday);
     expect(resolveChefForecastServiceDate(helsinki(DATES.monday, '08:30:00'))).toBe(DATES.tuesday);
 
-    expect(resolveChefResultsServiceDate(helsinki(DATES.monday, '08:29:59'))).toBe(DATES.monday);
-    expect(resolveChefResultsServiceDate(helsinki(DATES.monday, '08:30:00'))).toBe(DATES.monday);
+    expect(resolveForecastResultsServiceDate(helsinki(DATES.monday, '08:29:59'))).toBe(DATES.monday);
+    expect(resolveForecastResultsServiceDate(helsinki(DATES.monday, '08:30:00'))).toBe(DATES.monday);
   });
 
   it('shows weekend calendar dates as non-service days without falling back to Friday', () => {
-    expect(resolveChefResultsServiceDate(helsinki(DATES.friday, '23:59:59'))).toBe(DATES.friday);
+    expect(resolveForecastResultsServiceDate(helsinki(DATES.friday, '23:59:59'))).toBe(DATES.friday);
     expect(isOperationalServiceDay(DATES.friday)).toBe(true);
 
-    expect(resolveChefResultsServiceDate(helsinki(DATES.saturday, '00:00:00'))).toBe(DATES.saturday);
-    expect(resolveChefResultsServiceDate(helsinki(DATES.saturday, '12:00:00'))).toBe(DATES.saturday);
+    expect(resolveForecastResultsServiceDate(helsinki(DATES.saturday, '00:00:00'))).toBe(DATES.saturday);
+    expect(resolveForecastResultsServiceDate(helsinki(DATES.saturday, '12:00:00'))).toBe(DATES.saturday);
     expect(isOperationalServiceDay(DATES.saturday)).toBe(false);
 
-    expect(resolveChefResultsServiceDate(helsinki(DATES.sunday, '00:00:00'))).toBe(DATES.sunday);
-    expect(resolveChefResultsServiceDate(helsinki(DATES.sunday, '23:59:59'))).toBe(DATES.sunday);
+    expect(resolveForecastResultsServiceDate(helsinki(DATES.sunday, '00:00:00'))).toBe(DATES.sunday);
+    expect(resolveForecastResultsServiceDate(helsinki(DATES.sunday, '23:59:59'))).toBe(DATES.sunday);
     expect(isOperationalServiceDay(DATES.sunday)).toBe(false);
 
-    expect(resolveChefResultsServiceDate(helsinki(DATES.nextMonday, '00:00:00'))).toBe(
+    expect(resolveForecastResultsServiceDate(helsinki(DATES.nextMonday, '00:00:00'))).toBe(
       DATES.nextMonday,
     );
     expect(isOperationalServiceDay(DATES.nextMonday)).toBe(true);
@@ -80,11 +80,11 @@ describe('Kitchen Results participant dashboard calendar date', () => {
   it('keeps an explicitly closed weekday as the dashboard date and marks it non-service', () => {
     mockExplicitClosures(DATES.monday);
 
-    expect(resolveChefResultsServiceDate(helsinki(DATES.monday, '00:00:00'))).toBe(DATES.monday);
-    expect(resolveChefResultsServiceDate(helsinki(DATES.monday, '23:59:59'))).toBe(DATES.monday);
+    expect(resolveForecastResultsServiceDate(helsinki(DATES.monday, '00:00:00'))).toBe(DATES.monday);
+    expect(resolveForecastResultsServiceDate(helsinki(DATES.monday, '23:59:59'))).toBe(DATES.monday);
     expect(isOperationalServiceDay(DATES.monday)).toBe(false);
 
-    expect(resolveChefResultsServiceDate(helsinki(DATES.tuesday, '00:00:00'))).toBe(DATES.tuesday);
+    expect(resolveForecastResultsServiceDate(helsinki(DATES.tuesday, '00:00:00'))).toBe(DATES.tuesday);
     expect(isOperationalServiceDay(DATES.tuesday)).toBe(true);
   });
 
@@ -92,7 +92,7 @@ describe('Kitchen Results participant dashboard calendar date', () => {
     // 2026-01-07 is a Wednesday used elsewhere as missing-from-workbook; still operational.
     const wednesdayWithoutMenu = '2026-01-07';
     expect(isOperationalServiceDay(wednesdayWithoutMenu)).toBe(true);
-    expect(resolveChefResultsServiceDate(helsinki(wednesdayWithoutMenu, '12:00:00'))).toBe(
+    expect(resolveForecastResultsServiceDate(helsinki(wednesdayWithoutMenu, '12:00:00'))).toBe(
       wednesdayWithoutMenu,
     );
   });
@@ -117,23 +117,23 @@ describe('Kitchen Results participant dashboard calendar date', () => {
       }).formatToParts(instant);
       // Sanity: local wall clock differs by zone, but dashboard date stays Helsinki.
       expect(localParts.find((part) => part.type === 'day')?.value).toBeTruthy();
-      expect(resolveChefResultsServiceDate(instant)).toBe(DATES.tuesday);
+      expect(resolveForecastResultsServiceDate(instant)).toBe(DATES.tuesday);
     }
   });
 
   it('rolls at Helsinki midnight across spring and autumn DST weekends', () => {
-    expect(resolveChefResultsServiceDate(helsinki(DATES.springSaturday, '23:59:59'))).toBe(
+    expect(resolveForecastResultsServiceDate(helsinki(DATES.springSaturday, '23:59:59'))).toBe(
       DATES.springSaturday,
     );
-    expect(resolveChefResultsServiceDate(helsinki(DATES.springSunday, '00:00:00'))).toBe(
+    expect(resolveForecastResultsServiceDate(helsinki(DATES.springSunday, '00:00:00'))).toBe(
       DATES.springSunday,
     );
     expect(isOperationalServiceDay(DATES.springSunday)).toBe(false);
 
-    expect(resolveChefResultsServiceDate(helsinki(DATES.autumnSaturday, '23:59:59'))).toBe(
+    expect(resolveForecastResultsServiceDate(helsinki(DATES.autumnSaturday, '23:59:59'))).toBe(
       DATES.autumnSaturday,
     );
-    expect(resolveChefResultsServiceDate(helsinki(DATES.autumnSunday, '00:00:00'))).toBe(
+    expect(resolveForecastResultsServiceDate(helsinki(DATES.autumnSunday, '00:00:00'))).toBe(
       DATES.autumnSunday,
     );
     expect(isOperationalServiceDay(DATES.autumnSunday)).toBe(false);

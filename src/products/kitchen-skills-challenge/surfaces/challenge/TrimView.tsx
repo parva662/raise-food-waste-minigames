@@ -2,11 +2,11 @@ import { useEffect, useMemo, useState } from 'react';
 import { formatDurationFromMinutes, formatGrams, formatWastePercent } from '@/products/kitchen-skills-challenge/format';
 import { getGameBusInputCollections } from '@/platform/gamebus/bridge';
 import { extractGroupActivities, getRawKitchenGroupActivitiesInput } from '@/platform/gamebus/groupActivities';
-import { normalizeIngredientId } from '@/shared/ingredientId';
-import { kitchenDayIngredientIdFromName, useReadyKitchenDaySession } from '@/products/kitchen-skills-challenge/domain/session/KitchenSkillsSessionContext';
+import { normalizeIngredientId } from '@/shared/identifiers/ingredientId';
+import { kitchenSkillsIngredientIdFromName, useReadyKitchenSkillsSession } from '@/products/kitchen-skills-challenge/domain/session/KitchenSkillsSessionContext';
 import { isIngredientAlreadyRecorded } from '@/products/kitchen-skills-challenge/domain/session/ingredientUniqueness';
-import { historicalTrimSamplesFromGroupActivities } from '@/products/kitchen-skills-challenge/read/selectKitchenDayActivities';
-import { TRIM_TECHNIQUES, type KitchenDayIngredientCategory, type TrimTechnique } from '@/products/kitchen-skills-challenge/domain/types';
+import { historicalTrimSamplesFromGroupActivities } from '@/products/kitchen-skills-challenge/read/selectKitchenSkillsActivities';
+import { TRIM_TECHNIQUES, type KitchenSkillsIngredientCategory, type TrimTechnique } from '@/products/kitchen-skills-challenge/domain/types';
 import { ingredientCategoryOptions } from '@/products/kitchen-skills-challenge/domain/trim/categories';
 import { wastePercentage } from '@/products/kitchen-skills-challenge/domain/trim/derived';
 import { compareToKitchenReference } from '@/products/kitchen-skills-challenge/domain/trim/reference';
@@ -60,10 +60,10 @@ function stepLabel(step: TrimStep): string {
   return labels[step];
 }
 
-export function KitchenDayTrimView() {
-  const { session, recordedIngredientIds, commitTrimEntry } = useReadyKitchenDaySession();
+export function KitchenSkillsTrimView() {
+  const { session, recordedIngredientIds, commitTrimEntry } = useReadyKitchenSkillsSession();
   const [step, setStep] = useState<TrimStep>('category');
-  const [category, setCategory] = useState<KitchenDayIngredientCategory | ''>('');
+  const [category, setCategory] = useState<KitchenSkillsIngredientCategory | ''>('');
   const [ingredientName, setIngredientName] = useState('');
   const [weightRaw, setWeightRaw] = useState('');
   const [technique, setTechnique] = useState<TrimTechnique | null>(null);
@@ -73,7 +73,7 @@ export function KitchenDayTrimView() {
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
-  const ingredientId = kitchenDayIngredientIdFromName(ingredientName);
+  const ingredientId = kitchenSkillsIngredientIdFromName(ingredientName);
   const weight = parseStartingWeightGrams(weightRaw);
   const estimate = weight.ok ? parseEstimatedWasteGrams(estimateRaw, weight.value) : { ok: false as const, issue: 'invalid' as const };
   const actual = weight.ok ? parseActualWasteGrams(actualRaw, weight.value) : { ok: false as const, issue: 'invalid' as const };

@@ -23,7 +23,7 @@ People working in the kitchen (in this pilot they are often students of the kitc
 
 Supervisory role. Uses the Kitchen Skills Challenge **trainer** surface (`#/kitchen-day-tutor`) to inspect student evidence and optionally post `wastePracticeReview`.
 
-Exact GameBus on-behalf-of-student posting is still unresolved. Trainer live posting stays **disabled** (`KITCHEN_DAY_TUTOR_LIVE_INTEGRATION_READY = false`).
+Exact GameBus on-behalf-of-student posting is still unresolved. Trainer live posting stays **disabled** (`KITCHEN_SKILLS_TRAINER_LIVE_INTEGRATION_READY = false`).
 
 ### 4. Admin viewer
 

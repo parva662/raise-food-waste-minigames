@@ -10,7 +10,7 @@ import {
   shortageRateGramsPerCustomer,
   surplusRateGramsPerCustomer,
 } from '@/products/forecast-results/calculations/teamComparison';
-import { formatGrams } from '@/products/forecast-results/useChefResultsData';
+import { formatGrams } from '@/products/forecast-results/useForecastResultsData';
 import { CustomerEstimateCard } from '@/products/forecast-results/participant/components/CustomerEstimateCard';
 import { ProductionPlanCard } from '@/products/forecast-results/participant/components/ProductionPlanCard';
 

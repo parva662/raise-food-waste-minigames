@@ -2,7 +2,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { ChefResultsParticipantApp } from '@/products/forecast-results/participant/ForecastResultsParticipantApp';
+import { ForecastResultsParticipantApp } from '@/products/forecast-results/participant/ForecastResultsParticipantApp';
 import {
   KITCHEN_GROUP_ACTIVITIES_REQUEST_KEY,
   KITCHEN_GROUP_INPUT_COLLECTION_KEY,
@@ -101,7 +101,7 @@ describe('canonical participant results in embedded mode', () => {
   beforeEach(() => {
     resetGameBusBridgeForTests();
     vi.spyOn(detectEmbedModule, 'isGameBusEmbed').mockReturnValue(true);
-    vi.spyOn(operationalCalendarModule, 'resolveChefResultsServiceDate').mockReturnValue(sep7);
+    vi.spyOn(operationalCalendarModule, 'resolveForecastResultsServiceDate').mockReturnValue(sep7);
     window.sessionStorage.clear();
     window.location.hash = '#/chef-results';
     originalParent = window.parent;
@@ -136,7 +136,7 @@ describe('canonical participant results in embedded mode', () => {
         wasteMeasurementForDate(sep7),
       ]),
     );
-    render(<ChefResultsParticipantApp />);
+    render(<ForecastResultsParticipantApp />);
 
     expect(screen.queryByTestId('chef-results-date-select')).not.toBeInTheDocument();
     expect(screen.getByTestId('participant-no-forecast-result')).toHaveTextContent(
@@ -157,7 +157,7 @@ describe('canonical participant results in embedded mode', () => {
       ]),
     );
     const user = userEvent.setup();
-    render(<ChefResultsParticipantApp />);
+    render(<ForecastResultsParticipantApp />);
 
     expect(screen.getByTestId('participant-results-unavailable-closeout')).toHaveTextContent(
       'Waiting for service closeout',
@@ -178,7 +178,7 @@ describe('canonical participant results in embedded mode', () => {
         wasteMeasurementForDate(sep7),
       ]),
     );
-    render(<ChefResultsParticipantApp />);
+    render(<ForecastResultsParticipantApp />);
 
     expect(screen.getByTestId('participant-no-forecast-result')).toHaveTextContent(
       'No forecast for this service',
@@ -204,7 +204,7 @@ describe('canonical participant results in embedded mode', () => {
       ]),
     );
     const user = userEvent.setup();
-    render(<ChefResultsParticipantApp />);
+    render(<ForecastResultsParticipantApp />);
 
     expect(screen.getByTestId('participant-results-header')).toHaveTextContent(
       /Monday, 7 September 2026/,
@@ -228,7 +228,7 @@ describe('canonical participant results in embedded mode', () => {
         wasteMeasurementForDate(sep7),
       ]),
     );
-    render(<ChefResultsParticipantApp />);
+    render(<ForecastResultsParticipantApp />);
 
     expect(screen.getByTestId('participant-no-forecast-result')).toBeInTheDocument();
     expect(screen.queryByTestId('forecast-impact-section')).not.toBeInTheDocument();
@@ -256,27 +256,27 @@ describe('canonical participant results in embedded mode', () => {
         wasteMeasurementForDate(sep7),
       ]),
     );
-    render(<ChefResultsParticipantApp />);
+    render(<ForecastResultsParticipantApp />);
 
     expect(screen.getByTestId('customer-estimate-predicted')).toHaveTextContent('142');
     expect(screen.getByTestId('customer-estimate-predicted')).not.toHaveTextContent('100');
   });
 
   it('resolves the same canonical date for every authenticated staff account', () => {
-    const canonicalSpy = vi.spyOn(operationalCalendarModule, 'resolveChefResultsServiceDate');
+    const canonicalSpy = vi.spyOn(operationalCalendarModule, 'resolveForecastResultsServiceDate');
     canonicalSpy.mockReturnValue(sep7);
 
     ingestInputCollectionsForTests(
       embeddedPayload(staff1Id, [wasteMeasurementForDate(sep7)]),
     );
-    const { unmount } = render(<ChefResultsParticipantApp />);
+    const { unmount } = render(<ForecastResultsParticipantApp />);
     expect(canonicalSpy).toHaveBeenCalled();
     unmount();
 
     ingestInputCollectionsForTests(
       embeddedPayload(testAccountId, [wasteMeasurementForDate(sep7)]),
     );
-    render(<ChefResultsParticipantApp />);
+    render(<ForecastResultsParticipantApp />);
     expect(canonicalSpy.mock.results.every((result) => result.value === sep7)).toBe(true);
   });
 });

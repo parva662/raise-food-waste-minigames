@@ -1,12 +1,12 @@
 import { useMemo, useState } from 'react';
 import { discardedWasteGrams } from '@/products/kitchen-skills-challenge/domain/trim/derived';
 import { formatGrams } from '@/products/kitchen-skills-challenge/format';
-import { useReadyKitchenDaySession } from '@/products/kitchen-skills-challenge/domain/session/KitchenSkillsSessionContext';
+import { useReadyKitchenSkillsSession } from '@/products/kitchen-skills-challenge/domain/session/KitchenSkillsSessionContext';
 import { canSaveRescueSuggestion, parseReusableWasteGrams, parseReuseDestination } from '@/products/kitchen-skills-challenge/domain/reuse/validation';
 
-export function KitchenDayRescueView() {
+export function KitchenSkillsReuseView() {
   const { session, trimEntries, findRescueByIngredientId, commitRescueEntry } =
-    useReadyKitchenDaySession();
+    useReadyKitchenSkillsSession();
   const completedTrim = trimEntries;
   const [ingredientId, setIngredientId] = useState(completedTrim[0]?.ingredientId ?? '');
   const [reusableRaw, setReusableRaw] = useState('');

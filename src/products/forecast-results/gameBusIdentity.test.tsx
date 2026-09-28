@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, render, screen } from '@testing-library/react';
-import { ChefResultsParticipantApp } from '@/products/forecast-results/participant/ForecastResultsParticipantApp';
+import { ForecastResultsParticipantApp } from '@/products/forecast-results/participant/ForecastResultsParticipantApp';
 import { DEFAULT_FIXTURE_CURRENT_USER_ID, getFixtureCurrentUserId } from '@/products/forecast-results/currentUserContext';
 import * as detectEmbedModule from '@/platform/gamebus/detectEmbed';
 import * as operationalCalendarModule from '@/shared/calendar/operationalServiceCalendar';
@@ -42,7 +42,7 @@ describe('GameBus authenticated user on chef results', () => {
   beforeEach(() => {
     resetGameBusBridgeForTests();
     vi.spyOn(detectEmbedModule, 'isGameBusEmbed').mockReturnValue(true);
-    vi.spyOn(operationalCalendarModule, 'resolveChefResultsServiceDate').mockReturnValue('2026-09-07');
+    vi.spyOn(operationalCalendarModule, 'resolveForecastResultsServiceDate').mockReturnValue('2026-09-07');
     window.sessionStorage.clear();
     window.location.hash = '#/chef-results?gamebusDebug=1';
     originalParent = window.parent;
@@ -77,7 +77,7 @@ describe('GameBus authenticated user on chef results', () => {
       },
     });
 
-    render(<ChefResultsParticipantApp />);
+    render(<ForecastResultsParticipantApp />);
 
     expectNoParticipantDebugUi();
     expect(screen.getByTestId('chef-results-participant-page')).toBeInTheDocument();
@@ -92,7 +92,7 @@ describe('GameBus authenticated user on chef results', () => {
       },
     });
 
-    render(<ChefResultsParticipantApp />);
+    render(<ForecastResultsParticipantApp />);
 
     expectNoParticipantDebugUi();
   });
@@ -104,7 +104,7 @@ describe('GameBus authenticated user on chef results', () => {
       },
     });
 
-    render(<ChefResultsParticipantApp />);
+    render(<ForecastResultsParticipantApp />);
 
     expectNoParticipantDebugUi();
   });
@@ -116,7 +116,7 @@ describe('GameBus authenticated user on chef results', () => {
       },
     });
 
-    render(<ChefResultsParticipantApp />);
+    render(<ForecastResultsParticipantApp />);
 
     expect(getFixtureCurrentUserId()).toBe(DEFAULT_FIXTURE_CURRENT_USER_ID);
     expect(screen.queryByTestId('fixture-current-user-selector')).not.toBeInTheDocument();
@@ -136,7 +136,7 @@ describe('GameBus authenticated user on chef results', () => {
       },
     });
 
-    render(<ChefResultsParticipantApp />);
+    render(<ForecastResultsParticipantApp />);
 
     expect(infoSpy).toHaveBeenCalledWith('[gamebus] authenticated user', {
       id: 'logged-user',

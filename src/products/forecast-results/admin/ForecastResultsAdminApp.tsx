@@ -8,7 +8,7 @@ import { getFixtureServiceDates } from '@/products/forecast-results/adapters/fix
 import { ForecastingManagementSection } from '@/products/forecast-results/admin/components/ForecastingManagementSection';
 import { ManagementDashboardHeader } from '@/products/forecast-results/admin/components/ManagementDashboardHeader';
 import { ActualKitchenOutcomeSection } from '@/products/forecast-results/participant/components/ActualKitchenOutcomeSection';
-import { useChefResultsData } from '@/products/forecast-results/useChefResultsData';
+import { useForecastResultsData } from '@/products/forecast-results/useForecastResultsData';
 import { useGameBusEmbed } from '@/platform/gamebus/useGameBusEmbed';
 
 /**
@@ -62,7 +62,7 @@ function AdminPartialServicePanel({ state }: { state: AdminServicePartialState }
   );
 }
 
-export function ChefResultsAdminApp() {
+export function ForecastResultsAdminApp() {
   const { embedded, inputCollections, inputCollectionsReady } = useGameBusEmbed();
   const fixtureDates = useMemo(() => getFixtureServiceDates(), []);
   const groupDates = useMemo(() => {
@@ -83,7 +83,7 @@ export function ChefResultsAdminApp() {
     );
   }, [serviceDates]);
 
-  const resultsState = useChefResultsData(selectedDate);
+  const resultsState = useForecastResultsData(selectedDate);
   const dailyResults = resultsState.status === 'ready' ? resultsState.dailyResults : null;
   const isLoading = resultsState.status === 'pending';
 

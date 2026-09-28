@@ -23,10 +23,9 @@ type InputCollectionsListener = (data: GameBusInputCollectionsPayload | null) =>
 let taskData: TaskData | null = null;
 let inputCollectionsData: GameBusInputCollectionsPayload | null = null;
 let hasPostedActivity = false;
-let chefForecastPostedTargetDate: string | null = null;
-const trimSmartPostedAttemptKeys = new Set<string>();
-let trimSmartSubmissionInFlight = false;
+const postedKeys = new Set<string>();
 let submissionInFlight = false;
+let keyedSubmissionInFlight = false;
 let taskListener: TaskListener | null = null;
 let inputCollectionsListener: InputCollectionsListener | null = null;
 let messageHandlerAttached = false;
@@ -235,8 +234,8 @@ export function hasGameBusPostedActivity(): boolean {
   return hasPostedActivity;
 }
 
-export function hasGameBusPostedChefForecastForDate(targetDate: string): boolean {
-  return chefForecastPostedTargetDate === targetDate;
+export function hasGameBusPostedKey(key: string): boolean {
+  return postedKeys.has(key);
 }
 
 export function isGameBusSubmissionInFlight(): boolean {
@@ -251,10 +250,15 @@ export type ActivityPostResult =
   | { ok: true; message: ActivityMessage }
   | { ok: false; reason: string };
 
+/**
+ * Duplicate / in-flight policy for ACTIVITY posts.
+ * - `once`: one successful post per embed lifetime (also blocks later `once` posts)
+ * - `key`: unique key; `markOnce` also sets the global one-shot flag (forecast-style)
+ * - keyed posts without `markOnce` use a separate in-flight flag (multi-entry games)
+ */
 export type ActivityDuplicatePolicy =
   | { type: 'once' }
-  | { type: 'chef-date'; targetDate: string }
-  | { type: 'attempt-key'; key: string };
+  | { type: 'key'; key: string; markOnce?: boolean };
 
 export type ActivityPostHooks = {
   logTask?: (task: TaskData) => void;
@@ -273,36 +277,25 @@ export function tryPostBuiltActivity(
   policy: ActivityDuplicatePolicy,
   hooks: ActivityPostHooks = {},
 ): ActivityPostResult {
+  const usesKeyedInFlight = policy.type === 'key' && !policy.markOnce;
   const duplicate =
-    policy.type === 'once'
-      ? hasPostedActivity
-      : policy.type === 'chef-date'
-        ? chefForecastPostedTargetDate === policy.targetDate
-        : trimSmartPostedAttemptKeys.has(policy.key);
+    policy.type === 'once' ? hasPostedActivity : postedKeys.has(policy.key);
   if (duplicate) {
-    gamebusDevLog(
-      policy.type === 'attempt-key'
-        ? 'trimSmart submission blocked as duplicate attempt'
-        : 'submission blocked as duplicate',
-    );
+    gamebusDevLog('submission blocked as duplicate');
     return { ok: false, reason: 'duplicate' };
   }
 
-  const inFlight = policy.type === 'attempt-key' ? trimSmartSubmissionInFlight : submissionInFlight;
+  const inFlight = usesKeyedInFlight ? keyedSubmissionInFlight : submissionInFlight;
   if (inFlight) {
-    gamebusDevLog(
-      policy.type === 'attempt-key'
-        ? 'trimSmart submission blocked as in flight'
-        : 'submission blocked as duplicate',
-    );
+    gamebusDevLog(usesKeyedInFlight ? 'submission blocked as in flight' : 'submission blocked as duplicate');
     return { ok: false, reason: 'in_flight' };
   }
   if (!taskData) {
     return { ok: false, reason: 'no_task' };
   }
 
-  if (policy.type === 'attempt-key') {
-    trimSmartSubmissionInFlight = true;
+  if (usesKeyedInFlight) {
+    keyedSubmissionInFlight = true;
   } else {
     submissionInFlight = true;
   }
@@ -318,11 +311,11 @@ export function tryPostBuiltActivity(
     hooks.afterPost?.();
     if (policy.type === 'once') {
       hasPostedActivity = true;
-    } else if (policy.type === 'chef-date') {
-      hasPostedActivity = true;
-      chefForecastPostedTargetDate = policy.targetDate;
     } else {
-      trimSmartPostedAttemptKeys.add(policy.key);
+      postedKeys.add(policy.key);
+      if (policy.markOnce) {
+        hasPostedActivity = true;
+      }
     }
     gamebusDevLog('ACTIVITY sent', {
       type: message.type,
@@ -337,8 +330,8 @@ export function tryPostBuiltActivity(
       reason: error instanceof Error ? error.message : 'build_failed',
     };
   } finally {
-    if (policy.type === 'attempt-key') {
-      trimSmartSubmissionInFlight = false;
+    if (usesKeyedInFlight) {
+      keyedSubmissionInFlight = false;
     } else {
       submissionInFlight = false;
     }
@@ -352,9 +345,8 @@ export function resetGameBusBridgeForTests(): void {
   taskData = null;
   inputCollectionsData = null;
   hasPostedActivity = false;
-  chefForecastPostedTargetDate = null;
-  trimSmartPostedAttemptKeys.clear();
-  trimSmartSubmissionInFlight = false;
+  postedKeys.clear();
+  keyedSubmissionInFlight = false;
   submissionInFlight = false;
   taskListener = null;
   inputCollectionsListener = null;

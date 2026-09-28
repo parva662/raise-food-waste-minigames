@@ -1,4 +1,4 @@
-import type { KitchenDayReviewEntry } from '@/products/kitchen-skills-challenge/domain/types';
+import type { KitchenSkillsReviewEntry } from '@/products/kitchen-skills-challenge/domain/types';
 
 export const WASTE_PRACTICE_REVIEW_REQUIRED_REFS = [
   'sessionId',
@@ -13,7 +13,7 @@ export type WastePracticeReviewPropertyRef =
   | 'chefFeedback';
 
 export function orderedWastePracticeReviewPropertyRefs(
-  entry: KitchenDayReviewEntry,
+  entry: KitchenSkillsReviewEntry,
 ): readonly WastePracticeReviewPropertyRef[] {
   if (entry.chefFeedback?.trim()) {
     return [...WASTE_PRACTICE_REVIEW_REQUIRED_REFS, 'chefFeedback'];
@@ -21,7 +21,7 @@ export function orderedWastePracticeReviewPropertyRefs(
   return WASTE_PRACTICE_REVIEW_REQUIRED_REFS;
 }
 
-export function mapWastePracticeReview(entry: KitchenDayReviewEntry) {
+export function mapWastePracticeReview(entry: KitchenSkillsReviewEntry) {
   const values: Partial<Record<WastePracticeReviewPropertyRef, { value: string | number }>> = {
     sessionId: { value: entry.sessionId },
     sessionDate: { value: entry.sessionDate },

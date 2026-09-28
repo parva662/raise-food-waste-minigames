@@ -6,7 +6,7 @@ import { buildChefActivityMessage } from '@/products/kitchen-forecast/gamebus/bu
 import { pariChefForecastTaskFixture } from '@/products/kitchen-forecast/gamebus/chefTaskFixtures';
 import { resolveMealSlotsForDate } from '@/shared/menu/mealSlots';
 import { MENU_DATES } from '@/test/fixtures/dates';
-import * as operationalCalendarModule from '@/shared/calendar/operationalServiceCalendar';
+import * as chefForecastWindowModule from '@/products/kitchen-forecast/chefForecastWindow';
 
 function getSoupInput() {
   const group = screen.getByRole('group', { name: /^Soup:/i });
@@ -40,7 +40,7 @@ describe('chef soup and dessert sync', () => {
   });
 
   beforeEach(() => {
-    vi.spyOn(operationalCalendarModule, 'resolveChefForecastServiceDate').mockReturnValue(
+    vi.spyOn(chefForecastWindowModule, 'resolveChefForecastServiceDate').mockReturnValue(
       MENU_DATES.runtimeWednesday,
     );
   });

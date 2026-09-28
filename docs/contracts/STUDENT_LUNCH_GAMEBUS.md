@@ -2,7 +2,7 @@
 
 **Status:** **EXTERNAL / GAMEBUS CONTRACT** — repository mapper implemented; live GameBus template migration still manual and pending.
 **Approved product behaviour:** [`../../features/student/student-lunch.feature`](../../features/student/student-lunch.feature) (**APPROVED PRODUCT TARGET**).
-**Implemented technical behaviour:** current `src/` on `main` — `src/products/lunch-declaration/gamebus/mapStudentLunchCheckin.ts`, `src/products/lunch-declaration/gamebus/resolveStudentLunchProperties.ts`, `src/products/lunch-declaration/gamebus/buildActivityMessage.ts`, `src/platform/gamebus/propertySchemas.ts`.
+**Implemented technical behaviour:** current `src/` — `src/products/lunch-declaration/gamebus/mapStudentLunchCheckin.ts`, `src/products/lunch-declaration/gamebus/resolveStudentLunchProperties.ts`, `src/products/lunch-declaration/gamebus/buildActivityMessage.ts`. Canonical property schemas live in this document.
 **Live GameBus configuration:** not verified from this repository. The last recorded admin audit was taken from the test environment on 2026-07-27 and is not stored here.
 
 This document has four distinct layers, in order:
@@ -223,7 +223,7 @@ Modify the existing `studentLunchCheckin` template; do not delete old property t
 
 Result: 7 required links plus 4 optional item-ID links. **Do not add a `timingStatus` link to this template.**
 
-Full JSON Schemas: `STUDENT_LUNCH_CHECKIN_PROPERTY_SCHEMAS` in `src/platform/gamebus/propertySchemas.ts`.
+Full JSON Schemas: this document (section on property templates).
 
 Until the admin templates match, live ingest will not accept what the repository mapper sends.
 

@@ -3,7 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { AppRouter } from '@/app/AppRouter';
-import { ChefResultsAdminApp } from '@/products/forecast-results/admin/ForecastResultsAdminApp';
+import { ForecastResultsAdminApp } from '@/products/forecast-results/admin/ForecastResultsAdminApp';
 import { OverviewSection } from '@/products/forecast-results/admin/components/OverviewSection';
 import { buildFixtureDailyServiceResults } from '@/products/forecast-results/adapters/fixtureCalculationSource';
 import { sumMeasuredOverproductionGrams } from '@/products/forecast-results/calculations/actualKitchenOutcome';
@@ -43,7 +43,7 @@ describe('kitchen management dashboard route', () => {
     vi.restoreAllMocks();
   });
 
-  it('renders ChefResultsAdminApp at #/chef-results-admin', () => {
+  it('renders ForecastResultsAdminApp at #/chef-results-admin', () => {
     render(<AppRouter />);
     expect(screen.getByTestId('chef-results-admin-page')).toBeInTheDocument();
   });
@@ -85,7 +85,7 @@ describe('kitchen management primary navigation', () => {
   });
 
   it('shows Overview, Staff, and Trends tabs with Overview default', () => {
-    render(<ChefResultsAdminApp />);
+    render(<ForecastResultsAdminApp />);
     expect(screen.getByTestId('kitchen-mgmt-primary-tab-overview')).toBeInTheDocument();
     expect(screen.getByTestId('kitchen-mgmt-primary-tab-staff')).toBeInTheDocument();
     expect(screen.getByTestId('kitchen-mgmt-primary-tab-trends')).toBeInTheDocument();
@@ -99,7 +99,7 @@ describe('kitchen management primary navigation', () => {
 
   it('preserves selected service date when switching tabs', async () => {
     const user = userEvent.setup();
-    render(<ChefResultsAdminApp />);
+    render(<ForecastResultsAdminApp />);
     const select = screen.getByTestId('chef-results-admin-date-select');
     await user.selectOptions(select, '2026-07-27');
     expect(screen.getByTestId('kitchen-mgmt-selected-date')).toHaveTextContent(/Monday, 27 July 2026/);
@@ -111,7 +111,7 @@ describe('kitchen management primary navigation', () => {
 
   it('supports keyboard navigation on primary tabs', async () => {
     const user = userEvent.setup();
-    render(<ChefResultsAdminApp />);
+    render(<ForecastResultsAdminApp />);
     const overviewTab = screen.getByTestId('kitchen-mgmt-primary-tab-overview');
     overviewTab.focus();
     await user.keyboard('{ArrowRight}');
@@ -133,7 +133,7 @@ describe('kitchen management service selection', () => {
   });
 
   it('defaults to latest calculable fixture service date', () => {
-    render(<ChefResultsAdminApp />);
+    render(<ForecastResultsAdminApp />);
     const select = screen.getByTestId('chef-results-admin-date-select') as HTMLSelectElement;
     expect(select.value).toBe('2026-07-31');
     expect(screen.getByTestId('kitchen-mgmt-selected-date')).toHaveTextContent(/Friday, 31 July 2026/);
@@ -141,7 +141,7 @@ describe('kitchen management service selection', () => {
 
   it('allows selecting an older service date', async () => {
     const user = userEvent.setup();
-    render(<ChefResultsAdminApp />);
+    render(<ForecastResultsAdminApp />);
     const select = screen.getByTestId('chef-results-admin-date-select');
     await user.selectOptions(select, '2026-07-27');
     expect((select as HTMLSelectElement).value).toBe('2026-07-27');
@@ -152,7 +152,7 @@ describe('kitchen management service selection', () => {
 
   it('does not show fixture results while embedded input is pending', () => {
     vi.spyOn(detectEmbedModule, 'isGameBusEmbed').mockReturnValue(true);
-    render(<ChefResultsAdminApp />);
+    render(<ForecastResultsAdminApp />);
     expect(screen.getByTestId('chef-results-admin-pending')).toHaveTextContent(
       'Loading kitchen results…',
     );
@@ -172,7 +172,7 @@ describe('kitchen management service overview', () => {
     expect(daily).not.toBeNull();
     const expectedTotal = sumMeasuredOverproductionGrams(daily!.observed);
 
-    render(<ChefResultsAdminApp />);
+    render(<ForecastResultsAdminApp />);
     expect(screen.getByTestId('service-overview-customers')).toHaveTextContent(
       String(daily!.observed.actualCustomers),
     );
@@ -207,7 +207,7 @@ describe('kitchen management staff table', () => {
   it('lists named staff with normalized metrics and no ranking language', async () => {
     const user = userEvent.setup();
     const daily = buildFixtureDailyServiceResults('2026-07-31')!;
-    render(<ChefResultsAdminApp />);
+    render(<ForecastResultsAdminApp />);
     await openStaffTab(user);
 
     const rows = daily.staffResults.map((result) =>
@@ -245,7 +245,7 @@ describe('kitchen management staff detail', () => {
     const first = [...daily.staffResults].sort((a, b) => a.userName.localeCompare(b.userName))[0]!;
     const second = [...daily.staffResults].sort((a, b) => a.userName.localeCompare(b.userName))[1]!;
 
-    render(<ChefResultsAdminApp />);
+    render(<ForecastResultsAdminApp />);
     await openStaffTab(user);
 
     await user.click(screen.getByTestId(`staff-view-details-${first.userId}`));
@@ -270,7 +270,7 @@ describe('kitchen management staff detail', () => {
     const daily = buildFixtureDailyServiceResults('2026-07-31')!;
     const staff = daily.staffResults[0]!;
 
-    render(<ChefResultsAdminApp />);
+    render(<ForecastResultsAdminApp />);
     await openStaffTab(user);
     await user.click(screen.getByTestId(`staff-view-details-${staff.userId}`));
 
@@ -297,7 +297,7 @@ describe('kitchen management team overview and trends', () => {
   });
 
   it('shows team overview medians for selected service with multiple forecasts', () => {
-    render(<ChefResultsAdminApp />);
+    render(<ForecastResultsAdminApp />);
     expect(screen.getByTestId('kitchen-mgmt-team-overview')).toBeInTheDocument();
     expect(screen.getByTestId('team-overview-staff-count').textContent).not.toBe('0');
     expect(screen.getByTestId('team-overview-median-surplus')).toBeInTheDocument();
@@ -306,7 +306,7 @@ describe('kitchen management team overview and trends', () => {
 
   it('shows week month year management trends anchored to selected service date', async () => {
     const user = userEvent.setup();
-    render(<ChefResultsAdminApp />);
+    render(<ForecastResultsAdminApp />);
     await openTrendsTab(user);
     expect(screen.getByTestId('kitchen-mgmt-trends')).toBeInTheDocument();
     expect(screen.getByTestId('kitchen-mgmt-trend-panel-week')).toBeInTheDocument();
@@ -323,7 +323,7 @@ describe('kitchen management team overview and trends', () => {
 
   it('shows chart with one completed service and reserves trend language for two-plus', async () => {
     const user = userEvent.setup();
-    render(<ChefResultsAdminApp />);
+    render(<ForecastResultsAdminApp />);
     await openTrendsTab(user);
     expect(screen.getByTestId('kitchen-mgmt-period-summary')).toBeInTheDocument();
     const chart = screen.queryByTestId('kitchen-mgmt-trend-chart');
@@ -366,9 +366,9 @@ describe('kitchen management embedded admin names', () => {
 
   it('shows real actor names on embedded admin page', async () => {
     const user = userEvent.setup();
-    const { embeddedKitchenPayloadForAdmin } = await import('@/products/forecast-results/chefResultsManagementTestFixtures');
+    const { embeddedKitchenPayloadForAdmin } = await import('@/products/forecast-results/forecastResultsManagementTestFixtures');
     ingestInputCollectionsForTests(embeddedKitchenPayloadForAdmin());
-    render(<ChefResultsAdminApp />);
+    render(<ForecastResultsAdminApp />);
     await openStaffTab(user);
     expect(screen.getByTestId('staff-result-name-real-user-abc')).toHaveTextContent('Test Account');
     expect(screen.getByTestId('staff-result-name-coworker-user')).toHaveTextContent('Coworker Chef');

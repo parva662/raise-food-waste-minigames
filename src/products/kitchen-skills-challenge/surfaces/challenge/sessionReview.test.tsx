@@ -4,17 +4,17 @@ import { afterEach, describe, expect, it } from 'vitest';
 import { ingestInputCollectionsForTests, resetGameBusBridgeForTests } from '@/platform/gamebus/bridge';
 import { SessionEvidence } from '@/products/kitchen-skills-challenge/surfaces/shared/SessionEvidence';
 import { SessionReviewView } from '@/products/kitchen-skills-challenge/surfaces/challenge/SessionReviewView';
-import { KitchenDaySessionProvider } from '@/products/kitchen-skills-challenge/domain/session/KitchenSkillsSessionContext';
+import { KitchenSkillsSessionProvider } from '@/products/kitchen-skills-challenge/domain/session/KitchenSkillsSessionContext';
 import type {
-  KitchenDayPortionEntry,
-  KitchenDayRescueEntry,
-  KitchenDayReviewEntry,
-  KitchenDayTrimEntry,
+  KitchenSkillsPortionEntry,
+  KitchenSkillsRescueEntry,
+  KitchenSkillsReviewEntry,
+  KitchenSkillsTrimEntry,
 } from '@/products/kitchen-skills-challenge/domain/types';
 
 const sessionId = 'kitchen-day:kitchen-day-task-1:user-1:2026-09-23';
 
-const trimEntries: KitchenDayTrimEntry[] = [
+const trimEntries: KitchenSkillsTrimEntry[] = [
   {
     sessionId,
     sessionDate: '2026-09-23',
@@ -33,7 +33,7 @@ const trimEntries: KitchenDayTrimEntry[] = [
   },
 ];
 
-const rescueEntries: KitchenDayRescueEntry[] = [
+const rescueEntries: KitchenSkillsRescueEntry[] = [
   {
     sessionId,
     sessionDate: '2026-09-23',
@@ -45,7 +45,7 @@ const rescueEntries: KitchenDayRescueEntry[] = [
   },
 ];
 
-const portionEntries: KitchenDayPortionEntry[] = [
+const portionEntries: KitchenSkillsPortionEntry[] = [
   {
     sessionId,
     sessionDate: '2026-09-23',
@@ -63,7 +63,7 @@ const portionEntries: KitchenDayPortionEntry[] = [
   },
 ];
 
-const review: KitchenDayReviewEntry = {
+const review: KitchenSkillsReviewEntry = {
   sessionId,
   sessionDate: '2026-09-23',
   submittedAt: '2026-09-23T12:00:00.000Z',
@@ -152,11 +152,11 @@ describe('Session review presentation', () => {
 
   it('shows Kitchen Day complete when required records exist and hides sessionId', async () => {
     render(
-      <KitchenDaySessionProvider
+      <KitchenSkillsSessionProvider
         initialSession={{ sessionId, sessionDate: '2026-09-23' }}
       >
         <SessionReviewView />
-      </KitchenDaySessionProvider>,
+      </KitchenSkillsSessionProvider>,
     );
     ingestInputCollectionsForTests({
       kitchenGroupInput: {
@@ -237,9 +237,9 @@ describe('Session review presentation', () => {
 
   it('lists remaining required modules without technical wording', () => {
     render(
-      <KitchenDaySessionProvider initialSession={{ sessionId, sessionDate: '2026-09-23' }}>
+      <KitchenSkillsSessionProvider initialSession={{ sessionId, sessionDate: '2026-09-23' }}>
         <SessionReviewView />
-      </KitchenDaySessionProvider>,
+      </KitchenSkillsSessionProvider>,
     );
     expect(screen.getByTestId('kitchen-day-review-status')).toHaveTextContent('Still to complete');
     expect(screen.getByTestId('kitchen-day-review-status')).toHaveTextContent('Trim Smart');

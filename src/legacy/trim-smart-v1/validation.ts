@@ -4,7 +4,7 @@ import {
   type TrimSmartIngredientCategory,
   type TrimSmartPractice,
 } from '@/legacy/trim-smart-v1/types';
-import { normalizeIngredientId } from '@/shared/ingredientId';
+import { normalizeIngredientId } from '@/shared/identifiers/ingredientId';
 
 export function validateIngredientStepInput(fields: {
   ingredientCategory: string;

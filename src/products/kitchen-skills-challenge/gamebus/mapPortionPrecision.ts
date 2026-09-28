@@ -1,4 +1,4 @@
-import type { KitchenDayPortionEntry } from '@/products/kitchen-skills-challenge/domain/types';
+import type { KitchenSkillsPortionEntry } from '@/products/kitchen-skills-challenge/domain/types';
 
 export const PORTION_PRECISION_REQUIRED_REFS = [
   'sessionId',
@@ -16,7 +16,7 @@ export function orderedPortionPrecisionPropertyRefs(): readonly PortionPrecision
   return PORTION_PRECISION_REQUIRED_REFS;
 }
 
-export function mapPortionPrecision(entry: KitchenDayPortionEntry) {
+export function mapPortionPrecision(entry: KitchenSkillsPortionEntry) {
   return {
     sessionId: { value: entry.sessionId },
     sessionDate: { value: entry.sessionDate },

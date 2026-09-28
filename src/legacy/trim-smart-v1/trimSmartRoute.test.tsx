@@ -5,7 +5,7 @@ import userEvent from '@testing-library/user-event';
 import { AppRouter } from '@/app/AppRouter';
 import { getAppMode, getExpectedActivityRef, TRIM_SMART_ACTIVITY_REF } from '@/app/routes';
 import { getDocumentTitleForMode } from '@/app/documentTitle';
-import * as operationalCalendarModule from '@/shared/calendar/operationalServiceCalendar';
+import * as chefForecastWindowModule from '@/products/kitchen-forecast/chefForecastWindow';
 
 function setHash(hash: string) {
   window.location.hash = hash;
@@ -21,7 +21,7 @@ async function completeIngredientStep(user: ReturnType<typeof userEvent.setup>) 
 
 describe('trim smart routing', () => {
   beforeEach(() => {
-    vi.spyOn(operationalCalendarModule, 'resolveChefForecastServiceDate').mockReturnValue(
+    vi.spyOn(chefForecastWindowModule, 'resolveChefForecastServiceDate').mockReturnValue(
       '2026-07-31',
     );
     setHash('');

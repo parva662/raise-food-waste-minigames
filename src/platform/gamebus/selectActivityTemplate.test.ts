@@ -1,40 +1,28 @@
 import { describe, expect, it } from 'vitest';
-import { pariChefForecastTaskFixture } from '@/products/kitchen-forecast/gamebus/chefTaskFixtures';
 import { selectActivityTemplate } from '@/platform/gamebus/selectActivityTemplate';
-import { pariStudentLunchTaskFixture } from '@/products/lunch-declaration/gamebus/taskFixtures';
-import { pariWasteMeasurementTaskFixture } from '@/products/service-closeout/gamebus/wasteMeasurementTaskFixtures';
+import { platformTaskFixture } from '@/platform/gamebus/testFixtures';
 
 describe('selectActivityTemplate (GameBus slug field)', () => {
-  it('selects chefForecast from activityTemplates[].slug', () => {
-    expect(selectActivityTemplate(pariChefForecastTaskFixture, 'chefForecast').reference).toBe(
-      'chefForecast',
-    );
+  it('selects the expected template slug', () => {
+    expect(selectActivityTemplate(platformTaskFixture('alpha'), 'alpha').reference).toBe('alpha');
   });
 
-  it('selects studentLunchCheckin from activityTemplates[].slug', () => {
-    expect(selectActivityTemplate(pariStudentLunchTaskFixture, 'studentLunchCheckin').reference).toBe(
-      'studentLunchCheckin',
-    );
-  });
-
-  it('selects wasteMeasurement from activityTemplates[].slug', () => {
-    expect(selectActivityTemplate(pariWasteMeasurementTaskFixture, 'wasteMeasurement').reference).toBe(
-      'wasteMeasurement',
-    );
+  it('selects among multiple templates by slug', () => {
+    const task = platformTaskFixture('alpha');
+    task.activityTemplates.push({
+      id: 'platform-template-2',
+      slug: 'beta',
+      name: 'beta',
+      providers: [],
+      linkedProperties: [],
+    });
+    expect(selectActivityTemplate(task, 'beta').reference).toBe('beta');
   });
 
   it('reports (none) when slug does not match expected template', () => {
-    const task = {
-      ...pariChefForecastTaskFixture,
-      activityTemplates: [
-        {
-          ...pariChefForecastTaskFixture.activityTemplates[0]!,
-          slug: 'unexpectedTemplate',
-        },
-      ],
-    };
-    expect(() => selectActivityTemplate(task, 'chefForecast')).toThrow(
-      /expected chefForecast.*Found: unexpectedTemplate/,
+    const task = platformTaskFixture('unexpectedTemplate');
+    expect(() => selectActivityTemplate(task, 'alpha')).toThrow(
+      /expected alpha.*Found: unexpectedTemplate/,
     );
   });
 });

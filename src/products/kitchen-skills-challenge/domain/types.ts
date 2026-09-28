@@ -1,11 +1,11 @@
-export type KitchenDayRecordSource = 'local' | 'persisted';
+export type KitchenSkillsRecordSource = 'local' | 'persisted';
 
-export interface KitchenDayLockedSession {
+export interface KitchenSkillsLockedSession {
   sessionId: string;
   sessionDate: string;
 }
 
-export const KITCHEN_DAY_INGREDIENT_CATEGORIES = [
+export const KITCHEN_SKILLS_INGREDIENT_CATEGORIES = [
   'root',
   'leafy',
   'fruit',
@@ -14,7 +14,7 @@ export const KITCHEN_DAY_INGREDIENT_CATEGORIES = [
   'other',
 ] as const;
 
-export type KitchenDayIngredientCategory = (typeof KITCHEN_DAY_INGREDIENT_CATEGORIES)[number];
+export type KitchenSkillsIngredientCategory = (typeof KITCHEN_SKILLS_INGREDIENT_CATEGORIES)[number];
 
 export const TRIM_TECHNIQUES = [
   'peeling',
@@ -34,13 +34,13 @@ export type TrimTechnique = (typeof TRIM_TECHNIQUES)[number];
 export const PORTION_UNITS = ['g', 'kg', 'dL', 'L'] as const;
 export type PortionUnit = (typeof PORTION_UNITS)[number];
 
-export interface KitchenDayTrimEntry {
+export interface KitchenSkillsTrimEntry {
   sessionId: string;
   sessionDate: string;
   submittedAt: string;
   ingredientId: string;
   ingredientName: string;
-  ingredientCategory: KitchenDayIngredientCategory;
+  ingredientCategory: KitchenSkillsIngredientCategory;
   ingredientWeightGrams: number;
   trimTechniques: TrimTechnique;
   estimatedWasteGrams: number;
@@ -48,18 +48,18 @@ export interface KitchenDayTrimEntry {
   durationMinutes: number;
   preparationStartedAt: string;
   preparationEndedAt: string;
-  source: KitchenDayRecordSource;
+  source: KitchenSkillsRecordSource;
   persistId?: string;
 }
 
-export interface KitchenDayRescueEntry {
+export interface KitchenSkillsRescueEntry {
   sessionId: string;
   sessionDate: string;
   ingredientId: string;
   reusableWasteGrams: number;
   reuseDestination: string;
   submittedAt: string;
-  source: KitchenDayRecordSource;
+  source: KitchenSkillsRecordSource;
   persistId?: string;
 }
 
@@ -70,7 +70,7 @@ export interface RecipeCompositionLine {
   unit: PortionUnit;
 }
 
-export interface KitchenDayPortionEntry {
+export interface KitchenSkillsPortionEntry {
   sessionId: string;
   sessionDate: string;
   submittedAt: string;
@@ -78,30 +78,28 @@ export interface KitchenDayPortionEntry {
   recipeName: string;
   recipeComposition: RecipeCompositionLine[];
   finalRecipeWeightGrams: number;
-  source: KitchenDayRecordSource;
+  source: KitchenSkillsRecordSource;
   persistId?: string;
 }
 
-export interface KitchenDayReviewEntry {
+export interface KitchenSkillsReviewEntry {
   sessionId: string;
   sessionDate: string;
   submittedAt: string;
   timeEfficiencyScore: number;
   preparationQualityScore: number;
   chefFeedback?: string;
-  source: KitchenDayRecordSource;
+  source: KitchenSkillsRecordSource;
   persistId?: string;
 }
 
-export interface KitchenDayChefSession {
+export interface KitchenSkillsTrainerSession {
   actorId: string;
   actorName: string;
   sessionId: string;
   sessionDate: string;
-  trimEntries: KitchenDayTrimEntry[];
-  rescueEntries: KitchenDayRescueEntry[];
-  portionEntries: KitchenDayPortionEntry[];
-  review: KitchenDayReviewEntry | null;
+  trimEntries: KitchenSkillsTrimEntry[];
+  rescueEntries: KitchenSkillsRescueEntry[];
+  portionEntries: KitchenSkillsPortionEntry[];
+  review: KitchenSkillsReviewEntry | null;
 }
-
-export type KitchenDaySection = 'trim' | 'reuse' | 'portion' | 'review';

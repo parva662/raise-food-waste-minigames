@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { extractGroupActivities } from '@/platform/gamebus/groupActivities';
-import { historicalTrimSamplesFromGroupActivities, selectKitchenDayActivities } from '@/products/kitchen-skills-challenge/read/selectKitchenDayActivities';
+import { historicalTrimSamplesFromGroupActivities, selectKitchenSkillsActivities } from '@/products/kitchen-skills-challenge/read/selectKitchenSkillsActivities';
 
 describe('Kitchen Day group-activity selectors', () => {
   it('filters Kitchen Day templates from existing group activities', () => {
@@ -9,7 +9,7 @@ describe('Kitchen Day group-activity selectors', () => {
       { template: { slug: 'chefForecast' }, properties: [] },
       { template: { slug: 'portionPrecision' }, properties: [] },
     ]);
-    expect(selectKitchenDayActivities(activities).map((item) => (item as { template: { slug: string } }).template.slug)).toEqual([
+    expect(selectKitchenSkillsActivities(activities).map((item) => (item as { template: { slug: string } }).template.slug)).toEqual([
       'trimSmart',
       'portionPrecision',
     ]);

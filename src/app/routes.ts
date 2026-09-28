@@ -30,8 +30,6 @@ export type RouteSurface =
   | 'kitchen-skills-trainer';
 
 export type KitchenSkillsHashSection = 'trim' | 'reuse' | 'portion' | 'review';
-/** @deprecated Use KitchenSkillsHashSection. Alias retained for existing imports. */
-export type KitchenDayHashSection = KitchenSkillsHashSection;
 
 export const STUDENT_ACTIVITY_REF = 'studentLunchCheckin';
 export const CHEF_ACTIVITY_REF = 'chefForecast';
@@ -161,8 +159,6 @@ export function parseKitchenDaySection(
   }
   return 'trim';
 }
-
-export const parseKitchenSkillsSection = parseKitchenDaySection;
 
 export function parseKitchenDaySelectedSessionId(
   hash: string = typeof window === 'undefined' ? '' : window.location.hash,

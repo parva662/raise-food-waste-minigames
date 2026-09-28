@@ -1,5 +1,5 @@
-import type { KitchenDayPortionEntry } from '@/products/kitchen-skills-challenge/domain/types';
-import { selectKitchenDayActivityTemplate } from '@/products/kitchen-skills-challenge/gamebus/taskTemplates';
+import type { KitchenSkillsPortionEntry } from '@/products/kitchen-skills-challenge/domain/types';
+import { selectKitchenSkillsActivityTemplate } from '@/products/kitchen-skills-challenge/gamebus/taskTemplates';
 import type { ActivityMessage, TaskData } from '@/platform/gamebus/types';
 import {
   mapPortionPrecision,
@@ -9,9 +9,9 @@ import {
 
 export function buildPortionPrecisionActivityMessage(
   task: TaskData,
-  entry: KitchenDayPortionEntry,
+  entry: KitchenSkillsPortionEntry,
 ): ActivityMessage {
-  const template = selectKitchenDayActivityTemplate(task, 'portionPrecision');
+  const template = selectKitchenSkillsActivityTemplate(task, 'portionPrecision');
   const values = mapPortionPrecision(entry);
   const start = new Date(entry.submittedAt);
   return {

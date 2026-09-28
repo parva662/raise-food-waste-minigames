@@ -28,7 +28,7 @@ Do **not** split Kitchen Day into three embeds. Embedded `sessionId` is one stud
 ## Client rules
 
 - Embedded Kitchen Day waits for a valid TASK **and** `inputCollectionPari.me`, then locks `sessionId` / `sessionDate` once. Later TASK or INPUT_COLLECTIONS refreshes cannot replace them.
-- Builders call `selectKitchenDayActivityTemplate(task, slug)` and fail if any of the three templates is missing.
+- Builders call `selectKitchenSkillsActivityTemplate(task, slug)` and fail if any of the three templates is missing.
 - Review builders call `selectWastePracticeReviewTemplate(task)` and fail if `wastePracticeReview` is missing.
-- `KITCHEN_DAY_STUDENT_LIVE_INTEGRATION_READY` is `true` after manual verification of the student activity/property setup on foodtracker.
-- `KITCHEN_DAY_TUTOR_LIVE_INTEGRATION_READY` remains `false` until the trainer → student submission mechanism is confirmed.
+- `KITCHEN_SKILLS_STUDENT_LIVE_INTEGRATION_READY` is `true` after manual verification of the student activity/property setup on foodtracker.
+- `KITCHEN_SKILLS_TRAINER_LIVE_INTEGRATION_READY` remains `false` until the trainer → student submission mechanism is confirmed.

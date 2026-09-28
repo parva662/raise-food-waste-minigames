@@ -4,7 +4,7 @@ import { buildServiceTeamOverview } from '@/products/forecast-results/calculatio
 import { formatCustomerErrorCount, formatNormalizedRate } from '@/products/forecast-results/managementFormat';
 import { RESULT_CATEGORY_KEYS, RESULT_CATEGORY_LABELS } from '@/products/forecast-results/types';
 import type { DailyServiceResults } from '@/products/forecast-results/types';
-import { formatGrams } from '@/products/forecast-results/useChefResultsData';
+import { formatGrams } from '@/products/forecast-results/useForecastResultsData';
 
 interface OverviewSectionProps {
   dailyResults: DailyServiceResults;

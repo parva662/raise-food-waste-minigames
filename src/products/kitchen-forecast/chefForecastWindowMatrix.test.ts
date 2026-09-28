@@ -1,8 +1,8 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { helsinki } from '@/test/fixtures/dates';
 import { mockExplicitClosures } from '@/test/fixtures/serviceCalendar';
+import { resolveChefForecastServiceDate } from '@/products/kitchen-forecast/chefForecastWindow';
 import {
-  resolveChefForecastServiceDate,
   resolveNextServiceDate,
   resolvePreviousOperationalDay,
 } from '@/shared/calendar/operationalServiceCalendar';

@@ -7,10 +7,10 @@ import {
   ingestTaskForTests,
   resetGameBusBridgeForTests,
 } from '@/platform/gamebus/bridge';
-import { kitchenDayTaskFixture } from '@/products/kitchen-skills-challenge/gamebus/kitchenDayTaskFixtures';
-import { KitchenDayApp } from '@/products/kitchen-skills-challenge/surfaces/challenge/KitchenSkillsChallengeApp';
-import { KitchenDaySessionProvider, useKitchenDaySession } from '@/products/kitchen-skills-challenge/domain/session/KitchenSkillsSessionContext';
-import { ensureKitchenDayLockedSession } from '@/products/kitchen-skills-challenge/domain/session/lock';
+import { kitchenSkillsTaskFixture } from '@/products/kitchen-skills-challenge/gamebus/kitchenSkillsTaskFixtures';
+import { KitchenSkillsChallengeApp } from '@/products/kitchen-skills-challenge/surfaces/challenge/KitchenSkillsChallengeApp';
+import { KitchenSkillsSessionProvider, useKitchenSkillsSession } from '@/products/kitchen-skills-challenge/domain/session/KitchenSkillsSessionContext';
+import { ensureKitchenSkillsLockedSession } from '@/products/kitchen-skills-challenge/domain/session/lock';
 
 function setHash(hash: string) {
   window.location.hash = hash;
@@ -18,7 +18,7 @@ function setHash(hash: string) {
 }
 
 function Probe() {
-  const value = useKitchenDaySession();
+  const value = useKitchenSkillsSession();
   return (
     <div>
       <span data-testid="kd-status">{value.status}</span>
@@ -105,9 +105,9 @@ describe('Kitchen Day session initialization and hydration', () => {
   it('shows initializing in embed until TASK and authenticated user both exist', async () => {
     vi.spyOn(detectEmbed, 'isGameBusEmbed').mockReturnValue(true);
     setHash('#/kitchen-day');
-    render(<KitchenDayApp />);
+    render(<KitchenSkillsChallengeApp />);
     expect(screen.getByTestId('kitchen-day-initializing')).toBeInTheDocument();
-    ingestTaskForTests(kitchenDayTaskFixture);
+    ingestTaskForTests(kitchenSkillsTaskFixture);
     expect(screen.getByTestId('kitchen-day-initializing')).toBeInTheDocument();
     ingestInputCollectionsForTests({
       inputCollectionPari: { me: { id: 'user-1', firstName: 'Student', lastName: 'One' } },
@@ -121,12 +121,12 @@ describe('Kitchen Day session initialization and hydration', () => {
   it('does not replace a locked session when a later TASK or participant refresh arrives', async () => {
     vi.spyOn(detectEmbed, 'isGameBusEmbed').mockReturnValue(true);
     render(
-      <KitchenDaySessionProvider now={new Date('2026-09-23T10:00:00.000Z')}>
+      <KitchenSkillsSessionProvider now={new Date('2026-09-23T10:00:00.000Z')}>
         <Probe />
-      </KitchenDaySessionProvider>,
+      </KitchenSkillsSessionProvider>,
     );
     expect(screen.getByTestId('kd-status')).toHaveTextContent('initializing');
-    ingestTaskForTests(kitchenDayTaskFixture);
+    ingestTaskForTests(kitchenSkillsTaskFixture);
     expect(screen.getByTestId('kd-status')).toHaveTextContent('initializing');
     ingestInputCollectionsForTests({
       inputCollectionPari: { me: { id: 'user-1', firstName: 'Student', lastName: 'One' } },
@@ -136,7 +136,7 @@ describe('Kitchen Day session initialization and hydration', () => {
         'kitchen-day:kitchen-day-task-1:user-1:2026-09-23',
       );
     });
-    ingestTaskForTests({ ...kitchenDayTaskFixture, id: 'other-task' });
+    ingestTaskForTests({ ...kitchenSkillsTaskFixture, id: 'other-task' });
     ingestInputCollectionsForTests({
       inputCollectionPari: { me: { id: 'user-9', firstName: 'Other', lastName: 'Student' } },
     });
@@ -146,13 +146,13 @@ describe('Kitchen Day session initialization and hydration', () => {
   });
 
   it('keeps the locked session date when the open page crosses Helsinki midnight', () => {
-    const locked = ensureKitchenDayLockedSession(null, {
+    const locked = ensureKitchenSkillsLockedSession(null, {
       embedded: true,
       taskId: 'kitchen-day-task-1',
       actorId: 'user-1',
       now: new Date('2026-09-22T20:30:00.000Z'),
     });
-    const reused = ensureKitchenDayLockedSession(locked, {
+    const reused = ensureKitchenSkillsLockedSession(locked, {
       embedded: true,
       taskId: 'kitchen-day-task-1',
       actorId: 'user-1',
@@ -168,9 +168,9 @@ describe('Kitchen Day session initialization and hydration', () => {
       sessionDate: '2026-09-23',
     };
     render(
-      <KitchenDaySessionProvider initialSession={session}>
+      <KitchenSkillsSessionProvider initialSession={session}>
         <Probe />
-      </KitchenDaySessionProvider>,
+      </KitchenSkillsSessionProvider>,
     );
     ingestInputCollectionsForTests(persistedCollections);
     await waitFor(() => {
@@ -185,7 +185,7 @@ describe('Kitchen Day session initialization and hydration', () => {
       sessionDate: '2026-09-23',
     };
     function CommitProbe() {
-      const { commitTrimEntry, recordedIngredientIds } = useKitchenDaySession();
+      const { commitTrimEntry, recordedIngredientIds } = useKitchenSkillsSession();
       return (
         <button
           type="button"
@@ -215,12 +215,12 @@ describe('Kitchen Day session initialization and hydration', () => {
         </button>
       );
     }
-    const { MyDayView } = await import('@/products/kitchen-skills-challenge/surfaces/challenge/MyDayView');
+    const { SessionReviewView } = await import('@/products/kitchen-skills-challenge/surfaces/challenge/SessionReviewView');
     render(
-      <KitchenDaySessionProvider initialSession={session}>
-        <MyDayView />
+      <KitchenSkillsSessionProvider initialSession={session}>
+        <SessionReviewView />
         <CommitProbe />
-      </KitchenDaySessionProvider>,
+      </KitchenSkillsSessionProvider>,
     );
     ingestInputCollectionsForTests(persistedCollections);
     await waitFor(() => {
@@ -238,9 +238,9 @@ describe('Kitchen Day session initialization and hydration', () => {
       sessionDate: '2026-09-23',
     };
     render(
-      <KitchenDaySessionProvider initialSession={session}>
+      <KitchenSkillsSessionProvider initialSession={session}>
         <Probe />
-      </KitchenDaySessionProvider>,
+      </KitchenSkillsSessionProvider>,
     );
     ingestInputCollectionsForTests({
       kitchenGroupInput: {

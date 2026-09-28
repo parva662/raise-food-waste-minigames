@@ -1,4 +1,4 @@
-import type { KitchenDayChefSession } from '@/products/kitchen-skills-challenge/domain/types';
+import type { KitchenSkillsTrainerSession } from '@/products/kitchen-skills-challenge/domain/types';
 import {
   parsePersistedPortionEntry,
   parsePersistedRescueEntry,
@@ -6,16 +6,16 @@ import {
   parsePersistedTrimEntry,
   readActivityActorId,
   readActivityActorName,
-} from '@/products/kitchen-skills-challenge/read/kitchenDayReadModel';
+} from '@/products/kitchen-skills-challenge/read/kitchenSkillsReadModel';
 
 export function chefSessionKey(actorId: string, sessionId: string): string {
   return `${actorId}::${sessionId}`;
 }
 
-export function buildKitchenDayChefSessions(
+export function buildKitchenSkillsTrainerSessions(
   activities: readonly unknown[],
-): KitchenDayChefSession[] {
-  const sessions = new Map<string, KitchenDayChefSession>();
+): KitchenSkillsTrainerSession[] {
+  const sessions = new Map<string, KitchenSkillsTrainerSession>();
 
   const ensure = (activity: unknown, sessionId: string, sessionDate: string) => {
     const actorId = readActivityActorId(activity);
@@ -23,7 +23,7 @@ export function buildKitchenDayChefSessions(
     const key = chefSessionKey(actorId, sessionId);
     const existing = sessions.get(key);
     if (existing) return existing;
-    const created: KitchenDayChefSession = {
+    const created: KitchenSkillsTrainerSession = {
       actorId,
       actorName: readActivityActorName(activity) ?? actorId,
       sessionId,
@@ -74,10 +74,10 @@ export function buildKitchenDayChefSessions(
   });
 }
 
-export function findKitchenDayChefSession(
-  sessions: readonly KitchenDayChefSession[],
+export function findKitchenSkillsTrainerSession(
+  sessions: readonly KitchenSkillsTrainerSession[],
   sessionId: string | null,
-): KitchenDayChefSession | undefined {
+): KitchenSkillsTrainerSession | undefined {
   if (!sessionId) return undefined;
   return sessions.find((session) => session.sessionId === sessionId);
 }

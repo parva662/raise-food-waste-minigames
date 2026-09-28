@@ -1,5 +1,5 @@
 import { useEffect, useMemo } from 'react';
-import { isChefResultsGameBusDebugMode } from '@/platform/gamebus/chefResultsInvestigation';
+import { isForecastResultsGameBusDebugMode } from '@/products/forecast-results/debug/forecastResultsInvestigation';
 import { getAuthenticatedGameBusUser } from '@/platform/gamebus/inputCollections';
 import { useGameBusEmbed } from '@/platform/gamebus/useGameBusEmbed';
 
@@ -15,7 +15,7 @@ export function useGameBusAuthenticatedUser() {
   );
 
   useEffect(() => {
-    if (!isChefResultsGameBusDebugMode() || !embedded || !user) return;
+    if (!isForecastResultsGameBusDebugMode() || !embedded || !user) return;
     console.info('[gamebus] authenticated user', { id: user.id, name: user.name });
   }, [embedded, user]);
 

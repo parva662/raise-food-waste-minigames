@@ -2,7 +2,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { act, cleanup, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { ChefResultsParticipantApp } from '@/products/forecast-results/participant/ForecastResultsParticipantApp';
+import { ForecastResultsParticipantApp } from '@/products/forecast-results/participant/ForecastResultsParticipantApp';
 import * as detectEmbedModule from '@/platform/gamebus/detectEmbed';
 import { resetGameBusBridgeForTests } from '@/platform/gamebus/bridge';
 import { helsinki } from '@/test/fixtures/dates';
@@ -35,7 +35,7 @@ describe('participant dashboard midnight and no-service UX', () => {
 
     vi.setSystemTime(helsinki('2026-09-07', '23:59:59'));
     const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
-    render(<ChefResultsParticipantApp />);
+    render(<ForecastResultsParticipantApp />);
 
     expect(screen.getByTestId('dashboard-calendar-date')).toHaveTextContent(
       /Monday, 7 September 2026/,
@@ -62,7 +62,7 @@ describe('participant dashboard midnight and no-service UX', () => {
   it('switches Friday → Saturday to No service today while Progress stays visible', async () => {
     vi.setSystemTime(helsinki('2026-08-14', '23:59:59'));
     const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
-    render(<ChefResultsParticipantApp />);
+    render(<ForecastResultsParticipantApp />);
 
     expect(screen.getByTestId('dashboard-calendar-date')).toHaveTextContent(
       /Friday, 14 August 2026/,
@@ -92,7 +92,7 @@ describe('participant dashboard midnight and no-service UX', () => {
 
   it('switches Sunday → Monday and reevaluates operational-day Overview', async () => {
     vi.setSystemTime(helsinki('2026-08-16', '23:59:59'));
-    render(<ChefResultsParticipantApp />);
+    render(<ForecastResultsParticipantApp />);
 
     expect(screen.getByTestId('dashboard-status-chip')).toHaveTextContent('No service today');
 
@@ -111,7 +111,7 @@ describe('participant dashboard midnight and no-service UX', () => {
   it('shows No service today for an explicitly closed weekday', () => {
     mockExplicitClosures('2026-09-07');
     vi.setSystemTime(helsinki('2026-09-07', '12:00:00'));
-    render(<ChefResultsParticipantApp />);
+    render(<ForecastResultsParticipantApp />);
 
     expect(screen.getByTestId('dashboard-calendar-date')).toHaveTextContent(
       /Monday, 7 September 2026/,

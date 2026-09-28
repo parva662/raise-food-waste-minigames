@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, render, screen } from '@testing-library/react';
-import { ChefResultsParticipantApp } from '@/products/forecast-results/participant/ForecastResultsParticipantApp';
+import { ForecastResultsParticipantApp } from '@/products/forecast-results/participant/ForecastResultsParticipantApp';
 import {
   KITCHEN_GROUP_ACTIVITIES_REQUEST_KEY,
   KITCHEN_GROUP_INPUT_COLLECTION_KEY,
@@ -16,7 +16,7 @@ import {
   INPUT_COLLECTION_PARI_ME_REQUEST_KEY,
 } from '@/platform/gamebus/inputCollections';
 import { buildAnonymizedChefForecastActivity } from '@/products/service-closeout/forecast/fixtures/gameBusChefForecastActivities';
-import { getChefResultsFrontendDiagnosticIdentifier } from '@/products/forecast-results/debug/frontendBuildIdentifier';
+import { getForecastResultsFrontendDiagnosticIdentifier } from '@/products/forecast-results/debug/frontendBuildIdentifier';
 
 const serviceDate = '2026-07-29';
 
@@ -105,9 +105,9 @@ describe('participant INPUT_COLLECTIONS debug UI regression', () => {
 
   it('does not render INPUT_COLLECTIONS diagnostics on participant page with gamebusDebug=1', () => {
     ingestInputCollectionsForTests(embeddedKitchenPayload());
-    render(<ChefResultsParticipantApp />);
+    render(<ForecastResultsParticipantApp />);
 
-    const frontendDiagnosticId = getChefResultsFrontendDiagnosticIdentifier();
+    const frontendDiagnosticId = getForecastResultsFrontendDiagnosticIdentifier();
     expect(screen.queryByText(frontendDiagnosticId.label)).not.toBeInTheDocument();
     expectNoParticipantDebugUi();
     expect(screen.getByTestId('chef-results-participant-page')).toBeInTheDocument();
@@ -116,7 +116,7 @@ describe('participant INPUT_COLLECTIONS debug UI regression', () => {
   it('does not render INPUT_COLLECTIONS diagnostics without gamebusDebug=1', () => {
     window.location.hash = '#/chef-results';
     ingestInputCollectionsForTests(embeddedKitchenPayload());
-    render(<ChefResultsParticipantApp />);
+    render(<ForecastResultsParticipantApp />);
 
     expectNoParticipantDebugUi();
   });

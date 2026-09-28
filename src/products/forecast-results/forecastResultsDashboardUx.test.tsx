@@ -2,7 +2,7 @@
 import { describe, it, expect, afterEach, beforeEach, vi } from 'vitest';
 import { cleanup, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { ChefResultsParticipantApp } from '@/products/forecast-results/participant/ForecastResultsParticipantApp';
+import { ForecastResultsParticipantApp } from '@/products/forecast-results/participant/ForecastResultsParticipantApp';
 import { ActualKitchenOutcomeSection } from '@/products/forecast-results/participant/components/ActualKitchenOutcomeSection';
 import { ForecastImpactSection } from '@/products/forecast-results/participant/components/ForecastImpactSection';
 import { TeamComparisonSection } from '@/products/forecast-results/participant/components/TeamComparisonSection';
@@ -253,13 +253,13 @@ describe('dashboard headings and progress discoverability', () => {
   });
 
   beforeEach(() => {
-    vi.spyOn(operationalCalendarModule, 'resolveChefResultsServiceDate').mockReturnValue('2026-07-31');
+    vi.spyOn(operationalCalendarModule, 'resolveForecastResultsServiceDate').mockReturnValue('2026-07-31');
     window.sessionStorage.setItem('chef-results-fixture-current-user-id', 'fixture-user-a');
   });
 
   it('has exactly one h1 and shows progress without current result', async () => {
     const user = userEvent.setup();
-    render(<ChefResultsParticipantApp />);
+    render(<ForecastResultsParticipantApp />);
     expect(screen.getAllByRole('heading', { level: 1 })).toHaveLength(1);
     expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Kitchen Staff Dashboard');
     expect(screen.queryByText('Your result')).not.toBeInTheDocument();
@@ -270,7 +270,7 @@ describe('dashboard headings and progress discoverability', () => {
 
   it('shows progress while current service has no personal forecast', async () => {
     const user = userEvent.setup();
-    render(<ChefResultsParticipantApp />);
+    render(<ForecastResultsParticipantApp />);
     expect(screen.getByTestId('participant-no-forecast-result')).toBeInTheDocument();
     expect(screen.queryByTestId('forecast-impact-section')).not.toBeInTheDocument();
     await user.click(screen.getByTestId('participant-primary-tab-progress'));

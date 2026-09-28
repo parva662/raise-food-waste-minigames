@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { useReadyKitchenDaySession } from '@/products/kitchen-skills-challenge/domain/session/KitchenSkillsSessionContext';
+import { useReadyKitchenSkillsSession } from '@/products/kitchen-skills-challenge/domain/session/KitchenSkillsSessionContext';
 import { formatPortionDeviation } from '@/products/kitchen-skills-challenge/domain/portion/copy';
 import { evaluatePortionLine } from '@/products/kitchen-skills-challenge/domain/portion/deviations';
 import { getRecipeReference, listRecipeReferences } from '@/products/kitchen-skills-challenge/domain/portion/recipes';
@@ -10,8 +10,8 @@ import {
   parseFinalRecipeWeightGrams,
 } from '@/products/kitchen-skills-challenge/domain/portion/validation';
 
-export function KitchenDayPortionView() {
-  const { session, commitPortionEntry } = useReadyKitchenDaySession();
+export function KitchenSkillsPortionView() {
+  const { session, commitPortionEntry } = useReadyKitchenSkillsSession();
   const recipes = listRecipeReferences();
   const [recipeId, setRecipeId] = useState('');
   const [actuals, setActuals] = useState<Record<string, string>>({});

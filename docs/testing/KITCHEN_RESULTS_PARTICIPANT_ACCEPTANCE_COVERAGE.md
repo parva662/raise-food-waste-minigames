@@ -27,11 +27,11 @@ Route: `#/chef-results`. Timezone: `Europe/Helsinki`.
 | Missing menu weekday | Still operational service day | `chefResultsServiceDate.test.ts` | COVERED |
 | Calculation model | Observed demand, simulated over/shortage, customer abs error | `calculateDailyResults.test.ts`; calculation engine tests | COVERED |
 | Eligible forecast selection | Exact actor + targetDate; latest eligible wins | `selectCloseoutForecast.test.ts` (shared KF rules) | COVERED |
-| Waiting vs Progress | History remains when current service waits | `kitchenResultsProgressIndependence.test.ts`; `ChefResultsParticipantApp` progress path | COVERED |
+| Waiting vs Progress | History remains when current service waits | `kitchenResultsProgressIndependence.test.ts`; `ForecastResultsParticipantApp` progress path | COVERED |
 | Progress chart 0/1/2+ | Single-point chart without trend claim | `participantProgressSection.test.tsx`; `participantProgressData.test.ts` | COVERED |
 | Other-staff threshold | Compare at 1 peer; labels | `teamComparison.test.ts`; `chefResultsParticipantDashboard.test.tsx` | COVERED |
 | Closeout, no personal forecast | Actual outcome + explanation | `ParticipantOverviewSection` + closeout-only path | COVERED (UI path) |
-| Forecast, no closeout | Pending forecast summary + history | `ChefResultsParticipantApp` pendingForecast path | COVERED (UI path) |
+| Forecast, no closeout | Pending forecast summary + history | `ForecastResultsParticipantApp` pendingForecast path | COVERED (UI path) |
 | Dessert omitted in payload | Soup-menu fallback, not zero | `adapters/chefForecastAdapter.test.ts` | COVERED |
 | No ranking | No leaderboard / winner language | `chefResultsPrivacy.test.ts`; dashboard UX tests | COVERED |
 | Portion-weight / identity edges | Unspecified product edges | — | `@pending` in Gherkin |

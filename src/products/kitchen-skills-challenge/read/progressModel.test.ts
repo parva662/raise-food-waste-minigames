@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { buildKitchenDayProgressPoints } from '@/products/kitchen-skills-challenge/read/progressModel';
+import { buildKitchenSkillsProgressPoints } from '@/products/kitchen-skills-challenge/read/progressModel';
 
 describe('Kitchen Day progress derived metrics', () => {
   it('recalculates ingredient accuracy and final-weight deviation from current reference data', () => {
-    const points = buildKitchenDayProgressPoints([
+    const points = buildKitchenSkillsProgressPoints([
       {
         actorId: 'user-1',
         actorName: 'Student',

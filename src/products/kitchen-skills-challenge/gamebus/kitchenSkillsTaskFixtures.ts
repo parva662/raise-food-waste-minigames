@@ -1,4 +1,4 @@
-import { KITCHEN_DAY_TRIM_REQUIRED_REFS } from '@/products/kitchen-skills-challenge/gamebus/mapKitchenDayTrimSmart';
+import { KITCHEN_SKILLS_TRIM_REQUIRED_REFS } from '@/products/kitchen-skills-challenge/gamebus/mapKitchenSkillsTrimSmart';
 import { PORTION_PRECISION_REQUIRED_REFS } from '@/products/kitchen-skills-challenge/gamebus/mapPortionPrecision';
 import { RESCUE_AND_REUSE_REQUIRED_REFS } from '@/products/kitchen-skills-challenge/gamebus/mapRescueAndReuse';
 import { WASTE_PRACTICE_REVIEW_REQUIRED_REFS } from '@/products/kitchen-skills-challenge/gamebus/mapWastePracticeReview';
@@ -13,7 +13,7 @@ function linked(refs: readonly string[]) {
   }));
 }
 
-export const kitchenDayTaskFixture: TaskData = {
+export const kitchenSkillsTaskFixture: TaskData = {
   id: 'kitchen-day-task-1',
   href: 'embedded-task-kitchen-day',
   type: 'USER_TRIGGERED_EMBEDDED',
@@ -31,7 +31,7 @@ export const kitchenDayTaskFixture: TaskData = {
       slug: 'trimSmart',
       name: 'Trim Smart',
       providers: [],
-      linkedProperties: linked(KITCHEN_DAY_TRIM_REQUIRED_REFS),
+      linkedProperties: linked(KITCHEN_SKILLS_TRIM_REQUIRED_REFS),
     },
     {
       id: 'kd-rescue',
@@ -53,13 +53,13 @@ export const kitchenDayTaskFixture: TaskData = {
   taskRules: [],
 };
 
-export const kitchenDayChefTaskFixture: TaskData = {
-  ...kitchenDayTaskFixture,
+export const kitchenSkillsTrainerTaskFixture: TaskData = {
+  ...kitchenSkillsTaskFixture,
   id: 'kitchen-day-chef-task-1',
   title: 'Kitchen Day chef review',
   url: 'http://localhost:5173/#/kitchen-day/chef',
   activityTemplates: [
-    ...kitchenDayTaskFixture.activityTemplates,
+    ...kitchenSkillsTaskFixture.activityTemplates,
     {
       id: 'kd-review',
       slug: 'wastePracticeReview',

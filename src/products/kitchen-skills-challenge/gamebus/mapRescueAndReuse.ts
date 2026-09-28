@@ -1,4 +1,4 @@
-import type { KitchenDayRescueEntry } from '@/products/kitchen-skills-challenge/domain/types';
+import type { KitchenSkillsRescueEntry } from '@/products/kitchen-skills-challenge/domain/types';
 
 export const RESCUE_AND_REUSE_REQUIRED_REFS = [
   'sessionId',
@@ -15,7 +15,7 @@ export function orderedRescueAndReusePropertyRefs(): readonly RescueAndReuseProp
   return RESCUE_AND_REUSE_REQUIRED_REFS;
 }
 
-export function mapRescueAndReuse(entry: KitchenDayRescueEntry) {
+export function mapRescueAndReuse(entry: KitchenSkillsRescueEntry) {
   return {
     sessionId: { value: entry.sessionId },
     sessionDate: { value: entry.sessionDate },

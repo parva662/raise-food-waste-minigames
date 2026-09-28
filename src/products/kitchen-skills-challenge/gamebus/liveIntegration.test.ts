@@ -1,34 +1,34 @@
 /** @vitest-environment jsdom */
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { ingestTaskForTests, resetGameBusBridgeForTests } from '@/platform/gamebus/bridge';
-import { kitchenDayChefTaskFixture, kitchenDayTaskFixture } from '@/products/kitchen-skills-challenge/gamebus/kitchenDayTaskFixtures';
-import { mapKitchenDayTrimSmart, orderedKitchenDayTrimPropertyRefs } from '@/products/kitchen-skills-challenge/gamebus/mapKitchenDayTrimSmart';
+import { kitchenSkillsTrainerTaskFixture, kitchenSkillsTaskFixture } from '@/products/kitchen-skills-challenge/gamebus/kitchenSkillsTaskFixtures';
+import { mapKitchenSkillsTrimSmart, orderedKitchenSkillsTrimPropertyRefs } from '@/products/kitchen-skills-challenge/gamebus/mapKitchenSkillsTrimSmart';
 import { mapPortionPrecision, orderedPortionPrecisionPropertyRefs } from '@/products/kitchen-skills-challenge/gamebus/mapPortionPrecision';
 import { mapRescueAndReuse, orderedRescueAndReusePropertyRefs } from '@/products/kitchen-skills-challenge/gamebus/mapRescueAndReuse';
 import {
-  KITCHEN_DAY_STUDENT_LIVE_BLOCK_REASON,
-  KITCHEN_DAY_STUDENT_LIVE_INTEGRATION_READY,
-  KITCHEN_DAY_TUTOR_LIVE_BLOCK_REASON,
-  KITCHEN_DAY_TUTOR_LIVE_INTEGRATION_READY,
-  canPostKitchenDayStudentActivity,
-  canPostKitchenDayTutorReview,
+  KITCHEN_SKILLS_STUDENT_LIVE_BLOCK_REASON,
+  KITCHEN_SKILLS_STUDENT_LIVE_INTEGRATION_READY,
+  KITCHEN_SKILLS_TRAINER_LIVE_BLOCK_REASON,
+  KITCHEN_SKILLS_TRAINER_LIVE_INTEGRATION_READY,
+  canPostKitchenSkillsStudentActivity,
+  canPostKitchenSkillsTrainerReview,
 } from '@/products/kitchen-skills-challenge/gamebus/liveIntegration';
 import {
-  resetKitchenDayPostStateForTests,
-  tryPostKitchenDayActivity,
-  tryPostKitchenDayPortion,
-  tryPostKitchenDayRescue,
-  tryPostKitchenDayReview,
-  tryPostKitchenDayTrim,
+  resetKitchenSkillsPostStateForTests,
+  tryPostKitchenSkillsActivity,
+  tryPostKitchenSkillsPortion,
+  tryPostKitchenSkillsRescue,
+  tryPostKitchenSkillsReview,
+  tryPostKitchenSkillsTrim,
 } from '@/products/kitchen-skills-challenge/gamebus/postActivity';
 import type {
-  KitchenDayPortionEntry,
-  KitchenDayRescueEntry,
-  KitchenDayReviewEntry,
-  KitchenDayTrimEntry,
+  KitchenSkillsPortionEntry,
+  KitchenSkillsRescueEntry,
+  KitchenSkillsReviewEntry,
+  KitchenSkillsTrimEntry,
 } from '@/products/kitchen-skills-challenge/domain/types';
 
-const trimEntry: KitchenDayTrimEntry = {
+const trimEntry: KitchenSkillsTrimEntry = {
   sessionId: 'kitchen-day:kitchen-day-task-1:user-1:2026-09-23',
   sessionDate: '2026-09-23',
   submittedAt: '2026-09-23T10:05:00.000Z',
@@ -45,7 +45,7 @@ const trimEntry: KitchenDayTrimEntry = {
   source: 'local',
 };
 
-const rescueEntry: KitchenDayRescueEntry = {
+const rescueEntry: KitchenSkillsRescueEntry = {
   sessionId: 'kitchen-day:kitchen-day-task-1:user-1:2026-09-23',
   sessionDate: '2026-09-23',
   ingredientId: 'carrot',
@@ -55,7 +55,7 @@ const rescueEntry: KitchenDayRescueEntry = {
   source: 'local',
 };
 
-const portionEntry: KitchenDayPortionEntry = {
+const portionEntry: KitchenSkillsPortionEntry = {
   sessionId: 'kitchen-day:kitchen-day-task-1:user-1:2026-09-23',
   sessionDate: '2026-09-23',
   submittedAt: '2026-09-23T11:00:00.000Z',
@@ -68,7 +68,7 @@ const portionEntry: KitchenDayPortionEntry = {
   source: 'local',
 };
 
-const reviewEntry: KitchenDayReviewEntry = {
+const reviewEntry: KitchenSkillsReviewEntry = {
   sessionId: 'kitchen-day:kitchen-day-task-1:user-1:2026-09-23',
   sessionDate: '2026-09-23',
   submittedAt: '2026-09-23T14:00:00.000Z',
@@ -84,59 +84,59 @@ function postedPropertyTemplates(message: { data: { properties: { template: stri
 describe('Kitchen Day split live integration gates', () => {
   beforeEach(() => {
     resetGameBusBridgeForTests();
-    resetKitchenDayPostStateForTests();
+    resetKitchenSkillsPostStateForTests();
   });
 
   afterEach(() => {
     resetGameBusBridgeForTests();
-    resetKitchenDayPostStateForTests();
+    resetKitchenSkillsPostStateForTests();
     vi.restoreAllMocks();
   });
 
   it('enables student posting and keeps tutor review blocked', () => {
-    expect(KITCHEN_DAY_STUDENT_LIVE_INTEGRATION_READY).toBe(true);
-    expect(KITCHEN_DAY_TUTOR_LIVE_INTEGRATION_READY).toBe(false);
-    expect(canPostKitchenDayStudentActivity()).toBe(true);
-    expect(canPostKitchenDayTutorReview()).toBe(false);
+    expect(KITCHEN_SKILLS_STUDENT_LIVE_INTEGRATION_READY).toBe(true);
+    expect(KITCHEN_SKILLS_TRAINER_LIVE_INTEGRATION_READY).toBe(false);
+    expect(canPostKitchenSkillsStudentActivity()).toBe(true);
+    expect(canPostKitchenSkillsTrainerReview()).toBe(false);
   });
 
   it('does not run a builder when the supplied gate is closed', () => {
     expect(
-      tryPostKitchenDayActivity(
-        kitchenDayChefTaskFixture,
+      tryPostKitchenSkillsActivity(
+        kitchenSkillsTrainerTaskFixture,
         () => {
           throw new Error('builder must not run while this gate is closed');
         },
         'review:closed',
         false,
-        KITCHEN_DAY_TUTOR_LIVE_BLOCK_REASON,
+        KITCHEN_SKILLS_TRAINER_LIVE_BLOCK_REASON,
       ),
     ).toEqual({
       ok: false,
-      reason: KITCHEN_DAY_TUTOR_LIVE_BLOCK_REASON,
+      reason: KITCHEN_SKILLS_TRAINER_LIVE_BLOCK_REASON,
     });
   });
 
   it('posts embedded Trim with the unchanged mapper payload', () => {
-    ingestTaskForTests(kitchenDayTaskFixture);
+    ingestTaskForTests(kitchenSkillsTaskFixture);
     const postMessage = vi.spyOn(window.parent, 'postMessage').mockImplementation(() => undefined);
-    const result = tryPostKitchenDayTrim(trimEntry);
+    const result = tryPostKitchenSkillsTrim(trimEntry);
     expect(result.ok).toBe(true);
     if (!result.ok) return;
     expect(result.status).toBe('posted_awaiting_persist');
     expect(result.message.type).toBe('ACTIVITY');
     expect(result.message.data.template).toBe('trimSmart');
-    expect(postedPropertyTemplates(result.message)).toEqual(orderedKitchenDayTrimPropertyRefs());
+    expect(postedPropertyTemplates(result.message)).toEqual(orderedKitchenSkillsTrimPropertyRefs());
     expect(result.message.data.properties.map((property) => property.obj)).toEqual(
-      orderedKitchenDayTrimPropertyRefs().map((ref) => mapKitchenDayTrimSmart(trimEntry)[ref]),
+      orderedKitchenSkillsTrimPropertyRefs().map((ref) => mapKitchenSkillsTrimSmart(trimEntry)[ref]),
     );
     expect(postMessage).toHaveBeenCalledTimes(1);
   });
 
   it('posts embedded Rescue with the unchanged mapper payload', () => {
-    ingestTaskForTests(kitchenDayTaskFixture);
+    ingestTaskForTests(kitchenSkillsTaskFixture);
     vi.spyOn(window.parent, 'postMessage').mockImplementation(() => undefined);
-    const result = tryPostKitchenDayRescue(rescueEntry);
+    const result = tryPostKitchenSkillsRescue(rescueEntry);
     expect(result.ok).toBe(true);
     if (!result.ok) return;
     expect(result.message.data.template).toBe('rescueAndReuse');
@@ -147,9 +147,9 @@ describe('Kitchen Day split live integration gates', () => {
   });
 
   it('posts embedded Portion with the unchanged mapper payload', () => {
-    ingestTaskForTests(kitchenDayTaskFixture);
+    ingestTaskForTests(kitchenSkillsTaskFixture);
     vi.spyOn(window.parent, 'postMessage').mockImplementation(() => undefined);
-    const result = tryPostKitchenDayPortion(portionEntry);
+    const result = tryPostKitchenSkillsPortion(portionEntry);
     expect(result.ok).toBe(true);
     if (!result.ok) return;
     expect(result.message.data.template).toBe('portionPrecision');
@@ -160,39 +160,39 @@ describe('Kitchen Day split live integration gates', () => {
   });
 
   it('blocks wastePracticeReview even when the tutor TASK is present', () => {
-    ingestTaskForTests(kitchenDayChefTaskFixture);
+    ingestTaskForTests(kitchenSkillsTrainerTaskFixture);
     const postMessage = vi.spyOn(window.parent, 'postMessage').mockImplementation(() => undefined);
-    expect(tryPostKitchenDayReview(reviewEntry)).toEqual({
+    expect(tryPostKitchenSkillsReview(reviewEntry)).toEqual({
       ok: false,
-      reason: KITCHEN_DAY_TUTOR_LIVE_BLOCK_REASON,
+      reason: KITCHEN_SKILLS_TRAINER_LIVE_BLOCK_REASON,
     });
     expect(postMessage).not.toHaveBeenCalled();
   });
 
   it('does not post from standalone/local when no TASK is ingested', () => {
     const postMessage = vi.spyOn(window.parent, 'postMessage').mockImplementation(() => undefined);
-    expect(tryPostKitchenDayTrim(trimEntry)).toEqual({ ok: false, reason: 'no_task' });
-    expect(tryPostKitchenDayRescue(rescueEntry)).toEqual({ ok: false, reason: 'no_task' });
-    expect(tryPostKitchenDayPortion(portionEntry)).toEqual({ ok: false, reason: 'no_task' });
-    expect(tryPostKitchenDayReview(reviewEntry)).toEqual({
+    expect(tryPostKitchenSkillsTrim(trimEntry)).toEqual({ ok: false, reason: 'no_task' });
+    expect(tryPostKitchenSkillsRescue(rescueEntry)).toEqual({ ok: false, reason: 'no_task' });
+    expect(tryPostKitchenSkillsPortion(portionEntry)).toEqual({ ok: false, reason: 'no_task' });
+    expect(tryPostKitchenSkillsReview(reviewEntry)).toEqual({
       ok: false,
-      reason: KITCHEN_DAY_TUTOR_LIVE_BLOCK_REASON,
+      reason: KITCHEN_SKILLS_TRAINER_LIVE_BLOCK_REASON,
     });
     expect(postMessage).not.toHaveBeenCalled();
   });
 
   it('keeps student duplicate-attempt and TASK checks', () => {
-    ingestTaskForTests(kitchenDayTaskFixture);
+    ingestTaskForTests(kitchenSkillsTaskFixture);
     vi.spyOn(window.parent, 'postMessage').mockImplementation(() => undefined);
-    expect(tryPostKitchenDayTrim(trimEntry).ok).toBe(true);
-    expect(tryPostKitchenDayTrim(trimEntry)).toEqual({ ok: false, reason: 'duplicate' });
-    expect(tryPostKitchenDayRescue({ ...rescueEntry, ingredientId: 'unknown' }).ok).toBe(true);
+    expect(tryPostKitchenSkillsTrim(trimEntry).ok).toBe(true);
+    expect(tryPostKitchenSkillsTrim(trimEntry)).toEqual({ ok: false, reason: 'duplicate' });
+    expect(tryPostKitchenSkillsRescue({ ...rescueEntry, ingredientId: 'unknown' }).ok).toBe(true);
   });
 
   it('does not expose student or tutor block tokens as LIVE E2E copy', () => {
-    expect(KITCHEN_DAY_STUDENT_LIVE_BLOCK_REASON).toBe('student_live_blocked');
-    expect(KITCHEN_DAY_TUTOR_LIVE_BLOCK_REASON).toBe('tutor_live_blocked');
-    expect(KITCHEN_DAY_STUDENT_LIVE_BLOCK_REASON).not.toMatch(/LIVE E2E/i);
-    expect(KITCHEN_DAY_TUTOR_LIVE_BLOCK_REASON).not.toMatch(/LIVE E2E/i);
+    expect(KITCHEN_SKILLS_STUDENT_LIVE_BLOCK_REASON).toBe('student_live_blocked');
+    expect(KITCHEN_SKILLS_TRAINER_LIVE_BLOCK_REASON).toBe('tutor_live_blocked');
+    expect(KITCHEN_SKILLS_STUDENT_LIVE_BLOCK_REASON).not.toMatch(/LIVE E2E/i);
+    expect(KITCHEN_SKILLS_TRAINER_LIVE_BLOCK_REASON).not.toMatch(/LIVE E2E/i);
   });
 });

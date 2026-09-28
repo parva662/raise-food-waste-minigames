@@ -2,7 +2,7 @@ import { sumMeasuredOverproductionGrams } from '@/products/forecast-results/calc
 import { formatMeasuredGrams } from '@/products/forecast-results/displayFormat';
 import { RESULT_CATEGORY_KEYS, RESULT_CATEGORY_LABELS } from '@/products/forecast-results/types';
 import type { DailyServiceResults } from '@/products/forecast-results/types';
-import { formatGrams } from '@/products/forecast-results/useChefResultsData';
+import { formatGrams } from '@/products/forecast-results/useForecastResultsData';
 
 interface ServiceOverviewSectionProps {
   dailyResults: DailyServiceResults;

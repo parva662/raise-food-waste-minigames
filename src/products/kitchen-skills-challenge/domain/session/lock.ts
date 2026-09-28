@@ -1,20 +1,20 @@
-import { buildKitchenDaySessionId, getKitchenDaySessionDate } from '@/products/kitchen-skills-challenge/domain/session/identity';
-import type { KitchenDayLockedSession } from '@/products/kitchen-skills-challenge/domain/types';
+import { buildKitchenSkillsSessionId, getKitchenSkillsSessionDate } from '@/products/kitchen-skills-challenge/domain/session/identity';
+import type { KitchenSkillsLockedSession } from '@/products/kitchen-skills-challenge/domain/types';
 
-export function ensureKitchenDayLockedSession(
-  existing: KitchenDayLockedSession | null,
+export function ensureKitchenSkillsLockedSession(
+  existing: KitchenSkillsLockedSession | null,
   options: {
     embedded: boolean;
     taskId: string | undefined;
     actorId?: string | undefined;
     now?: Date;
   },
-): KitchenDayLockedSession {
+): KitchenSkillsLockedSession {
   if (existing) {
     return existing;
   }
-  const sessionDate = getKitchenDaySessionDate(options.now);
-  const sessionId = buildKitchenDaySessionId({
+  const sessionDate = getKitchenSkillsSessionDate(options.now);
+  const sessionId = buildKitchenSkillsSessionId({
     embedded: options.embedded,
     taskId: options.taskId,
     actorId: options.actorId,

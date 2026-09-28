@@ -8,7 +8,7 @@ import { MENU_DATES } from '@/test/fixtures/dates';
 import { resolveMealSlotsForDate } from '@/shared/menu/mealSlots';
 import * as datesModule from '@/shared/time/dates';
 import * as menuResolverModule from '@/shared/menu/menuResolver';
-import * as operationalCalendarModule from '@/shared/calendar/operationalServiceCalendar';
+import * as chefForecastWindowModule from '@/products/kitchen-forecast/chefForecastWindow';
 import { CLOSEOUT_OVERPRODUCTION_EXCEEDS_PREPARED_ERROR } from '@/products/service-closeout/validation';
 import { CLOSEOUT_INCOMPLETE_MESSAGE } from '@/products/service-closeout/types';
 
@@ -42,7 +42,7 @@ async function fillCloseoutForm(user: ReturnType<typeof userEvent.setup>) {
 describe('service closeout routing', () => {
   beforeEach(() => {
     setHash('');
-    vi.spyOn(operationalCalendarModule, 'resolveChefForecastServiceDate').mockReturnValue(
+    vi.spyOn(chefForecastWindowModule, 'resolveChefForecastServiceDate').mockReturnValue(
       MENU_DATES.runtimeWednesday,
     );
   });

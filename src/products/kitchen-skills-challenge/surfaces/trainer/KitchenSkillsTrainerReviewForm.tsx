@@ -1,9 +1,9 @@
 import { useState } from 'react';
-import { useReadyKitchenDaySession } from '@/products/kitchen-skills-challenge/domain/session/KitchenSkillsSessionContext';
-import { parseKitchenDayReviewScore } from '@/products/kitchen-skills-challenge/domain/assessment/scores';
-import type { KitchenDayChefSession, KitchenDayReviewEntry } from '@/products/kitchen-skills-challenge/domain/types';
+import { useReadyKitchenSkillsSession } from '@/products/kitchen-skills-challenge/domain/session/KitchenSkillsSessionContext';
+import { parseKitchenSkillsReviewScore } from '@/products/kitchen-skills-challenge/domain/assessment/scores';
+import type { KitchenSkillsTrainerSession, KitchenSkillsReviewEntry } from '@/products/kitchen-skills-challenge/domain/types';
 
-function ReviewReadback({ review }: { review: KitchenDayReviewEntry }) {
+function ReviewReadback({ review }: { review: KitchenSkillsReviewEntry }) {
   return (
     <section className="chef-results-panel" data-testid="kitchen-day-review-submitted">
       <h3 className="chef-results-panel__title">Tutor assessment</h3>
@@ -28,8 +28,8 @@ function ReviewReadback({ review }: { review: KitchenDayReviewEntry }) {
   );
 }
 
-export function KitchenDayChefReviewForm({ selected }: { selected: KitchenDayChefSession }) {
-  const { commitReview, findReviewBySessionId } = useReadyKitchenDaySession();
+export function KitchenSkillsTrainerReviewForm({ selected }: { selected: KitchenSkillsTrainerSession }) {
+  const { commitReview, findReviewBySessionId } = useReadyKitchenSkillsSession();
   const existing = selected.review ?? findReviewBySessionId(selected.sessionId);
   const [timeScore, setTimeScore] = useState('');
   const [qualityScore, setQualityScore] = useState('');
@@ -40,8 +40,8 @@ export function KitchenDayChefReviewForm({ selected }: { selected: KitchenDayChe
     return <ReviewReadback review={existing} />;
   }
 
-  const parsedTime = parseKitchenDayReviewScore(timeScore);
-  const parsedQuality = parseKitchenDayReviewScore(qualityScore);
+  const parsedTime = parseKitchenSkillsReviewScore(timeScore);
+  const parsedQuality = parseKitchenSkillsReviewScore(qualityScore);
 
   return (
     <section className="chef-results-panel" data-testid="kitchen-day-review-form">

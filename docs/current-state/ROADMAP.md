@@ -35,7 +35,7 @@
 
 **Research value:** `confidence` supports perceived vs actual forecast accuracy; `notes` preserve context for unusual service days and FAIR metadata.
 
-Full YAML schemas: `docs/contracts/KITCHEN_FORECAST_GAMEBUS.md`, `src/platform/gamebus/propertySchemas.ts`.
+Full YAML schemas: `docs/contracts/KITCHEN_FORECAST_GAMEBUS.md`.
 
 Chef embed URL: `https://parva662.github.io/raise-food-waste-minigames/#/chef`
 
@@ -137,7 +137,7 @@ Migrate the **existing** `studentLunchCheckin` activity template; do **not** del
 
 Do **not** add a `timingStatus` template or link to `studentLunchCheckin`; the Student Lunch mapper never sends it.
 
-Full JSON Schemas and examples: `src/platform/gamebus/propertySchemas.ts`.
+Full JSON Schemas and examples: `docs/contracts/STUDENT_LUNCH_GAMEBUS.md`.
 
 ---
 
@@ -214,7 +214,7 @@ Validate participant association, multi-user visibility, and organization bounda
 
 ### Student lunch (manual admin)
 
-1. Create or update **property templates** in GameBus admin (schemas in `propertySchemas.ts`).
+1. Create or update **property templates** in GameBus admin (schemas in `docs/contracts/STUDENT_LUNCH_GAMEBUS.md`).
 2. Update **`studentLunchCheckin`** activity-template property links.
 3. Confirm optional item-ID **omission**, enum behaviour, and schema validation on ingest.
 4. **Test Pari** embedded task against migrated template.

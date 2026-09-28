@@ -4,7 +4,7 @@ import { cleanup, render, screen } from '@testing-library/react';
 import { ChefApp } from '@/products/kitchen-forecast/KitchenForecastApp';
 import { helsinki, MENU_DATES, SUBMISSION_TIMES } from '@/test/fixtures/dates';
 import * as menuResolverModule from '@/shared/menu/menuResolver';
-import * as operationalCalendarModule from '@/shared/calendar/operationalServiceCalendar';
+import * as chefForecastWindowModule from '@/products/kitchen-forecast/chefForecastWindow';
 import { OperationalCalendarError } from '@/shared/calendar/operationalServiceCalendar';
 
 describe('ChefApp menu availability', () => {
@@ -18,7 +18,7 @@ describe('ChefApp menu availability', () => {
   });
 
   it('CLOSED day disables forecast submission', () => {
-    vi.spyOn(operationalCalendarModule, 'resolveChefForecastServiceDate').mockReturnValue(
+    vi.spyOn(chefForecastWindowModule, 'resolveChefForecastServiceDate').mockReturnValue(
       MENU_DATES.closedWorkbookDay,
     );
     vi.spyOn(menuResolverModule, 'resolveMenuForDate').mockReturnValue({
@@ -31,7 +31,7 @@ describe('ChefApp menu availability', () => {
   });
 
   it('missing date disables forecast submission', () => {
-    vi.spyOn(operationalCalendarModule, 'resolveChefForecastServiceDate').mockReturnValue(
+    vi.spyOn(chefForecastWindowModule, 'resolveChefForecastServiceDate').mockReturnValue(
       MENU_DATES.missingFromWorkbook,
     );
     render(<ChefApp clock={() => SUBMISSION_TIMES.midday} />);
@@ -52,7 +52,7 @@ describe('ChefApp menu availability', () => {
   });
 
   it('renders calendar error banner instead of a blank page when service date resolution fails', () => {
-    vi.spyOn(operationalCalendarModule, 'resolveChefForecastServiceDate').mockImplementation(() => {
+    vi.spyOn(chefForecastWindowModule, 'resolveChefForecastServiceDate').mockImplementation(() => {
       throw new OperationalCalendarError('No service date within the menu calendar.');
     });
     render(<ChefApp clock={() => SUBMISSION_TIMES.midday} />);

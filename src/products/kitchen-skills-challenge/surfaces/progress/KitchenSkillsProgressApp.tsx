@@ -1,19 +1,19 @@
 import { useMemo, useState } from 'react';
 import { formatSessionDate, formatWastePercent } from '@/products/kitchen-skills-challenge/format';
-import { buildKitchenDayProgressPoints } from '@/products/kitchen-skills-challenge/read/progressModel';
+import { buildKitchenSkillsProgressPoints } from '@/products/kitchen-skills-challenge/read/progressModel';
 import { SessionEvidence } from '@/products/kitchen-skills-challenge/surfaces/shared/SessionEvidence';
 import { Sparkline } from '@/products/kitchen-skills-challenge/surfaces/progress/Sparkline';
-import { useKitchenDayGroupData } from '@/products/kitchen-skills-challenge/read/useGroupData';
+import { useKitchenSkillsGroupData } from '@/products/kitchen-skills-challenge/read/useGroupData';
 
 export function KitchenSkillsProgressApp() {
-  const { actorId, sessions } = useKitchenDayGroupData();
+  const { actorId, sessions } = useKitchenSkillsGroupData();
   const [tab, setTab] = useState<'overview' | 'progress'>('overview');
   const ownSessions = useMemo(
     () => (actorId ? sessions.filter((session) => session.actorId === actorId) : []),
     [actorId, sessions],
   );
   const latest = ownSessions[ownSessions.length - 1] ?? ownSessions[0];
-  const points = buildKitchenDayProgressPoints(ownSessions);
+  const points = buildKitchenSkillsProgressPoints(ownSessions);
 
   return (
     <div className="chef-results-page chef-results-page--participant kitchen-mgmt-page" data-testid="kitchen-day-progress-page">
@@ -144,5 +144,3 @@ export function KitchenSkillsProgressApp() {
     </div>
   );
 }
-
-export { KitchenSkillsProgressApp as KitchenDayProgressApp };

@@ -1,11 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import {
-  buildKitchenDayReadModel,
-  mergeKitchenDayRecords,
+  buildKitchenSkillsReadModel,
+  mergeKitchenSkillsRecords,
   parsePersistedPortionEntry,
   parsePersistedRescueEntry,
   parsePersistedTrimEntry,
-} from '@/products/kitchen-skills-challenge/read/kitchenDayReadModel';
+} from '@/products/kitchen-skills-challenge/read/kitchenSkillsReadModel';
 
 const sessionId = 'kitchen-day:task-1:user-1:2026-09-23';
 
@@ -87,7 +87,7 @@ describe('Kitchen Day read model', () => {
         ],
       }),
     ).toBeNull();
-    const model = buildKitchenDayReadModel(
+    const model = buildKitchenSkillsReadModel(
       [trimActivity(), { template: { slug: 'trimSmart' }, properties: [] }, trimActivity({ actor: { id: 'user-2' } })],
       { sessionId, actorId: 'user-1' },
     );
@@ -95,12 +95,12 @@ describe('Kitchen Day read model', () => {
   });
 
   it('accepts a matching actor when participant-scoped reading requests actorId', () => {
-    const model = buildKitchenDayReadModel([trimActivity()], { sessionId, actorId: 'user-1' });
+    const model = buildKitchenSkillsReadModel([trimActivity()], { sessionId, actorId: 'user-1' });
     expect(model.trimEntries).toHaveLength(1);
   });
 
   it('rejects another actor when participant-scoped reading requests actorId', () => {
-    const model = buildKitchenDayReadModel([trimActivity({ actor: { id: 'user-2', name: 'Other' } })], {
+    const model = buildKitchenSkillsReadModel([trimActivity({ actor: { id: 'user-2', name: 'Other' } })], {
       sessionId,
       actorId: 'user-1',
     });
@@ -108,7 +108,7 @@ describe('Kitchen Day read model', () => {
   });
 
   it('rejects a missing actor when participant-scoped reading requests actorId', () => {
-    const model = buildKitchenDayReadModel([trimActivity({ actor: undefined })], {
+    const model = buildKitchenSkillsReadModel([trimActivity({ actor: undefined })], {
       sessionId,
       actorId: 'user-1',
     });
@@ -116,7 +116,7 @@ describe('Kitchen Day read model', () => {
   });
 
   it('rejects a malformed actor when participant-scoped reading requests actorId', () => {
-    const model = buildKitchenDayReadModel([trimActivity({ actor: { name: 'Student' } })], {
+    const model = buildKitchenSkillsReadModel([trimActivity({ actor: { name: 'Student' } })], {
       sessionId,
       actorId: 'user-1',
     });
@@ -126,7 +126,7 @@ describe('Kitchen Day read model', () => {
   it('deduplicates local copies once the persisted record exists', () => {
     const persisted = [parsePersistedTrimEntry(trimActivity())!];
     const local = [{ ...persisted[0]!, source: 'local' as const, persistId: undefined }];
-    const merged = mergeKitchenDayRecords(local, persisted, (left, right) => left.ingredientId === right.ingredientId);
+    const merged = mergeKitchenSkillsRecords(local, persisted, (left, right) => left.ingredientId === right.ingredientId);
     expect(merged).toHaveLength(1);
     expect(merged[0]?.source).toBe('persisted');
   });

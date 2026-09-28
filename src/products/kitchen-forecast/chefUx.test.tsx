@@ -4,7 +4,7 @@ import { cleanup, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { ChefApp } from '@/products/kitchen-forecast/KitchenForecastApp';
 import { MENU_DATES, SUBMISSION_TIMES } from '@/test/fixtures/dates';
-import * as operationalCalendarModule from '@/shared/calendar/operationalServiceCalendar';
+import * as chefForecastWindowModule from '@/products/kitchen-forecast/chefForecastWindow';
 import { buildChefActivityMessage } from '@/products/kitchen-forecast/gamebus/buildChefActivityMessage';
 import { pariChefForecastTaskFixture } from '@/products/kitchen-forecast/gamebus/chefTaskFixtures';
 import { resolveMealSlotsForDate } from '@/shared/menu/mealSlots';
@@ -53,7 +53,7 @@ async function fillAllForecastFields(
 
 describe('chef forecast UX', () => {
   beforeEach(() => {
-    vi.spyOn(operationalCalendarModule, 'resolveChefForecastServiceDate').mockReturnValue(
+    vi.spyOn(chefForecastWindowModule, 'resolveChefForecastServiceDate').mockReturnValue(
       MENU_DATES.runtimeWednesday,
     );
   });

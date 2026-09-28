@@ -6,38 +6,38 @@ import type { TaskData } from '@/platform/gamebus/types';
  * Verified live on foodtracker.gamebus.eu: chef-mission / service-closeout task
  * `01a081a9-4fee-7772-b1c6-bdfc7a362ecb` lists chefForecast + kitchenServiceCloseout + wasteMeasurement.
  */
-export const KITCHEN_DAY_TASK_ACTIVITY_TEMPLATES = [
+export const KITCHEN_SKILLS_TASK_ACTIVITY_TEMPLATES = [
   'trimSmart',
   'rescueAndReuse',
   'portionPrecision',
 ] as const;
 
-export type KitchenDayTaskActivityTemplate =
-  (typeof KITCHEN_DAY_TASK_ACTIVITY_TEMPLATES)[number];
+export type KitchenSkillsTaskActivityTemplate =
+  (typeof KITCHEN_SKILLS_TASK_ACTIVITY_TEMPLATES)[number];
 
 export function listTaskActivityTemplateSlugs(task: TaskData): string[] {
   return (task.activityTemplates ?? []).map((template) => template.slug);
 }
 
-export function missingKitchenDayTaskTemplates(task: TaskData): string[] {
+export function missingKitchenSkillsTaskTemplates(task: TaskData): string[] {
   const slugs = listTaskActivityTemplateSlugs(task);
-  return KITCHEN_DAY_TASK_ACTIVITY_TEMPLATES.filter((slug) => !slugs.includes(slug));
+  return KITCHEN_SKILLS_TASK_ACTIVITY_TEMPLATES.filter((slug) => !slugs.includes(slug));
 }
 
-export function assertKitchenDayTask(task: TaskData): void {
-  const missing = missingKitchenDayTaskTemplates(task);
+export function assertKitchenSkillsTask(task: TaskData): void {
+  const missing = missingKitchenSkillsTaskTemplates(task);
   if (missing.length > 0) {
     throw new Error(
-      `Kitchen Day TASK is missing required activity templates: ${missing.join(', ')}`,
+      `Kitchen Skills Challenge TASK is missing required activity templates: ${missing.join(', ')}`,
     );
   }
 }
 
-export function selectKitchenDayActivityTemplate(
+export function selectKitchenSkillsActivityTemplate(
   task: TaskData,
-  slug: KitchenDayTaskActivityTemplate,
+  slug: KitchenSkillsTaskActivityTemplate,
 ): string {
-  assertKitchenDayTask(task);
+  assertKitchenSkillsTask(task);
   return selectActivityTemplate(task, slug).reference;
 }
 

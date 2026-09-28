@@ -15,7 +15,7 @@ export const KITCHEN_DAY_ACTIVITY_TEMPLATES = [
   'wastePracticeReview',
 ] as const;
 
-export function selectKitchenDayActivities(activities: readonly unknown[]): unknown[] {
+export function selectKitchenSkillsActivities(activities: readonly unknown[]): unknown[] {
   return activities.filter((activity) => {
     const template = getActivityTemplateReference(activity);
     return (

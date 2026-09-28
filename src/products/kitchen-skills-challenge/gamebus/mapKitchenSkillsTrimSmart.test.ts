@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { buildKitchenDayTrimSmartActivityMessage } from '@/products/kitchen-skills-challenge/gamebus/buildKitchenDayTrimSmartActivityMessage';
-import { kitchenDayTaskFixture } from '@/products/kitchen-skills-challenge/gamebus/kitchenDayTaskFixtures';
-import { mapKitchenDayTrimSmart, orderedKitchenDayTrimPropertyRefs } from '@/products/kitchen-skills-challenge/gamebus/mapKitchenDayTrimSmart';
-import type { KitchenDayTrimEntry } from '@/products/kitchen-skills-challenge/domain/types';
+import { buildKitchenSkillsTrimSmartActivityMessage } from '@/products/kitchen-skills-challenge/gamebus/buildKitchenSkillsTrimSmartActivityMessage';
+import { kitchenSkillsTaskFixture } from '@/products/kitchen-skills-challenge/gamebus/kitchenSkillsTaskFixtures';
+import { mapKitchenSkillsTrimSmart, orderedKitchenSkillsTrimPropertyRefs } from '@/products/kitchen-skills-challenge/gamebus/mapKitchenSkillsTrimSmart';
+import type { KitchenSkillsTrimEntry } from '@/products/kitchen-skills-challenge/domain/types';
 
-const entry: KitchenDayTrimEntry = {
+const entry: KitchenSkillsTrimEntry = {
   sessionId: 'kitchen-day:standalone:2026-09-23',
   sessionDate: '2026-09-23',
   submittedAt: '2026-09-23T10:05:00.000Z',
@@ -23,7 +23,7 @@ const entry: KitchenDayTrimEntry = {
 
 describe('Kitchen Day Trim mapper contract', () => {
   it('posts the exact target property set', () => {
-    expect(orderedKitchenDayTrimPropertyRefs()).toEqual([
+    expect(orderedKitchenSkillsTrimPropertyRefs()).toEqual([
       'sessionId',
       'sessionDate',
       'submittedAt',
@@ -36,7 +36,7 @@ describe('Kitchen Day Trim mapper contract', () => {
       'actualWasteGrams',
       'duration',
     ]);
-    const values = mapKitchenDayTrimSmart(entry);
+    const values = mapKitchenSkillsTrimSmart(entry);
     expect(values.ingredientCategory).toEqual({ value: 'root' });
     expect(values.ingredientWeightGrams).toEqual({ value: 5000 });
     expect(values.trimTechniques).toEqual({ value: 'trimming' });
@@ -47,7 +47,7 @@ describe('Kitchen Day Trim mapper contract', () => {
   });
 
   it('uses the real preparation interval for ACTIVITY start and end', () => {
-    const message = buildKitchenDayTrimSmartActivityMessage(kitchenDayTaskFixture, entry);
+    const message = buildKitchenSkillsTrimSmartActivityMessage(kitchenSkillsTaskFixture, entry);
     expect(message.data.start).toBe(entry.preparationStartedAt);
     expect(message.data.end).toBe(entry.preparationEndedAt);
     expect(message.data.template).toBe('trimSmart');

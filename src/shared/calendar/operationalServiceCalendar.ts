@@ -1,7 +1,6 @@
 import { parseISO } from 'date-fns';
 import { fromZonedTime, toZonedTime } from 'date-fns-tz';
 import { CANTEEN_CONFIG } from '@/shared/calendar/canteen';
-import { isBeforeChefWindowSwitch } from '@/products/kitchen-forecast/chefForecastWindow';
 import { addDaysToIsoDate, getOperationalDateIso } from '@/shared/time/dates';
 import { isExplicitlyClosedServiceDate } from '@/shared/menu/menuResolver';
 
@@ -66,21 +65,6 @@ export function resolvePreviousOperationalDay(serviceDate: string): string {
 }
 
 /**
- * Kitchen forecast target date when the page is opened (Helsinki operational day).
- * Before 08:30 the target is today's own service; from 08:30 it is the next operational
- * service. Whether entry is actually open is a separate question — see the submission window.
- */
-export function resolveChefForecastServiceDate(now: Date = new Date()): string {
-  const today = getOperationalDateIso(now);
-
-  if (isOperationalServiceDay(today) && isBeforeChefWindowSwitch(now)) {
-    return today;
-  }
-
-  return resolveNextServiceDate(today);
-}
-
-/**
  * Kitchen Results participant dashboard calendar date (Europe/Helsinki).
  *
  * This is the current Helsinki calendar day. It rolls at exactly 00:00:00 Helsinki and
@@ -89,7 +73,7 @@ export function resolveChefForecastServiceDate(now: Date = new Date()): string {
  * Whether that calendar day is an operational service day is a separate question —
  * see {@link isOperationalServiceDay}.
  */
-export function resolveChefResultsServiceDate(now: Date = new Date()): string {
+export function resolveForecastResultsServiceDate(now: Date = new Date()): string {
   return getOperationalDateIso(now);
 }
 

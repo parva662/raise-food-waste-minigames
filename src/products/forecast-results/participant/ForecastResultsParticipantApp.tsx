@@ -18,7 +18,7 @@ import {
 import {
   isOperationalServiceDay,
   msUntilNextHelsinkiMidnight,
-  resolveChefResultsServiceDate,
+  resolveForecastResultsServiceDate,
 } from '@/shared/calendar/operationalServiceCalendar';
 import { getFixtureCurrentUserId } from '@/products/forecast-results/currentUserContext';
 import { findParticipantDailyResult } from '@/products/forecast-results/calculations/participantWeekData';
@@ -28,7 +28,7 @@ import {
   buildParticipantPeerComparisonInsights,
 } from '@/products/forecast-results/calculations/teamComparison';
 import { useGameBusAuthenticatedUser } from '@/products/forecast-results/useGameBusAuthenticatedUser';
-import { useChefResultsData } from '@/products/forecast-results/useChefResultsData';
+import { useForecastResultsData } from '@/products/forecast-results/useForecastResultsData';
 import { useGameBusEmbed } from '@/platform/gamebus/useGameBusEmbed';
 import type { DailyServiceResults } from '@/products/forecast-results/types';
 
@@ -91,7 +91,7 @@ function useHelsinkiDashboardClock(): Date {
  * Dashboard date = current Europe/Helsinki calendar day (midnight rollover).
  * Historical Progress is independent of the current service waiting/no-forecast state.
  */
-export function ChefResultsParticipantApp() {
+export function ForecastResultsParticipantApp() {
   const { embedded, inputCollections, inputCollectionsReady } = useGameBusEmbed();
   const { user: authenticatedUser } = useGameBusAuthenticatedUser();
   const isEmbeddedLoading = embedded && !inputCollectionsReady;
@@ -99,7 +99,7 @@ export function ChefResultsParticipantApp() {
   const currentUserId = embedded ? authenticatedUser?.id ?? '' : fixtureUserId;
 
   const now = useHelsinkiDashboardClock();
-  const resultsServiceDate = useMemo(() => resolveChefResultsServiceDate(now), [now]);
+  const resultsServiceDate = useMemo(() => resolveForecastResultsServiceDate(now), [now]);
   const isServiceDay = useMemo(
     () => isOperationalServiceDay(resultsServiceDate),
     [resultsServiceDate],
@@ -109,7 +109,7 @@ export function ChefResultsParticipantApp() {
   const canLoadParticipantData = !isEmbeddedLoading && (!embedded || inputCollectionsReady);
   const canLoadProgress = canLoadParticipantData && Boolean(currentUserId || !embedded);
 
-  const resultsState = useChefResultsData(isServiceDay ? resultsServiceDate : '');
+  const resultsState = useForecastResultsData(isServiceDay ? resultsServiceDate : '');
   const completeDailyResults =
     isServiceDay && resultsState.status === 'ready' ? resultsState.dailyResults : null;
 

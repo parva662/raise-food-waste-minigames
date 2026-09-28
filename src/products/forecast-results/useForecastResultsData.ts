@@ -12,7 +12,7 @@ import {
 } from '@/products/forecast-results/adapters/fixtureCalculationSource';
 import type { DailyServiceResults, StaffWeeklySummary } from '@/products/forecast-results/types';
 
-export type ChefResultsDataState =
+export type ForecastResultsDataState =
   | {
       status: 'pending';
       source: 'group';
@@ -28,7 +28,7 @@ export type ChefResultsDataState =
       weeklySummaries: StaffWeeklySummary[];
     };
 
-export function useChefResultsFixtureData(selectedDate: string): {
+export function useForecastResultsFixtureData(selectedDate: string): {
   serviceDates: readonly string[];
   dailyResults: DailyServiceResults | null;
   weeklySummaries: StaffWeeklySummary[];
@@ -40,9 +40,9 @@ export function useChefResultsFixtureData(selectedDate: string): {
   };
 }
 
-export function useChefResultsData(selectedDate: string): ChefResultsDataState {
+export function useForecastResultsData(selectedDate: string): ForecastResultsDataState {
   const { embedded, inputCollections, inputCollectionsReady } = useGameBusEmbed();
-  const fixtureData = useChefResultsFixtureData(selectedDate);
+  const fixtureData = useForecastResultsFixtureData(selectedDate);
 
   const groupData = useMemo(() => {
     if (!embedded || !inputCollectionsReady) return null;

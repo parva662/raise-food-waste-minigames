@@ -1,5 +1,5 @@
 import type { KitchenProgressSummary } from '@/products/forecast-results/adapters/groupCalculationSource';
-import { formatGrams } from '@/products/forecast-results/useChefResultsData';
+import { formatGrams } from '@/products/forecast-results/useForecastResultsData';
 
 interface KitchenProgressSectionProps {
   progress: KitchenProgressSummary;

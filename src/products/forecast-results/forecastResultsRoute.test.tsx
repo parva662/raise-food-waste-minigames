@@ -13,7 +13,7 @@ function setHash(hash: string) {
 
 describe('chef results routes', () => {
   beforeEach(() => {
-    vi.spyOn(operationalCalendarModule, 'resolveChefResultsServiceDate').mockReturnValue('2026-07-31');
+    vi.spyOn(operationalCalendarModule, 'resolveForecastResultsServiceDate').mockReturnValue('2026-07-31');
     setHash('');
     window.sessionStorage.clear();
     window.sessionStorage.setItem('chef-results-fixture-current-user-id', DEFAULT_FIXTURE_CURRENT_USER_ID);
@@ -49,7 +49,7 @@ describe('chef results routes', () => {
 
 describe('participant privacy', () => {
   beforeEach(() => {
-    vi.spyOn(operationalCalendarModule, 'resolveChefResultsServiceDate').mockReturnValue('2026-07-31');
+    vi.spyOn(operationalCalendarModule, 'resolveForecastResultsServiceDate').mockReturnValue('2026-07-31');
     setHash('#/chef-results');
     window.sessionStorage.clear();
     window.sessionStorage.setItem('chef-results-fixture-current-user-id', 'fixture-user-c');

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { buildKitchenDayChefSessions } from '@/products/kitchen-skills-challenge/read/chefSessions';
+import { buildKitchenSkillsTrainerSessions } from '@/products/kitchen-skills-challenge/read/trainerSessions';
 
 const sessionA = 'kitchen-day:task-1:user-1:2026-09-23';
 const sessionB = 'kitchen-day:task-1:user-2:2026-09-23';
@@ -29,7 +29,7 @@ function trimActivity(actorId: string, sessionId: string, ingredientId: string) 
 
 describe('Kitchen Day chef session grouping', () => {
   it('groups completed records by participant actor and sessionId, not date only', () => {
-    const sessions = buildKitchenDayChefSessions([
+    const sessions = buildKitchenSkillsTrainerSessions([
       trimActivity('user-1', sessionA, 'carrot'),
       trimActivity('user-2', sessionB, 'onion'),
     ]);
@@ -44,7 +44,7 @@ describe('Kitchen Day chef session grouping', () => {
   });
 
   it('does not treat incomplete or actor-less activities as completed evidence', () => {
-    const sessions = buildKitchenDayChefSessions([
+    const sessions = buildKitchenSkillsTrainerSessions([
       { template: { slug: 'trimSmart' }, properties: [] },
       { ...trimActivity('user-1', sessionA, 'carrot'), actor: undefined },
     ]);

@@ -4,8 +4,8 @@ import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it } from 'vitest';
 import { ingestInputCollectionsForTests, resetGameBusBridgeForTests } from '@/platform/gamebus/bridge';
 import { AppRouter } from '@/app/AppRouter';
-import { KitchenDaySessionProvider } from '@/products/kitchen-skills-challenge/domain/session/KitchenSkillsSessionContext';
-import { MyDayView } from '@/products/kitchen-skills-challenge/surfaces/challenge/MyDayView';
+import { KitchenSkillsSessionProvider } from '@/products/kitchen-skills-challenge/domain/session/KitchenSkillsSessionContext';
+import { SessionReviewView } from '@/products/kitchen-skills-challenge/surfaces/challenge/SessionReviewView';
 
 const sessionOne = 'kitchen-day:kitchen-day-task-1:user-1:2026-09-23';
 const sessionTwo = 'kitchen-day:kitchen-day-task-1:user-2:2026-09-23';
@@ -105,11 +105,11 @@ describe('Kitchen Day student and chef dashboards', () => {
 
   it('shows the authenticated student completed records together as read-only', async () => {
     render(
-      <KitchenDaySessionProvider
+      <KitchenSkillsSessionProvider
         initialSession={{ sessionId: sessionOne, sessionDate: '2026-09-23' }}
       >
-        <MyDayView />
-      </KitchenDaySessionProvider>,
+        <SessionReviewView />
+      </KitchenSkillsSessionProvider>,
     );
     ingestInputCollectionsForTests(groupCollections);
     await waitFor(() => {

@@ -1,4 +1,4 @@
-import { formatGrams } from '@/products/forecast-results/useChefResultsData';
+import { formatGrams } from '@/products/forecast-results/useForecastResultsData';
 
 /** Tolerance for treating actual and estimated surplus as equivalent (grams). */
 export const SURPLUS_COMPARISON_TOLERANCE_GRAMS = 1;

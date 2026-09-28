@@ -1,4 +1,4 @@
-import { normalizeIngredientId } from '@/shared/ingredientId';
+import { normalizeIngredientId } from '@/shared/identifiers/ingredientId';
 import type {
   TrimSmartLockedAttempt,
   TrimSmartLockedSession,

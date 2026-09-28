@@ -8,7 +8,7 @@ export function tryPostTrimSmartActivity(
 ): ActivityPostResult {
   return tryPostBuiltActivity(
     (task) => buildTrimSmartActivityMessage(task, submission),
-    { type: 'attempt-key', key: attemptPostKey },
+    { type: 'key', key: attemptPostKey },
     { devPayloadLabel: 'trimSmart' },
   );
 }

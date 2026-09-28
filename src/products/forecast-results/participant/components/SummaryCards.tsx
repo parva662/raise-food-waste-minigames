@@ -1,6 +1,6 @@
 import { TrendingDown, TrendingUp, Users } from 'lucide-react';
 import type { StaffDailyResult } from '@/products/forecast-results/types';
-import { formatGrams, formatSignedCount } from '@/products/forecast-results/useChefResultsData';
+import { formatGrams, formatSignedCount } from '@/products/forecast-results/useForecastResultsData';
 
 interface SummaryCardsProps {
   result: StaffDailyResult;

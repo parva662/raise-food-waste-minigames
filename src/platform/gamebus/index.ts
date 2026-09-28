@@ -9,7 +9,7 @@ export {
   getGameBusTask,
   startGameBusHandshake,
   hasGameBusPostedActivity,
-  hasGameBusPostedChefForecastForDate,
+  hasGameBusPostedKey,
   isGameBusSubmissionInFlight,
 } from '@/platform/gamebus/bridge';
 export {

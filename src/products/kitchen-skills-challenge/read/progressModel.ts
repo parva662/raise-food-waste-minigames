@@ -1,9 +1,9 @@
 import { wastePercentage } from '@/products/kitchen-skills-challenge/domain/trim/derived';
 import { buildPortionRecipeMetrics } from '@/products/kitchen-skills-challenge/domain/portion/metrics';
 import { getRecipeReference } from '@/products/kitchen-skills-challenge/domain/portion/recipes';
-import type { KitchenDayChefSession } from '@/products/kitchen-skills-challenge/domain/types';
+import type { KitchenSkillsTrainerSession } from '@/products/kitchen-skills-challenge/domain/types';
 
-export interface KitchenDayProgressPoint {
+export interface KitchenSkillsProgressPoint {
   sessionId: string;
   sessionDate: string;
   wastePercent: number | null;
@@ -14,9 +14,9 @@ export interface KitchenDayProgressPoint {
   preparationQualityScore: number | null;
 }
 
-export function buildKitchenDayProgressPoints(
-  sessions: readonly KitchenDayChefSession[],
-): KitchenDayProgressPoint[] {
+export function buildKitchenSkillsProgressPoints(
+  sessions: readonly KitchenSkillsTrainerSession[],
+): KitchenSkillsProgressPoint[] {
   return [...sessions]
     .sort((left, right) => left.sessionDate.localeCompare(right.sessionDate))
     .map((session) => {

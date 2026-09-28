@@ -1,9 +1,9 @@
 import {
-  KITCHEN_DAY_INGREDIENT_CATEGORIES,
-  type KitchenDayIngredientCategory,
+  KITCHEN_SKILLS_INGREDIENT_CATEGORIES,
+  type KitchenSkillsIngredientCategory,
 } from '@/products/kitchen-skills-challenge/domain/types';
 
-export const INGREDIENT_CATEGORY_LABELS: Record<KitchenDayIngredientCategory, string> = {
+export const INGREDIENT_CATEGORY_LABELS: Record<KitchenSkillsIngredientCategory, string> = {
   root: 'Root vegetables',
   leafy: 'Leafy vegetables',
   fruit: 'Fruit vegetables',
@@ -13,22 +13,22 @@ export const INGREDIENT_CATEGORY_LABELS: Record<KitchenDayIngredientCategory, st
 };
 
 export function ingredientCategoryOptions(): {
-  value: KitchenDayIngredientCategory;
+  value: KitchenSkillsIngredientCategory;
   label: string;
 }[] {
-  return KITCHEN_DAY_INGREDIENT_CATEGORIES.map((value) => ({
+  return KITCHEN_SKILLS_INGREDIENT_CATEGORIES.map((value) => ({
     value,
     label: INGREDIENT_CATEGORY_LABELS[value],
   }));
 }
 
-export function isKitchenDayIngredientCategory(
+export function isKitchenSkillsIngredientCategory(
   value: string,
-): value is KitchenDayIngredientCategory {
-  return (KITCHEN_DAY_INGREDIENT_CATEGORIES as readonly string[]).includes(value);
+): value is KitchenSkillsIngredientCategory {
+  return (KITCHEN_SKILLS_INGREDIENT_CATEGORIES as readonly string[]).includes(value);
 }
 
-export function storedCategoryFromLabel(label: string): KitchenDayIngredientCategory | null {
+export function storedCategoryFromLabel(label: string): KitchenSkillsIngredientCategory | null {
   const match = ingredientCategoryOptions().find((option) => option.label === label);
   return match?.value ?? null;
 }

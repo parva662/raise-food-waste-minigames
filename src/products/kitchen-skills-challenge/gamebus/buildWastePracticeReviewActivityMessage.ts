@@ -1,5 +1,5 @@
 import { selectWastePracticeReviewTemplate } from '@/products/kitchen-skills-challenge/gamebus/taskTemplates';
-import type { KitchenDayReviewEntry } from '@/products/kitchen-skills-challenge/domain/types';
+import type { KitchenSkillsReviewEntry } from '@/products/kitchen-skills-challenge/domain/types';
 import type { ActivityMessage, TaskData } from '@/platform/gamebus/types';
 import {
   mapWastePracticeReview,
@@ -8,7 +8,7 @@ import {
 
 export function buildWastePracticeReviewActivityMessage(
   task: TaskData,
-  entry: KitchenDayReviewEntry,
+  entry: KitchenSkillsReviewEntry,
 ): ActivityMessage {
   const template = selectWastePracticeReviewTemplate(task);
   const values = mapWastePracticeReview(entry);

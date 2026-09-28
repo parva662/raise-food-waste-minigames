@@ -127,7 +127,7 @@ Canonical: [`../product/kitchen-skills-challenge/KITCHEN_SKILLS_CHALLENGE.md`](.
 
 **Known defect:** Trim → iframe close → Rescue & Reuse may not see prior Trim. Not fixed in the architecture refactor.
 
-**Live GameBus (foodtracker.gamebus.eu):** Student Kitchen Skills Challenge activity schemas and properties were **manually verified** on `https://foodtracker.gamebus.eu`. Student posting is **enabled** for Trim / Rescue / Portion (`KITCHEN_DAY_STUDENT_LIVE_INTEGRATION_READY = true`). Trainer `wastePracticeReview` posting remains **blocked** (`KITCHEN_DAY_TUTOR_LIVE_INTEGRATION_READY = false`) until trainer-on-behalf-of-student semantics are confirmed. This is **not** a claim of trainer live end-to-end success.
+**Live GameBus (foodtracker.gamebus.eu):** Student Kitchen Skills Challenge activity schemas and properties were **manually verified** on `https://foodtracker.gamebus.eu`. Student posting is **enabled** for Trim / Rescue / Portion (`KITCHEN_SKILLS_STUDENT_LIVE_INTEGRATION_READY = true`). Trainer `wastePracticeReview` posting remains **blocked** (`KITCHEN_SKILLS_TRAINER_LIVE_INTEGRATION_READY = false`) until trainer-on-behalf-of-student semantics are confirmed. This is **not** a claim of trainer live end-to-end success.
 
 **v1 product-review baseline:** The current student/trainer UX, including Session Review at `#/kitchen-day/review`, is the approved product-review checkpoint for v1.
 

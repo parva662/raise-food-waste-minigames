@@ -1,7 +1,7 @@
-import type { KitchenDayTrimEntry } from '@/products/kitchen-skills-challenge/domain/types';
+import type { KitchenSkillsTrimEntry } from '@/products/kitchen-skills-challenge/domain/types';
 import { durationPayload } from '@/products/kitchen-skills-challenge/domain/trim/timer';
 
-export const KITCHEN_DAY_TRIM_REQUIRED_REFS = [
+export const KITCHEN_SKILLS_TRIM_REQUIRED_REFS = [
   'sessionId',
   'sessionDate',
   'submittedAt',
@@ -15,13 +15,13 @@ export const KITCHEN_DAY_TRIM_REQUIRED_REFS = [
   'duration',
 ] as const;
 
-export type KitchenDayTrimPropertyRef = (typeof KITCHEN_DAY_TRIM_REQUIRED_REFS)[number];
+export type KitchenSkillsTrimPropertyRef = (typeof KITCHEN_SKILLS_TRIM_REQUIRED_REFS)[number];
 
-export function orderedKitchenDayTrimPropertyRefs(): readonly KitchenDayTrimPropertyRef[] {
-  return KITCHEN_DAY_TRIM_REQUIRED_REFS;
+export function orderedKitchenSkillsTrimPropertyRefs(): readonly KitchenSkillsTrimPropertyRef[] {
+  return KITCHEN_SKILLS_TRIM_REQUIRED_REFS;
 }
 
-export function mapKitchenDayTrimSmart(entry: KitchenDayTrimEntry) {
+export function mapKitchenSkillsTrimSmart(entry: KitchenSkillsTrimEntry) {
   return {
     sessionId: { value: entry.sessionId },
     sessionDate: { value: entry.sessionDate },

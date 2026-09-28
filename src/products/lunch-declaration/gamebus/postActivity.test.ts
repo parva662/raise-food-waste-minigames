@@ -2,6 +2,7 @@
 import { describe, it, expect, vi } from 'vitest';
 import { buildActivityMessage } from '@/products/lunch-declaration/gamebus/buildActivityMessage';
 import {
+  ingestInputCollectionsForTests,
   ingestTaskForTests,
   resetGameBusBridgeForTests,
 } from '@/platform/gamebus/bridge';
@@ -125,6 +126,44 @@ describe('buildActivityMessage integration', () => {
     const second = tryPostActivity(declaration, draft, slots);
     expect(second.ok).toBe(false);
     if (!second.ok) expect(second.reason).toBe('duplicate');
+
+    Object.defineProperty(window, 'parent', { configurable: true, value: originalParent });
+    resetGameBusBridgeForTests();
+  });
+
+  it('keeps student ACTIVITY posting unchanged when INPUT_COLLECTIONS is present', () => {
+    resetGameBusBridgeForTests();
+    const parentPostMessage = vi.fn();
+    const originalParent = window.parent;
+    Object.defineProperty(window, 'parent', {
+      configurable: true,
+      value: { postMessage: parentPostMessage },
+    });
+
+    ingestTaskForTests(pariStudentLunchTaskFixture);
+    ingestInputCollectionsForTests({
+      serviceCloseoutInput: {
+        chefForecasts: { docs: [{ id: 'forecast-1', template: 'chefForecast' }], totalDocs: 1 },
+      },
+    });
+
+    const draft: MealDraft = {
+      mealChoice: 'regular',
+      mainQuantity: 1,
+      vegetarianQuantity: 0,
+      soupQuantity: 0,
+      dessertQuantity: 0,
+    };
+    const result = tryPostActivity(baseDeclaration(), draft, slots);
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.message.type).toBe('ACTIVITY');
+      expect(result.message.data.template).toBe('studentLunchCheckin');
+    }
+    expect(parentPostMessage).toHaveBeenCalledWith(
+      expect.objectContaining({ type: 'ACTIVITY' }),
+      '*',
+    );
 
     Object.defineProperty(window, 'parent', { configurable: true, value: originalParent });
     resetGameBusBridgeForTests();

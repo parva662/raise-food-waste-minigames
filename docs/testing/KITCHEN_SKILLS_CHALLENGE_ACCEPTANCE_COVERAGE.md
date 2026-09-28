@@ -27,8 +27,8 @@ Implementation: `main` (`#/kitchen-day`, `#/kitchen-day-progress`, `#/kitchen-da
 | Student Progress | `read/progressModel.test.ts`, `kitchenSkills.pages.test.tsx` | Own history; derived accuracy / final-weight trends |
 | Tutor evidence | `kitchenSkills.dashboard.test.tsx`, `kitchenSkills.pages.test.tsx` | Read-only measurements; actor isolation |
 | Tutor assessment | `kitchenSkills.review.test.tsx`, `domain/assessment/scores.test.ts` | Scores 0–5; 0 ≠ unanswered; one `wastePracticeReview` per session; not pre-filled |
-| Exact GameBus mapper contracts | `src/products/kitchen-skills-challenge/gamebus/mapKitchenDayTrimSmart.test.ts`, `mapRescueAndReuse.test.ts`, `mapPortionPrecision.test.ts`, `mapWastePracticeReview.test.ts` | No derived metrics posted |
-| Live-integration guard | `src/products/kitchen-skills-challenge/gamebus/liveIntegration.test.ts` | Student live enabled; trainer `KITCHEN_DAY_TUTOR_LIVE_INTEGRATION_READY=false` |
+| Exact GameBus mapper contracts | `src/products/kitchen-skills-challenge/gamebus/mapKitchenSkillsTrimSmart.test.ts`, `mapRescueAndReuse.test.ts`, `mapPortionPrecision.test.ts`, `mapWastePracticeReview.test.ts` | No derived metrics posted |
+| Live-integration guard | `src/products/kitchen-skills-challenge/gamebus/liveIntegration.test.ts` | Student live enabled; trainer `KITCHEN_SKILLS_TRAINER_LIVE_INTEGRATION_READY=false` |
 | Percentile / ranking | `@pending` | Sufficient-data rule not agreed |
 
 Gherkin filenames `chef-review.feature` / `CHEF_REVIEW.md` are historical. Product wording is Tutor / Tutor assessment. The activity slug remains `wastePracticeReview`.

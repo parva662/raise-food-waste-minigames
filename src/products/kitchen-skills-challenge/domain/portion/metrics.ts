@@ -1,4 +1,4 @@
-import type { KitchenDayPortionEntry, RecipeCompositionLine } from '@/products/kitchen-skills-challenge/domain/types';
+import type { KitchenSkillsPortionEntry, RecipeCompositionLine } from '@/products/kitchen-skills-challenge/domain/types';
 import type { RecipeReference, RecipeReferenceLine } from '@/products/kitchen-skills-challenge/domain/portion/recipes';
 
 export interface IngredientPortionMetric {
@@ -90,7 +90,7 @@ export function measureIngredientLine(
 }
 
 export function buildPortionRecipeMetrics(
-  entry: KitchenDayPortionEntry,
+  entry: KitchenSkillsPortionEntry,
   recipe: RecipeReference | null,
 ): PortionRecipeMetrics {
   const ingredients = entry.recipeComposition.map((line) =>

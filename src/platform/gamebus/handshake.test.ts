@@ -6,10 +6,9 @@ import {
   resetGameBusBridgeForTests,
   startGameBusHandshake,
 } from '@/platform/gamebus/bridge';
-import type { TaskData } from '@/platform/gamebus/types';
-import { pariStudentLunchTaskFixture } from '@/products/lunch-declaration/gamebus/taskFixtures';
+import { platformTaskFixture } from '@/platform/gamebus/testFixtures';
 
-const taskFixture: TaskData = pariStudentLunchTaskFixture;
+const taskFixture = platformTaskFixture();
 
 describe('GameBus handshake', () => {
   let parentPostMessage: ReturnType<typeof vi.fn>;

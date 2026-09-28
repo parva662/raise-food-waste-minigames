@@ -10,10 +10,7 @@ import {
   getTodayIsoDate,
   getTomorrowIsoDate,
 } from '@/shared/time/dates';
-import { resolveCloseoutServiceDate } from '@/products/service-closeout/closeoutServiceDate';
 import { helsinki } from '@/test/fixtures/dates';
-import { getSubmissionPhase } from '@/products/lunch-declaration/submissionWindow';
-import { FIXTURE_LUNCH_DATE, SUBMISSION_TIMES } from '@/test/fixtures/dates';
 
 describe('operational dates (Europe/Helsinki)', () => {
   it('resolves today from Helsinki calendar, not browser-local assumptions', () => {
@@ -26,11 +23,6 @@ describe('operational dates (Europe/Helsinki)', () => {
     const helsinkiMidday = helsinki('2026-08-17', '12:00:00');
     expect(getOperationalTomorrowDateIso(helsinkiMidday)).toBe('2026-08-18');
     expect(getTomorrowIsoDate(helsinkiMidday)).toBe('2026-08-18');
-  });
-
-  it('resolves service closeout to Helsinki today near UTC midnight', () => {
-    const instant = new Date('2026-08-17T21:30:00Z');
-    expect(resolveCloseoutServiceDate(undefined, instant)).toBe('2026-08-18');
   });
 
   it('targets chef forecast to Helsinki tomorrow', () => {
@@ -66,12 +58,5 @@ describe('operational dates (Europe/Helsinki)', () => {
     expect(new Date(submittedAt).toISOString()).toBe(submittedAt);
     expect(formatSubmissionTime(submittedAt)).toBe(formatOperationalTime(submittedAt));
     expect(formatOperationalTime(submittedAt)).toBe('18:30');
-  });
-
-  it('preserves existing submission-window Helsinki behavior', () => {
-    expect(getSubmissionPhase(SUBMISSION_TIMES.onTimeExact, FIXTURE_LUNCH_DATE)).toBe('open');
-    expect(getSubmissionPhase(SUBMISSION_TIMES.closedJustAfter, FIXTURE_LUNCH_DATE)).toBe(
-      'closed',
-    );
   });
 });

@@ -7,15 +7,15 @@ import {
 import { isGameBusEmbed } from '@/platform/gamebus/detectEmbed';
 import { extractGroupActivities, getRawKitchenGroupActivitiesInput } from '@/platform/gamebus/groupActivities';
 import { getAuthenticatedGameBusUser } from '@/platform/gamebus/inputCollections';
-import { buildKitchenDayChefSessions } from '@/products/kitchen-skills-challenge/read/chefSessions';
-import type { KitchenDayChefSession } from '@/products/kitchen-skills-challenge/domain/types';
+import { buildKitchenSkillsTrainerSessions } from '@/products/kitchen-skills-challenge/read/trainerSessions';
+import type { KitchenSkillsTrainerSession } from '@/products/kitchen-skills-challenge/domain/types';
 
-export function useKitchenDayGroupData(): {
+export function useKitchenSkillsGroupData(): {
   actorId: string | null;
-  sessions: KitchenDayChefSession[];
+  sessions: KitchenSkillsTrainerSession[];
 } {
   const [actorId, setActorId] = useState<string | null>(null);
-  const [sessions, setSessions] = useState<KitchenDayChefSession[]>([]);
+  const [sessions, setSessions] = useState<KitchenSkillsTrainerSession[]>([]);
 
   useEffect(() => {
     const stop = isGameBusEmbed() ? startGameBusHandshake() : () => undefined;
@@ -23,7 +23,7 @@ export function useKitchenDayGroupData(): {
       const payload = getGameBusInputCollections();
       setActorId(getAuthenticatedGameBusUser(payload)?.id ?? null);
       setSessions(
-        buildKitchenDayChefSessions(
+        buildKitchenSkillsTrainerSessions(
           extractGroupActivities(getRawKitchenGroupActivitiesInput(payload)),
         ),
       );

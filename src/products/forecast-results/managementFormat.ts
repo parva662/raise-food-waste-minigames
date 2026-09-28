@@ -1,4 +1,4 @@
-import { formatGrams } from '@/products/forecast-results/useChefResultsData';
+import { formatGrams } from '@/products/forecast-results/useForecastResultsData';
 import { buildCustomerEstimateDifferenceLabel, getCategoryOutcomeKind } from '@/products/forecast-results/calculations/forecastInterpretation';
 import type { StaffDailyResult } from '@/products/forecast-results/types';
 

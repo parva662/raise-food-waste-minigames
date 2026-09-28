@@ -2,7 +2,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { ChefResultsParticipantApp } from '@/products/forecast-results/participant/ForecastResultsParticipantApp';
+import { ForecastResultsParticipantApp } from '@/products/forecast-results/participant/ForecastResultsParticipantApp';
 import { DEFAULT_FIXTURE_CURRENT_USER_ID } from '@/products/forecast-results/currentUserContext';
 import * as operationalCalendarModule from '@/shared/calendar/operationalServiceCalendar';
 import * as detectEmbedModule from '@/platform/gamebus/detectEmbed';
@@ -10,7 +10,7 @@ import * as detectEmbedModule from '@/platform/gamebus/detectEmbed';
 describe('kitchen staff dashboard primary tabs', () => {
   beforeEach(() => {
     vi.spyOn(detectEmbedModule, 'isGameBusEmbed').mockReturnValue(false);
-    vi.spyOn(operationalCalendarModule, 'resolveChefResultsServiceDate').mockReturnValue(
+    vi.spyOn(operationalCalendarModule, 'resolveForecastResultsServiceDate').mockReturnValue(
       '2026-07-31',
     );
     window.sessionStorage.clear();
@@ -26,7 +26,7 @@ describe('kitchen staff dashboard primary tabs', () => {
   });
 
   it('shows one H1 and Overview / Progress tabs with Overview default', () => {
-    render(<ChefResultsParticipantApp />);
+    render(<ForecastResultsParticipantApp />);
     expect(screen.getAllByRole('heading', { level: 1 })).toHaveLength(1);
     expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Kitchen Staff Dashboard');
     expect(screen.getByTestId('participant-primary-tab-overview')).toBeInTheDocument();
@@ -39,7 +39,7 @@ describe('kitchen staff dashboard primary tabs', () => {
 
   it('keeps service date and status visible when switching to Progress', async () => {
     const user = userEvent.setup();
-    render(<ChefResultsParticipantApp />);
+    render(<ForecastResultsParticipantApp />);
     expect(screen.getByTestId('participant-results-header')).toHaveTextContent(/31 July 2026/);
     await user.click(screen.getByTestId('participant-primary-tab-progress'));
     expect(screen.getByTestId('your-progress-section')).toBeInTheDocument();
@@ -50,7 +50,7 @@ describe('kitchen staff dashboard primary tabs', () => {
 
   it('supports keyboard navigation on primary tabs', async () => {
     const user = userEvent.setup();
-    render(<ChefResultsParticipantApp />);
+    render(<ForecastResultsParticipantApp />);
     const overviewTab = screen.getByTestId('participant-primary-tab-overview');
     overviewTab.focus();
     await user.keyboard('{ArrowRight}');
@@ -61,7 +61,7 @@ describe('kitchen staff dashboard primary tabs', () => {
   });
 
   it('does not show progress period tabs on Overview', () => {
-    render(<ChefResultsParticipantApp />);
+    render(<ForecastResultsParticipantApp />);
     expect(screen.queryByTestId('progress-period-tabs')).not.toBeInTheDocument();
     expect(screen.queryByTestId('kitchen-progress-section')).not.toBeInTheDocument();
   });

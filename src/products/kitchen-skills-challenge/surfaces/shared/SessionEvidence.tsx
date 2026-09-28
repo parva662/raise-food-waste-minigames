@@ -3,7 +3,7 @@ import { getGameBusInputCollections } from '@/platform/gamebus/bridge';
 import { discardedWasteGrams, wastePercentage } from '@/products/kitchen-skills-challenge/domain/trim/derived';
 import { TRIM_TECHNIQUE_LABELS } from '@/products/kitchen-skills-challenge/domain/trim/techniques';
 import { compareToKitchenReference } from '@/products/kitchen-skills-challenge/domain/trim/reference';
-import { historicalTrimSamplesFromGroupActivities } from '@/products/kitchen-skills-challenge/read/selectKitchenDayActivities';
+import { historicalTrimSamplesFromGroupActivities } from '@/products/kitchen-skills-challenge/read/selectKitchenSkillsActivities';
 import {
   formatFinalWeightDifference,
   formatMetricPercent,
@@ -20,10 +20,10 @@ import {
   formatWastePercent,
 } from '@/products/kitchen-skills-challenge/format';
 import type {
-  KitchenDayPortionEntry,
-  KitchenDayRescueEntry,
-  KitchenDayReviewEntry,
-  KitchenDayTrimEntry,
+  KitchenSkillsPortionEntry,
+  KitchenSkillsRescueEntry,
+  KitchenSkillsReviewEntry,
+  KitchenSkillsTrimEntry,
 } from '@/products/kitchen-skills-challenge/domain/types';
 
 function Fact({ label, value, testId }: { label: string; value: string; testId?: string }) {
@@ -42,10 +42,10 @@ export function SessionEvidence({
   review,
   testIdPrefix = 'kitchen-day',
 }: {
-  trimEntries: readonly KitchenDayTrimEntry[];
-  rescueEntries: readonly KitchenDayRescueEntry[];
-  portionEntries: readonly KitchenDayPortionEntry[];
-  review?: KitchenDayReviewEntry | null;
+  trimEntries: readonly KitchenSkillsTrimEntry[];
+  rescueEntries: readonly KitchenSkillsRescueEntry[];
+  portionEntries: readonly KitchenSkillsPortionEntry[];
+  review?: KitchenSkillsReviewEntry | null;
   testIdPrefix?: string;
 }) {
   const historicalSamples = historicalTrimSamplesFromGroupActivities(

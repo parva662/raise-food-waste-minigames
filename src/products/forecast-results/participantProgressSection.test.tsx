@@ -9,7 +9,7 @@ import { DEFAULT_FIXTURE_CURRENT_USER_ID } from '@/products/forecast-results/cur
 
 describe('ParticipantProgressSection', () => {
   beforeEach(() => {
-    vi.spyOn(operationalCalendarModule, 'resolveChefResultsServiceDate').mockReturnValue(
+    vi.spyOn(operationalCalendarModule, 'resolveForecastResultsServiceDate').mockReturnValue(
       '2026-07-31',
     );
   });

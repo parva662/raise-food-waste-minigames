@@ -1,5 +1,5 @@
-import type { KitchenDayRescueEntry } from '@/products/kitchen-skills-challenge/domain/types';
-import { selectKitchenDayActivityTemplate } from '@/products/kitchen-skills-challenge/gamebus/taskTemplates';
+import type { KitchenSkillsRescueEntry } from '@/products/kitchen-skills-challenge/domain/types';
+import { selectKitchenSkillsActivityTemplate } from '@/products/kitchen-skills-challenge/gamebus/taskTemplates';
 import type { ActivityMessage, TaskData } from '@/platform/gamebus/types';
 import {
   mapRescueAndReuse,
@@ -9,9 +9,9 @@ import {
 
 export function buildRescueAndReuseActivityMessage(
   task: TaskData,
-  entry: KitchenDayRescueEntry,
+  entry: KitchenSkillsRescueEntry,
 ): ActivityMessage {
-  const template = selectKitchenDayActivityTemplate(task, 'rescueAndReuse');
+  const template = selectKitchenSkillsActivityTemplate(task, 'rescueAndReuse');
   const values = mapRescueAndReuse(entry);
   const start = new Date(entry.submittedAt);
   return {

@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
 import LunchDeclarationApp from '@/products/lunch-declaration/LunchDeclarationApp';
 import { KitchenForecastApp } from '@/products/kitchen-forecast/KitchenForecastApp';
-import { ChefResultsAdminApp } from '@/products/forecast-results/admin/ForecastResultsAdminApp';
-import { ChefResultsParticipantApp } from '@/products/forecast-results/participant/ForecastResultsParticipantApp';
+import { ForecastResultsAdminApp } from '@/products/forecast-results/admin/ForecastResultsAdminApp';
+import { ForecastResultsParticipantApp } from '@/products/forecast-results/participant/ForecastResultsParticipantApp';
 import { ServiceCloseoutApp } from '@/products/service-closeout/ServiceCloseoutApp';
 import { TrimSmartApp } from '@/legacy/trim-smart-v1/TrimSmartApp';
 import { KitchenSkillsChallengeApp } from '@/products/kitchen-skills-challenge/surfaces/challenge/KitchenSkillsChallengeApp';
@@ -32,11 +32,11 @@ export function AppRouter() {
   }
 
   if (mode === 'chef-results-admin') {
-    return <ChefResultsAdminApp />;
+    return <ForecastResultsAdminApp />;
   }
 
   if (mode === 'chef-results') {
-    return <ChefResultsParticipantApp />;
+    return <ForecastResultsParticipantApp />;
   }
 
   if (mode === 'service-closeout') {

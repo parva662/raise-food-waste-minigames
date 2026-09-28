@@ -1,10 +1,10 @@
 import { getOperationalDateIso } from '@/shared/time/dates';
 
-export function getKitchenDaySessionDate(now: Date = new Date()): string {
+export function getKitchenSkillsSessionDate(now: Date = new Date()): string {
   return getOperationalDateIso(now);
 }
 
-export function buildKitchenDaySessionId(options: {
+export function buildKitchenSkillsSessionId(options: {
   embedded: boolean;
   taskId: string | undefined;
   actorId?: string | undefined;
@@ -12,11 +12,11 @@ export function buildKitchenDaySessionId(options: {
 }): string {
   if (options.embedded) {
     if (!options.taskId?.trim()) {
-      throw new Error('GameBus TASK id is required to build Kitchen Day sessionId');
+      throw new Error('GameBus TASK id is required to build Kitchen Skills Challenge sessionId');
     }
     if (!options.actorId?.trim()) {
       throw new Error(
-        'Authenticated GameBus participant id is required to build Kitchen Day sessionId',
+        'Authenticated GameBus participant id is required to build Kitchen Skills Challenge sessionId',
       );
     }
     return `kitchen-day:${options.taskId.trim()}:${options.actorId.trim()}:${options.sessionDate}`;

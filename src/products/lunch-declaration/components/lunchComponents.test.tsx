@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { describe, it, expect, vi, afterEach } from 'vitest';
-import { cleanup, render, screen } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MealSection } from '@/products/lunch-declaration/components/MealSection';
 import { RegularLunchPanel } from '@/products/lunch-declaration/components/RegularLunchPanel';
@@ -8,7 +8,9 @@ import { SoupLunchPanel } from '@/products/lunch-declaration/components/SoupLunc
 import { PortionFoodCard } from '@/products/lunch-declaration/components/PortionFoodCard';
 import { GameStatusHeader } from '@/products/lunch-declaration/components/GameStatusHeader';
 import { SelectionPanel } from '@/products/lunch-declaration/components/SelectionPanel';
+import { FoodImage } from '@/products/lunch-declaration/components/FoodImage';
 import { resolveMealSlotsForDate } from '@/shared/menu/mealSlots';
+import { publicAssetUrl } from '@/shared/menu/menuItemImage';
 import { getSubmissionWindowStatus } from '@/products/lunch-declaration/submissionWindow';
 import { FIXTURE_LUNCH_DATE, SUBMISSION_TIMES } from '@/test/fixtures/dates';
 
@@ -138,5 +140,23 @@ describe('saved status', () => {
     );
     expect(screen.getByText('Lunch saved')).toBeInTheDocument();
     expect(screen.queryByText(/points/i)).not.toBeInTheDocument();
+  });
+});
+
+describe('FoodImage', () => {
+  it('falls back from broken dedicated image to placeholder', () => {
+    const placeholder = publicAssetUrl('images/menu/placeholders/main.svg');
+    const { container } = render(
+      <FoodImage
+        src="/missing-dedicated.webp"
+        placeholderSrc={placeholder}
+        alt="Test dish"
+        category="classic"
+      />,
+    );
+    const img = container.querySelector('img');
+    expect(img).toBeTruthy();
+    fireEvent.error(img!);
+    expect(container.querySelector('img')?.getAttribute('src')).toBe(placeholder);
   });
 });

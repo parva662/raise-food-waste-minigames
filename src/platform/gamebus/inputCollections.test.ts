@@ -8,7 +8,6 @@ import {
   resetGameBusBridgeForTests,
   startGameBusHandshake,
 } from '@/platform/gamebus/bridge';
-import { tryPostActivity } from '@/products/lunch-declaration/gamebus/postActivity';
 import {
   getAuthenticatedGameBusUser,
   getInputCollectionKeys,
@@ -20,11 +19,10 @@ import {
   SERVICE_CLOSEOUT_INPUT_COLLECTION_KEY,
   SERVICE_CLOSEOUT_INPUTS_COLLECTION_KEY_LEGACY,
 } from '@/platform/gamebus/inputCollections';
-import { pariStudentLunchTaskFixture } from '@/products/lunch-declaration/gamebus/taskFixtures';
+import { platformTaskFixture } from '@/platform/gamebus/testFixtures';
 import type { GameBusInputCollectionsPayload } from '@/platform/gamebus/types';
-import type { ActiveDeclaration } from '@/products/lunch-declaration/types/declaration';
-import type { DailyMealSlots, MealDraft } from '@/shared/menu/mealChoice';
-import { CANTEEN_CONFIG } from '@/shared/calendar/canteen';
+
+const taskFixture = platformTaskFixture();
 
 const rawChefForecastsFixture = {
   docs: [{ id: 'forecast-1', template: 'chefForecast' }],
@@ -37,73 +35,15 @@ const nestedInputCollections: GameBusInputCollectionsPayload = {
   },
 };
 
-const slots: DailyMealSlots = {
-  main: {
-    id: 'meatballs',
-    name: 'Meatballs',
-    category: 'classic',
-    unit: 'pieces',
-    maxQuantity: 6,
-    image: '',
-    dietaryTags: [],
-  },
-  vegetarian: {
-    id: 'pasta-primavera',
-    name: 'Pasta',
-    category: 'vegetarian',
-    unit: 'portion',
-    maxQuantity: 3,
-    image: '',
-    dietaryTags: [],
-  },
-  soup: {
-    id: 'tomato-soup',
-    name: 'Tomato Soup',
-    category: 'soup',
-    unit: 'cups',
-    maxQuantity: 2,
-    image: '',
-    dietaryTags: [],
-  },
-  dessert: {
-    id: 'yogurt-berries',
-    name: 'Yogurt',
-    category: 'dessert',
-    unit: 'pieces',
-    maxQuantity: 2,
-    image: '',
-    dietaryTags: [],
-  },
-};
-
-function baseDeclaration(): ActiveDeclaration {
-  return {
-    studentId: CANTEEN_CONFIG.studentId,
-    lunchDate: '2026-07-29',
-    menuCycleWeek: 2,
-    menuVersion: 'excel-dated-menu',
-    mealChoice: 'regular',
-    regularMainSelected: true,
-    regularVegetarianSelected: false,
-    noLunch: false,
-    selections: [],
-    submittedAt: '2026-07-28T12:00:00.000Z',
-    updatedAt: '2026-07-28T12:00:00.000Z',
-    includeInForecast: true,
-  };
-}
-
 describe('GameBus INPUT_COLLECTIONS', () => {
-  let parentPostMessage: ReturnType<typeof vi.fn>;
   let originalParent: Window;
 
   beforeEach(() => {
     resetGameBusBridgeForTests();
-    parentPostMessage = vi.fn();
     originalParent = window.parent;
     Object.defineProperty(window, 'parent', {
       configurable: true,
-      value: { postMessage: parentPostMessage },
+      value: { postMessage: vi.fn() },
     });
   });
 
@@ -186,19 +126,19 @@ describe('GameBus INPUT_COLLECTIONS', () => {
 
     window.dispatchEvent(
       new MessageEvent('message', {
-        data: { type: 'TASK', data: pariStudentLunchTaskFixture },
+        data: { type: 'TASK', data: taskFixture },
         source: window.parent as Window,
       }),
     );
 
     expect(getGameBusInputCollections()).toEqual(nestedInputCollections);
-    expect(getGameBusTask()).toEqual(pariStudentLunchTaskFixture);
+    expect(getGameBusTask()).toEqual(taskFixture);
     cleanup();
   });
 
   it('does not clear TASK when INPUT_COLLECTIONS arrives later', () => {
     const cleanup = startGameBusHandshake();
-    ingestTaskForTests(pariStudentLunchTaskFixture);
+    ingestTaskForTests(taskFixture);
 
     window.dispatchEvent(
       new MessageEvent('message', {
@@ -207,33 +147,9 @@ describe('GameBus INPUT_COLLECTIONS', () => {
       }),
     );
 
-    expect(getGameBusTask()).toEqual(pariStudentLunchTaskFixture);
+    expect(getGameBusTask()).toEqual(taskFixture);
     expect(getGameBusInputCollections()).toEqual(nestedInputCollections);
     cleanup();
-  });
-
-  it('keeps student ACTIVITY posting unchanged when INPUT_COLLECTIONS is present', () => {
-    ingestTaskForTests(pariStudentLunchTaskFixture);
-    ingestInputCollectionsForTests(nestedInputCollections);
-
-    const draft: MealDraft = {
-      mealChoice: 'regular',
-      mainQuantity: 1,
-      vegetarianQuantity: 0,
-      soupQuantity: 0,
-      dessertQuantity: 0,
-    };
-
-    const result = tryPostActivity(baseDeclaration(), draft, slots);
-    expect(result.ok).toBe(true);
-    if (result.ok) {
-      expect(result.message.type).toBe('ACTIVITY');
-      expect(result.message.data.template).toBe('studentLunchCheckin');
-    }
-    expect(parentPostMessage).toHaveBeenCalledWith(
-      expect.objectContaining({ type: 'ACTIVITY' }),
-      '*',
-    );
   });
 
   it('ignores INPUT_COLLECTIONS messages not from parent', () => {

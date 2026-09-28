@@ -17,7 +17,7 @@ export function tryPostChefActivity(
 ): ActivityPostResult {
   return tryPostBuiltActivity(
     (task) => buildChefActivityMessage(task, submission, draft, slots),
-    { type: 'chef-date', targetDate: submission.targetDate },
+    { type: 'key', key: submission.targetDate, markOnce: true },
     {
       logTask: logChefTaskBeforeSubmission,
       beforePost: (message) => {

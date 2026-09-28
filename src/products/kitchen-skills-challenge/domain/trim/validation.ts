@@ -1,5 +1,5 @@
-import { normalizeIngredientId } from '@/shared/ingredientId';
-import { isKitchenDayIngredientCategory } from '@/products/kitchen-skills-challenge/domain/trim/categories';
+import { normalizeIngredientId } from '@/shared/identifiers/ingredientId';
+import { isKitchenSkillsIngredientCategory } from '@/products/kitchen-skills-challenge/domain/trim/categories';
 import { isTrimTechnique } from '@/products/kitchen-skills-challenge/domain/trim/techniques';
 
 export type GramsParse =
@@ -46,7 +46,7 @@ export function validateIngredientSetup(fields: {
   startingWeightGrams: string;
 }): string[] {
   const issues: string[] = [];
-  if (!isKitchenDayIngredientCategory(fields.ingredientCategory)) {
+  if (!isKitchenSkillsIngredientCategory(fields.ingredientCategory)) {
     issues.push('ingredientCategory');
   }
   if (!fields.ingredientName.trim() || !normalizeIngredientId(fields.ingredientName)) {

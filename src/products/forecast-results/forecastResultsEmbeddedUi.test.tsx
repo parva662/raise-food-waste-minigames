@@ -2,8 +2,8 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { ChefResultsParticipantApp } from '@/products/forecast-results/participant/ForecastResultsParticipantApp';
-import { ChefResultsAdminApp } from '@/products/forecast-results/admin/ForecastResultsAdminApp';
+import { ForecastResultsParticipantApp } from '@/products/forecast-results/participant/ForecastResultsParticipantApp';
+import { ForecastResultsAdminApp } from '@/products/forecast-results/admin/ForecastResultsAdminApp';
 import { DEFAULT_FIXTURE_CURRENT_USER_ID } from '@/products/forecast-results/currentUserContext';
 import {
   KITCHEN_GROUP_ACTIVITIES_REQUEST_KEY,
@@ -104,7 +104,7 @@ describe('embedded chef results UI', () => {
   beforeEach(() => {
     resetGameBusBridgeForTests();
     vi.spyOn(detectEmbedModule, 'isGameBusEmbed').mockReturnValue(true);
-    vi.spyOn(operationalCalendarModule, 'resolveChefResultsServiceDate').mockReturnValue(serviceDate);
+    vi.spyOn(operationalCalendarModule, 'resolveForecastResultsServiceDate').mockReturnValue(serviceDate);
     window.sessionStorage.clear();
     window.location.hash = '#/chef-results';
     originalParent = window.parent;
@@ -129,7 +129,7 @@ describe('embedded chef results UI', () => {
 
   it('shows the canonical service date in the participant header without a date picker', () => {
     ingestInputCollectionsForTests(embeddedKitchenPayload());
-    render(<ChefResultsParticipantApp />);
+    render(<ForecastResultsParticipantApp />);
 
     expect(screen.queryByTestId('chef-results-date-select')).not.toBeInTheDocument();
     expect(screen.getByTestId('participant-results-header')).toHaveTextContent(
@@ -139,7 +139,7 @@ describe('embedded chef results UI', () => {
 
   it('shows only the authenticated user result on the participant page', () => {
     ingestInputCollectionsForTests(embeddedKitchenPayload());
-    render(<ChefResultsParticipantApp />);
+    render(<ForecastResultsParticipantApp />);
 
     expect(screen.getByTestId('actual-kitchen-outcome-section')).toBeInTheDocument();
     expect(screen.getByTestId('forecast-impact-section')).toBeInTheDocument();
@@ -153,7 +153,7 @@ describe('embedded chef results UI', () => {
     ingestInputCollectionsForTests(
       embeddedKitchenPayload({ includeCurrentUserForecast: false, includeCoworkerForecast: true }),
     );
-    render(<ChefResultsParticipantApp />);
+    render(<ForecastResultsParticipantApp />);
 
     expect(screen.queryByTestId('chef-results-date-select')).not.toBeInTheDocument();
     expect(screen.getByTestId('participant-no-forecast-result')).toHaveTextContent(
@@ -167,7 +167,7 @@ describe('embedded chef results UI', () => {
   it('uses real embedded kitchen progress instead of fixture leakage', async () => {
     const user = userEvent.setup();
     ingestInputCollectionsForTests(embeddedKitchenPayload());
-    render(<ChefResultsParticipantApp />);
+    render(<ForecastResultsParticipantApp />);
     await user.click(screen.getByTestId('participant-primary-tab-progress'));
 
     expect(screen.getByTestId('kitchen-progress-services-count')).toHaveTextContent('1');
@@ -180,7 +180,7 @@ describe('embedded chef results UI', () => {
       [KITCHEN_GROUP_INPUT_COLLECTION_KEY]:
         embeddedKitchenPayload()[KITCHEN_GROUP_INPUT_COLLECTION_KEY],
     });
-    render(<ChefResultsParticipantApp />);
+    render(<ForecastResultsParticipantApp />);
 
     expect(screen.queryByTestId('kitchen-progress-section')).not.toBeInTheDocument();
     expect(screen.queryByText('4.12 kg')).not.toBeInTheDocument();
@@ -189,7 +189,7 @@ describe('embedded chef results UI', () => {
   it('renders participant kitchen progress once authenticated user identity is available', async () => {
     const user = userEvent.setup();
     ingestInputCollectionsForTests(embeddedKitchenPayload());
-    render(<ChefResultsParticipantApp />);
+    render(<ForecastResultsParticipantApp />);
     await user.click(screen.getByTestId('participant-primary-tab-progress'));
 
     expect(screen.getByTestId('kitchen-progress-section')).toBeInTheDocument();
@@ -199,7 +199,7 @@ describe('embedded chef results UI', () => {
   it('shows real actor names on the admin page', async () => {
     const user = userEvent.setup();
     ingestInputCollectionsForTests(embeddedKitchenPayload());
-    render(<ChefResultsAdminApp />);
+    render(<ForecastResultsAdminApp />);
     await user.click(screen.getByTestId('kitchen-mgmt-primary-tab-staff'));
 
     expect(screen.getByTestId('staff-result-name-real-user-abc')).toHaveTextContent('Test Account');
@@ -210,7 +210,7 @@ describe('embedded chef results UI', () => {
     const user = userEvent.setup();
     window.location.hash = '#/chef-results?gamebusDebug=1';
     ingestInputCollectionsForTests(embeddedKitchenPayload());
-    render(<ChefResultsParticipantApp />);
+    render(<ForecastResultsParticipantApp />);
 
     expect(screen.queryByText('GameBus debug')).not.toBeInTheDocument();
     expect(screen.queryByTestId('chef-results-debug-panel')).not.toBeInTheDocument();
@@ -226,7 +226,7 @@ describe('embedded chef results UI', () => {
 
   it('hides participant debug UI in normal participant mode', () => {
     ingestInputCollectionsForTests(embeddedKitchenPayload());
-    render(<ChefResultsParticipantApp />);
+    render(<ForecastResultsParticipantApp />);
 
     expect(screen.queryByText('GameBus debug')).not.toBeInTheDocument();
     expect(screen.queryByTestId('chef-results-debug-panel')).not.toBeInTheDocument();
@@ -241,7 +241,7 @@ describe('embedded chef results loading boundary', () => {
   beforeEach(() => {
     resetGameBusBridgeForTests();
     vi.spyOn(detectEmbedModule, 'isGameBusEmbed').mockReturnValue(true);
-    vi.spyOn(operationalCalendarModule, 'resolveChefResultsServiceDate').mockReturnValue(serviceDate);
+    vi.spyOn(operationalCalendarModule, 'resolveForecastResultsServiceDate').mockReturnValue(serviceDate);
     window.sessionStorage.clear();
     window.location.hash = '#/chef-results';
     originalParent = window.parent;
@@ -265,7 +265,7 @@ describe('embedded chef results loading boundary', () => {
   });
 
   it('does not render fixture result cards while INPUT_COLLECTIONS is pending', () => {
-    render(<ChefResultsParticipantApp />);
+    render(<ForecastResultsParticipantApp />);
 
     expect(screen.getByTestId('chef-results-pending')).toHaveTextContent('Loading kitchen results…');
     expect(screen.queryByTestId('participant-summary-cards')).not.toBeInTheDocument();
@@ -274,13 +274,13 @@ describe('embedded chef results loading boundary', () => {
   });
 
   it('does not render the service-date dropdown while INPUT_COLLECTIONS is pending', () => {
-    render(<ChefResultsParticipantApp />);
+    render(<ForecastResultsParticipantApp />);
 
     expect(screen.queryByTestId('chef-results-date-select')).not.toBeInTheDocument();
   });
 
   it('does not render fixture kitchen progress while INPUT_COLLECTIONS is pending', () => {
-    render(<ChefResultsParticipantApp />);
+    render(<ForecastResultsParticipantApp />);
 
     expect(screen.queryByTestId('kitchen-progress-section')).not.toBeInTheDocument();
     expect(screen.queryByText('5')).not.toBeInTheDocument();
@@ -288,7 +288,7 @@ describe('embedded chef results loading boundary', () => {
   });
 
   it('does not render fixture your week history while INPUT_COLLECTIONS is pending', () => {
-    render(<ChefResultsParticipantApp />);
+    render(<ForecastResultsParticipantApp />);
 
     expect(screen.queryByTestId('your-progress-section')).not.toBeInTheDocument();
     expect(screen.queryByTestId('week-trend-over')).not.toBeInTheDocument();
@@ -299,7 +299,7 @@ describe('standalone chef results fixtures', () => {
   beforeEach(() => {
     resetGameBusBridgeForTests();
     vi.spyOn(detectEmbedModule, 'isGameBusEmbed').mockReturnValue(false);
-    vi.spyOn(operationalCalendarModule, 'resolveChefResultsServiceDate').mockReturnValue('2026-07-31');
+    vi.spyOn(operationalCalendarModule, 'resolveForecastResultsServiceDate').mockReturnValue('2026-07-31');
     window.sessionStorage.clear();
     window.sessionStorage.setItem(
       'chef-results-fixture-current-user-id',
@@ -316,7 +316,7 @@ describe('standalone chef results fixtures', () => {
 
   it('still renders fixture participant results in standalone mode', async () => {
     const user = userEvent.setup();
-    render(<ChefResultsParticipantApp />);
+    render(<ForecastResultsParticipantApp />);
 
     expect(screen.queryByTestId('chef-results-pending')).not.toBeInTheDocument();
     expect(screen.getByTestId('actual-kitchen-outcome-section')).toBeInTheDocument();

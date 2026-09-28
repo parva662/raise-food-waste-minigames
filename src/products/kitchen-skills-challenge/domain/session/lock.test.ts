@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { ensureKitchenDayLockedSession } from '@/products/kitchen-skills-challenge/domain/session/lock';
+import { ensureKitchenSkillsLockedSession } from '@/products/kitchen-skills-challenge/domain/session/lock';
 
 describe('Kitchen Day session lock', () => {
   it('locks Helsinki date on first creation', () => {
-    const session = ensureKitchenDayLockedSession(null, {
+    const session = ensureKitchenSkillsLockedSession(null, {
       embedded: false,
       taskId: undefined,
       now: new Date('2026-09-14T20:30:00.000Z'),
@@ -13,12 +13,12 @@ describe('Kitchen Day session lock', () => {
   });
 
   it('keeps the locked session when the page stays open across midnight', () => {
-    const locked = ensureKitchenDayLockedSession(null, {
+    const locked = ensureKitchenSkillsLockedSession(null, {
       embedded: false,
       taskId: undefined,
       now: new Date('2026-09-14T20:30:00.000Z'),
     });
-    const reused = ensureKitchenDayLockedSession(locked, {
+    const reused = ensureKitchenSkillsLockedSession(locked, {
       embedded: false,
       taskId: undefined,
       now: new Date('2026-09-14T21:30:00.000Z'),
@@ -28,7 +28,7 @@ describe('Kitchen Day session lock', () => {
   });
 
   it('locks an embedded session with the authenticated participant', () => {
-    const session = ensureKitchenDayLockedSession(null, {
+    const session = ensureKitchenSkillsLockedSession(null, {
       embedded: true,
       taskId: 'kitchen-day-task-1',
       actorId: 'user-1',

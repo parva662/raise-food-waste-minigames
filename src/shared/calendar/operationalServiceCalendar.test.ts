@@ -1,12 +1,10 @@
 import { describe, expect, it, vi, afterEach } from 'vitest';
 import {
   isOperationalServiceDay,
-  resolveChefForecastServiceDate,
   resolveNextServiceDate,
   resolvePreviousOperationalDay,
 } from '@/shared/calendar/operationalServiceCalendar';
 import { MENU_DATES } from '@/test/fixtures/dates';
-import { helsinki } from '@/test/fixtures/dates';
 import { mockExplicitClosures } from '@/test/fixtures/serviceCalendar';
 import * as menuResolverModule from '@/shared/menu/menuResolver';
 
@@ -115,16 +113,6 @@ describe('operational service calendar', () => {
     expect(resolvePreviousOperationalDay(SERVICE_CALENDAR_DATES.tuesdayAug18)).toBe(
       SERVICE_CALENDAR_DATES.fridayAug14,
     );
-  });
-
-  it('resolves kitchen forecast service date from Helsinki operational Friday to Monday', () => {
-    const fridayAfternoon = helsinki(SERVICE_CALENDAR_DATES.fridayAug14, '15:00:00');
-    expect(resolveChefForecastServiceDate(fridayAfternoon)).toBe(SERVICE_CALENDAR_DATES.mondayAug17);
-  });
-
-  it('resolves kitchen forecast service date to today before 08:30 on a service day', () => {
-    const mondayMorning = helsinki(SERVICE_CALENDAR_DATES.mondayAug17, '08:29:59');
-    expect(resolveChefForecastServiceDate(mondayMorning)).toBe(SERVICE_CALENDAR_DATES.mondayAug17);
   });
 });
 

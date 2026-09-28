@@ -1,6 +1,10 @@
 import { fromZonedTime, toZonedTime } from 'date-fns-tz';
 import { CHEF_CONFIG } from '@/products/kitchen-forecast/config';
-import { addDaysToIsoDate } from '@/shared/time/dates';
+import {
+  isOperationalServiceDay,
+  resolveNextServiceDate,
+} from '@/shared/calendar/operationalServiceCalendar';
+import { addDaysToIsoDate, getOperationalDateIso } from '@/shared/time/dates';
 
 function secondsOfDay(time: string): number {
   const [hours, minutes, seconds] = time.split(':').map(Number);
@@ -36,6 +40,21 @@ export function isWithinChefAdvanceWindowTime(instant: Date): boolean {
 /** True while the day's own service is still the target, i.e. before 08:30 Helsinki. */
 export function isBeforeChefWindowSwitch(instant: Date): boolean {
   return getChefHelsinkiSecondsOfDay(instant) < WINDOW_SWITCH_SECONDS;
+}
+
+/**
+ * Kitchen forecast target date when the page is opened (Helsinki operational day).
+ * Before 08:30 the target is today's own service; from 08:30 it is the next operational
+ * service. Whether entry is actually open is a separate question — see the submission window.
+ */
+export function resolveChefForecastServiceDate(now: Date = new Date()): string {
+  const today = getOperationalDateIso(now);
+
+  if (isOperationalServiceDay(today) && isBeforeChefWindowSwitch(now)) {
+    return today;
+  }
+
+  return resolveNextServiceDate(today);
 }
 
 /** 08:30:00 Helsinki on the given service date — the end of its grace window. */

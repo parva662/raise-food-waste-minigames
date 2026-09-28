@@ -1,13 +1,13 @@
 import { describe, expect, it } from 'vitest';
-import { kitchenDayChefTaskFixture, kitchenDayTaskFixture } from '@/products/kitchen-skills-challenge/gamebus/kitchenDayTaskFixtures';
+import { kitchenSkillsTrainerTaskFixture, kitchenSkillsTaskFixture } from '@/products/kitchen-skills-challenge/gamebus/kitchenSkillsTaskFixtures';
 import { buildWastePracticeReviewActivityMessage } from '@/products/kitchen-skills-challenge/gamebus/buildWastePracticeReviewActivityMessage';
 import {
   mapWastePracticeReview,
   orderedWastePracticeReviewPropertyRefs,
 } from '@/products/kitchen-skills-challenge/gamebus/mapWastePracticeReview';
-import type { KitchenDayReviewEntry } from '@/products/kitchen-skills-challenge/domain/types';
+import type { KitchenSkillsReviewEntry } from '@/products/kitchen-skills-challenge/domain/types';
 
-const entry: KitchenDayReviewEntry = {
+const entry: KitchenSkillsReviewEntry = {
   sessionId: 'kitchen-day:task-1:user-1:2026-09-23',
   sessionDate: '2026-09-23',
   submittedAt: '2026-09-23T14:00:00.000Z',
@@ -51,10 +51,10 @@ describe('wastePracticeReview mapper', () => {
   });
 
   it('validates wastePracticeReview against the TASK template before build', () => {
-    expect(buildWastePracticeReviewActivityMessage(kitchenDayChefTaskFixture, entry).data.template).toBe(
+    expect(buildWastePracticeReviewActivityMessage(kitchenSkillsTrainerTaskFixture, entry).data.template).toBe(
       'wastePracticeReview',
     );
-    expect(() => buildWastePracticeReviewActivityMessage(kitchenDayTaskFixture, entry)).toThrow(
+    expect(() => buildWastePracticeReviewActivityMessage(kitchenSkillsTaskFixture, entry)).toThrow(
       /wastePracticeReview/,
     );
   });

@@ -1,13 +1,11 @@
 import { useReducer, useCallback, useMemo, useEffect, useState, useRef } from 'react';
 import { resolveMenuForDate } from '@/shared/menu/menuResolver';
 import { resolveMealSlotsForDate } from '@/shared/menu/mealSlots';
-import {
-  resolveChefForecastServiceDate,
-  OperationalCalendarError,
-} from '@/shared/calendar/operationalServiceCalendar';
+import { OperationalCalendarError } from '@/shared/calendar/operationalServiceCalendar';
+import { resolveChefForecastServiceDate } from '@/products/kitchen-forecast/chefForecastWindow';
 import { isGameBusEmbed, useGameBusEmbed } from '@/platform/gamebus';
 import { tryPostChefActivity } from '@/products/kitchen-forecast/gamebus/postActivity';
-import { hasGameBusPostedChefForecastForDate } from '@/platform/gamebus/bridge';
+import { hasGameBusPostedKey } from '@/platform/gamebus/bridge';
 import { logChefTryPostActivityResult } from '@/products/kitchen-forecast/gamebus/chefGameBusSubmissionDebug';
 import { gamebusDevLog } from '@/platform/gamebus/devLog';
 import {
@@ -216,7 +214,7 @@ export function useChefForecast(clock: Clock = systemClock) {
   const submissionOpen =
     serviceDateResolution.status === 'resolved' && isChefSubmissionAllowed(now, serviceDate);
   const gameBusPostedForServiceDate =
-    serviceDate !== '' && hasGameBusPostedChefForecastForDate(serviceDate);
+    serviceDate !== '' && hasGameBusPostedKey(serviceDate);
   const hasSubmitted = state.submitted || gameBusPostedForServiceDate;
   const formInteractive =
     menuAvailability.status === 'available' &&

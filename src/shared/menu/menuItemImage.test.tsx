@@ -1,9 +1,6 @@
-// @vitest-environment jsdom
 import { describe, it, expect } from 'vitest';
-import { render, fireEvent } from '@testing-library/react';
-import { FoodImage } from '@/products/lunch-declaration/components/FoodImage';
 import { foodCatalogue } from '@/shared/menu/foodCatalogue';
-import { resolveMenuItemImage, publicAssetUrl } from '@/shared/menu/menuItemImage';
+import { resolveMenuItemImage } from '@/shared/menu/menuItemImage';
 
 describe('menuItemImage', () => {
   it('uses category placeholder when dedicated file is absent', () => {
@@ -24,23 +21,5 @@ describe('menuItemImage', () => {
       expect(item.imageDedicated).toMatch(/items\/.+\.webp$/);
       expect(item.imagePlaceholder).toMatch(/placeholders\/.+\.svg$/);
     }
-  });
-});
-
-describe('FoodImage', () => {
-  it('falls back from broken dedicated image to placeholder', () => {
-    const placeholder = publicAssetUrl('images/menu/placeholders/main.svg');
-    const { container } = render(
-      <FoodImage
-        src="/missing-dedicated.webp"
-        placeholderSrc={placeholder}
-        alt="Test dish"
-        category="classic"
-      />,
-    );
-    const img = container.querySelector('img');
-    expect(img).toBeTruthy();
-    fireEvent.error(img!);
-    expect(container.querySelector('img')?.getAttribute('src')).toBe(placeholder);
   });
 });

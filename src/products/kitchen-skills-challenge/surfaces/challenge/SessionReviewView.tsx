@@ -1,10 +1,10 @@
 import { SessionEvidence } from '@/products/kitchen-skills-challenge/surfaces/shared/SessionEvidence';
 import { formatSessionDate } from '@/products/kitchen-skills-challenge/format';
-import { useReadyKitchenDaySession } from '@/products/kitchen-skills-challenge/domain/session/KitchenSkillsSessionContext';
+import { useReadyKitchenSkillsSession } from '@/products/kitchen-skills-challenge/domain/session/KitchenSkillsSessionContext';
 
 export function SessionReviewView() {
   const { session, trimEntries, rescueEntries, portionEntries, findReviewBySessionId } =
-    useReadyKitchenDaySession();
+    useReadyKitchenSkillsSession();
   const review = findReviewBySessionId(session.sessionId);
   const missing: string[] = [];
   if (trimEntries.length === 0) missing.push('Trim Smart');

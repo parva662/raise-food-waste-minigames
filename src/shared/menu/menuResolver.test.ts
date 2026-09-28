@@ -7,8 +7,6 @@ import {
   resolveMenuForDate,
 } from '@/shared/menu/menuResolver';
 import { resolveMealSlotsForDate } from '@/shared/menu/mealSlots';
-import { buildActivityMessage } from '@/products/lunch-declaration/gamebus/buildActivityMessage';
-import { pariStudentLunchTaskFixture } from '@/products/lunch-declaration/gamebus/taskFixtures';
 import { MENU_DATES } from '@/test/fixtures/dates';
 import { foodCatalogue } from '@/shared/menu/foodCatalogue';
 import { getAllGeneratedDailyMenus, getGeneratedMenuMeta } from '@/shared/menu/generatedMenuData';
@@ -93,38 +91,6 @@ describe('generated dated menu resolver', () => {
     expect(range.end).toBe('2026-10-30');
     expect(resolveMenuForDate(MENU_DATES.beforeRange)).toEqual({ status: 'unavailable' });
     expect(resolveMenuForDate(MENU_DATES.afterRange)).toEqual({ status: 'unavailable' });
-  });
-
-  it('exposes generated item IDs to GameBus studentLunchCheckin mapper', () => {
-    const slots = resolveMealSlotsForDate(MENU_DATES.runtimeWednesday)!;
-    const draft = {
-      mealChoice: 'regular' as const,
-      mainQuantity: 1,
-      vegetarianQuantity: 0,
-      soupQuantity: 0,
-      dessertQuantity: 0,
-    };
-    const message = buildActivityMessage(
-      pariStudentLunchTaskFixture,
-      {
-        studentId: 'demo',
-        lunchDate: MENU_DATES.runtimeWednesday,
-        menuCycleWeek: 2,
-        menuVersion: 'test',
-        mealChoice: 'regular',
-        regularMainSelected: true,
-        regularVegetarianSelected: false,
-        noLunch: false,
-        selections: [],
-        submittedAt: '2026-02-03T12:00:00.000Z',
-        updatedAt: '2026-02-03T12:00:00.000Z',
-        includeInForecast: true,
-      },
-      draft,
-      slots,
-    );
-    const mainProp = message.data.properties.find((p) => p.template === 'mainItemId');
-    expect(mainProp?.obj).toEqual({ value: slots.main.id });
   });
 
   it('resolves every catalogue item with image paths', () => {

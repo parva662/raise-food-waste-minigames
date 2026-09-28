@@ -54,9 +54,9 @@ product domain logic
 product surface
 ```
 
-`platform/gamebus` must not import `products/*` or `legacy/*`. Products post through `tryPostBuiltActivity` (already-built ACTIVITY message) or, for Kitchen Skills Challenge student/trainer writes, their own posting helper that still uses the same `postMessage` shape.
+`platform/gamebus` must not import `products/*` or `legacy/*`. Products post through `tryPostBuiltActivity` (already-built ACTIVITY message) or, for Kitchen Skills Challenge student/trainer writes, their own posting helper that still uses the same `postMessage` shape. Duplicate and in-flight handling in the bridge is generic (`once` vs keyed, optional `markOnce`), not product-named.
 
-Shared calendar/menu/time may be consumed by several products.
+Shared calendar/menu/time/identifiers may be consumed by several products. Shared must not import `products/*` or `legacy/*`.
 
 ## Shared operational kernel
 
@@ -65,6 +65,7 @@ Only genuinely shared code:
 - `shared/time/` — Europe/Helsinki dates, clock, countdown
 - `shared/calendar/` — operational service days
 - `shared/menu/` — menu resolution and meal slots
+- `shared/identifiers/` — generic ids such as ingredient ids
 - `shared/ui/` — `MenuStatusBanner`
 
 Do not add `shared/services/` dumping grounds. If a module is owned by one product, keep it there.

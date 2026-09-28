@@ -1,6 +1,6 @@
 import { RESULT_CATEGORY_KEYS, RESULT_CATEGORY_LABELS } from '@/products/forecast-results/types';
 import type { StaffDailyResult } from '@/products/forecast-results/types';
-import { formatGrams } from '@/products/forecast-results/useChefResultsData';
+import { formatGrams } from '@/products/forecast-results/useForecastResultsData';
 import {
   formatCategoryOutcomeLabel,
   getCategoryOutcomeKind,

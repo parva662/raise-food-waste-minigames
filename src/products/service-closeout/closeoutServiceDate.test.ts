@@ -83,3 +83,10 @@ describe('closeoutServiceDate', () => {
     expect(selected?.activityId).toBe('activity-forecast-anon-001');
   });
 });
+
+describe('closeoutServiceDate Helsinki calendar', () => {
+  it('resolves service closeout to Helsinki today near UTC midnight', () => {
+    const instant = new Date('2026-08-17T21:30:00Z');
+    expect(resolveCloseoutServiceDate(undefined, instant)).toBe('2026-08-18');
+  });
+});
