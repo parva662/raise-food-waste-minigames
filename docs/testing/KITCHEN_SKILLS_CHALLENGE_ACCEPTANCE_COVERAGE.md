@@ -1,6 +1,6 @@
 # Kitchen Skills Challenge acceptance coverage
 
-Approved Gherkin: `features/kitchen-skills-challenge/*.feature`  
+Approved Gherkin: `features/kitchen-skills-challenge/*.feature`
 Implementation: `main` (`#/kitchen-day`, `#/kitchen-day-progress`, `#/kitchen-day-tutor`). Those hashes are legacy-stable.
 
 **LIVE E2E BLOCKED BY GAMEBUS ADMIN ALIGNMENT.** Repository tests cover domain, UI, and mapper contracts only. There is no browser/live GameBus E2E suite.

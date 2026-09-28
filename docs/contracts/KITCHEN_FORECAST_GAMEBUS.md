@@ -1,6 +1,6 @@
 # GameBus chef forecast — integration contract
 
-**Status:** Repository mapper implemented (`src/products/kitchen-forecast/gamebus/mapChefForecast.ts`)  
+**Status:** Repository mapper implemented (`src/products/kitchen-forecast/gamebus/mapChefForecast.ts`)
 **Activity reference:** `chefForecast` only (no `chefForecastV2`)  
 **Live GameBus:** Manual admin migration required — do not edit live config from this repo.
 
