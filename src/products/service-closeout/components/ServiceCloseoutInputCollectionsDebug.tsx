@@ -22,10 +22,9 @@ function formatRawJson(value: unknown): string {
  */
 export function ServiceCloseoutInputCollectionsDebug() {
   const [open, setOpen] = useState(false);
+  const { embedded, inputCollectionsReady, inputCollections } = useGameBusEmbed();
 
   if (!import.meta.env.DEV) return null;
-
-  const { embedded, inputCollectionsReady, inputCollections } = useGameBusEmbed();
   const collectionKeys = getInputCollectionKeys(inputCollections);
   const rawGroupActivities = getRawKitchenGroupActivitiesInput(inputCollections);
 
