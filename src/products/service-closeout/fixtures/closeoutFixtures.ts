@@ -1,0 +1,173 @@
+/**
+ * DEVELOPMENT FIXTURES ONLY — example finalized closeouts for future calculation tests.
+ * Not used by the production closeout form. Not study or live operational data.
+ */
+import type { NormalizedServiceCloseout } from '@/products/service-closeout/operationalRecord';
+
+export const FIXTURE_NORMALIZED_CLOSEOUTS: readonly NormalizedServiceCloseout[] = [
+  {
+    targetDate: '2026-07-27',
+    actualCustomers: 176,
+    main: {
+      itemId: 'thai-pork-meatballs-with-rice',
+      preparedQuantity: 118,
+      portionWeightGrams: 120,
+      overproductionGrams: 480,
+      overproductionKg: 0.48,
+    },
+    vegetarian: {
+      itemId: 'quorn-and-mushroom-stew',
+      preparedQuantity: 52,
+      portionWeightGrams: 180,
+      overproductionGrams: 360,
+      overproductionKg: 0.36,
+    },
+    soup: {
+      itemId: 'pumpkin-soup',
+      preparedQuantity: 38,
+      portionWeightGrams: 250,
+      overproductionGrams: 500,
+      overproductionKg: 0.5,
+    },
+    dessert: {
+      itemId: 'apple-compote',
+      preparedQuantity: 34,
+      portionWeightGrams: 90,
+      overproductionGrams: 180,
+      overproductionKg: 0.18,
+    },
+    submittedAt: '2026-07-27T14:30:00.000Z',
+  },
+  {
+    targetDate: '2026-07-28',
+    actualCustomers: 188,
+    main: {
+      itemId: 'sausage-stroganoff-with-mashed-potatoes',
+      preparedQuantity: 125,
+      portionWeightGrams: 120,
+      overproductionGrams: 600,
+      overproductionKg: 0.6,
+    },
+    vegetarian: {
+      itemId: 'black-bean-patty-with-mashed-potatoes-and-lemon-aioli',
+      preparedQuantity: 54,
+      portionWeightGrams: 180,
+      overproductionGrams: 360,
+      overproductionKg: 0.36,
+    },
+    soup: {
+      itemId: 'chicken-and-lentil-soup',
+      preparedQuantity: 42,
+      portionWeightGrams: 250,
+      overproductionGrams: 500,
+      overproductionKg: 0.5,
+    },
+    dessert: {
+      itemId: 'baked-banana-smoothie',
+      preparedQuantity: 36,
+      portionWeightGrams: 90,
+      overproductionGrams: 90,
+      overproductionKg: 0.09,
+    },
+    submittedAt: '2026-07-28T14:30:00.000Z',
+  },
+  {
+    targetDate: '2026-07-29',
+    actualCustomers: 182,
+    main: {
+      itemId: 'chicken-steak-with-pesto-sauce-and-pasta',
+      preparedQuantity: 112,
+      portionWeightGrams: 120,
+      overproductionGrams: 480,
+      overproductionKg: 0.48,
+    },
+    vegetarian: {
+      itemId: 'chickpea-and-apricot-stew-with-pasta',
+      preparedQuantity: 50,
+      portionWeightGrams: 180,
+      overproductionGrams: 360,
+      overproductionKg: 0.36,
+    },
+    soup: {
+      itemId: 'pike-fish-ball-soup',
+      preparedQuantity: 36,
+      portionWeightGrams: 250,
+      overproductionGrams: 250,
+      overproductionKg: 0.25,
+    },
+    dessert: {
+      itemId: 'mango-and-pear-lassi',
+      preparedQuantity: 32,
+      portionWeightGrams: 90,
+      overproductionGrams: 180,
+      overproductionKg: 0.18,
+    },
+    submittedAt: '2026-07-29T14:30:00.000Z',
+  },
+  {
+    targetDate: '2026-07-30',
+    actualCustomers: 194,
+    main: {
+      itemId: 'roasted-rainbow-trout-with-lemon-sauce-and-potatoes',
+      preparedQuantity: 130,
+      portionWeightGrams: 120,
+      overproductionGrams: 720,
+      overproductionKg: 0.72,
+    },
+    vegetarian: {
+      itemId: 'vegetable-patties-with-tartar-sauce-and-pasta',
+      preparedQuantity: 56,
+      portionWeightGrams: 180,
+      overproductionGrams: 540,
+      overproductionKg: 0.54,
+    },
+    soup: {
+      itemId: 'pea-soup',
+      preparedQuantity: 48,
+      portionWeightGrams: 250,
+      overproductionGrams: 750,
+      overproductionKg: 0.75,
+    },
+    dessert: {
+      itemId: 'oven-pancake',
+      preparedQuantity: 40,
+      portionWeightGrams: 90,
+      overproductionGrams: 270,
+      overproductionKg: 0.27,
+    },
+    submittedAt: '2026-07-30T14:30:00.000Z',
+  },
+  {
+    targetDate: '2026-07-31',
+    actualCustomers: 179,
+    main: {
+      itemId: 'minced-meat-lasagne',
+      preparedQuantity: 120,
+      portionWeightGrams: 120,
+      overproductionGrams: 600,
+      overproductionKg: 0.6,
+    },
+    vegetarian: {
+      itemId: 'lentil-lasagne',
+      preparedQuantity: 48,
+      portionWeightGrams: 180,
+      overproductionGrams: 360,
+      overproductionKg: 0.36,
+    },
+    soup: {
+      itemId: 'creamy-beetroot-soup',
+      preparedQuantity: 34,
+      portionWeightGrams: 250,
+      overproductionGrams: 500,
+      overproductionKg: 0.5,
+    },
+    dessert: {
+      itemId: 'stewed-apple-with-ginger-cream',
+      preparedQuantity: 30,
+      portionWeightGrams: 90,
+      overproductionGrams: 90,
+      overproductionKg: 0.09,
+    },
+    submittedAt: '2026-07-31T14:30:00.000Z',
+  },
+] as const;

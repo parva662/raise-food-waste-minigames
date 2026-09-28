@@ -1,5 +1,5 @@
 import { vi } from 'vitest';
-import * as menuResolverModule from '../../services/menuResolver';
+import * as menuResolverModule from '@/shared/menu/menuResolver';
 
 /**
  * Marks the given dates as explicitly closed / non-service; every other date keeps its

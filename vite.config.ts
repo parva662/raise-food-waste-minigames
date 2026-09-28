@@ -1,10 +1,19 @@
 /// <reference types="vitest/config" />
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
+
+const srcDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), 'src');
 
 export default defineConfig(({ command }) => ({
   base: command === 'build' ? '/raise-food-waste-minigames/' : '/',
   plugins: [react()],
+  resolve: {
+    alias: {
+      '@': srcDir,
+    },
+  },
   test: {
     environment: 'node',
     pool: 'forks',

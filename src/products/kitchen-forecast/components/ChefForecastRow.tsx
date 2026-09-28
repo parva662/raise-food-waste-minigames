@@ -1,0 +1,75 @@
+import type { MenuItem } from '@/shared/menu/types';
+import { FoodImage } from '@/products/lunch-declaration/components/FoodImage';
+import { CHEF_INTEGER_RANGE_ERROR } from '@/products/kitchen-forecast/validation';
+import { ChefIntegerInput } from '@/products/kitchen-forecast/components/ChefIntegerInput';
+
+interface ChefForecastRowProps {
+  item: MenuItem;
+  categoryLabel: string;
+  quantity: number | null;
+  disabled: boolean;
+  readOnly?: boolean;
+  helperText?: string;
+  error: string | null;
+  onQuantityChange: (value: number | null) => void;
+  onValidationError: (error: string | null) => void;
+}
+
+export function ChefForecastRow({
+  item,
+  categoryLabel,
+  quantity,
+  disabled,
+  readOnly = false,
+  helperText,
+  error,
+  onQuantityChange,
+  onValidationError,
+}: ChefForecastRowProps) {
+  const inputDisabled = disabled || readOnly;
+
+  return (
+    <div className="chef-forecast-row" role="group" aria-label={`${categoryLabel}: ${item.name}`}>
+      <div className="chef-forecast-row__thumb">
+        <FoodImage
+          src={item.imageDedicated ?? item.image}
+          placeholderSrc={item.imagePlaceholder}
+          alt={item.name}
+          category={item.category}
+          className="chef-forecast-row__image"
+          fallbackClassName="chef-forecast-row__image-fallback"
+          iconSize={16}
+        />
+      </div>
+      <div className="chef-forecast-row__info">
+        <span className="chef-forecast-row__category">{categoryLabel}</span>
+        <span className="chef-forecast-row__name">{item.name}</span>
+        {helperText ? <span className="chef-forecast-row__helper">{helperText}</span> : null}
+      </div>
+      <div className="chef-forecast-row__quantity">
+        <label className="chef-forecast-row__qty-label" htmlFor={`chef-qty-${item.id}`}>
+          Portions
+        </label>
+        <ChefIntegerInput
+          id={`chef-qty-${item.id}`}
+          className="chef-forecast-row__input"
+          value={quantity}
+          disabled={inputDisabled}
+          error={error}
+          fieldLabel={`${categoryLabel} portions`}
+          describedBy={error ? `chef-qty-error-${item.id}` : undefined}
+          onChange={onQuantityChange}
+          onValidationError={onValidationError}
+        />
+        <span className="chef-forecast-row__unit">portions</span>
+      </div>
+      {error && (
+        <p id={`chef-qty-error-${item.id}`} className="chef-forecast-row__error" role="alert">
+          {error}
+        </p>
+      )}
+    </div>
+  );
+}
+
+export { CHEF_INTEGER_RANGE_ERROR };
