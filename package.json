@@ -1,10 +1,13 @@
 {
-  "name": "gamebus-lunch-dnd-v2",
+  "name": "raise-food-waste-minigames",
   "private": true,
   "version": "0.0.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "typecheck": "tsc -b",
+    "lint": "eslint src scripts",
+    "check": "npm run typecheck && npm run lint && npm run test:run && npm run build",
     "build": "tsc -b && vite build",
     "preview": "vite preview",
     "test": "vitest",
@@ -13,7 +16,8 @@
     "menu:inspect": "tsx scripts/menu/inspect-cli.ts",
     "menu:convert": "tsx scripts/menu/convert-cli.ts",
     "menu:check": "tsx scripts/menu/check-cli.ts",
-    "kitchen-day:recipes": "tsx scripts/kitchen-day/extract-cli.ts"
+    "kitchen-skills:recipes": "tsx scripts/kitchen-skills/extract-cli.ts",
+    "kitchen-day:recipes": "npm run kitchen-skills:recipes"
   },
   "dependencies": {
     "date-fns": "^4.4.0",
@@ -23,16 +27,22 @@
     "react-dom": "^19.1.0"
   },
   "devDependencies": {
+    "@eslint/js": "^10.0.1",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",
     "@testing-library/user-event": "^14.6.1",
+    "@types/node": "^26.6.3",
     "@types/react": "^19.1.2",
     "@types/react-dom": "^19.1.2",
     "@vitejs/plugin-react": "^4.4.1",
     "@vitest/coverage-v8": "^4.1.10",
+    "eslint": "^10.11.0",
+    "eslint-plugin-react-hooks": "^7.1.1",
+    "eslint-plugin-react-refresh": "^0.5.7",
     "jsdom": "^29.1.1",
     "tsx": "^4.23.1",
     "typescript": "~5.8.3",
+    "typescript-eslint": "^8.70.1",
     "vite": "^6.3.5",
     "vitest": "^4.1.10",
     "xlsx": "^0.18.5"

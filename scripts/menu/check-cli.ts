@@ -77,7 +77,7 @@ for (const day of dailyMenus) {
   }
 }
 
-if (JSON.stringify(runtimeCatalogue) !== JSON.stringify(foodCatalogue.map(({ sourceName, ...rest }) => rest))) {
+if (JSON.stringify(runtimeCatalogue) !== JSON.stringify(foodCatalogue.map(({ sourceName: _sourceName, ...rest }) => rest))) {
   errors.push('Runtime food-catalogue.json is out of sync with generated-data/menu/food-catalogue.json');
 }
 

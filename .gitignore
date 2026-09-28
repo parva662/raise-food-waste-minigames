@@ -25,3 +25,9 @@ dist-ssr
 
 # Local external protocol reference (not part of this repo)
 reference/gamebus-minigame-demo-main/
+
+# Test / coverage artifacts
+coverage/
+playwright-report/
+test-results/
+e2e/.auth/

@@ -36,7 +36,7 @@ Games run in an iframe; GameBus supplies **TASK** data and **INPUT_COLLECTIONS**
 | **Students** | Lunch declaration; future plate observation mission; future progress/gamification as agreed outside current scope |
 | **Kitchen staff / chefs** | Kitchen forecast; service closeout; participant results views |
 | **Chef / authorized kitchen staff** | Same operational games plus management/research dashboard views where enabled |
-| **Teachers / practical kitchen participants** | Kitchen Day practical modules (Trim & Waste / Reuse / Portioning) |
+| **Teachers / practical kitchen participants** | Kitchen Skills Challenge (Trim / Reuse / Portion; hashes `#/kitchen-day*`) |
 
 ---
 
@@ -50,14 +50,14 @@ Games run in an iframe; GameBus supplies **TASK** data and **INPUT_COLLECTIONS**
 - **Kitchen Staff Dashboard (Chef Results)** — participant-safe forecast feedback; read-only in app.
 - **Kitchen Management Dashboard** — broader staff/research view; route hidden pending production auth.
 
-### Practical kitchen day (teaching lab) — connected modules, not three games
+### Kitchen Skills Challenge (teaching lab) — connected modules, not three games
 
-Orchestration: [`docs/product/waste-challenges/KITCHEN_DAY.md`](./docs/product/waste-challenges/KITCHEN_DAY.md) (**APPROVED PRODUCT TARGET**). Slugs: [`docs/product/waste-challenges/GAMEBUS_SLUG_CONTRACT.md`](./docs/product/waste-challenges/GAMEBUS_SLUG_CONTRACT.md).
+Orchestration: [`docs/product/kitchen-skills-challenge/KITCHEN_SKILLS_CHALLENGE.md`](./docs/product/kitchen-skills-challenge/KITCHEN_SKILLS_CHALLENGE.md). Slugs: [`docs/product/kitchen-skills-challenge/GAMEBUS_SLUG_CONTRACT.md`](./docs/product/kitchen-skills-challenge/GAMEBUS_SLUG_CONTRACT.md).
 
-- **Trim Smart** — **CURRENT IMPLEMENTATION** v1 on `main` (`#/waste/trim-smart`, Ingredient → Practice → Measure). Target on `feature/kitchen-day-v1`: estimate → timed prep → actual waste; locked category enum; multiple **different** ingredients per session (same ingredient once).
-- **Rescue & Reuse** — encoded on `feature/kitchen-day-v1`; not on `main`; join `sessionId` + `ingredientId`; reusable amount + free-text destination.
-- **Portion Precision** — encoded on `feature/kitchen-day-v1`; not on `main`; one activity per recipe; `recipeComposition`; required amounts and expected final weight from the generated professional recipe reference.
-- **Session Review / Student Progress / tutor assessment** — encoded on `feature/kitchen-day-v1`; not on `main`; read-only evidence; one end-of-session `wastePracticeReview` (two 0–5 scores + optional feedback); existing `GET /groups/activities`.
+- **Trim Smart (Kitchen Skills Challenge)** — estimate → timed prep → actual waste at `#/kitchen-day`. Legacy v1 remains at `#/waste/trim-smart`.
+- **Rescue & Reuse** — `#/kitchen-day/reuse`; join `sessionId` + `ingredientId`.
+- **Portion Precision** — `#/kitchen-day/portion`; professional recipe reference extract.
+- **Session Review / Progress / trainer assessment** — `#/kitchen-day/review`, `#/kitchen-day-progress`, `#/kitchen-day-tutor`. Trainer `wastePracticeReview` posting is disabled.
 
 ### Student missions (broader study)
 
@@ -79,8 +79,8 @@ Orchestration: [`docs/product/waste-challenges/KITCHEN_DAY.md`](./docs/product/w
 ## System boundaries
 
 - **In scope:** Custom embed UIs, client-side validation, mapping to GameBus ACTIVITY payloads, standalone demo modes, GitHub Pages deployment, automated unit/integration tests (Vitest).
-- **Out of scope (unless explicitly added):** GameBus server administration, live template editing, badge/result engines. Kitchen Day connected modules are encoded on `feature/kitchen-day-v1` and are **not** on `main`. Retrieval uses the existing `kitchenGroupInput` / `GET /groups/activities` client already in this repo.
-- **Authority:** [`PROJECT_RULES.md`](./PROJECT_RULES.md) for engineering process; **approved** `.feature` files for product targets; **source on `main`** for production-built games, and `feature/kitchen-day-v1` for the Kitchen Day target until merge; GameBus contracts under [`docs/contracts/`](./docs/contracts/); product pages under [`docs/product/`](./docs/product/).
+- **Out of scope (unless explicitly added):** GameBus server administration, live template editing, badge/result engines. Kitchen Skills Challenge is on `main` at `#/kitchen-day*`. Retrieval uses `kitchenGroupInput` / group activities.
+- **Authority:** [`PROJECT_RULES.md`](./PROJECT_RULES.md) for engineering process; **approved** `.feature` files for product targets; **source on `main`** for production-built games; GameBus contracts under [`docs/contracts/`](./docs/contracts/); product pages under [`docs/product/`](./docs/product/).
 
 ---
 

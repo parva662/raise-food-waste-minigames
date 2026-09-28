@@ -1,5 +1,5 @@
-import { resolveMenuForDate } from '../../services/menuResolver';
-import { FIXTURE_LUNCH_DATE } from './dates';
+import { resolveMenuForDate } from '@/shared/menu/menuResolver';
+import { FIXTURE_LUNCH_DATE } from '@/test/fixtures/dates';
 
 export function getFixtureMenuItems() {
   const menu = resolveMenuForDate(FIXTURE_LUNCH_DATE);

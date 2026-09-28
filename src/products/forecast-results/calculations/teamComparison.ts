@@ -1,0 +1,163 @@
+import type { StaffDailyResult } from '@/products/forecast-results/types';
+import {
+  buildPeerCustomerComparisonDetail,
+  buildPeerCustomerComparisonMessage,
+} from '@/products/forecast-results/calculations/forecastInterpretation';
+
+/**
+ * Minimum OTHER participating staff (excluding the authenticated user) before
+ * showing other-staff comparison. One peer is enough; the UI labels a single peer
+ * as "Other staff" and two-or-more peers as "Other staff median".
+ */
+export const MIN_ANONYMOUS_PEER_COUNT = 1;
+
+/** @deprecated Use MIN_ANONYMOUS_PEER_COUNT — kept for existing imports during transition. */
+export const MIN_ANONYMOUS_COMPARISON_PARTICIPANTS = MIN_ANONYMOUS_PEER_COUNT;
+
+export type AnonymousPeerBenchmark = {
+  peerCount: number;
+  canCompare: boolean;
+  /** "Other staff" when peerCount === 1; "Other staff median" when peerCount >= 2. */
+  peerLabel: 'Other staff' | 'Other staff median';
+  participantOverproductionRateGramsPerCustomer: number | null;
+  peerOverproductionMedianGramsPerCustomer: number | null;
+  participantShortageRateGramsPerCustomer: number | null;
+  peerShortageMedianGramsPerCustomer: number | null;
+  participantCustomerError: number;
+  peerCustomerErrorMedian: number;
+};
+
+export type ParticipantPeerComparisonInsight = {
+  overproductionMessage: string | null;
+  shortageMessage: string | null;
+  customerMessage: string | null;
+};
+
+function median(values: readonly number[]): number {
+  if (values.length === 0) return 0;
+  const sorted = [...values].sort((a, b) => a - b);
+  const mid = Math.floor(sorted.length / 2);
+  if (sorted.length % 2 === 0) {
+    return (sorted[mid - 1]! + sorted[mid]!) / 2;
+  }
+  return sorted[mid]!;
+}
+
+export function surplusRateGramsPerCustomer(result: StaffDailyResult): number | null {
+  if (result.actualCustomers <= 0) return null;
+  return result.totalSimulatedOverproductionGrams / result.actualCustomers;
+}
+
+export function shortageRateGramsPerCustomer(result: StaffDailyResult): number | null {
+  if (result.actualCustomers <= 0) return null;
+  return result.totalSimulatedShortageGrams / result.actualCustomers;
+}
+
+export function buildAnonymousPeerBenchmark(
+  staffResults: readonly StaffDailyResult[],
+  participantUserId: string,
+): AnonymousPeerBenchmark {
+  const participant = staffResults.find((result) => result.userId === participantUserId);
+  const peers = staffResults.filter((result) => result.userId !== participantUserId);
+
+  const peerOverRates = peers
+    .map(surplusRateGramsPerCustomer)
+    .filter((value): value is number => value !== null);
+  const peerShortRates = peers
+    .map(shortageRateGramsPerCustomer)
+    .filter((value): value is number => value !== null);
+  const peerCustomerErrors = peers.map((result) => result.customerForecastAbsoluteError);
+
+  return {
+    peerCount: peers.length,
+    canCompare: peers.length >= MIN_ANONYMOUS_PEER_COUNT,
+    peerLabel: peers.length >= 2 ? 'Other staff median' : 'Other staff',
+    participantOverproductionRateGramsPerCustomer: participant
+      ? surplusRateGramsPerCustomer(participant)
+      : null,
+    peerOverproductionMedianGramsPerCustomer:
+      peerOverRates.length > 0 ? median(peerOverRates) : null,
+    participantShortageRateGramsPerCustomer: participant
+      ? shortageRateGramsPerCustomer(participant)
+      : null,
+    peerShortageMedianGramsPerCustomer:
+      peerShortRates.length > 0 ? median(peerShortRates) : null,
+    participantCustomerError: participant?.customerForecastAbsoluteError ?? 0,
+    peerCustomerErrorMedian: peerCustomerErrors.length > 0 ? median(peerCustomerErrors) : 0,
+  };
+}
+
+function formatRate(value: number | null): string {
+  if (value === null) return '—';
+  return `${value.toFixed(1)} g/customer`;
+}
+
+function compareRatesMessage(
+  participantRate: number | null,
+  peerMedian: number | null,
+  metricLabel: string,
+): string | null {
+  if (participantRate === null || peerMedian === null) return null;
+  const delta = participantRate - peerMedian;
+  const tolerance = Math.max(peerMedian * 0.05, 0.1);
+  if (Math.abs(delta) <= tolerance) {
+    return `Your ${metricLabel} was close to the other-staff comparison.`;
+  }
+  if (delta < 0) {
+    return `Your ${metricLabel} was ${Math.abs(delta).toFixed(1)} g/customer below the other-staff comparison.`;
+  }
+  return `Your ${metricLabel} was ${delta.toFixed(1)} g/customer above the other-staff comparison.`;
+}
+
+export function buildParticipantPeerComparisonInsights(
+  _participant: StaffDailyResult,
+  benchmark: AnonymousPeerBenchmark,
+): ParticipantPeerComparisonInsight {
+  if (!benchmark.canCompare) {
+    return {
+      overproductionMessage: null,
+      shortageMessage: null,
+      customerMessage: null,
+    };
+  }
+
+  const overproductionMessage = compareRatesMessage(
+    benchmark.participantOverproductionRateGramsPerCustomer,
+    benchmark.peerOverproductionMedianGramsPerCustomer,
+    'estimated surplus',
+  );
+
+  let shortageMessage: string | null = null;
+  if (
+    benchmark.participantShortageRateGramsPerCustomer !== null &&
+    benchmark.peerShortageMedianGramsPerCustomer !== null
+  ) {
+    const delta =
+      benchmark.participantShortageRateGramsPerCustomer -
+      benchmark.peerShortageMedianGramsPerCustomer;
+    if (Math.abs(delta) <= 0.1) {
+      shortageMessage = 'Estimated shortage was close to the other-staff comparison.';
+    } else if (delta < 0) {
+      shortageMessage = `Estimated shortage was ${Math.abs(delta).toFixed(1)} g/customer below the other-staff comparison.`;
+    } else {
+      shortageMessage = `Estimated shortage was ${delta.toFixed(1)} g/customer above the other-staff comparison.`;
+    }
+  }
+
+  const customerMessage = buildPeerCustomerComparisonMessage(
+    benchmark.participantCustomerError,
+    benchmark.peerCustomerErrorMedian,
+  );
+  const customerDetail = buildPeerCustomerComparisonDetail(
+    benchmark.participantCustomerError,
+    benchmark.peerCustomerErrorMedian,
+  );
+
+  return {
+    overproductionMessage,
+    shortageMessage,
+    customerMessage: customerDetail ? `${customerMessage} ${customerDetail}` : customerMessage,
+  };
+}
+
+export { formatRate as formatPeerRateGramsPerCustomer };

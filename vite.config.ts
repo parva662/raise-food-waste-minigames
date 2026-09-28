@@ -1,10 +1,19 @@
 /// <reference types="vitest/config" />
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
+
+const srcDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), 'src');
 
 export default defineConfig(({ command }) => ({
   base: command === 'build' ? '/raise-food-waste-minigames/' : '/',
   plugins: [react()],
+  resolve: {
+    alias: {
+      '@': srcDir,
+    },
+  },
   test: {
     environment: 'node',
     pool: 'forks',
@@ -18,10 +27,9 @@ export default defineConfig(({ command }) => ({
       provider: 'v8',
       reporter: ['text', 'json-summary', 'html'],
       include: [
-        'src/services/**/*.ts',
-        'src/repositories/**/*.ts',
-        'src/utils/**/*.ts',
-        'src/hooks/**/*.ts',
+        'src/products/**/*.ts',
+        'src/shared/**/*.ts',
+        'src/platform/**/*.ts',
       ],
       exclude: ['**/*.test.ts', '**/*.test.tsx', 'src/test/**'],
     },

@@ -1,8 +1,8 @@
-import type { ActiveDeclaration } from '../../types/declaration';
-import { CANTEEN_CONFIG } from '../../config/canteen';
-import { resolveMealSlotsForDate } from '../../services/mealSlots';
-import { buildSelectionsFromMealDraft } from '../../utils/mealChoice';
-import { FIXTURE_LUNCH_DATE, SUBMISSION_TIMES } from './dates';
+import type { ActiveDeclaration } from '@/products/lunch-declaration/types/declaration';
+import { CANTEEN_CONFIG } from '@/shared/calendar/canteen';
+import { resolveMealSlotsForDate } from '@/shared/menu/mealSlots';
+import { buildSelectionsFromMealDraft } from '@/products/lunch-declaration/mealChoice';
+import { FIXTURE_LUNCH_DATE, SUBMISSION_TIMES } from '@/test/fixtures/dates';
 
 export function createFixtureDeclaration(
   overrides: Partial<ActiveDeclaration> = {},

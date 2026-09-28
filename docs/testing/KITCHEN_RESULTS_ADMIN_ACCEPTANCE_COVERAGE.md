@@ -18,7 +18,7 @@ Route: `#/chef-results-admin`. Timezone: `Europe/Helsinki`.
 | Area | Key scenarios | Automated coverage | Status |
 |---|---|---|---|
 | Complete service results | Shared engine staff table + overview | `chefResultsManagementDashboard.test.tsx`; calculation tests | COVERED |
-| Partial closeout-only | Actuals + explanation | `resolveAdminServicePartialState` + `ChefResultsAdminApp` | COVERED (path) |
+| Partial closeout-only | Actuals + explanation | `resolveAdminServicePartialState` + `ForecastResultsAdminApp` | COVERED (path) |
 | Partial forecast-only | Forecast list + pending closeout | Same | COVERED (path) |
 | Empty service | Clear empty state | `kitchenResultsProgressIndependence.test.ts` (empty kind) | COVERED |
 | Trends chart 0/1/2+ | Single-point chart allowed | `chefResultsManagementDashboard.test.tsx`; `ManagementTrendsSection` | COVERED |

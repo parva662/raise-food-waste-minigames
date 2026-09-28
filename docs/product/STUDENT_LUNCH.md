@@ -40,12 +40,12 @@ Do **not** rewrite the approved `.feature` merely to match current code.
 
 | Area | Location |
 |------|----------|
-| Route | Default / empty hash → student mode (`src/routing/appMode.ts`, `App.tsx`) |
-| Selection / submit | `src/hooks/useLunchSelection.ts` |
-| Service date | `src/services/studentLunchServiceDate.ts` |
-| Window / deadline | `src/config/canteen.ts`, `src/services/submissionWindow.ts` |
-| Menu / slots | `src/services/menuResolver.ts`, `src/services/mealSlots.ts` |
-| ACTIVITY mapping | `src/gamebus/mapStudentLunchCheckin.ts`, `src/gamebus/bridge.ts` |
+| Route | Default / empty hash → student mode (`src/app/routes.ts`, `src/products/lunch-declaration/LunchDeclarationApp.tsx`) |
+| Selection / submit | `src/products/lunch-declaration/useLunchSelection.ts` |
+| Service date | `src/products/lunch-declaration/studentLunchServiceDate.ts` |
+| Window / deadline | `src/shared/calendar/canteen.ts`, `src/products/lunch-declaration/submissionWindow.ts` |
+| Menu / slots | `src/shared/menu/menuResolver.ts`, `src/shared/menu/mealSlots.ts` |
+| ACTIVITY mapping | `src/products/lunch-declaration/gamebus/mapStudentLunchCheckin.ts`, `src/platform/gamebus/bridge.ts` |
 
 ---
 

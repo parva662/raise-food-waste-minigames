@@ -6,27 +6,27 @@ Controlled example menu source for the planned menu-import implementation. It do
 
 This file is **not** connected to runtime menu loading today. The app still uses the in-repo menu configuration under `src/`.
 
-## Kitchen Day recipe reference
+## Kitchen Skills Challenge recipe reference
 
 Source workbook (provenance only):
 
-`reference/kitchen-day/reseptit_data_v3.xlsx`
+`reference/kitchen-skills/reseptit_data_v3.xlsx`
 
 Canonical application reference (clean derivative):
 
-`reference/kitchen-day/kitchen_day_recipe_reference_clean.xlsx`
+`reference/kitchen-skills/kitchen_day_recipe_reference_clean.xlsx`
 
 The clean workbook is the only Excel file used to generate Portion Precision targets. Application code must consume the deterministic extracted dataset, not parse XLSX in the browser.
 
 Regenerate with:
 
-`npm run kitchen-day:recipes`
+`npm run kitchen-skills:recipes`
 
 Outputs:
 
-- `generated-data/kitchen-day/recipes.json`
-- `generated-data/kitchen-day/extraction-report.json`
-- `src/data/generated/kitchen-day-recipes.json` (runtime copy of the compact dataset)
+- `generated-data/kitchen-skills/recipes.json`
+- `generated-data/kitchen-skills/extraction-report.json`
+- `src/data/generated/kitchen-skills-recipes.json` (runtime copy of the compact dataset)
 
 Field mapping:
 
@@ -36,7 +36,7 @@ Field mapping:
 
 A recipe is imported only when it has an id, a name, an expected final weight greater than 0, and at least one valid ingredient. An ingredient is imported only when it has a usable name and a target weight greater than 0. Invalid rows are excluded and counted in the extraction report; missing weights are not invented.
 
-Current clean-workbook extract (`generated-data/kitchen-day/extraction-report.json`):
+Current clean-workbook extract (`generated-data/kitchen-skills/extraction-report.json`):
 
 - 191 recipe summary rows → **190 imported**
 - 1763 ingredient rows → **1741 imported**

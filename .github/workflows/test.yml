@@ -25,7 +25,10 @@ jobs:
         run: npm ci
 
       - name: TypeScript check
-        run: npx tsc -b
+        run: npm run typecheck
+
+      - name: Lint
+        run: npm run lint
 
       - name: Run tests
         run: npm run test:run

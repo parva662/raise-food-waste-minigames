@@ -4,7 +4,7 @@
 **Do not** create `chefForecastV2`, delete global property templates, or edit live config from this repository.  
 **Chef app URL (after setup):** `https://parva662.github.io/raise-food-waste-minigames/#/chef`
 
-**Code verification:** `src/gamebus/mapChefForecast.ts` and `src/gamebus/resolveChefForecastProperties.ts` require exactly **twelve required** property references always sent (including zero quantities and all four item IDs), plus **two optional** links (`confidence`, `notes`) included in the ACTIVITY only when the chef enters a value.
+**Code verification:** `src/products/kitchen-forecast/gamebus/mapChefForecast.ts` and `src/products/kitchen-forecast/gamebus/resolveChefForecastProperties.ts` require exactly **twelve required** property references always sent (including zero quantities and all four item IDs), plus **two optional** links (`confidence`, `notes`) included in the ACTIVITY only when the chef enters a value.
 
 | Order | Reference | Required on activity |
 |-------|-----------|----------------------|
@@ -84,7 +84,7 @@
 
 ### Quantity range — product rule vs. admin schema
 
-- **Kitchen Forecast business values are whole numbers 0–1000 inclusive** for expected customers and every forecast quantity (`src/config/chef.ts`; enforced by the app before submission).
+- **Kitchen Forecast business values are whole numbers 0–1000 inclusive** for expected customers and every forecast quantity (`src/products/kitchen-forecast/config.ts`; enforced by the app before submission).
 - Several reused legacy GameBus property schemas below declare a much wider maximum (`9007199254740991`). That is a **compatibility / admin schema detail** of shared global templates, not a Kitchen Forecast business range.
 - **A value above 1000 is not a valid Kitchen Forecast value**, regardless of what the live schema would accept. Any such value in the data is out of contract and should be treated as invalid on analysis.
 - Tightening those live schemas to 0–1000 is a **separate manual GameBus admin decision**. Do not change live GameBus configuration from this repository, and do not edit the existing templates as part of Kitchen Forecast delivery.
@@ -619,4 +619,4 @@ With optional values entered:
 - [`KITCHEN_FORECAST_GAMEBUS.md`](KITCHEN_FORECAST_GAMEBUS.md) — integration contract
 - [`../current-state/ROADMAP.md`](../current-state/ROADMAP.md) — roadmap
 - Product page: [`../product/KITCHEN_FORECAST.md`](../product/KITCHEN_FORECAST.md)
-- `src/gamebus/mapChefForecast.ts` — runtime mapper (authoritative property list)
+- `src/products/kitchen-forecast/gamebus/mapChefForecast.ts` — runtime mapper (authoritative property list)

@@ -53,8 +53,8 @@ Two surfaces exist in the current repository:
 
 | Surface | Route | Source area |
 |---------|-------|-------------|
-| Staff / participant results | `#/chef-results` | `src/chefResults/` |
-| Management / admin results | `#/chef-results-admin` | `src/chefResults/` (management views) |
+| Staff / participant results | `#/chef-results` | `src/products/forecast-results/` |
+| Management / admin results | `#/chef-results-admin` | `src/products/forecast-results/` (management views) |
 
 Describe behaviour only from current source and existing docs. Detailed migration review is still pending per implementation status.
 

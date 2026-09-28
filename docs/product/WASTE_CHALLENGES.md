@@ -1,25 +1,24 @@
-# Waste challenges / Kitchen Day (practical kitchen)
+# Waste challenges / Kitchen Skills Challenge (practical kitchen)
 
-**APPROVED PRODUCT TARGET** for product logic and property names. Not implemented as Kitchen Day on `main`. Encoded on `feature/kitchen-day-v1`.
+**APPROVED PRODUCT TARGET** for product logic and property names. **Implemented on `main`** at `#/kitchen-day*` (legacy-stable hashes). Legacy Trim Smart v1 remains at `#/waste/trim-smart`.
 
-**CURRENT IMPLEMENTATION on `main`:** Trim Smart v1 only (Ingredient → Practice → Measure).
-
-Canonical orchestration: [`waste-challenges/KITCHEN_DAY.md`](waste-challenges/KITCHEN_DAY.md).
-Property slugs: [`waste-challenges/GAMEBUS_SLUG_CONTRACT.md`](waste-challenges/GAMEBUS_SLUG_CONTRACT.md).
+Canonical orchestration: [`kitchen-skills-challenge/KITCHEN_SKILLS_CHALLENGE.md`](kitchen-skills-challenge/KITCHEN_SKILLS_CHALLENGE.md).
+Property slugs: [`kitchen-skills-challenge/GAMEBUS_SLUG_CONTRACT.md`](kitchen-skills-challenge/GAMEBUS_SLUG_CONTRACT.md).
 
 ---
 
 ## Family
 
-| Module | On `main` | On `feature/kitchen-day-v1` | Where to read |
-|--------|-----------|-----------------------------|---------------|
-| Kitchen Day | Trim Smart v1 only | Connected student workflow | [`waste-challenges/KITCHEN_DAY.md`](waste-challenges/KITCHEN_DAY.md) |
-| Trim Smart | v1 standalone | Target flow | [`waste-challenges/TRIM_SMART.md`](waste-challenges/TRIM_SMART.md) |
-| Rescue & Reuse | none | Implemented | [`waste-challenges/RESCUE_AND_REUSE.md`](waste-challenges/RESCUE_AND_REUSE.md) |
-| Portion Precision | none | Professional recipe extract + derived metrics | [`waste-challenges/PORTION_PRECISION.md`](waste-challenges/PORTION_PRECISION.md) |
-| Session Review / Progress / tutor assessment | none | Implemented | [`waste-challenges/CHEF_REVIEW.md`](waste-challenges/CHEF_REVIEW.md) |
+| Module | On `main` | Where to read |
+|--------|-----------|---------------|
+| Kitchen Skills Challenge | Connected student workflow at `#/kitchen-day*` | [`kitchen-skills-challenge/KITCHEN_SKILLS_CHALLENGE.md`](kitchen-skills-challenge/KITCHEN_SKILLS_CHALLENGE.md) |
+| Trim Smart (current) | `#/kitchen-day` | [`kitchen-skills-challenge/TRIM_SMART.md`](kitchen-skills-challenge/TRIM_SMART.md) |
+| Rescue & Reuse | `#/kitchen-day/reuse` | [`kitchen-skills-challenge/RESCUE_AND_REUSE.md`](kitchen-skills-challenge/RESCUE_AND_REUSE.md) |
+| Portion Precision | `#/kitchen-day/portion` | [`kitchen-skills-challenge/PORTION_PRECISION.md`](kitchen-skills-challenge/PORTION_PRECISION.md) |
+| Session Review / Progress / trainer assessment | `#/kitchen-day/review`, `#/kitchen-day-progress`, `#/kitchen-day-tutor` | [`kitchen-skills-challenge/CHEF_REVIEW.md`](kitchen-skills-challenge/CHEF_REVIEW.md) |
+| Legacy Trim Smart v1 | `#/waste/trim-smart` (deprecated) | `src/legacy/trim-smart-v1/` |
 
-Acceptance: [`../../features/waste-challenges/`](../../features/waste-challenges/).
+Acceptance: [`../../features/kitchen-skills-challenge/`](../../features/kitchen-skills-challenge/).
 
 ---
 
@@ -30,7 +29,7 @@ Acceptance: [`../../features/waste-challenges/`](../../features/waste-challenges
 | Estimate / actual waste / system vs kitchen reference | Trim Smart |
 | Reuse suggestion (`sessionId` + `ingredientId`) | Rescue & Reuse |
 | `recipeComposition` + final recipe weight + derived accuracy | Portion Precision |
-| Session Review, Student Progress, one session tutor assessment | [`CHEF_REVIEW.md`](waste-challenges/CHEF_REVIEW.md) |
+| Session Review, Student Progress, one session trainer assessment | [`CHEF_REVIEW.md`](kitchen-skills-challenge/CHEF_REVIEW.md) |
 
 **@pending:** percentile / ranking sufficient-data rule.
 

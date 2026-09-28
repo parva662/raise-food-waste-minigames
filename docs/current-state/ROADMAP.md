@@ -35,7 +35,7 @@
 
 **Research value:** `confidence` supports perceived vs actual forecast accuracy; `notes` preserve context for unusual service days and FAIR metadata.
 
-Full YAML schemas: `docs/contracts/KITCHEN_FORECAST_GAMEBUS.md`, `src/gamebus/propertySchemas.ts`.
+Full YAML schemas: `docs/contracts/KITCHEN_FORECAST_GAMEBUS.md`.
 
 Chef embed URL: `https://parva662.github.io/raise-food-waste-minigames/#/chef`
 
@@ -137,7 +137,7 @@ Migrate the **existing** `studentLunchCheckin` activity template; do **not** del
 
 Do **not** add a `timingStatus` template or link to `studentLunchCheckin`; the Student Lunch mapper never sends it.
 
-Full JSON Schemas and examples: `src/gamebus/propertySchemas.ts`.
+Full JSON Schemas and examples: `docs/contracts/STUDENT_LUNCH_GAMEBUS.md`.
 
 ---
 
@@ -214,7 +214,7 @@ Validate participant association, multi-user visibility, and organization bounda
 
 ### Student lunch (manual admin)
 
-1. Create or update **property templates** in GameBus admin (schemas in `propertySchemas.ts`).
+1. Create or update **property templates** in GameBus admin (schemas in `docs/contracts/STUDENT_LUNCH_GAMEBUS.md`).
 2. Update **`studentLunchCheckin`** activity-template property links.
 3. Confirm optional item-ID **omission**, enum behaviour, and schema validation on ingest.
 4. **Test Pari** embedded task against migrated template.
@@ -223,10 +223,10 @@ Validate participant association, multi-user visibility, and organization bounda
 
 ## Completed in repo (do not regress)
 
-- Student embed mapper: `src/gamebus/mapStudentLunchCheckin.ts` → `studentLunchCheckin`.
-- **Chef forecast:** `src/chef/*`, `src/gamebus/mapChefForecast.ts`, route `#/chef`.
-- **Service closeout:** `src/serviceCloseout/*`, `src/gamebus/mapWasteMeasurement.ts`, route `#/service-closeout` → `wasteMeasurement` ACTIVITY.
-- **Chef results:** `src/chefResults/*`, route `#/chef-results` (participant-safe), `#/chef-results-admin` (admin/research).
+- Student embed mapper: `src/products/lunch-declaration/gamebus/mapStudentLunchCheckin.ts` → `studentLunchCheckin`.
+- **Chef forecast:** `src/products/kitchen-forecast/*`, `src/products/kitchen-forecast/gamebus/mapChefForecast.ts`, route `#/chef`.
+- **Service closeout:** `src/products/service-closeout/*`, `src/products/service-closeout/gamebus/mapWasteMeasurement.ts`, route `#/service-closeout` → `wasteMeasurement` ACTIVITY.
+- **Chef results:** `src/products/forecast-results/*`, route `#/chef-results` (participant-safe), `#/chef-results-admin` (admin/research).
 - Pari iframe on GitHub Pages + `providerPari` origin (admin).
 - Node **Excel → JSON** conversion (`scripts/menu/`, `generated-data/menu/`).
 - **Runtime dated menu** from `src/data/generated/`; +175 day date shift unchanged.
@@ -239,16 +239,10 @@ Validate participant association, multi-user visibility, and organization bounda
 - Participant association without `studentId`/`chefId` on ACTIVITY (verify on test env).
 - Real food photography (`public/images/menu/items/<id>.webp`).
 
-## Kitchen Day (approved target — encoded on `feature/kitchen-day-v1`, not on `main`)
+## Kitchen Skills Challenge (implemented on `main`)
 
-See [`../product/waste-challenges/IMPLEMENTATION_BLUEPRINT.md`](../product/waste-challenges/IMPLEMENTATION_BLUEPRINT.md).
+See [`../product/kitchen-skills-challenge/IMPLEMENTATION_BLUEPRINT.md`](../product/kitchen-skills-challenge/IMPLEMENTATION_BLUEPRINT.md).
 
-0. GameBus admin alignment — **open** (live schemas, TASK, left-menu routes, embedded E2E)
-1. Shared session / shell — done on the feature branch
-2. Trim Smart target migration — done on the feature branch
-3. Rescue & Reuse — done on the feature branch
-4. Portion Precision + recipe extract — done on the feature branch
-5. Session Review / Student Progress / Tutor dashboard + `wastePracticeReview` — done on the feature branch
-6. Repository tests / build — done on the feature branch
+The connected Trim / Rescue / Portion / review / progress / trainer surfaces are on `main` at `#/kitchen-day*`. Legacy Trim Smart v1 remains at `#/waste/trim-smart`.
 
-`main` CURRENT IMPLEMENTATION remains Trim Smart v1 only. Next step after this branch is **LIVE GAMEBUS ALIGNMENT**, not further product redesign.
+Next product debugging step is **live GameBus E2E** (including the known Trim → Reuse reopen defect), not further product redesign.
