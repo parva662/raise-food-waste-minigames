@@ -1,10 +1,10 @@
 # Session Review, Student Progress, and tutor assessment
 
-> **APPROVED PRODUCT TARGET**. Not implemented on `main`. Encoded on `feature/kitchen-day-v1`.
+> **APPROVED PRODUCT TARGET**. Implemented on `main` at `#/kitchen-day/review`, `#/kitchen-day-progress`, and `#/kitchen-day-tutor`. Trainer `wastePracticeReview` posting remains disabled.
 >
 > Filename is historical. Product wording is **Tutor** / **Tutor assessment**. The GameBus activity slug remains `wastePracticeReview`.
 >
-> [`KITCHEN_DAY.md`](KITCHEN_DAY.md) · [`GAMEBUS_SLUG_CONTRACT.md`](GAMEBUS_SLUG_CONTRACT.md).
+> [`KITCHEN_SKILLS_CHALLENGE.md`](KITCHEN_SKILLS_CHALLENGE.md) · [`GAMEBUS_SLUG_CONTRACT.md`](GAMEBUS_SLUG_CONTRACT.md).
 
 ## 1. Two feedback layers
 
@@ -40,7 +40,7 @@ Tutor “on behalf of student” GameBus registration is unresolved until the li
 
 ## 4. Retrieval
 
-`src/gamebus/groupActivities.ts` — `kitchenGroupInput.activities` → `GET /groups/activities`.
+`src/platform/gamebus/groupActivities.ts` — `kitchenGroupInput.activities` → `GET /groups/activities`.
 
 **Not** a platform blocker. **Not** a new API.
 

@@ -87,11 +87,11 @@ For a given authenticated actor + `targetDate`:
 | Item | Location |
 |------|----------|
 | Route | `#/chef` |
-| App | `src/chef/` |
-| Window boundaries | `src/config/chef.ts`, `src/services/chefForecastWindow.ts` |
-| Target-date resolution | `src/services/operationalServiceCalendar.ts` |
-| Retrieval eligibility | `src/services/chefForecastEligibilityPolicy.ts`, `src/serviceCloseout/forecast/selectCloseoutForecast.ts` |
-| ACTIVITY mapping | `src/gamebus/` chef forecast builders / mappers |
+| App | `src/products/kitchen-forecast/` |
+| Window boundaries | `src/products/kitchen-forecast/config.ts`, `src/products/kitchen-forecast/chefForecastWindow.ts` |
+| Target-date resolution | `src/shared/calendar/operationalServiceCalendar.ts` |
+| Retrieval eligibility | `src/products/kitchen-forecast/chefForecastEligibilityPolicy.ts`, `src/products/service-closeout/forecast/selectCloseoutForecast.ts` |
+| ACTIVITY mapping | `src/products/kitchen-forecast/gamebus/` builders / mappers |
 
 ---
 

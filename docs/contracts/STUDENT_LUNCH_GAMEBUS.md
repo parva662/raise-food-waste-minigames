@@ -2,7 +2,7 @@
 
 **Status:** **EXTERNAL / GAMEBUS CONTRACT** — repository mapper implemented; live GameBus template migration still manual and pending.
 **Approved product behaviour:** [`../../features/student/student-lunch.feature`](../../features/student/student-lunch.feature) (**APPROVED PRODUCT TARGET**).
-**Implemented technical behaviour:** current `src/` on `main` — `src/gamebus/mapStudentLunchCheckin.ts`, `src/gamebus/resolveActivityProperties.ts`, `src/gamebus/buildActivityMessage.ts`, `src/gamebus/propertySchemas.ts`.
+**Implemented technical behaviour:** current `src/` on `main` — `src/products/lunch-declaration/gamebus/mapStudentLunchCheckin.ts`, `src/products/lunch-declaration/gamebus/resolveStudentLunchProperties.ts`, `src/products/lunch-declaration/gamebus/buildActivityMessage.ts`, `src/platform/gamebus/propertySchemas.ts`.
 **Live GameBus configuration:** not verified from this repository. The last recorded admin audit was taken from the test environment on 2026-07-27 and is not stored here.
 
 This document has four distinct layers, in order:
@@ -110,7 +110,7 @@ Property order follows `orderedPropertyRefsForDraft`: `targetDate`, `mealType`, 
 - `start` is `submittedAt`; `end` is `start + 1 minute`.
 - The child posts once via `window.parent.postMessage`; the parent closes the modal on an accepted `ACTIVITY`.
 
-Embed handshake, as implemented in `src/gamebus/bridge.ts`:
+Embed handshake, as implemented in `src/platform/gamebus/bridge.ts`:
 
 1. Child registers its `message` listener and posts `{ type: 'IFRAME_READY' }`, retrying until a TASK arrives.
 2. Parent posts `{ type: 'TASK', data: { activityTemplates, … } }`; the first TASK wins and later duplicates are ignored.
@@ -185,11 +185,11 @@ The theoretical maximum of 11 properties requires positive quantities in both pa
 
 | Concern | Implementation on `main` |
 |---------|--------------------------|
-| Route | Default / empty hash → student mode (`src/routing/appMode.ts`) |
-| Target service date | `src/services/studentLunchServiceDate.ts` — first operational day after the Helsinki operational date, skipping weekends and explicitly closed days via `isOperationalServiceDay` |
+| Route | Default / empty hash → student mode (`src/app/routes.ts`) |
+| Target service date | `src/products/lunch-declaration/studentLunchServiceDate.ts` — first operational day after the Helsinki operational date, skipping weekends and explicitly closed days via `isOperationalServiceDay` |
 | Menu unavailable | Blocks the form and submission; the resolved `targetDate` is unchanged |
 | Deadline | `CANTEEN_CONFIG` 23:59:00 Europe/Helsinki on the calendar day before the target service; `submissionWindow` closes when `now >= deadline` (also once the service day itself begins) |
-| Flow | Edit → Review → Confirm in `src/hooks/useLunchSelection.ts` |
+| Flow | Edit → Review → Confirm in `src/products/lunch-declaration/useLunchSelection.ts` |
 | Submit states | `idle` / `sending` / `failed` / `success`; failure keeps the draft and allows retry |
 | Duplicate safety | Bridge in-flight and `hasPosted` guards reject a second post as `duplicate` |
 | Mapping | `mapStudentLunchCheckin` → `buildActivityMessage` → `ACTIVITY` with `start` = `submittedAt`, `end` = `+1 min` |
@@ -223,7 +223,7 @@ Modify the existing `studentLunchCheckin` template; do not delete old property t
 
 Result: 7 required links plus 4 optional item-ID links. **Do not add a `timingStatus` link to this template.**
 
-Full JSON Schemas: `STUDENT_LUNCH_CHECKIN_PROPERTY_SCHEMAS` in `src/gamebus/propertySchemas.ts`.
+Full JSON Schemas: `STUDENT_LUNCH_CHECKIN_PROPERTY_SCHEMAS` in `src/platform/gamebus/propertySchemas.ts`.
 
 Until the admin templates match, live ingest will not accept what the repository mapper sends.
 

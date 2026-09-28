@@ -1,6 +1,6 @@
 # APPROVED PRODUCT TARGET
-# Product: docs/product/waste-challenges/PORTION_PRECISION.md
-# Slugs: docs/product/waste-challenges/GAMEBUS_SLUG_CONTRACT.md
+# Product: docs/product/kitchen-skills-challenge/PORTION_PRECISION.md
+# Slugs: docs/product/kitchen-skills-challenge/GAMEBUS_SLUG_CONTRACT.md
 # Not implemented on main.
 #
 @portion-precision @waste-challenges @kitchen-day

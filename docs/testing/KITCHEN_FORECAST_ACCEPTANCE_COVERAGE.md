@@ -12,19 +12,19 @@ This document maps the **approved** Kitchen Forecast Gherkin to repository autom
 | Gherkin Rule / Scenario | Tags | Automated coverage | Status |
 |---|---|---|---|
 | **Rule: The forecast belongs to the authenticated kitchen-staff account** | | | |
-| Kitchen staff open the forecast from their own GameBus account | `@happy-path @platform` | `src/chef/chefRoute.test.tsx` (`chef route loads chef forecast UI`); `src/chef/chefForecastSubmissionLifecycle.test.tsx` (`offers no owner, staff, or service-date selection control`) | COVERED |
+| Kitchen staff open the forecast from their own GameBus account | `@happy-path @platform` | `src/products/kitchen-forecast/chefRoute.test.tsx` (`chef route loads chef forecast UI`); `src/products/kitchen-forecast/chefForecastSubmissionLifecycle.test.tsx` (`offers no owner, staff, or service-date selection control`) | COVERED |
 | No shared kitchen account is used | `@security @identity` | Same lifecycle identity test: no staff/owner control; ownership is the GameBus session, not a typed identifier | COVERED |
 | A kitchen-staff member cannot forecast on behalf of someone else | `@security @identity` | `chefForecastSubmissionLifecycle.test.tsx` (`offers no owner, staff, or service-date selection control`) | COVERED |
-| No separate kitchen identifier is stored on the forecast record | `@security @identity` | `src/gamebus/mapChefForecast.test.ts` (`omits confidence and notes when not answered` — asserts no `chefId`); `chefForecastSubmissionLifecycle.test.tsx` (`records a complete ACTIVITY with on-time status and no forbidden properties`) | COVERED |
+| No separate kitchen identifier is stored on the forecast record | `@security @identity` | `src/products/kitchen-forecast/gamebus/mapChefForecast.test.ts` (`omits confidence and notes when not answered` — asserts no `chefId`); `chefForecastSubmissionLifecycle.test.tsx` (`records a complete ACTIVITY with on-time status and no forbidden properties`) | COVERED |
 | **Rule: Several staff members may each forecast the same service date independently** | | | |
-| Two kitchen-staff members forecast the same service date | `@multi-account` | `src/serviceCloseout/forecast/selectCloseoutForecast.test.ts` (`keeps two different actors for the same service date`) | COVERED |
+| Two kitchen-staff members forecast the same service date | `@multi-account` | `src/products/service-closeout/forecast/selectCloseoutForecast.test.ts` (`keeps two different actors for the same service date`) | COVERED |
 | One staff member cannot see or change another's forecast | `@multi-account @security` | `selectCloseoutForecast.test.ts` (`returns only the matching authenticated actor`, `does not invent a forecast from another participant when the authenticated actor has none`); Kitchen Forecast UI never loads another actor's draft | COVERED |
 | Each participant is compared against the shared service outcome | `@multi-account @research` | Independent per-actor records for the same `targetDate` in `selectForecastsForDate`; `chefForecast` mapper never includes Student Lunch properties | COVERED |
 | **Rule: The forecast targets one automatically resolved operational lunch service** | | | |
-| The target service date is resolved by the product, not chosen | `@calendar` | `src/chef/chefForecastServiceDate.test.ts`; `chefForecastSubmissionLifecycle.test.tsx` (`offers no owner, staff, or service-date selection control` — no date picker); header `dateTime` in timing UX tests | COVERED |
-| Weekends are never offered as a forecast target | `@calendar @weekend` | `src/chef/chefForecastWindowMatrix.test.ts` (`%s never opens entry and never becomes a target` for Saturday and Sunday); `operationalServiceCalendar.test.ts` (`treats weekends as non-service`) | COVERED |
+| The target service date is resolved by the product, not chosen | `@calendar` | `src/products/kitchen-forecast/chefForecastServiceDate.test.ts`; `chefForecastSubmissionLifecycle.test.tsx` (`offers no owner, staff, or service-date selection control` — no date picker); header `dateTime` in timing UX tests | COVERED |
+| Weekends are never offered as a forecast target | `@calendar @weekend` | `src/products/kitchen-forecast/chefForecastWindowMatrix.test.ts` (`%s never opens entry and never becomes a target` for Saturday and Sunday); `operationalServiceCalendar.test.ts` (`treats weekends as non-service`) | COVERED |
 | An explicitly closed day is skipped | `@calendar @closure` | `chefForecastWindowMatrix.test.ts` (`skips an explicitly closed Monday from the Friday advance window`); `chefForecastServiceDate.test.ts` (`targets Tuesday when Monday is explicitly closed`) | COVERED |
-| No usable service date can be resolved | `@calendar @unavailable` | `src/chef/chefAvailability.test.tsx` (`renders calendar error banner instead of a blank page when service date resolution fails`) | COVERED |
+| No usable service date can be resolved | `@calendar @unavailable` | `src/products/kitchen-forecast/chefAvailability.test.tsx` (`renders calendar error banner instead of a blank page when service date resolution fails`) | COVERED |
 | Device timezone does not change the target service date | `@timezone` | `chefForecastWindowMatrix.test.ts` (`uses Helsinki wall-clock even when other device timezones still show a different time of day` — Amsterdam / UTC / New York / Tokyo wall clocks of one instant) | COVERED |
 | **Rule: Missing menu data blocks entry without changing the resolved service date** | | | |
 | The published menu for the target service is visible | `@menu` | `chefForecastSubmissionLifecycle.test.tsx` (`shows the target service date menu as read-only content`); `chefRoute.test.tsx` (`known available date shows four menu forecast cards`) | COVERED |
@@ -49,16 +49,16 @@ This document maps the **approved** Kitchen Forecast Gherkin to repository autom
 | Today's service cannot be forecast once its grace window has closed | `@cutoff @late` | `chefForecastWindowMatrix.test.ts` (`Monday 08:30:00` targets Tuesday); `chefSubmissionWindow.test.ts` (`closes the service date at exactly 08:30`, `refuses ACTIVITY creation outside an eligible window`) | COVERED |
 | Normal successful forecasts are recorded as on-time | `@cutoff @late @data` | `chefSubmissionWindow.test.ts` (`creates submissions with on-time timingStatus inside a window`); `chefForecastSubmissionLifecycle.test.tsx` (`records a complete ACTIVITY with on-time status…`) | COVERED |
 | **Rule: Every forecast explicitly carries its target service date** | | | |
-| The target service date is recorded explicitly | `@data @target-date` | `src/gamebus/mapChefForecast.test.ts` (`submits correct targetDate, timingStatus and submittedAt`); lifecycle ACTIVITY `targetDate` assertion | COVERED |
+| The target service date is recorded explicitly | `@data @target-date` | `src/products/kitchen-forecast/gamebus/mapChefForecast.test.ts` (`submits correct targetDate, timingStatus and submittedAt`); lifecycle ACTIVITY `targetDate` assertion | COVERED |
 | An advance submission still records the service date it targets | `@data @target-date` | `mapChefForecast.test.ts` (`records the service date being forecast, not the day the form was filled`) | COVERED |
 | A forecast is never matched to a different service date | `@data @target-date` | `selectCloseoutForecast.test.ts` (`requires exact targetDate match`, `does not use tomorrow forecast for today closeout` in parse tests) | COVERED |
 | **Rule: The forecast is expected customers plus the menu portion forecasts** | | | |
-| The forecast inputs are presented | `@inputs` | `src/chef/chefUx.test.tsx` (`renders chef route with countdown and four categories`, `uses visible label for expected customers…`) | COVERED |
+| The forecast inputs are presented | `@inputs` | `src/products/kitchen-forecast/chefUx.test.tsx` (`renders chef route with countdown and four categories`, `uses visible label for expected customers…`) | COVERED |
 | All forecast values start unanswered | `@inputs @blank-vs-zero` | `chefUx.test.tsx` (`starts all five numeric fields blank`, `shows Not entered in forecast overview for unanswered values`) | COVERED |
 | Blank and zero mean different things | `@inputs @blank-vs-zero` | `chefUx.test.tsx` (`distinguishes blank from explicit zero`, `preserves explicit zero and clearing returns overview to Not entered`) | COVERED |
 | Every required editable forecast must be answered before submission | `@inputs @completeness` | `chefUx.test.tsx` (`disables submit while any required field is blank`, `shows disabled-submit explanation before form is complete`) | COVERED |
 | **Rule: Soup and dessert are one soup-menu forecast** | | | |
-| The soup-menu quantity is entered once | `@inputs @soup-menu` | `src/chef/chefSoupDessertSync.test.tsx` (`sets dessert to 50 when soup is 50`, `does not allow independent dessert editing`) | COVERED |
+| The soup-menu quantity is entered once | `@inputs @soup-menu` | `src/products/kitchen-forecast/chefSoupDessertSync.test.tsx` (`sets dessert to 50 when soup is 50`, `does not allow independent dessert editing`) | COVERED |
 | Soup and dessert are recorded with the same quantity | `@inputs @soup-menu @data` | `chefSoupDessertSync.test.tsx` (`submits matching forecastSoup and forecastDessert values`); lifecycle payload `forecastSoup === forecastDessert` | COVERED |
 | Clearing the soup-menu quantity clears the dessert forecast | `@inputs @soup-menu` | `chefSoupDessertSync.test.tsx` (`clears dessert when soup is cleared`) | COVERED |
 | **Rule: Headcount and portion forecasts are independent** | | | |
@@ -121,9 +121,9 @@ This document maps the **approved** Kitchen Forecast Gherkin to repository autom
 
 | Area | Files |
 |---|---|
-| Target / window / eligibility matrix | `src/chef/chefForecastWindowMatrix.test.ts`, `src/chef/chefForecastServiceDate.test.ts`, `src/chef/chefSubmissionWindow.test.ts`, `src/services/chefForecastEligibilityPolicy.test.ts`, `src/services/operationalServiceCalendar.test.ts` |
-| Page timing UX | `src/chef/chefForecastTimingUx.test.tsx` |
-| Form / validation / soup-dessert | `src/chef/chefUx.test.tsx`, `src/chef/chefSoupDessertSync.test.tsx`, `src/chef/optionalFields.test.ts` |
-| Submission lifecycle / GameBus bridge | `src/chef/chefForecastSubmissionLifecycle.test.tsx`, `src/gamebus/mapChefForecast.test.ts` |
-| Retrieval | `src/serviceCloseout/forecast/selectCloseoutForecast.test.ts` |
-| Menu vs calendar | `src/chef/chefAvailability.test.tsx`, `src/services/menuResolver.test.ts` |
+| Target / window / eligibility matrix | `src/products/kitchen-forecast/chefForecastWindowMatrix.test.ts`, `src/products/kitchen-forecast/chefForecastServiceDate.test.ts`, `src/products/kitchen-forecast/chefSubmissionWindow.test.ts`, `src/services/chefForecastEligibilityPolicy.test.ts`, `src/services/operationalServiceCalendar.test.ts` |
+| Page timing UX | `src/products/kitchen-forecast/chefForecastTimingUx.test.tsx` |
+| Form / validation / soup-dessert | `src/products/kitchen-forecast/chefUx.test.tsx`, `src/products/kitchen-forecast/chefSoupDessertSync.test.tsx`, `src/products/kitchen-forecast/optionalFields.test.ts` |
+| Submission lifecycle / GameBus bridge | `src/products/kitchen-forecast/chefForecastSubmissionLifecycle.test.tsx`, `src/products/kitchen-forecast/gamebus/mapChefForecast.test.ts` |
+| Retrieval | `src/products/service-closeout/forecast/selectCloseoutForecast.test.ts` |
+| Menu vs calendar | `src/products/kitchen-forecast/chefAvailability.test.tsx`, `src/services/menuResolver.test.ts` |

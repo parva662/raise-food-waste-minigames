@@ -1,10 +1,11 @@
 # APPROVED PRODUCT TARGET
-# Orchestration: docs/product/waste-challenges/KITCHEN_DAY.md
-# Slugs: docs/product/waste-challenges/GAMEBUS_SLUG_CONTRACT.md
-# CURRENT IMPLEMENTATION on main is Trim Smart v1 only — not this target.
+# Orchestration: docs/product/kitchen-skills-challenge/KITCHEN_SKILLS_CHALLENGE.md
+# Slugs: docs/product/kitchen-skills-challenge/GAMEBUS_SLUG_CONTRACT.md
+# CURRENT IMPLEMENTATION on main includes this product at #/kitchen-day.
+# Public hashes stay #/kitchen-day* for GameBus Custom Embed compatibility.
 #
-@kitchen-day @waste-challenges
-Feature: Kitchen Day connected session
+@kitchen-day @kitchen-skills-challenge @waste-challenges
+Feature: Kitchen Skills Challenge connected session
   As a student or tutor in a practical kitchen
   I want one kitchen-day session that holds preparation, reuse, and portioning records together
   So that the work is reviewed as one day rather than as separate games

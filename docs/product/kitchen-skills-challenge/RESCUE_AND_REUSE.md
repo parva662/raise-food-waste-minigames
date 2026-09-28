@@ -2,7 +2,7 @@
 
 > **APPROVED PRODUCT TARGET**. Not implemented on `main`.
 >
-> Module of [`KITCHEN_DAY.md`](KITCHEN_DAY.md). Slug authority: [`GAMEBUS_SLUG_CONTRACT.md`](GAMEBUS_SLUG_CONTRACT.md).
+> Module of [`KITCHEN_SKILLS_CHALLENGE.md`](KITCHEN_SKILLS_CHALLENGE.md). Slug authority: [`GAMEBUS_SLUG_CONTRACT.md`](GAMEBUS_SLUG_CONTRACT.md).
 
 ## 1. Purpose
 

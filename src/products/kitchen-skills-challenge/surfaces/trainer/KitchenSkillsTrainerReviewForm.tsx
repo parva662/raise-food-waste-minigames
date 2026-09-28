@@ -7,7 +7,7 @@ function ReviewReadback({ review }: { review: KitchenDayReviewEntry }) {
   return (
     <section className="chef-results-panel" data-testid="kitchen-day-review-submitted">
       <h3 className="chef-results-panel__title">Tutor assessment</h3>
-      <p className="chef-results-panel__intro">This Kitchen Day already has a session review.</p>
+      <p className="chef-results-panel__intro">This challenge session already has a session review.</p>
       <dl className="chef-results-metrics chef-results-metrics--compact">
         <div>
           <dt>Time efficiency</dt>
@@ -109,7 +109,7 @@ export function KitchenDayChefReviewForm({ selected }: { selected: KitchenDayChe
               result.reason === 'tutor_live_blocked'
                 ? 'Tutor assessment cannot be submitted from this page yet.'
                 : result.reason === 'duplicate_review'
-                  ? 'This Kitchen Day already has a session review.'
+                  ? 'This challenge session already has a session review.'
                   : 'The review could not be saved.',
             );
           }

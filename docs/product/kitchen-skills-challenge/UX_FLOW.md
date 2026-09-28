@@ -2,7 +2,7 @@
 
 > **APPROVED PRODUCT TARGET**. Trim Smart v1 remains a standalone CURRENT IMPLEMENTATION at `#/waste/trim-smart`.
 >
-> Visual language: [`../UI_STANDARD.md`](../UI_STANDARD.md). GameBus menu URLs: [`../../contracts/KITCHEN_DAY_ROUTES.md`](../../contracts/KITCHEN_DAY_ROUTES.md).
+> Visual language: [`../UI_STANDARD.md`](../UI_STANDARD.md). GameBus menu URLs: [`../../contracts/KITCHEN_SKILLS_CHALLENGE_ROUTES.md`](../../contracts/KITCHEN_SKILLS_CHALLENGE_ROUTES.md).
 
 **Slug authority:** [`GAMEBUS_SLUG_CONTRACT.md`](GAMEBUS_SLUG_CONTRACT.md).
 

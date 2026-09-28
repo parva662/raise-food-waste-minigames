@@ -8,6 +8,7 @@ import {
   kitchenDayTutorHashFor,
   parseKitchenDaySelectedSessionId,
 } from '@/app/routes';
+
 function KitchenDayTutorBody() {
   const { session, findReviewBySessionId, groupSessions } = useKitchenDaySession();
   const sessions = groupSessions;
@@ -32,7 +33,7 @@ function KitchenDayTutorBody() {
   if (!session) {
     return (
       <div className="kitchen-mgmt-page" data-testid="kitchen-day-tutor-initializing">
-        <h1 className="kitchen-mgmt-header__title">Kitchen Day tutor</h1>
+        <h1 className="kitchen-mgmt-header__title">Kitchen Skills Challenge Trainer</h1>
         <p className="kitchen-mgmt-header__lead">Getting the tutor workspace ready.</p>
       </div>
     );
@@ -42,9 +43,9 @@ function KitchenDayTutorBody() {
     <div className="chef-results-page kitchen-mgmt-page" data-testid="kitchen-day-tutor-page">
       <header className="kitchen-mgmt-header">
         <div className="kitchen-mgmt-header__main">
-          <h1 className="kitchen-mgmt-header__title">Kitchen Day tutor</h1>
+          <h1 className="kitchen-mgmt-header__title">Kitchen Skills Challenge Trainer</h1>
           <p className="kitchen-mgmt-header__lead">
-            Review student Kitchen Day evidence, then add one qualitative assessment.
+            Review student Kitchen Skills Challenge evidence, then add one qualitative assessment.
           </p>
         </div>
       </header>

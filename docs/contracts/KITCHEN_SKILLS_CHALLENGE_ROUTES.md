@@ -1,6 +1,8 @@
-# Kitchen Day — GameBus left-menu route contract
+# Kitchen Skills Challenge — GameBus left-menu route contract
 
-**Status:** Encoded on `feature/kitchen-day-v1`. Ready for production GitHub Pages Custom Embed URLs.
+**Product name:** Kitchen Skills Challenge.
+**Public hashes:** `#/kitchen-day*` (legacy-stable). Do not rename the hashes.
+**Status:** Implemented on `main`. Ready for production GitHub Pages Custom Embed URLs.
 **Active GameBus environment:** `https://foodtracker.gamebus.eu`
 **Student posting:** Enabled for Trim / Rescue / Portion after manual schema verification.
 **Tutor posting:** Still blocked pending verified trainer-on-behalf-of-student semantics.

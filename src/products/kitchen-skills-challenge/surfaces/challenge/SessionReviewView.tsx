@@ -14,7 +14,7 @@ export function SessionReviewView() {
     <section className="kitchen-day-card" data-testid="kitchen-day-overview">
       <header className="kitchen-day-review-header">
         <h2 className="kitchen-day-card__title">Session review</h2>
-        <p className="kitchen-day-card__copy">This Kitchen Day only. Submitted measurements cannot be edited here.</p>
+        <p className="kitchen-day-card__copy">This challenge session only. Submitted measurements cannot be edited here.</p>
         <p data-testid="kitchen-day-session-meta">{formatSessionDate(session.sessionDate)}</p>
         {missing.length > 0 ? (
           <div className="kitchen-day-review-status" data-testid="kitchen-day-review-status">
@@ -27,7 +27,7 @@ export function SessionReviewView() {
           </div>
         ) : (
           <p className="kitchen-day-review-status kitchen-day-review-status--complete" data-testid="kitchen-day-review-status">
-            ✓ Kitchen Day complete
+            ✓ Kitchen Skills Challenge complete
           </p>
         )}
       </header>

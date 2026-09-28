@@ -33,8 +33,8 @@ One shared whole-canteen closeout per service date. Authenticated GameBus `activ
 | Item | Location |
 |------|----------|
 | Route | `#/service-closeout` |
-| App | `src/serviceCloseout/` |
-| ACTIVITY mapping | `src/gamebus/mapWasteMeasurement.ts`, builders |
+| App | `src/products/service-closeout/` |
+| ACTIVITY mapping | `src/products/service-closeout/gamebus/mapWasteMeasurement.ts`, builders |
 | Group activities read | `kitchenGroupInput.activities` |
 
 ---

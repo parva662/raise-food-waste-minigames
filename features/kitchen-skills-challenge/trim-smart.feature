@@ -1,6 +1,6 @@
 # APPROVED PRODUCT TARGET
-# Product: docs/product/waste-challenges/TRIM_SMART.md
-# Slugs: docs/product/waste-challenges/GAMEBUS_SLUG_CONTRACT.md
+# Product: docs/product/kitchen-skills-challenge/TRIM_SMART.md
+# Slugs: docs/product/kitchen-skills-challenge/GAMEBUS_SLUG_CONTRACT.md
 # CURRENT IMPLEMENTATION on main still uses practice / participantWasteGrams — not this target.
 #
 @trim-smart @waste-challenges @kitchen-day

@@ -1,6 +1,6 @@
-# Kitchen Day — GameBus TASK architecture
+# Kitchen Skills Challenge — GameBus TASK architecture
 
-**Status:** Encoded on `feature/kitchen-day-v1`. Production routes are ready for Custom Embed Pages.
+**Status:** Implemented on `main`. Production routes are ready for Custom Embed Pages.
 **Active GameBus environment:** `https://foodtracker.gamebus.eu`
 **Student schemas:** Manually verified on foodtracker. Student `trimSmart` / `rescueAndReuse` / `portionPrecision` posting is enabled.
 **Tutor review:** `wastePracticeReview` posting remains blocked until trainer-on-behalf-of-student semantics are confirmed. Do not treat this as tutor live E2E success.
@@ -13,7 +13,7 @@
 - `rescueAndReuse`
 - `portionPrecision`
 
-The iframe receives **one** `TASK` (later TASK messages are ignored by `src/gamebus/bridge.ts`). The child posts multiple `ACTIVITY` messages, each naming the matching template.
+The iframe receives **one** `TASK` (later TASK messages are ignored by `src/platform/gamebus/bridge.ts`). The child posts multiple `ACTIVITY` messages, each naming the matching template.
 
 Do **not** split Kitchen Day into three embeds. Embedded `sessionId` is one student + one Kitchen Day: `kitchen-day:<taskId>:<actorId>:<sessionDate>`. Do not persist actor id as a Kitchen Day activity property.
 

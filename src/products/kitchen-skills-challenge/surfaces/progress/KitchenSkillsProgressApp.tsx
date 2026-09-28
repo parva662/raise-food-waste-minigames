@@ -19,14 +19,14 @@ export function KitchenSkillsProgressApp() {
     <div className="chef-results-page chef-results-page--participant kitchen-mgmt-page" data-testid="kitchen-day-progress-page">
       <header className="kitchen-mgmt-header chef-results-dashboard-header">
         <div className="kitchen-mgmt-header__main">
-          <h1 className="kitchen-mgmt-header__title">Kitchen Day Progress</h1>
+          <h1 className="kitchen-mgmt-header__title">Kitchen Skills Challenge Progress</h1>
           <p className="kitchen-mgmt-header__lead">
-            Your own Kitchen Day performance over time.
+            Your own Kitchen Skills Challenge performance over time.
           </p>
         </div>
       </header>
 
-      <div className="kitchen-mgmt-primary-tabs" role="tablist" aria-label="Kitchen Day progress views">
+      <div className="kitchen-mgmt-primary-tabs" role="tablist" aria-label="Kitchen Skills Challenge progress views">
         <button
           type="button"
           role="tab"
@@ -61,7 +61,7 @@ export function KitchenSkillsProgressApp() {
         <section data-testid="kitchen-day-progress-overview">
           {latest ? (
             <>
-              <h2 className="kitchen-mgmt-module-title">Latest Kitchen Day</h2>
+              <h2 className="kitchen-mgmt-module-title">Latest challenge session</h2>
               <p>{formatSessionDate(latest.sessionDate)}</p>
               {latest.review ? (
                 <div className="chef-results-panel" data-testid="kitchen-day-progress-tutor">
@@ -81,7 +81,7 @@ export function KitchenSkillsProgressApp() {
               />
             </>
           ) : (
-            <p className="chef-results-empty">No Kitchen Day history yet.</p>
+            <p className="chef-results-empty">No Kitchen Skills Challenge history yet.</p>
           )}
         </section>
       ) : (

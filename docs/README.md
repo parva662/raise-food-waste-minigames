@@ -16,7 +16,7 @@ Verify the current commit with `git rev-parse HEAD` before relying on any pinned
 | [`product/`](product/) | Human-readable product documentation |
 | [`../features/`](../features/) | Gherkin acceptance specifications |
 | [`contracts/`](contracts/) | GameBus and external technical contracts |
-| [`architecture/`](architecture/) | Technical architecture (placeholder) |
+| [`architecture/`](architecture/) | One-SPA architecture, GameBus boundary, actors vs surfaces |
 | [`current-state/`](current-state/) | Implementation status, gaps, roadmap |
 | [`decisions/`](decisions/) | Future ADR / product decisions |
 | [`testing/`](testing/) | Testing strategy notes |
@@ -69,8 +69,8 @@ docs/
 │   ├── KITCHEN_RESULTS.md
 │   ├── WASTE_CHALLENGES.md
 │   ├── RAISE_BARLAUREA_MASTER_PLAN.md
-│   └── waste-challenges/
-│       ├── KITCHEN_DAY.md
+│   └── kitchen-skills-challenge/
+│       ├── KITCHEN_SKILLS_CHALLENGE.md
 │       ├── GAMEBUS_SLUG_CONTRACT.md
 │       ├── TRIM_SMART.md
 │       ├── TRIM_SMART_DATA_MODEL.md
@@ -79,11 +79,16 @@ docs/
 │       ├── CHEF_REVIEW.md
 │       ├── UX_FLOW.md
 │       └── IMPLEMENTATION_BLUEPRINT.md
+├── architecture/
+│   ├── README.md
+│   └── ACTORS_AND_SURFACES.md
 ├── contracts/
 │   ├── STUDENT_LUNCH_GAMEBUS.md
 │   ├── KITCHEN_FORECAST_GAMEBUS.md
 │   ├── SERVICE_CLOSEOUT_GAMEBUS.md
-│   └── KITCHEN_FORECAST_ADMIN_SETUP.md
+│   ├── KITCHEN_FORECAST_ADMIN_SETUP.md
+│   ├── KITCHEN_SKILLS_CHALLENGE_ROUTES.md
+│   └── KITCHEN_SKILLS_CHALLENGE_TASK.md
 ├── current-state/
 │   ├── IMPLEMENTATION_STATUS.md
 │   └── ROADMAP.md
@@ -93,7 +98,7 @@ docs/
 features/
 ├── student/student-lunch.feature          ← APPROVED PRODUCT TARGET
 ├── kitchen/kitchen-forecast.feature       ← APPROVED PRODUCT TARGET
-└── waste-challenges/*.feature             ← APPROVED PRODUCT TARGET (not Trim Smart v1)
+└── kitchen-skills-challenge/*.feature     ← APPROVED PRODUCT TARGET (#/kitchen-day*)
 ```
 
 ---
@@ -106,18 +111,18 @@ features/
 | [`product/KITCHEN_FORECAST.md`](product/KITCHEN_FORECAST.md) | Kitchen Forecast navigation |
 | [`product/SERVICE_CLOSEOUT.md`](product/SERVICE_CLOSEOUT.md) | Service Closeout navigation |
 | [`product/KITCHEN_RESULTS.md`](product/KITCHEN_RESULTS.md) | Staff + management results |
-| [`product/WASTE_CHALLENGES.md`](product/WASTE_CHALLENGES.md) | Practical kitchen family overview (Kitchen Day modules) |
+| [`product/WASTE_CHALLENGES.md`](product/WASTE_CHALLENGES.md) | Practical kitchen family overview (Kitchen Skills Challenge) |
 | [`product/RAISE_BARLAUREA_MASTER_PLAN.md`](product/RAISE_BARLAUREA_MASTER_PLAN.md) | Study / system master plan |
-| [`product/waste-challenges/KITCHEN_DAY.md`](product/waste-challenges/KITCHEN_DAY.md) | Kitchen Day orchestration — **APPROVED PRODUCT TARGET** |
-| [`product/waste-challenges/GAMEBUS_SLUG_CONTRACT.md`](product/waste-challenges/GAMEBUS_SLUG_CONTRACT.md) | Locked GameBus slugs + admin checklist |
-| [`product/waste-challenges/TRIM_SMART.md`](product/waste-challenges/TRIM_SMART.md) | Trim Smart — CURRENT v1 + approved target |
-| [`product/waste-challenges/TRIM_SMART_DATA_MODEL.md`](product/waste-challenges/TRIM_SMART_DATA_MODEL.md) | Trim data model |
-| [`product/waste-challenges/RESCUE_AND_REUSE.md`](product/waste-challenges/RESCUE_AND_REUSE.md) | Reuse (`sessionId` + `ingredientId`) |
-| [`product/waste-challenges/PORTION_PRECISION.md`](product/waste-challenges/PORTION_PRECISION.md) | Portion Precision |
-| [`product/waste-challenges/CHEF_REVIEW.md`](product/waste-challenges/CHEF_REVIEW.md) | Session Review, Student Progress, tutor assessment |
-| [`product/waste-challenges/UX_FLOW.md`](product/waste-challenges/UX_FLOW.md) | Kitchen Day UX |
+| [`product/kitchen-skills-challenge/KITCHEN_SKILLS_CHALLENGE.md`](product/kitchen-skills-challenge/KITCHEN_SKILLS_CHALLENGE.md) | Kitchen Skills Challenge orchestration — **APPROVED PRODUCT TARGET** |
+| [`product/kitchen-skills-challenge/GAMEBUS_SLUG_CONTRACT.md`](product/kitchen-skills-challenge/GAMEBUS_SLUG_CONTRACT.md) | Locked GameBus slugs + admin checklist |
+| [`product/kitchen-skills-challenge/TRIM_SMART.md`](product/kitchen-skills-challenge/TRIM_SMART.md) | Trim Smart — Kitchen Skills Challenge + legacy v1 |
+| [`product/kitchen-skills-challenge/TRIM_SMART_DATA_MODEL.md`](product/kitchen-skills-challenge/TRIM_SMART_DATA_MODEL.md) | Trim data model |
+| [`product/kitchen-skills-challenge/RESCUE_AND_REUSE.md`](product/kitchen-skills-challenge/RESCUE_AND_REUSE.md) | Reuse (`sessionId` + `ingredientId`) |
+| [`product/kitchen-skills-challenge/PORTION_PRECISION.md`](product/kitchen-skills-challenge/PORTION_PRECISION.md) | Portion Precision |
+| [`product/kitchen-skills-challenge/CHEF_REVIEW.md`](product/kitchen-skills-challenge/CHEF_REVIEW.md) | Session Review, Student Progress, trainer assessment |
+| [`product/kitchen-skills-challenge/UX_FLOW.md`](product/kitchen-skills-challenge/UX_FLOW.md) | Kitchen Skills Challenge UX |
 | [`product/UI_STANDARD.md`](product/UI_STANDARD.md) | Shared application visual language |
-| [`product/waste-challenges/IMPLEMENTATION_BLUEPRINT.md`](product/waste-challenges/IMPLEMENTATION_BLUEPRINT.md) | Phases 0–6 |
+| [`product/kitchen-skills-challenge/IMPLEMENTATION_BLUEPRINT.md`](product/kitchen-skills-challenge/IMPLEMENTATION_BLUEPRINT.md) | Phases 0–6 |
 
 ---
 
@@ -129,8 +134,8 @@ features/
 | [`contracts/KITCHEN_FORECAST_GAMEBUS.md`](contracts/KITCHEN_FORECAST_GAMEBUS.md) | `chefForecast` |
 | [`contracts/SERVICE_CLOSEOUT_GAMEBUS.md`](contracts/SERVICE_CLOSEOUT_GAMEBUS.md) | `wasteMeasurement` |
 | [`contracts/KITCHEN_FORECAST_ADMIN_SETUP.md`](contracts/KITCHEN_FORECAST_ADMIN_SETUP.md) | Admin checklist |
-| [`contracts/KITCHEN_DAY_ROUTES.md`](contracts/KITCHEN_DAY_ROUTES.md) | Kitchen Day GameBus left-menu URLs |
-| [`contracts/KITCHEN_DAY_TASK.md`](contracts/KITCHEN_DAY_TASK.md) | One student TASK with three templates; tutor TASK for `wastePracticeReview` |
+| [`contracts/KITCHEN_SKILLS_CHALLENGE_ROUTES.md`](contracts/KITCHEN_SKILLS_CHALLENGE_ROUTES.md) | Kitchen Skills Challenge GameBus left-menu URLs (`#/kitchen-day*` retained) |
+| [`contracts/KITCHEN_SKILLS_CHALLENGE_TASK.md`](contracts/KITCHEN_SKILLS_CHALLENGE_TASK.md) | One student TASK with three templates; tutor TASK for `wastePracticeReview` |
 
 ---
 
@@ -150,7 +155,7 @@ features/
 |-------------|----------------|--------|
 | Student Lunch | [`../features/student/student-lunch.feature`](../features/student/student-lunch.feature) | **APPROVED PRODUCT TARGET** |
 | Kitchen Forecast | [`../features/kitchen/kitchen-forecast.feature`](../features/kitchen/kitchen-forecast.feature) | **APPROVED PRODUCT TARGET** — one `@pending` rollover edge case deferred |
-| Kitchen Day (five features) | [`../features/waste-challenges/`](../features/waste-challenges/) | **APPROVED PRODUCT TARGET** — not Trim Smart v1 |
+| Kitchen Skills Challenge (five features) | [`../features/kitchen-skills-challenge/`](../features/kitchen-skills-challenge/) | **APPROVED PRODUCT TARGET** — public hashes remain `#/kitchen-day*` |
 
 ---
 

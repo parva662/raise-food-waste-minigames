@@ -1,8 +1,8 @@
 # Trim Smart — ingredient preparation entry
 
-> **APPROVED PRODUCT TARGET** — module of [`KITCHEN_DAY.md`](KITCHEN_DAY.md).
+> **APPROVED PRODUCT TARGET** — module of [`KITCHEN_SKILLS_CHALLENGE.md`](KITCHEN_SKILLS_CHALLENGE.md).
 >
-> **CURRENT IMPLEMENTATION:** `#/waste/trim-smart` on `main` is Ingredient → Practice → Measure (`practice`, `participantWasteGrams`, old category values). That is not this target.
+> **CURRENT IMPLEMENTATION:** Kitchen Skills Challenge Trim is on `main` at `#/kitchen-day`. Legacy Trim Smart v1 remains at `#/waste/trim-smart` (`practice` / `participantWasteGrams`).
 
 **Slug authority:** [`GAMEBUS_SLUG_CONTRACT.md`](GAMEBUS_SLUG_CONTRACT.md).
 
@@ -16,7 +16,7 @@ One `trimSmart` activity = one ingredient preparation entry. A student records *
 
 Reuse (0..1) joins this entry by `sessionId` + `ingredientId`.
 
-## 3. CURRENT IMPLEMENTATION (v1 on `main`)
+## 3. LEGACY IMPLEMENTATION (v1 at `#/waste/trim-smart`)
 
 Standalone route, no estimate step, no timer, no reference comparison. Posts `practice` and `participantWasteGrams`. **DEPRECATED** for new target posts.
 

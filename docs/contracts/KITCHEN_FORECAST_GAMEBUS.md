@@ -1,6 +1,6 @@
 # GameBus chef forecast — integration contract
 
-**Status:** Repository mapper implemented (`src/gamebus/mapChefForecast.ts`)  
+**Status:** Repository mapper implemented (`src/products/kitchen-forecast/gamebus/mapChefForecast.ts`)  
 **Activity reference:** `chefForecast` only (no `chefForecastV2`)  
 **Live GameBus:** Manual admin migration required — do not edit live config from this repo.
 
@@ -417,12 +417,11 @@ Comparison uses **whole-canteen operational data**, not student declarations.
 
 | Module | Role |
 |--------|------|
-| `src/chef/ChefApp.tsx` | Chef UI |
-| `src/chef/components/ChefAdditionalContext.tsx` | Optional confidence (five labeled radios) and notes |
-| `src/chef/components/ChefFormGuidance.tsx` | Incomplete-form guidance |
-| `src/chef/components/ChefSubmitPanel.tsx` | Submit control and disabled explanation |
-| `src/chef/useChefForecast.ts` | State and submit |
-| `src/config/chef.ts` | Max quantity (1000) and deadline config |
-| `src/gamebus/mapChefForecast.ts` | Property value mapper |
-| `src/gamebus/buildChefActivityMessage.ts` | ACTIVITY builder |
-| `src/gamebus/propertySchemas.ts` | `CHEF_FORECAST_PROPERTY_SCHEMAS` |
+| `src/products/kitchen-forecast/KitchenForecastApp.tsx` | Kitchen Forecast UI |
+| `src/products/kitchen-forecast/components/ChefAdditionalContext.tsx` | Optional confidence (five labeled radios) and notes |
+| `src/products/kitchen-forecast/components/ChefSubmitPanel.tsx` | Submit control and disabled explanation |
+| `src/products/kitchen-forecast/useChefForecast.ts` | State and submit |
+| `src/products/kitchen-forecast/config.ts` | Max quantity (1000) and deadline config |
+| `src/products/kitchen-forecast/gamebus/mapChefForecast.ts` | Property value mapper |
+| `src/products/kitchen-forecast/gamebus/buildChefActivityMessage.ts` | ACTIVITY builder |
+| `src/platform/gamebus/propertySchemas.ts` | `CHEF_FORECAST_PROPERTY_SCHEMAS` |

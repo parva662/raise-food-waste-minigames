@@ -8,7 +8,7 @@ const ITEMS: { section: Exclude<KitchenDayHashSection, 'review'>; label: string;
 
 export function KitchenDayNav({ section }: { section: KitchenDayHashSection }) {
   return (
-    <nav className="kitchen-day-activity__nav" data-testid="kitchen-day-nav" aria-label="Kitchen Day">
+    <nav className="kitchen-day-activity__nav" data-testid="kitchen-day-nav" aria-label="Kitchen Skills Challenge">
       {ITEMS.map((item) => (
         <a
           key={item.section}

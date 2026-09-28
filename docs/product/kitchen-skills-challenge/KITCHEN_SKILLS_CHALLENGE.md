@@ -1,14 +1,13 @@
-# Kitchen Day — Connected practical workflow
+# Kitchen Skills Challenge — connected practical workflow
 
-> **Documentation status:** **APPROVED PRODUCT TARGET** (2026-09-23)
+> **Product name:** Kitchen Skills Challenge.
+> **Public hashes:** `#/kitchen-day*` remain the GameBus Custom Embed contract.
 >
-> Supersedes the assumption that Trim Smart, Rescue & Reuse, and Portion Precision are three independent standalone games.
->
-> **CURRENT IMPLEMENTATION:** `main` still has Trim Smart v1 only (`#/waste/trim-smart`: Ingredient → Practice → Measure; posts `practice` / `participantWasteGrams` / old category values). That is not this target.
+> **CURRENT IMPLEMENTATION:** on `main` at those hashes. Legacy Trim Smart v1 stays at `#/waste/trim-smart` (`practice` / `participantWasteGrams`).
 
 **Slug authority:** [`GAMEBUS_SLUG_CONTRACT.md`](GAMEBUS_SLUG_CONTRACT.md).
 
-UI pages: student activity `#/kitchen-day`, session review `#/kitchen-day/review`, progress `#/kitchen-day-progress`, tutor `#/kitchen-day-tutor`. Visual standard: [`../UI_STANDARD.md`](../UI_STANDARD.md). Route contract: [`../../contracts/KITCHEN_DAY_ROUTES.md`](../../contracts/KITCHEN_DAY_ROUTES.md). The product model is one **kitchen day / student session**.
+UI pages: student activity `#/kitchen-day`, session review `#/kitchen-day/review`, progress `#/kitchen-day-progress`, tutor `#/kitchen-day-tutor`. Visual standard: [`../UI_STANDARD.md`](../UI_STANDARD.md). Route contract: [`../../contracts/KITCHEN_SKILLS_CHALLENGE_ROUTES.md`](../../contracts/KITCHEN_SKILLS_CHALLENGE_ROUTES.md). The product model is one **kitchen day / student session**.
 
 ## 1. Purpose
 
@@ -72,7 +71,7 @@ See [`PORTION_PRECISION.md`](PORTION_PRECISION.md).
 
 One activity per prepared recipe. Stored: `sessionId`, `sessionDate`, `submittedAt`, `recipeId`, `recipeName`, `recipeComposition`, `finalRecipeWeightGrams`.
 
-Required amounts and expected final weight come from the generated recipe reference (`npm run kitchen-day:recipes` from `reference/kitchen-day/kitchen_day_recipe_reference_clean.xlsx`). They are not copied into GameBus. Expected final weight is `Kypsä_kokonaispaino`, not `Saanto` and not the sum of ingredient targets. Ingredient accuracy and final-weight deviation are derived on read. `ingredientCategory` is not used. A future BarLaurea source can use the same adapter.
+Required amounts and expected final weight come from the generated recipe reference (`npm run kitchen-skills:recipes` from `reference/kitchen-skills/kitchen_day_recipe_reference_clean.xlsx`). They are not copied into GameBus. Expected final weight is `Kypsä_kokonaispaino`, not `Saanto` and not the sum of ingredient targets. Ingredient accuracy and final-weight deviation are derived on read. `ingredientCategory` is not used. A future BarLaurea source can use the same adapter.
 
 ## 6. Session Review, Student Progress, Tutor dashboard
 
@@ -103,4 +102,4 @@ Initially seeded kitchen reference data keyed by `ingredientId`. Later accumulat
 
 ## 10. Related
 
-[`TRIM_SMART.md`](TRIM_SMART.md) · [`TRIM_SMART_DATA_MODEL.md`](TRIM_SMART_DATA_MODEL.md) · [`RESCUE_AND_REUSE.md`](RESCUE_AND_REUSE.md) · [`PORTION_PRECISION.md`](PORTION_PRECISION.md) · [`CHEF_REVIEW.md`](CHEF_REVIEW.md) · [`UX_FLOW.md`](UX_FLOW.md) · [`IMPLEMENTATION_BLUEPRINT.md`](IMPLEMENTATION_BLUEPRINT.md) · [`GAMEBUS_SLUG_CONTRACT.md`](GAMEBUS_SLUG_CONTRACT.md) · [`../../../features/waste-challenges/`](../../../features/waste-challenges/)
+[`TRIM_SMART.md`](TRIM_SMART.md) · [`TRIM_SMART_DATA_MODEL.md`](TRIM_SMART_DATA_MODEL.md) · [`RESCUE_AND_REUSE.md`](RESCUE_AND_REUSE.md) · [`PORTION_PRECISION.md`](PORTION_PRECISION.md) · [`CHEF_REVIEW.md`](CHEF_REVIEW.md) · [`UX_FLOW.md`](UX_FLOW.md) · [`IMPLEMENTATION_BLUEPRINT.md`](IMPLEMENTATION_BLUEPRINT.md) · [`GAMEBUS_SLUG_CONTRACT.md`](GAMEBUS_SLUG_CONTRACT.md) · [`../../../features/kitchen-skills-challenge/`](../../../features/kitchen-skills-challenge/)

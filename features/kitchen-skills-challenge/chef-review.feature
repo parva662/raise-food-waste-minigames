@@ -1,6 +1,6 @@
 # APPROVED PRODUCT TARGET
-# Product: docs/product/waste-challenges/CHEF_REVIEW.md
-# Slugs: docs/product/waste-challenges/GAMEBUS_SLUG_CONTRACT.md
+# Product: docs/product/kitchen-skills-challenge/CHEF_REVIEW.md
+# Slugs: docs/product/kitchen-skills-challenge/GAMEBUS_SLUG_CONTRACT.md
 # Filename is historical. Product wording is Tutor / Tutor assessment.
 # GameBus activity slug remains wastePracticeReview.
 # Not implemented on main.

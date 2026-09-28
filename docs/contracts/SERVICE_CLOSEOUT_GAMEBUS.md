@@ -15,7 +15,7 @@
 | Input Collection request (read-only, group) | `activities` → `GET /groups/activities` |
 | Authenticated current user | `inputCollectionPari.me` |
 | Output activity template | **`wasteMeasurement`** |
-| Local constant | `SERVICE_CLOSEOUT_ACTIVITY_REF = 'wasteMeasurement'` (`src/gamebus/appMode.ts`) |
+| Local constant | `SERVICE_CLOSEOUT_ACTIVITY_REF = 'wasteMeasurement'` (`src/app/routes.ts`) |
 
 **One Finalize = one ACTIVITY.** Clicking **Finalize service** validates, normalizes, maps to `wasteMeasurement`, and posts exactly one `ACTIVITY` through the existing GameBus bridge. The iframe closes via normal GameBus ACTIVITY behaviour — no manual close mechanism.
 
@@ -69,7 +69,7 @@ Prepared quantity properties (`preparedMainQuantity`, `preparedVegetarianQuantit
 
 - UI collects overproduction in **grams**.
 - GameBus properties use **kilograms**.
-- Conversion at mapper boundary only: `kg = grams / 1000` (`src/serviceCloseout/units.ts`).
+- Conversion at mapper boundary only: `kg = grams / 1000` (`src/products/service-closeout/units.ts`).
 
 ### 3.3 Explicitly excluded from ACTIVITY
 
@@ -85,13 +85,13 @@ Prepared quantity properties (`preparedMainQuantity`, `preparedVegetarianQuantit
 
 | Module | Role |
 |--------|------|
-| `src/gamebus/mapWasteMeasurement.ts` | Domain → property value map |
-| `src/gamebus/buildWasteMeasurementActivityMessage.ts` | Validated ACTIVITY builder |
-| `src/gamebus/resolveWasteMeasurementProperties.ts` | Canonical fifteen refs |
-| `src/gamebus/bridge.ts` → `tryPostCloseoutActivity` | postMessage via existing bridge |
-| `src/serviceCloseout/useServiceCloseout.ts` | Finalize → map → post (embed mode) |
-| `src/gamebus/groupActivities.ts` | Read `kitchenGroupInput.activities`; filter by template reference |
-| `src/gamebus/inputCollections.ts` | Authenticated `inputCollectionPari.me` |
+| `src/products/service-closeout/gamebus/mapWasteMeasurement.ts` | Domain → property value map |
+| `src/products/service-closeout/gamebus/buildWasteMeasurementActivityMessage.ts` | Validated ACTIVITY builder |
+| `src/products/service-closeout/gamebus/resolveWasteMeasurementProperties.ts` | Canonical fifteen refs |
+| `src/products/service-closeout/gamebus/postActivity.ts` → `tryPostCloseoutActivity` | postMessage via generic `tryPostBuiltActivity` |
+| `src/products/service-closeout/useServiceCloseout.ts` | Finalize → map → post (embed mode) |
+| `src/platform/gamebus/groupActivities.ts` | Read `kitchenGroupInput.activities`; filter by template reference |
+| `src/platform/gamebus/inputCollections.ts` | Authenticated `inputCollectionPari.me` |
 
 ---
 

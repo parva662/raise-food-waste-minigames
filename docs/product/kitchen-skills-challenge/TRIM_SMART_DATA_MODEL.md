@@ -17,13 +17,13 @@
 
 Waste % = `actualWasteGrams / ingredientWeightGrams × 100`. Estimate error = `estimatedWasteGrams − actualWasteGrams`. Kitchen reference / later historical average keyed by `ingredientId`. Percentile only after an agreed sufficient-data rule. Discarded after reuse = Trim `actualWasteGrams − reusableWasteGrams`.
 
-## 2. CURRENT IMPLEMENTATION (`main`, superseded)
+## 2. LEGACY IMPLEMENTATION (`#/waste/trim-smart`)
 
 `sessionId`, `sessionDate`, `ingredientCategory`, `ingredientId`, `ingredientName`, `ingredientWeightGrams`, `participantWasteGrams`, `practice`, `submittedAt`.
 
 Current code categories (`vegetables`, `fruit`, `meat`, …) are **not** the locked GameBus enum.
 
-Pointers: `src/gamebus/mapTrimSmart.ts`, `src/trimSmart/`.
+Pointers: `src/legacy/trim-smart-v1/gamebus/mapTrimSmart.ts`, `src/legacy/trim-smart-v1/`.
 
 ## 3. Target property set
 

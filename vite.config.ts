@@ -27,10 +27,9 @@ export default defineConfig(({ command }) => ({
       provider: 'v8',
       reporter: ['text', 'json-summary', 'html'],
       include: [
-        'src/services/**/*.ts',
-        'src/repositories/**/*.ts',
-        'src/utils/**/*.ts',
-        'src/hooks/**/*.ts',
+        'src/products/**/*.ts',
+        'src/shared/**/*.ts',
+        'src/platform/**/*.ts',
       ],
       exclude: ['**/*.test.ts', '**/*.test.tsx', 'src/test/**'],
     },

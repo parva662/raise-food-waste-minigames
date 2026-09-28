@@ -226,7 +226,7 @@ describe('Session review presentation', () => {
     });
 
     await waitFor(() => {
-      expect(screen.getByTestId('kitchen-day-review-status')).toHaveTextContent('Kitchen Day complete');
+      expect(screen.getByTestId('kitchen-day-review-status')).toHaveTextContent('Kitchen Skills Challenge complete');
     });
     expect(screen.getByTestId('kitchen-day-session-meta')).toHaveTextContent('23 September 2026');
     expect(screen.queryByText(/All required modules/)).not.toBeInTheDocument();

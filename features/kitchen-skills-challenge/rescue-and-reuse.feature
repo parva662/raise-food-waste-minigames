@@ -1,6 +1,6 @@
 # APPROVED PRODUCT TARGET
-# Product: docs/product/waste-challenges/RESCUE_AND_REUSE.md
-# Slugs: docs/product/waste-challenges/GAMEBUS_SLUG_CONTRACT.md
+# Product: docs/product/kitchen-skills-challenge/RESCUE_AND_REUSE.md
+# Slugs: docs/product/kitchen-skills-challenge/GAMEBUS_SLUG_CONTRACT.md
 # Not implemented on main.
 #
 @rescue-and-reuse @waste-challenges @kitchen-day

@@ -91,13 +91,13 @@ Tests live next to the code they cover (`*.test.ts` / `*.test.tsx`). Shared fixt
 | Menu | `npm run menu:convert` / `npm run menu:check` | `reference/` workbooks | `src/data/generated/` menu JSON |
 | Kitchen Skills recipes | `npm run kitchen-skills:recipes` | `reference/kitchen-skills/` | `src/data/generated/` recipe JSON |
 
-`npm run kitchen-day:recipes` remains a temporary alias for the recipe command.
+`npm run kitchen-day:recipes` is a temporary alias for `npm run kitchen-skills:recipes`.
 
 Do not edit generated JSON by hand.
 
 ## Deployment
 
-Push to `main` runs CI (`typecheck`, tests, production build) and GitHub Pages from `dist/`.
+Push to `main` runs CI (`typecheck`, `lint`, tests, production build) and GitHub Pages from `dist/`.
 
 Do not deploy from feature/refactor branches unless explicitly intended.
 

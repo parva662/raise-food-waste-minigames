@@ -4,7 +4,7 @@ import XLSX from 'xlsx';
 import { slugFromMenuItemName } from '../menu/normalize.ts';
 
 export const CLEAN_REFERENCE_RELATIVE_PATH =
-  'reference/kitchen-day/kitchen_day_recipe_reference_clean.xlsx';
+  'reference/kitchen-skills/kitchen_day_recipe_reference_clean.xlsx';
 
 export interface ExtractedIngredient {
   ingredientId: string;
@@ -262,9 +262,9 @@ export function writeRecipeExtractionOutputs(
 ): { recipesPath: string; reportPath: string; runtimePath: string } {
   const recipesJson = serializeRecipesDataset(result.recipes);
   const reportJson = serializeExtractionReport(result);
-  const recipesPath = resolve(repoRoot, 'generated-data/kitchen-day/recipes.json');
-  const reportPath = resolve(repoRoot, 'generated-data/kitchen-day/extraction-report.json');
-  const runtimePath = resolve(repoRoot, 'src/data/generated/kitchen-day-recipes.json');
+  const recipesPath = resolve(repoRoot, 'generated-data/kitchen-skills/recipes.json');
+  const reportPath = resolve(repoRoot, 'generated-data/kitchen-skills/extraction-report.json');
+  const runtimePath = resolve(repoRoot, 'src/data/generated/kitchen-skills-recipes.json');
   mkdirSync(dirname(recipesPath), { recursive: true });
   mkdirSync(dirname(reportPath), { recursive: true });
   mkdirSync(dirname(runtimePath), { recursive: true });

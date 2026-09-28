@@ -1,4 +1,4 @@
-import generatedRecipes from '@/data/generated/kitchen-day-recipes.json';
+import generatedRecipes from '@/data/generated/kitchen-skills-recipes.json';
 import type { PortionUnit } from '@/products/kitchen-skills-challenge/domain/types';
 
 export interface RecipeReferenceLine {

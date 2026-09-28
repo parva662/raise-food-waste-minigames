@@ -25,7 +25,7 @@ Confirmed highlights:
 | Area | Status |
 |------|--------|
 | Route | Default / empty hash → student mode |
-| Service date | `src/services/studentLunchServiceDate.ts` — next operational service; session-locked (midnight rollover still `@pending`) |
+| Service date | `src/products/lunch-declaration/studentLunchServiceDate.ts` — next operational service; session-locked (midnight rollover still `@pending`) |
 | Cutoff | `CANTEEN_CONFIG` 23:59:00; `submissionWindow` closes with `now >= deadline` |
 | Review / confirm | Edit → Review → Confirm in `useLunchSelection` / `SelectionPanel` |
 | Submit states | `idle` / `sending` / `failed` / `success` with retry on failure |
@@ -119,30 +119,27 @@ Cannot be closed from this repo’s Vitest stack (no browser E2E):
 
 ---
 
-## Kitchen Day / practical kitchen
+## Kitchen Skills Challenge / practical kitchen
 
-Canonical: [`../product/waste-challenges/KITCHEN_DAY.md`](../product/waste-challenges/KITCHEN_DAY.md) and [`GAMEBUS_SLUG_CONTRACT.md`](../product/waste-challenges/GAMEBUS_SLUG_CONTRACT.md) — **APPROVED PRODUCT TARGET**.
+Canonical: [`../product/kitchen-skills-challenge/KITCHEN_SKILLS_CHALLENGE.md`](../product/kitchen-skills-challenge/KITCHEN_SKILLS_CHALLENGE.md) and [`GAMEBUS_SLUG_CONTRACT.md`](../product/kitchen-skills-challenge/GAMEBUS_SLUG_CONTRACT.md) — **APPROVED PRODUCT TARGET**.
 
-**CURRENT IMPLEMENTATION on `main`:** Trim Smart v1 only (`#/waste/trim-smart`, Ingredient → Practice → Measure, `practice` / `participantWasteGrams` / old categories).
+**CURRENT IMPLEMENTATION on `main`:** Kitchen Skills Challenge is implemented at `#/kitchen-day*` (legacy-stable hashes). Source: `src/products/kitchen-skills-challenge/`. Legacy Trim Smart v1 remains at `#/waste/trim-smart`.
 
-**CURRENT IMPLEMENTATION on `feature/kitchen-day-v1`:** Phases 1–6 at `#/kitchen-day`: participant-specific session lock (TASK + `inputCollectionPari.me`), Trim / Reuse / Portion, Session Review, Student Progress, Tutor dashboard, session-level `wastePracticeReview`, professional recipe extract, derived Portion metrics. One student TASK must list `trimSmart` + `rescueAndReuse` + `portionPrecision` (see [`KITCHEN_DAY_TASK.md`](../contracts/KITCHEN_DAY_TASK.md)); review posts require `wastePracticeReview` on the tutor TASK. `#/waste/trim-smart` remains v1.
+**Known defect:** Trim → iframe close → Rescue & Reuse may not see prior Trim. Not fixed in the architecture refactor.
 
-**Live GameBus (foodtracker.gamebus.eu):** Student Kitchen Day activity schemas and properties were **manually verified** on `https://foodtracker.gamebus.eu`. Student posting is **enabled** for Trim / Rescue / Portion (`KITCHEN_DAY_STUDENT_LIVE_INTEGRATION_READY = true`). Tutor `wastePracticeReview` posting remains **blocked** (`KITCHEN_DAY_TUTOR_LIVE_INTEGRATION_READY = false`) until trainer-on-behalf-of-student semantics are confirmed. Routes are ready for production deployment as Custom Embed Pages. This is **not** a claim of tutor live end-to-end success.
+**Live GameBus (foodtracker.gamebus.eu):** Student Kitchen Skills Challenge activity schemas and properties were **manually verified** on `https://foodtracker.gamebus.eu`. Student posting is **enabled** for Trim / Rescue / Portion (`KITCHEN_DAY_STUDENT_LIVE_INTEGRATION_READY = true`). Trainer `wastePracticeReview` posting remains **blocked** (`KITCHEN_DAY_TUTOR_LIVE_INTEGRATION_READY = false`) until trainer-on-behalf-of-student semantics are confirmed. This is **not** a claim of trainer live end-to-end success.
 
-**v1 product-review baseline:** The current Kitchen Day student/tutor UX, including the vertical Session Review at `#/kitchen-day/review`, is the approved product-review checkpoint for v1.
+**v1 product-review baseline:** The current student/trainer UX, including Session Review at `#/kitchen-day/review`, is the approved product-review checkpoint for v1.
 
-**APPROVED TARGET:** connected Kitchen Day (Trim Smart + Rescue & Reuse + Portion Precision + one session-level tutor assessment).
+Gherkin: [`../../features/kitchen-skills-challenge/`](../../features/kitchen-skills-challenge/) — all **APPROVED PRODUCT TARGET**. Intentional `@pending`: percentile / ranking sufficient-data rule.
 
-Gherkin: [`../../features/waste-challenges/`](../../features/waste-challenges/) — all **APPROVED PRODUCT TARGET**. Intentional `@pending`: percentile / ranking sufficient-data rule.
-
-Implementation order: Phase 0 GameBus admin → 1 session/shell → 2 Trim target → 3 Rescue → 4 Portion → 5 dashboards + session review → 6 tests/build/deploy.
-
-| Module | On `main` | On `feature/kitchen-day-v1` | Target |
-|--------|-----------|-----------------------------|--------|
-| Trim Smart | v1 standalone | Target flow at `#/kitchen-day`; v1 kept at `#/waste/trim-smart` | Estimate → timed prep → actual; locked category enum; unique `ingredientId` per session |
-| Rescue & Reuse | none | `#/kitchen-day/reuse` | Join `sessionId` + `ingredientId`; `reusableWasteGrams` + free-text `reuseDestination` |
-| Portion Precision | none | `#/kitchen-day/portion` | Professional recipe reference extract; derived ingredient accuracy + final-weight deviation; [`PORTION_PRECISION.md`](../product/waste-challenges/PORTION_PRECISION.md) |
-| Dashboards + tutor review | none | `#/kitchen-day/review`, `#/kitchen-day-progress`, `#/kitchen-day-tutor` | Current-session review; student history; tutor evidence + `wastePracticeReview` |
+| Module | On `main` | Notes |
+|--------|-----------|--------|
+| Trim Smart | `#/kitchen-day` | Estimate → timed prep → actual; unique `ingredientId` per session |
+| Rescue & Reuse | `#/kitchen-day/reuse` | Join `sessionId` + `ingredientId` |
+| Portion Precision | `#/kitchen-day/portion` | Generated recipe reference; derived accuracy |
+| Session Review / Progress / trainer | `#/kitchen-day/review`, `#/kitchen-day-progress`, `#/kitchen-day-tutor` | Review is read-only; trainer posting disabled |
+| Legacy Trim Smart v1 | `#/waste/trim-smart` | Deprecated; old payload |
 
 ---
 

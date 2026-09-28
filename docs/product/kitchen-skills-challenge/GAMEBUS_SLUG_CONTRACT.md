@@ -95,7 +95,7 @@ One activity = one prepared recipe. Not one activity per ingredient line.
 | `actualAmount` | Actual amount used (nested — **not** a GameBus property) |
 | `unit` | Unit from the recipe dataset |
 
-Required recipe amounts and expected final weight are **not** copied into GameBus. They come from the generated recipe reference (`generated-data/kitchen-day/recipes.json`, produced from `reference/kitchen-day/kitchen_day_recipe_reference_clean.xlsx`). A future BarLaurea source can replace that extract behind the same adapter.
+Required recipe amounts and expected final weight are **not** copied into GameBus. They come from the generated recipe reference (`generated-data/kitchen-skills/recipes.json`, produced from `reference/kitchen-skills/kitchen_day_recipe_reference_clean.xlsx`). A future BarLaurea source can replace that extract behind the same adapter.
 
 **Do not post:** ingredient accuracy, ingredient error, expected final weight, final-weight deviation, or any combined Portion score. Those are derived on read.
 
@@ -126,9 +126,9 @@ One review per student Kitchen Day / session. Not one judgement per activity or 
 
 ## Retrieval
 
-Reuse the existing kitchen group-activities path (`kitchenGroupInput.activities` → `GET /groups/activities`, `src/gamebus/groupActivities.ts`). Filter to Kitchen Day templates. Group client-side by actor, template, `sessionId`, `sessionDate`, `ingredientId`, `recipeId`.
+Reuse the existing kitchen group-activities path (`kitchenGroupInput.activities` → `GET /groups/activities`, `src/platform/gamebus/groupActivities.ts`). Filter to Kitchen Day templates. Group client-side by actor, template, `sessionId`, `sessionDate`, `ingredientId`, `recipeId`.
 
-**TASK:** one Custom Embed task lists `trimSmart`, `rescueAndReuse`, and `portionPrecision`. Evidence and client rules: [`../../contracts/KITCHEN_DAY_TASK.md`](../../contracts/KITCHEN_DAY_TASK.md).
+**TASK:** one Custom Embed task lists `trimSmart`, `rescueAndReuse`, and `portionPrecision`. Evidence and client rules: [`../../contracts/KITCHEN_SKILLS_CHALLENGE_TASK.md`](../../contracts/KITCHEN_SKILLS_CHALLENGE_TASK.md).
 
 This is **not** a platform blocker and is **not** a new API.
 
