@@ -1,5 +1,6 @@
 import { useReducer, useCallback, useMemo, useEffect } from 'react';
-import { isGameBusEmbed, tryPostCloseoutActivity, useGameBusEmbed } from '@/platform/gamebus';
+import { isGameBusEmbed, useGameBusEmbed } from '@/platform/gamebus';
+import { tryPostCloseoutActivity } from '@/products/service-closeout/gamebus/postActivity';
 import { gamebusDevLog } from '@/platform/gamebus/devLog';
 import { resolveMenuForDate } from '@/shared/menu/menuResolver';
 import { resolveMealSlotsForDate } from '@/shared/menu/mealSlots';

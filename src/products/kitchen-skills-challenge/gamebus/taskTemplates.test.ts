@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { kitchenDayChefTaskFixture, kitchenDayTaskFixture } from '@/platform/gamebus/kitchenDayTaskFixtures';
-import { trimSmartTaskFixture } from '@/platform/gamebus/trimSmartTaskFixtures';
+import { kitchenDayChefTaskFixture, kitchenDayTaskFixture } from '@/products/kitchen-skills-challenge/gamebus/kitchenDayTaskFixtures';
+import { trimSmartTaskFixture } from '@/legacy/trim-smart-v1/gamebus/trimSmartTaskFixtures';
 import {
   assertKitchenDayTask,
   missingKitchenDayTaskTemplates,

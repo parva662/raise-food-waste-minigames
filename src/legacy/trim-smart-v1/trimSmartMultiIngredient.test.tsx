@@ -3,9 +3,13 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { AppRouter } from '@/app/AppRouter';
-import * as bridge from '@/platform/gamebus/bridge';
+import * as trimPost from '@/legacy/trim-smart-v1/gamebus/postActivity';
+import {
+  ingestTaskForTests,
+  resetGameBusBridgeForTests,
+} from '@/platform/gamebus/bridge';
 import * as detectEmbed from '@/platform/gamebus/detectEmbed';
-import { trimSmartTaskFixture } from '@/platform/gamebus/trimSmartTaskFixtures';
+import { trimSmartTaskFixture } from '@/legacy/trim-smart-v1/gamebus/trimSmartTaskFixtures';
 
 function setHash(hash: string) {
   window.location.hash = hash;
@@ -29,7 +33,7 @@ async function submitIngredient(
 describe('trim smart multi-ingredient session', () => {
   beforeEach(() => {
     setHash('#/waste/trim-smart');
-    vi.spyOn(bridge, 'tryPostTrimSmartActivity').mockImplementation((_submission, _attemptPostKey) => {
+    vi.spyOn(trimPost, 'tryPostTrimSmartActivity').mockImplementation((_submission, _attemptPostKey) => {
       return {
         ok: true,
         message: {
@@ -41,14 +45,14 @@ describe('trim smart multi-ingredient session', () => {
         } as never,
       };
     });
-    bridge.resetGameBusBridgeForTests();
-    bridge.ingestTaskForTests(trimSmartTaskFixture);
+    resetGameBusBridgeForTests();
+    ingestTaskForTests(trimSmartTaskFixture);
   });
 
   afterEach(() => {
     cleanup();
     setHash('');
-    bridge.resetGameBusBridgeForTests();
+    resetGameBusBridgeForTests();
     vi.restoreAllMocks();
   });
 
@@ -90,7 +94,7 @@ describe('trim smart multi-ingredient session', () => {
 
   it('posts separate trimSmart activities with shared session identity', async () => {
     vi.spyOn(detectEmbed, 'isGameBusEmbed').mockReturnValue(true);
-    const postSpy = vi.mocked(bridge.tryPostTrimSmartActivity);
+    const postSpy = vi.mocked(trimPost.tryPostTrimSmartActivity);
     const user = userEvent.setup();
     render(<AppRouter />);
 

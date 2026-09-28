@@ -2,8 +2,8 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import { ChefApp } from '@/products/kitchen-forecast/KitchenForecastApp';
-import { buildChefActivityMessage } from '@/platform/gamebus/buildChefActivityMessage';
-import { pariChefForecastTaskFixture } from '@/platform/gamebus/chefTaskFixtures';
+import { buildChefActivityMessage } from '@/products/kitchen-forecast/gamebus/buildChefActivityMessage';
+import { pariChefForecastTaskFixture } from '@/products/kitchen-forecast/gamebus/chefTaskFixtures';
 import { resolveMealSlotsForDate } from '@/shared/menu/mealSlots';
 import { MENU_DATES } from '@/test/fixtures/dates';
 import * as operationalCalendarModule from '@/shared/calendar/operationalServiceCalendar';

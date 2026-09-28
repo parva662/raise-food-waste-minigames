@@ -5,9 +5,10 @@ import {
   resolveChefForecastServiceDate,
   OperationalCalendarError,
 } from '@/shared/calendar/operationalServiceCalendar';
-import { isGameBusEmbed, tryPostChefActivity, useGameBusEmbed } from '@/platform/gamebus';
+import { isGameBusEmbed, useGameBusEmbed } from '@/platform/gamebus';
+import { tryPostChefActivity } from '@/products/kitchen-forecast/gamebus/postActivity';
 import { hasGameBusPostedChefForecastForDate } from '@/platform/gamebus/bridge';
-import { logChefTryPostActivityResult } from '@/platform/gamebus/debug/chefGameBusSubmissionDebug';
+import { logChefTryPostActivityResult } from '@/products/kitchen-forecast/gamebus/chefGameBusSubmissionDebug';
 import { gamebusDevLog } from '@/platform/gamebus/devLog';
 import {
   getChefSubmissionWindowStatus,

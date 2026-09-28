@@ -1,14 +1,16 @@
 export { isGameBusEmbed } from '@/platform/gamebus/detectEmbed';
 export { useGameBusEmbed } from '@/platform/gamebus/useGameBusEmbed';
 export {
-  tryPostActivity,
-  tryPostChefActivity,
-  tryPostCloseoutActivity,
+  tryPostBuiltActivity,
   resetGameBusBridgeForTests,
   ingestTaskForTests,
   ingestInputCollectionsForTests,
   getGameBusInputCollections,
+  getGameBusTask,
   startGameBusHandshake,
+  hasGameBusPostedActivity,
+  hasGameBusPostedChefForecastForDate,
+  isGameBusSubmissionInFlight,
 } from '@/platform/gamebus/bridge';
 export {
   getInputCollectionKeys,
@@ -26,16 +28,6 @@ export {
   KITCHEN_GROUP_ACTIVITIES_REQUEST_KEY,
 } from '@/platform/gamebus/inputCollections';
 export { parseGameBusAuthenticatedUser, type GameBusAuthenticatedUser } from '@/platform/gamebus/authenticatedUser';
-export { buildActivityMessage } from '@/platform/gamebus/buildActivityMessage';
-export { buildChefActivityMessage } from '@/platform/gamebus/buildChefActivityMessage';
-export { buildWasteMeasurementActivityMessage } from '@/platform/gamebus/buildWasteMeasurementActivityMessage';
-export {
-  getAppMode,
-  getExpectedActivityRef,
-  CHEF_HASH_ROUTE,
-  SERVICE_CLOSEOUT_ACTIVITY_REF,
-  WASTE_MEASUREMENT_ACTIVITY_REF,
-} from '@/app/routes';
 export type {
   ActivityMessage,
   TaskData,

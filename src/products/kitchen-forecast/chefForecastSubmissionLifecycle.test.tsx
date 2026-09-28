@@ -5,7 +5,7 @@ import { ChefApp } from '@/products/kitchen-forecast/KitchenForecastApp';
 import { helsinki } from '@/test/fixtures/dates';
 import * as detectEmbedModule from '@/platform/gamebus/detectEmbed';
 import { ingestTaskForTests, resetGameBusBridgeForTests } from '@/platform/gamebus/bridge';
-import { pariChefForecastTaskFixture } from '@/platform/gamebus/chefTaskFixtures';
+import { pariChefForecastTaskFixture } from '@/products/kitchen-forecast/gamebus/chefTaskFixtures';
 import { resolveMealSlotsForDate } from '@/shared/menu/mealSlots';
 import type { ActivityMessage } from '@/platform/gamebus/types';
 

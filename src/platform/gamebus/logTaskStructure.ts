@@ -1,10 +1,7 @@
+import { findActivityTemplate, resolveLinkedPropertyRefs } from '@/platform/gamebus/activityTemplate';
 import { gamebusDevLog } from '@/platform/gamebus/devLog';
+import { peekExpectedActivityRef } from '@/platform/gamebus/expectedActivityRef';
 import { readGameBusLinkedPropertySlug, readGameBusSlug } from '@/platform/gamebus/gameBusSlug';
-import {
-  findActivityTemplate,
-  resolveLinkedPropertyRefs,
-  STUDENT_LUNCH_CHECKIN_REF,
-} from '@/platform/gamebus/resolveActivityProperties';
 import type { TaskActivityTemplate, TaskData } from '@/platform/gamebus/types';
 
 function linkedPropertyIds(activity: TaskActivityTemplate | undefined): { ref: string; id?: string }[] {
@@ -38,8 +35,9 @@ function embeddedPropertyIds(
 export function logTaskStructureSanitized(task: TaskData): void {
   const dataKeys = Object.keys(task);
   const activityTemplates = task.activityTemplates ?? [];
-  const student = findActivityTemplate(task, STUDENT_LUNCH_CHECKIN_REF);
-  const selected = student ?? activityTemplates[0];
+  const expectedRef = peekExpectedActivityRef();
+  const expected = expectedRef ? findActivityTemplate(task, expectedRef) : undefined;
+  const selected = expected ?? activityTemplates[0];
 
   gamebusDevLog('TASK structure', {
     dataKeys,

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { buildTrimSmartSubmission } from '@/legacy/trim-smart-v1/buildSubmission';
-import { mapTrimSmart, orderedTrimSmartPropertyRefs } from '@/platform/gamebus/mapTrimSmart';
+import { mapTrimSmart, orderedTrimSmartPropertyRefs } from '@/legacy/trim-smart-v1/gamebus/mapTrimSmart';
 
 describe('buildTrimSmartSubmission', () => {
   const session = {

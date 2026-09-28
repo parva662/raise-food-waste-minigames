@@ -7,7 +7,7 @@ import {
   INPUT_COLLECTION_PARI_KEY,
   INPUT_COLLECTION_PARI_ME_REQUEST_KEY,
 } from '@/platform/gamebus/inputCollections';
-import { WASTE_MEASUREMENT_REQUIRED_REFS } from '@/platform/gamebus/mapWasteMeasurement';
+import { WASTE_MEASUREMENT_REQUIRED_REFS } from '@/products/service-closeout/gamebus/mapWasteMeasurement';
 import { buildAnonymizedChefForecastActivity } from '@/products/service-closeout/forecast/fixtures/gameBusChefForecastActivities';
 import {
   buildInputCollectionsDebugInfo,

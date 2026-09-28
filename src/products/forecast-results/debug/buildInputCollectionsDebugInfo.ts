@@ -11,7 +11,7 @@ import {
   getInputCollectionKeys,
   getRawAuthenticatedMeInput,
 } from '@/platform/gamebus/inputCollections';
-import { WASTE_MEASUREMENT_REQUIRED_REFS } from '@/platform/gamebus/mapWasteMeasurement';
+import { WASTE_MEASUREMENT_REQUIRED_REFS } from '@/products/service-closeout/gamebus/mapWasteMeasurement';
 
 export type RawActivitiesShape = 'array' | 'docs-envelope' | 'other';
 

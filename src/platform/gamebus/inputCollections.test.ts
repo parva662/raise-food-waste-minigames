@@ -7,8 +7,8 @@ import {
   ingestTaskForTests,
   resetGameBusBridgeForTests,
   startGameBusHandshake,
-  tryPostActivity,
 } from '@/platform/gamebus/bridge';
+import { tryPostActivity } from '@/products/lunch-declaration/gamebus/postActivity';
 import {
   getAuthenticatedGameBusUser,
   getInputCollectionKeys,
@@ -20,7 +20,7 @@ import {
   SERVICE_CLOSEOUT_INPUT_COLLECTION_KEY,
   SERVICE_CLOSEOUT_INPUTS_COLLECTION_KEY_LEGACY,
 } from '@/platform/gamebus/inputCollections';
-import { pariStudentLunchTaskFixture } from '@/platform/gamebus/taskFixtures';
+import { pariStudentLunchTaskFixture } from '@/products/lunch-declaration/gamebus/taskFixtures';
 import type { GameBusInputCollectionsPayload } from '@/platform/gamebus/types';
 import type { ActiveDeclaration } from '@/products/lunch-declaration/types/declaration';
 import type { DailyMealSlots, MealDraft } from '@/shared/menu/mealChoice';

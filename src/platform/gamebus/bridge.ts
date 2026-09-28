@@ -1,8 +1,3 @@
-import { buildActivityMessage } from '@/platform/gamebus/buildActivityMessage';
-import { buildChefActivityMessage } from '@/platform/gamebus/buildChefActivityMessage';
-import { buildWasteMeasurementActivityMessage } from '@/platform/gamebus/buildWasteMeasurementActivityMessage';
-import { buildTrimSmartActivityMessage } from '@/platform/gamebus/buildTrimSmartActivityMessage';
-import type { TrimSmartSubmission } from '@/legacy/trim-smart-v1/types';
 import { peekExpectedActivityRef } from '@/platform/gamebus/expectedActivityRef';
 import { isGameBusEmbed } from '@/platform/gamebus/detectEmbed';
 import { gamebusDevLog } from '@/platform/gamebus/devLog';
@@ -19,24 +14,6 @@ import type {
   TaskData,
   TaskMessage,
 } from '@/platform/gamebus/types';
-import type { ActiveDeclaration } from '@/products/lunch-declaration/types/declaration';
-import type { DailyMealSlots, MealDraft } from '@/shared/menu/mealChoice';
-import type { ChefForecastDraft, ChefForecastSubmission } from '@/products/kitchen-forecast/types';
-import type { ServiceCloseout } from '@/products/service-closeout/types';
-import {
-  armChefParentMessageDiagnostic,
-  logChefActivityBeforePostMessage,
-  logChefPostMessageReturned,
-  logChefSubmissionException,
-  logChefTaskBeforeSubmission,
-  resetChefParentMessageDiagnosticForTests,
-} from '@/platform/gamebus/debug/chefGameBusSubmissionDebug';
-import {
-  logStudentActivityBeforePostMessage,
-  logStudentPostMessageReturned,
-  logStudentSubmissionException,
-  logStudentTaskBeforeSubmission,
-} from '@/platform/gamebus/debug/studentGameBusSubmissionDebug';
 
 const HANDSHAKE_RETRY_MS = 875;
 
@@ -270,119 +247,83 @@ export function getIframeReadyAttemptCountForTests(): number {
   return iframeReadyAttempt;
 }
 
-export function tryPostActivity(
-  declaration: ActiveDeclaration,
-  draft: MealDraft,
-  slots: DailyMealSlots,
-): { ok: true; message: ActivityMessage } | { ok: false; reason: string } {
-  if (hasPostedActivity) {
-    gamebusDevLog('submission blocked as duplicate');
+export type ActivityPostResult =
+  | { ok: true; message: ActivityMessage }
+  | { ok: false; reason: string };
+
+export type ActivityDuplicatePolicy =
+  | { type: 'once' }
+  | { type: 'chef-date'; targetDate: string }
+  | { type: 'attempt-key'; key: string };
+
+export type ActivityPostHooks = {
+  logTask?: (task: TaskData) => void;
+  beforePost?: (message: ActivityMessage) => void;
+  afterPost?: () => void;
+  onError?: (error: unknown) => void;
+  devPayloadLabel?: string;
+};
+
+/**
+ * Post an already-built ACTIVITY message. Product adapters build the payload;
+ * this transport owns handshake, TASK, duplicate, and in-flight guards.
+ */
+export function tryPostBuiltActivity(
+  buildMessage: (task: TaskData) => ActivityMessage,
+  policy: ActivityDuplicatePolicy,
+  hooks: ActivityPostHooks = {},
+): ActivityPostResult {
+  const duplicate =
+    policy.type === 'once'
+      ? hasPostedActivity
+      : policy.type === 'chef-date'
+        ? chefForecastPostedTargetDate === policy.targetDate
+        : trimSmartPostedAttemptKeys.has(policy.key);
+  if (duplicate) {
+    gamebusDevLog(
+      policy.type === 'attempt-key'
+        ? 'trimSmart submission blocked as duplicate attempt'
+        : 'submission blocked as duplicate',
+    );
     return { ok: false, reason: 'duplicate' };
   }
-  if (submissionInFlight) {
-    gamebusDevLog('submission blocked as duplicate');
+
+  const inFlight = policy.type === 'attempt-key' ? trimSmartSubmissionInFlight : submissionInFlight;
+  if (inFlight) {
+    gamebusDevLog(
+      policy.type === 'attempt-key'
+        ? 'trimSmart submission blocked as in flight'
+        : 'submission blocked as duplicate',
+    );
     return { ok: false, reason: 'in_flight' };
   }
   if (!taskData) {
     return { ok: false, reason: 'no_task' };
   }
 
-  submissionInFlight = true;
-  try {
-    logStudentTaskBeforeSubmission(taskData);
-    const message = buildActivityMessage(taskData, declaration, draft, slots);
-    logStudentActivityBeforePostMessage(message);
-    window.parent.postMessage(message, '*');
-    logStudentPostMessageReturned();
-    hasPostedActivity = true;
-    gamebusDevLog('ACTIVITY sent', {
-      type: message.type,
-      template: message.data.template,
-      propertyCount: message.data.properties.length,
-    });
-    return { ok: true, message };
-  } catch (error) {
-    logStudentSubmissionException(error);
-    return {
-      ok: false,
-      reason: error instanceof Error ? error.message : 'build_failed',
-    };
-  } finally {
-    submissionInFlight = false;
-  }
-}
-
-export function tryPostChefActivity(
-  submission: ChefForecastSubmission,
-  draft: ChefForecastDraft,
-  slots: DailyMealSlots,
-): { ok: true; message: ActivityMessage } | { ok: false; reason: string } {
-  if (chefForecastPostedTargetDate === submission.targetDate) {
-    gamebusDevLog('submission blocked as duplicate');
-    return { ok: false, reason: 'duplicate' };
-  }
-  if (submissionInFlight) {
-    gamebusDevLog('submission blocked as duplicate');
-    return { ok: false, reason: 'in_flight' };
-  }
-  if (!taskData) {
-    return { ok: false, reason: 'no_task' };
+  if (policy.type === 'attempt-key') {
+    trimSmartSubmissionInFlight = true;
+  } else {
+    submissionInFlight = true;
   }
 
-  submissionInFlight = true;
   try {
-    logChefTaskBeforeSubmission(taskData);
-    const message = buildChefActivityMessage(taskData, submission, draft, slots);
-    if (import.meta.env.DEV) {
-      console.info('[gamebus] chefForecast ACTIVITY payload', message);
+    hooks.logTask?.(taskData);
+    const message = buildMessage(taskData);
+    if (hooks.devPayloadLabel && import.meta.env.DEV) {
+      console.info(`[gamebus] ${hooks.devPayloadLabel} ACTIVITY payload`, message);
     }
-    armChefParentMessageDiagnostic();
-    logChefActivityBeforePostMessage(message);
+    hooks.beforePost?.(message);
     window.parent.postMessage(message, '*');
-    logChefPostMessageReturned();
-    hasPostedActivity = true;
-    chefForecastPostedTargetDate = submission.targetDate;
-    gamebusDevLog('ACTIVITY sent', {
-      type: message.type,
-      template: message.data.template,
-      propertyCount: message.data.properties.length,
-    });
-    return { ok: true, message };
-  } catch (error) {
-    logChefSubmissionException(error);
-    return {
-      ok: false,
-      reason: error instanceof Error ? error.message : 'build_failed',
-    };
-  } finally {
-    submissionInFlight = false;
-  }
-}
-
-export function tryPostTrimSmartActivity(
-  submission: TrimSmartSubmission,
-  attemptPostKey: string,
-): { ok: true; message: ActivityMessage } | { ok: false; reason: string } {
-  if (trimSmartPostedAttemptKeys.has(attemptPostKey)) {
-    gamebusDevLog('trimSmart submission blocked as duplicate attempt');
-    return { ok: false, reason: 'duplicate' };
-  }
-  if (trimSmartSubmissionInFlight) {
-    gamebusDevLog('trimSmart submission blocked as in flight');
-    return { ok: false, reason: 'in_flight' };
-  }
-  if (!taskData) {
-    return { ok: false, reason: 'no_task' };
-  }
-
-  trimSmartSubmissionInFlight = true;
-  try {
-    const message = buildTrimSmartActivityMessage(taskData, submission);
-    if (import.meta.env.DEV) {
-      console.info('[gamebus] trimSmart ACTIVITY payload', message);
+    hooks.afterPost?.();
+    if (policy.type === 'once') {
+      hasPostedActivity = true;
+    } else if (policy.type === 'chef-date') {
+      hasPostedActivity = true;
+      chefForecastPostedTargetDate = policy.targetDate;
+    } else {
+      trimSmartPostedAttemptKeys.add(policy.key);
     }
-    window.parent.postMessage(message, '*');
-    trimSmartPostedAttemptKeys.add(attemptPostKey);
     gamebusDevLog('ACTIVITY sent', {
       type: message.type,
       template: message.data.template,
@@ -390,51 +331,17 @@ export function tryPostTrimSmartActivity(
     });
     return { ok: true, message };
   } catch (error) {
+    hooks.onError?.(error);
     return {
       ok: false,
       reason: error instanceof Error ? error.message : 'build_failed',
     };
   } finally {
-    trimSmartSubmissionInFlight = false;
-  }
-}
-
-export function tryPostCloseoutActivity(
-  closeout: ServiceCloseout,
-): { ok: true; message: ActivityMessage } | { ok: false; reason: string } {
-  if (hasPostedActivity) {
-    gamebusDevLog('submission blocked as duplicate');
-    return { ok: false, reason: 'duplicate' };
-  }
-  if (submissionInFlight) {
-    gamebusDevLog('submission blocked as duplicate');
-    return { ok: false, reason: 'in_flight' };
-  }
-  if (!taskData) {
-    return { ok: false, reason: 'no_task' };
-  }
-
-  submissionInFlight = true;
-  try {
-    const message = buildWasteMeasurementActivityMessage(taskData, closeout);
-    if (import.meta.env.DEV) {
-      console.info('[gamebus] wasteMeasurement ACTIVITY payload', message);
+    if (policy.type === 'attempt-key') {
+      trimSmartSubmissionInFlight = false;
+    } else {
+      submissionInFlight = false;
     }
-    window.parent.postMessage(message, '*');
-    hasPostedActivity = true;
-    gamebusDevLog('ACTIVITY sent', {
-      type: message.type,
-      template: message.data.template,
-      propertyCount: message.data.properties.length,
-    });
-    return { ok: true, message };
-  } catch (error) {
-    return {
-      ok: false,
-      reason: error instanceof Error ? error.message : 'build_failed',
-    };
-  } finally {
-    submissionInFlight = false;
   }
 }
 
@@ -442,7 +349,6 @@ export function tryPostCloseoutActivity(
 export function resetGameBusBridgeForTests(): void {
   stopHandshakeRetry();
   detachMessageListener();
-  resetChefParentMessageDiagnosticForTests();
   taskData = null;
   inputCollectionsData = null;
   hasPostedActivity = false;

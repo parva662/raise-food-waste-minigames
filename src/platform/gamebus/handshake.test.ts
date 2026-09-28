@@ -7,7 +7,7 @@ import {
   startGameBusHandshake,
 } from '@/platform/gamebus/bridge';
 import type { TaskData } from '@/platform/gamebus/types';
-import { pariStudentLunchTaskFixture } from '@/platform/gamebus/taskFixtures';
+import { pariStudentLunchTaskFixture } from '@/products/lunch-declaration/gamebus/taskFixtures';
 
 const taskFixture: TaskData = pariStudentLunchTaskFixture;
 

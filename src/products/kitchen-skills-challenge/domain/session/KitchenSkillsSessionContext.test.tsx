@@ -7,7 +7,7 @@ import {
   ingestTaskForTests,
   resetGameBusBridgeForTests,
 } from '@/platform/gamebus/bridge';
-import { kitchenDayTaskFixture } from '@/platform/gamebus/kitchenDayTaskFixtures';
+import { kitchenDayTaskFixture } from '@/products/kitchen-skills-challenge/gamebus/kitchenDayTaskFixtures';
 import { KitchenDayApp } from '@/products/kitchen-skills-challenge/surfaces/challenge/KitchenSkillsChallengeApp';
 import { KitchenDaySessionProvider, useKitchenDaySession } from '@/products/kitchen-skills-challenge/domain/session/KitchenSkillsSessionContext';
 import { ensureKitchenDayLockedSession } from '@/products/kitchen-skills-challenge/domain/session/lock';

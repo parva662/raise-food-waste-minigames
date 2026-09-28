@@ -5,7 +5,7 @@ import userEvent from '@testing-library/user-event';
 import { AppRouter } from '@/app/AppRouter';
 import * as bridge from '@/platform/gamebus/bridge';
 import * as detectEmbed from '@/platform/gamebus/detectEmbed';
-import { trimSmartTaskFixture } from '@/platform/gamebus/trimSmartTaskFixtures';
+import { trimSmartTaskFixture } from '@/legacy/trim-smart-v1/gamebus/trimSmartTaskFixtures';
 import type { ActivityMessage } from '@/platform/gamebus/types';
 
 function setHash(hash: string) {

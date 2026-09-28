@@ -10,7 +10,7 @@ import { MENU_DATES } from '@/test/fixtures/dates';
 import { selectLatestForecastForDate } from '@/products/service-closeout/forecast/selectCloseoutForecast';
 import { parseGameBusChefForecastActivities } from '@/products/service-closeout/forecast/parseGameBusChefForecast';
 import { buildAnonymizedChefForecastActivity } from '@/products/service-closeout/forecast/fixtures/gameBusChefForecastActivities';
-import { mapWasteMeasurement } from '@/platform/gamebus/mapWasteMeasurement';
+import { mapWasteMeasurement } from '@/products/service-closeout/gamebus/mapWasteMeasurement';
 import { resolveMealSlotsForDate } from '@/shared/menu/mealSlots';
 import { normalizeServiceCloseout } from '@/products/service-closeout/normalize';
 import { createDevelopmentPortionWeightProvider } from '@/products/service-closeout/portionWeight/developmentFixtures';

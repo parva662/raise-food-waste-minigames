@@ -7,8 +7,8 @@ import {
   resolveMenuForDate,
 } from '@/shared/menu/menuResolver';
 import { resolveMealSlotsForDate } from '@/shared/menu/mealSlots';
-import { buildActivityMessage } from '@/platform/gamebus/buildActivityMessage';
-import { pariStudentLunchTaskFixture } from '@/platform/gamebus/taskFixtures';
+import { buildActivityMessage } from '@/products/lunch-declaration/gamebus/buildActivityMessage';
+import { pariStudentLunchTaskFixture } from '@/products/lunch-declaration/gamebus/taskFixtures';
 import { MENU_DATES } from '@/test/fixtures/dates';
 import { foodCatalogue } from '@/shared/menu/foodCatalogue';
 import { getAllGeneratedDailyMenus, getGeneratedMenuMeta } from '@/shared/menu/generatedMenuData';

@@ -1,9 +1,8 @@
 import type { TaskData } from '@/platform/gamebus/types';
-import { STUDENT_LUNCH_CHECKIN_REF } from '@/platform/gamebus/resolveActivityProperties';
 
 export function selectActivityTemplate(
   task: TaskData,
-  expectedRef: string = STUDENT_LUNCH_CHECKIN_REF,
+  expectedRef: string,
 ): {
   reference: string;
   name: string | null;

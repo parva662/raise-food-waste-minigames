@@ -1,10 +1,10 @@
 /** @vitest-environment jsdom */
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { ingestTaskForTests, resetGameBusBridgeForTests } from '@/platform/gamebus/bridge';
-import { kitchenDayChefTaskFixture, kitchenDayTaskFixture } from '@/platform/gamebus/kitchenDayTaskFixtures';
-import { mapKitchenDayTrimSmart, orderedKitchenDayTrimPropertyRefs } from '@/platform/gamebus/mapKitchenDayTrimSmart';
-import { mapPortionPrecision, orderedPortionPrecisionPropertyRefs } from '@/platform/gamebus/mapPortionPrecision';
-import { mapRescueAndReuse, orderedRescueAndReusePropertyRefs } from '@/platform/gamebus/mapRescueAndReuse';
+import { kitchenDayChefTaskFixture, kitchenDayTaskFixture } from '@/products/kitchen-skills-challenge/gamebus/kitchenDayTaskFixtures';
+import { mapKitchenDayTrimSmart, orderedKitchenDayTrimPropertyRefs } from '@/products/kitchen-skills-challenge/gamebus/mapKitchenDayTrimSmart';
+import { mapPortionPrecision, orderedPortionPrecisionPropertyRefs } from '@/products/kitchen-skills-challenge/gamebus/mapPortionPrecision';
+import { mapRescueAndReuse, orderedRescueAndReusePropertyRefs } from '@/products/kitchen-skills-challenge/gamebus/mapRescueAndReuse';
 import {
   KITCHEN_DAY_STUDENT_LIVE_BLOCK_REASON,
   KITCHEN_DAY_STUDENT_LIVE_INTEGRATION_READY,

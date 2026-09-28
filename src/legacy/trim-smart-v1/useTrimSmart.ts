@@ -1,6 +1,6 @@
 import { useCallback, useLayoutEffect, useRef, useState } from 'react';
 import { isGameBusEmbed } from '@/platform/gamebus/detectEmbed';
-import { tryPostTrimSmartActivity } from '@/platform/gamebus/bridge';
+import { tryPostTrimSmartActivity } from '@/legacy/trim-smart-v1/gamebus/postActivity';
 import { useGameBusEmbed } from '@/platform/gamebus/useGameBusEmbed';
 import { buildTrimSmartSubmission } from '@/legacy/trim-smart-v1/buildSubmission';
 import { ensureTrimSmartLockedSession } from '@/legacy/trim-smart-v1/sessionLock';

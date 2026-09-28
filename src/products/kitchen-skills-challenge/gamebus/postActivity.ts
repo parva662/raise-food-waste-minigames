@@ -1,7 +1,7 @@
-import { buildKitchenDayTrimSmartActivityMessage } from '@/platform/gamebus/buildKitchenDayTrimSmartActivityMessage';
-import { buildPortionPrecisionActivityMessage } from '@/platform/gamebus/buildPortionPrecisionActivityMessage';
-import { buildRescueAndReuseActivityMessage } from '@/platform/gamebus/buildRescueAndReuseActivityMessage';
-import { buildWastePracticeReviewActivityMessage } from '@/platform/gamebus/buildWastePracticeReviewActivityMessage';
+import { buildKitchenDayTrimSmartActivityMessage } from '@/products/kitchen-skills-challenge/gamebus/buildKitchenDayTrimSmartActivityMessage';
+import { buildPortionPrecisionActivityMessage } from '@/products/kitchen-skills-challenge/gamebus/buildPortionPrecisionActivityMessage';
+import { buildRescueAndReuseActivityMessage } from '@/products/kitchen-skills-challenge/gamebus/buildRescueAndReuseActivityMessage';
+import { buildWastePracticeReviewActivityMessage } from '@/products/kitchen-skills-challenge/gamebus/buildWastePracticeReviewActivityMessage';
 import { getGameBusTask } from '@/platform/gamebus/bridge';
 import type { ActivityMessage, TaskData } from '@/platform/gamebus/types';
 import {

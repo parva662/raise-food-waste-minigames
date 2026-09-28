@@ -28,9 +28,10 @@ import { tryResolveStudentLunchServiceDate } from '@/products/lunch-declaration/
 import type { MealChoice } from '@/shared/menu/mealChoice';
 import type { SelectionEntry } from '@/shared/menu/types';
 import type { MealSummaryLine } from '@/products/lunch-declaration/mealChoice';
-import { isGameBusEmbed, tryPostActivity, useGameBusEmbed } from '@/platform/gamebus';
+import { isGameBusEmbed, useGameBusEmbed } from '@/platform/gamebus';
+import { tryPostActivity } from '@/products/lunch-declaration/gamebus/postActivity';
 import { gamebusDevLog } from '@/platform/gamebus/devLog';
-import { logStudentTryPostActivityResult } from '@/platform/gamebus/debug/studentGameBusSubmissionDebug';
+import { logStudentTryPostActivityResult } from '@/products/lunch-declaration/gamebus/studentGameBusSubmissionDebug';
 
 export type LunchUiStep = 'edit' | 'review';
 export type LunchSubmitStatus = 'idle' | 'sending' | 'failed' | 'success';

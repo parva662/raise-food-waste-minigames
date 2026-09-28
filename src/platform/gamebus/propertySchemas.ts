@@ -1,5 +1,6 @@
 /**
  * Proposed JSON Schemas for GameBus property templates (admin migration).
+ * Not a runtime adapter: product mappers live with each product.
  * ACTIVITY payload uses shape B: { template, obj: { value: <schema value> } }.
  */
 export const STUDENT_LUNCH_CHECKIN_PROPERTY_SCHEMAS = {

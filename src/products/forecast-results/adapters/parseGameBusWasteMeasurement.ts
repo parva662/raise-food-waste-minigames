@@ -1,5 +1,5 @@
 import { readGameBusSlug } from '@/platform/gamebus/gameBusSlug';
-import { WASTE_MEASUREMENT_REQUIRED_REFS } from '@/platform/gamebus/mapWasteMeasurement';
+import { WASTE_MEASUREMENT_REQUIRED_REFS } from '@/products/service-closeout/gamebus/mapWasteMeasurement';
 
 export type GameBusWasteMeasurement = {
   activityId: string;
