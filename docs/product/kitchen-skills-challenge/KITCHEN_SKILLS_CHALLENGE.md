@@ -73,7 +73,12 @@ Required amounts and expected final weight come from the generated recipe refere
 
 ## 6. Session Review, Student Progress, Tutor dashboard
 
-Read-only surfaces over completed Kitchen Day records. Loaded with the existing `kitchenGroupInput` / `GET /groups/activities` client. **Not** a retrieval blocker.
+Read-only surfaces over completed Kitchen Day records.
+
+- **Student session / Session Review** hydrate Trim, Reuse, and Portion from `kitchenGroupInputSelf.activities` (`GET /api/me/activities`). That collection is already self-scoped.
+- **Tutor dashboard and group history** still use `kitchenGroupInput.activities` (`GET /groups/activities`). Do not remove or repurpose that collection.
+
+**Not** a retrieval blocker and **not** a new REST API invented in this app. GameBus fills INPUT_COLLECTIONS from those endpoints.
 
 - Session Review (`#/kitchen-day/review`) is the current locked session only.
 - Student Progress (`#/kitchen-day-progress`) is own history.
@@ -96,8 +101,8 @@ Initially seeded kitchen reference data keyed by `ingredientId`. Later accumulat
 - One Portion activity per ingredient line
 - One tutor assessment or score per activity / ingredient
 - Storing calculated analytics
-- Inventing a Kitchen Day retrieval endpoint
+- Inventing a Kitchen Day retrieval endpoint (use configured INPUT_COLLECTIONS: `kitchenGroupInputSelf` for the student, `kitchenGroupInput` for group/trainer)
 
 ## 10. Related
 
-[`TRIM_SMART.md`](TRIM_SMART.md) · [`TRIM_SMART_DATA_MODEL.md`](TRIM_SMART_DATA_MODEL.md) · [`RESCUE_AND_REUSE.md`](RESCUE_AND_REUSE.md) · [`PORTION_PRECISION.md`](PORTION_PRECISION.md) · [`CHEF_REVIEW.md`](CHEF_REVIEW.md) · [`UX_FLOW.md`](UX_FLOW.md) · [`IMPLEMENTATION_BLUEPRINT.md`](IMPLEMENTATION_BLUEPRINT.md) · [`GAMEBUS_SLUG_CONTRACT.md`](GAMEBUS_SLUG_CONTRACT.md) · [`../../../features/kitchen-skills-challenge/`](../../../features/kitchen-skills-challenge/)
+[`TRIM_SMART.md`](TRIM_SMART.md) · [`TRIM_SMART_DATA_MODEL.md`](TRIM_SMART_DATA_MODEL.md) · [`RESCUE_AND_REUSE.md`](RESCUE_AND_REUSE.md) · [`PORTION_PRECISION.md`](PORTION_PRECISION.md) · [`CHEF_REVIEW.md`](CHEF_REVIEW.md) · [`UX_FLOW.md`](UX_FLOW.md) · [`IMPLEMENTATION_BLUEPRINT.md`](IMPLEMENTATION_BLUEPRINT.md) · [`GAMEBUS_SLUG_CONTRACT.md`](GAMEBUS_SLUG_CONTRACT.md) · [`../../contracts/GAMEBUS.md`](../../contracts/GAMEBUS.md) · [`../../../features/kitchen-skills-challenge/`](../../../features/kitchen-skills-challenge/)

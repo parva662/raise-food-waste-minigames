@@ -1606,14 +1606,127 @@ ul {
 }
 
 .kitchen-day-finish-dialog {
-  max-width: 42rem;
-  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+  width: min(42rem, 100%);
+  max-width: 100%;
+  min-width: 0;
+  max-height: min(80vh, 100%);
+  overflow: hidden;
+  background: var(--color-surface);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  padding: 0;
+}
+
+.kitchen-day-finish-dialog__header {
+  flex: 0 0 auto;
+  padding: var(--spacing-md) var(--spacing-md) 0;
+}
+
+.kitchen-day-finish-dialog__header .chef-zero-dialog__title {
+  margin-bottom: var(--spacing-md);
+}
+
+.kitchen-day-finish-overview {
+  list-style: none;
+  margin: 0 0 var(--spacing-md);
+  padding: 0;
+  display: grid;
+  gap: var(--spacing-sm);
+  text-align: left;
+}
+
+.kitchen-day-finish-overview li {
+  display: grid;
+  gap: 0.15rem;
+  padding: var(--spacing-sm) var(--spacing-md);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-bg);
+}
+
+.kitchen-day-finish-overview span {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-weight: 700;
+}
+
+.kitchen-day-finish-overview strong {
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.kitchen-day-finish-dialog__body {
+  flex: 1 1 auto;
+  min-height: 0;
   overflow: auto;
+  padding: 0 var(--spacing-md);
+  text-align: left;
 }
 
 .kitchen-day-finish-dialog .kitchen-day-evidence {
   text-align: left;
   margin-bottom: var(--spacing-md);
+}
+
+.kitchen-day-finish-dialog__actions {
+  flex: 0 0 auto;
+  justify-content: flex-end;
+  padding: var(--spacing-md);
+  border-top: 1px solid var(--color-border);
+  background: var(--color-surface);
+}
+
+.kitchen-day-finish-dialog__actions .kitchen-day-button {
+  white-space: nowrap;
+}
+
+.kitchen-day-evidence-section--collapsible {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--spacing-sm) var(--spacing-md);
+  background: var(--color-bg);
+}
+
+.kitchen-day-evidence-section--collapsible > summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-sm);
+  cursor: pointer;
+  list-style: none;
+}
+
+.kitchen-day-evidence-section--collapsible > summary::-webkit-details-marker {
+  display: none;
+}
+
+.kitchen-day-evidence-section--collapsible > summary::after {
+  content: 'Show';
+  flex: 0 0 auto;
+  font-size: var(--font-size-xs);
+  font-weight: 700;
+  color: var(--color-primary);
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+.kitchen-day-evidence-section--collapsible[open] > summary::after {
+  content: 'Hide';
+}
+
+.kitchen-day-portion-details {
+  margin-top: var(--spacing-sm);
+}
+
+.kitchen-day-portion-details > summary {
+  cursor: pointer;
+  font-weight: 700;
+  color: var(--color-primary);
 }
 
 .chef-zero-dialog__title {
@@ -4876,6 +4989,47 @@ ul {
   padding: var(--spacing-sm) var(--spacing-md);
   font: inherit;
   background: var(--color-surface);
+}
+
+.kitchen-day-combobox {
+  position: relative;
+}
+
+.kitchen-day-combobox__list {
+  position: absolute;
+  z-index: 20;
+  top: calc(100% + 0.25rem);
+  left: 0;
+  right: 0;
+  max-height: 16rem;
+  overflow: auto;
+  margin: 0;
+  padding: var(--spacing-xs) 0;
+  list-style: none;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-md);
+}
+
+.kitchen-day-combobox__option,
+.kitchen-day-combobox__empty {
+  padding: var(--spacing-sm) var(--spacing-md);
+  font-weight: 600;
+}
+
+.kitchen-day-combobox__option {
+  cursor: pointer;
+}
+
+.kitchen-day-combobox__option--active {
+  background: var(--color-primary-light);
+  color: var(--color-primary-dark);
+}
+
+.kitchen-day-combobox__empty {
+  color: var(--color-text-secondary);
+  font-weight: 500;
 }
 
 .kitchen-day-input--numeric {

@@ -11,13 +11,13 @@ Each row is a separate GameBus left-menu Custom Embed (or equivalent). Do not co
 
 | Page | Stable URL | Role | Posts | Required TASK templates | Required inputs |
 |------|------------|------|-------|-------------------------|-----------------|
-| Student Kitchen Day | `#/kitchen-day` (modules: `#/kitchen-day/reuse`, `#/kitchen-day/portion`, `#/kitchen-day/review`) | Student | `trimSmart`, `rescueAndReuse`, `portionPrecision` | Those three templates on one TASK | `inputCollectionPari.me`; group activities for hydration |
-| Student Kitchen Day Progress | `#/kitchen-day-progress` | Student | none | none | `inputCollectionPari.me`; `kitchenGroupInput.activities` including own Trim/Reuse/Portion and `wastePracticeReview` history |
+| Student Kitchen Day | `#/kitchen-day` (modules: `#/kitchen-day/reuse`, `#/kitchen-day/portion`, `#/kitchen-day/review`) | Student | `SILENT_ACTIVITY` for `trimSmart`, `rescueAndReuse`, `portionPrecision`; `{ type: 'EXIT' }` on Finish challenge | Those three templates on one TASK | `inputCollectionPari.me`; `kitchenGroupInputSelf.activities` (`GET /api/me/activities`) |
+| Student Kitchen Day Progress | `#/kitchen-day-progress` | Student | none | none | `inputCollectionPari.me`; `kitchenGroupInput.activities` for group/history including `wastePracticeReview` |
 | Tutor Kitchen Day Dashboard | `#/kitchen-day-tutor` (selected session: `?sessionId=`) | Tutor | `wastePracticeReview` | `wastePracticeReview` on the tutor TASK | Group Kitchen Day activities + review activities |
 
 Notes:
 
-- Embedded student activity locks `sessionId` after TASK + authenticated user.
+- Embedded student activity locks `sessionId` after TASK + authenticated user. Student work stays in one iframe: silent posts, then EXIT only from Finish challenge.
 - Progress and tutor pages do not appear on the student Kitchen Day module nav.
 - Production GitHub Pages URLs:
   - `https://parva662.github.io/raise-food-waste-minigames/#/kitchen-day`

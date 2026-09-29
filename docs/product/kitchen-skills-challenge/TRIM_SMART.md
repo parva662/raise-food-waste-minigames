@@ -28,7 +28,7 @@ Standalone route, no estimate step, no timer, no reference comparison. Posts `pr
 4. Timed preparation → `duration` (student does not type minutes).
 5. Actual waste → `actualWasteGrams`.
 6. See calculated waste % and reference comparison.
-7. Optional reuse for this ingredient, another **different** ingredient, or Session Review.
+7. **Save ingredient** posts `SILENT_ACTIVITY` and continues to Reuse in the same iframe.
 
 Worked example (stored facts): Carrot / 5000 g / `trimming` / estimate 600 g / actual 450 g / timed `duration`. Waste % 9% and the reference comparison are calculated, not stored.
 

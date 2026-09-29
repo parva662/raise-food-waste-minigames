@@ -22,3 +22,9 @@ The `.feature` file remains the product source of truth. That matrix only maps i
 Traceability from the approved Gherkin to Vitest coverage:
 
 [`SERVICE_CLOSEOUT_ACCEPTANCE_COVERAGE.md`](SERVICE_CLOSEOUT_ACCEPTANCE_COVERAGE.md)
+
+## Kitchen Skills Challenge
+
+Traceability from the approved Gherkin to Vitest coverage:
+
+[`KITCHEN_SKILLS_CHALLENGE_ACCEPTANCE_COVERAGE.md`](KITCHEN_SKILLS_CHALLENGE_ACCEPTANCE_COVERAGE.md)

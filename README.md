@@ -11,7 +11,7 @@ This is **one npm package**, **one SPA**, and **one GitHub Pages deployment**. P
 Embeddable web surfaces that:
 
 - collect structured lunch, forecast, closeout, and practical-kitchen data
-- post GameBus `ACTIVITY` messages with agreed property slugs
+- post GameBus `ACTIVITY` messages (Kitchen Skills student Trim / Reuse / Portion use `SILENT_ACTIVITY`; Finish challenge posts `EXIT`)
 - read `TASK` and `INPUT_COLLECTIONS` from the GameBus parent iframe
 
 They are research/pilot tools, not a restaurant ERP.

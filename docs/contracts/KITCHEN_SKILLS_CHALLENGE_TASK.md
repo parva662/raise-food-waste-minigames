@@ -13,7 +13,11 @@
 - `rescueAndReuse`
 - `portionPrecision`
 
-The iframe receives **one** `TASK` (later TASK messages are ignored by `src/platform/gamebus/bridge.ts`). The child posts multiple `ACTIVITY` messages, each naming the matching template.
+The iframe receives **one** `TASK` (later TASK messages are ignored by `src/platform/gamebus/bridge.ts`).
+
+Student Trim / Reuse / Portion each post **`SILENT_ACTIVITY`** with the same activity `data` as before (`template`, `start`, `end`, `properties`). That matches GameBus custom-task behaviour: silent posts store `/api/me/activities` and **do not close** the task dialog. After each successful silent post the SPA keeps the entry in local session state and continues Trim → Reuse → Portion → summary. **Finish challenge** then posts `{ type: 'EXIT' }` (`src/platform/gamebus/exit.ts`). Official protocol: [`GAMEBUS.md`](GAMEBUS.md).
+
+Tutor `wastePracticeReview` remains **`ACTIVITY`**.
 
 Do **not** split Kitchen Day into three embeds. Embedded `sessionId` is one student + one Kitchen Day: `kitchen-day:<taskId>:<actorId>:<sessionDate>`. Do not persist actor id as a Kitchen Day activity property.
 
@@ -23,11 +27,12 @@ Do **not** split Kitchen Day into three embeds. Embedded `sessionId` is one stud
 
 1. Live foodtracker TASK payloads already use `activityTemplates: TaskActivityTemplate[]`.
 2. Live chef-mission **service-closeout** embed `01a081a9-4fee-7772-b1c6-bdfc7a362ecb` lists **three** templates on one `USER_TRIGGERED_EMBEDDED` task: `chefForecast`, `kitchenServiceCloseout`, `wasteMeasurement`.
-3. Existing Trim Smart v1 already posts **multiple** `ACTIVITY` messages from one TASK (`tryPostTrimSmartActivity` + per-attempt keys). There is no GameBus ACK; parent modal close is not treated as required for every post.
+3. Existing Trim Smart v1 still posts **`ACTIVITY`** from `#/waste/trim-smart`. Kitchen Skills Challenge student modules on `#/kitchen-day*` post **`SILENT_ACTIVITY`** instead so the iframe is not destroyed between Trim, Reuse, and Portion.
 
 ## Client rules
 
 - Embedded Kitchen Day waits for a valid TASK **and** `inputCollectionPari.me`, then locks `sessionId` / `sessionDate` once. Later TASK or INPUT_COLLECTIONS refreshes cannot replace them.
+- Embedded student hydration uses `getRawKitchenSelfActivitiesInput` (no actor-id equality filter).
 - Builders call `selectKitchenSkillsActivityTemplate(task, slug)` and fail if any of the three templates is missing.
 - Review builders call `selectWastePracticeReviewTemplate(task)` and fail if `wastePracticeReview` is missing.
 - `KITCHEN_SKILLS_STUDENT_LIVE_INTEGRATION_READY` is `true` after manual verification of the student activity/property setup on foodtracker.

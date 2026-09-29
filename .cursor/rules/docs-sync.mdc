@@ -1,0 +1,15 @@
+---
+description: Keep Kitchen Skills and GameBus docs aligned with implemented behaviour
+globs: docs/**/*.md
+alwaysApply: false
+---
+
+# Documentation for this repo
+
+When an agreed Kitchen Skills or GameBus-integration change is implemented, update the canonical docs in the **same change**. Do not leave stale “reopen iframe” or “students hydrate only from `kitchenGroupInput`” statements.
+
+- Index: [`docs/README.md`](docs/README.md) (Diátaxis: Tutorials / How-to / Reference / Explanation).
+- Official GameBus pages: [`docs/contracts/GAMEBUS.md`](docs/contracts/GAMEBUS.md) — link them; do not paste those docs here.
+- Kitchen Skills product: [`docs/product/kitchen-skills-challenge/`](docs/product/kitchen-skills-challenge/).
+- Status: [`docs/current-state/IMPLEMENTATION_STATUS.md`](docs/current-state/IMPLEMENTATION_STATUS.md).
+- Do not rewrite [`docs/archive/`](docs/archive/) to match current behaviour.

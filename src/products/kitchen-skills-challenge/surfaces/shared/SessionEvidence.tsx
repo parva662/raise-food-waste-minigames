@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import { extractGroupActivities, getRawKitchenGroupActivitiesInput } from '@/platform/gamebus/groupActivities';
 import { getGameBusInputCollections } from '@/platform/gamebus/bridge';
 import { discardedWasteGrams, wastePercentage } from '@/products/kitchen-skills-challenge/domain/trim/derived';
@@ -11,7 +12,7 @@ import {
   formatPortionDifference,
 } from '@/products/kitchen-skills-challenge/domain/portion/copy';
 import { buildPortionRecipeMetrics } from '@/products/kitchen-skills-challenge/domain/portion/metrics';
-import { getRecipeReference } from '@/products/kitchen-skills-challenge/domain/portion/recipes';
+import { getRecipeReference, type RecipeReference } from '@/products/kitchen-skills-challenge/domain/portion/recipes';
 import {
   formatDurationFromMinutes,
   formatGrams,
@@ -35,18 +36,98 @@ function Fact({ label, value, testId }: { label: string; value: string; testId?:
   );
 }
 
+function PortionCompositionTable({
+  entry,
+  recipe,
+  testIdPrefix,
+}: {
+  entry: KitchenSkillsPortionEntry;
+  recipe: RecipeReference | null;
+  testIdPrefix: string;
+}) {
+  return (
+    <div className="kitchen-day-portion-table-wrap">
+      <table className="kitchen-day-portion-table">
+        <thead>
+          <tr>
+            <th scope="col">Ingredient</th>
+            <th scope="col">Target</th>
+            <th scope="col">Actual</th>
+            <th scope="col">Difference</th>
+            <th scope="col">Deviation %</th>
+          </tr>
+        </thead>
+        <tbody>
+          {entry.recipeComposition.map((line) => {
+            const required = recipe?.lines.find((item) => item.ingredientId === line.ingredientId);
+            return (
+              <tr key={line.ingredientId}>
+                <th scope="row">{line.ingredientName}</th>
+                <td data-testid={`${testIdPrefix}-portion-target-${entry.recipeId}-${line.ingredientId}`}>
+                  {required ? `${required.requiredAmount} ${required.unit}` : '—'}
+                </td>
+                <td data-testid={`${testIdPrefix}-portion-actual-${entry.recipeId}-${line.ingredientId}`}>
+                  {line.actualAmount} {line.unit}
+                </td>
+                <td data-testid={`${testIdPrefix}-portion-difference-${entry.recipeId}-${line.ingredientId}`}>
+                  {required ? formatPortionDifference(required, line) : '—'}
+                </td>
+                <td data-testid={`${testIdPrefix}-deviation-${entry.recipeId}-${line.ingredientId}`}>
+                  {required ? formatPortionDeviation(required, line) : '—'}
+                </td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+function EvidenceSection({
+  collapsible,
+  title,
+  testId,
+  children,
+}: {
+  collapsible: boolean;
+  title: string;
+  testId: string;
+  children: ReactNode;
+}) {
+  if (!collapsible) {
+    return (
+      <section className="kitchen-day-evidence-section" data-testid={testId}>
+        <h3 className="kitchen-day-evidence-section__title">{title}</h3>
+        {children}
+      </section>
+    );
+  }
+
+  return (
+    <details className="kitchen-day-evidence-section kitchen-day-evidence-section--collapsible" data-testid={testId}>
+      <summary className="kitchen-day-evidence-section__title">{title}</summary>
+      {children}
+    </details>
+  );
+}
+
 export function SessionEvidence({
   trimEntries,
   rescueEntries,
   portionEntries,
   review,
   testIdPrefix = 'kitchen-day',
+  collapsible = false,
+  collapsePortionTable = false,
 }: {
   trimEntries: readonly KitchenSkillsTrimEntry[];
   rescueEntries: readonly KitchenSkillsRescueEntry[];
   portionEntries: readonly KitchenSkillsPortionEntry[];
   review?: KitchenSkillsReviewEntry | null;
   testIdPrefix?: string;
+  collapsible?: boolean;
+  collapsePortionTable?: boolean;
 }) {
   const historicalSamples = historicalTrimSamplesFromGroupActivities(
     extractGroupActivities(getRawKitchenGroupActivitiesInput(getGameBusInputCollections())),
@@ -54,8 +135,7 @@ export function SessionEvidence({
 
   return (
     <div className="kitchen-day-evidence" data-testid={`${testIdPrefix}-evidence`} data-readonly="true">
-      <section className="kitchen-day-evidence-section" data-testid={`${testIdPrefix}-trim-section`}>
-        <h3 className="kitchen-day-evidence-section__title">Trim Smart</h3>
+      <EvidenceSection collapsible={collapsible} title="Trim Smart" testId={`${testIdPrefix}-trim-section`}>
         {trimEntries.length === 0 ? (
           <p className="chef-results-empty">No completed preparation yet.</p>
         ) : (
@@ -103,10 +183,9 @@ export function SessionEvidence({
             })}
           </ul>
         )}
-      </section>
+      </EvidenceSection>
 
-      <section className="kitchen-day-evidence-section" data-testid={`${testIdPrefix}-rescue-section`}>
-        <h3 className="kitchen-day-evidence-section__title">Rescue &amp; Reuse</h3>
+      <EvidenceSection collapsible={collapsible} title="Rescue & Reuse" testId={`${testIdPrefix}-rescue-section`}>
         {rescueEntries.length === 0 ? (
           <p className="chef-results-empty">No reuse suggestions yet.</p>
         ) : (
@@ -135,10 +214,9 @@ export function SessionEvidence({
             })}
           </ul>
         )}
-      </section>
+      </EvidenceSection>
 
-      <section className="kitchen-day-evidence-section" data-testid={`${testIdPrefix}-portion-section`}>
-        <h3 className="kitchen-day-evidence-section__title">Portion Precision</h3>
+      <EvidenceSection collapsible={collapsible} title="Portion Precision" testId={`${testIdPrefix}-portion-section`}>
         {portionEntries.length === 0 ? (
           <p className="chef-results-empty">No recipes recorded yet.</p>
         ) : (
@@ -187,49 +265,31 @@ export function SessionEvidence({
                       Difference {formatFinalWeightDifference(metrics.recordedFinalWeightGrams, metrics.expectedFinalWeightGrams)}
                     </p>
                   ) : null}
-                  <div className="kitchen-day-portion-table-wrap">
-                    <table className="kitchen-day-portion-table">
-                      <thead>
-                        <tr>
-                          <th scope="col">Ingredient</th>
-                          <th scope="col">Target</th>
-                          <th scope="col">Actual</th>
-                          <th scope="col">Difference</th>
-                          <th scope="col">Deviation %</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {entry.recipeComposition.map((line) => {
-                          const required = recipe?.lines.find(
-                            (item) => item.ingredientId === line.ingredientId,
-                          );
-                          return (
-                            <tr key={line.ingredientId}>
-                              <th scope="row">{line.ingredientName}</th>
-                              <td data-testid={`${testIdPrefix}-portion-target-${entry.recipeId}-${line.ingredientId}`}>
-                                {required ? `${required.requiredAmount} ${required.unit}` : '—'}
-                              </td>
-                              <td data-testid={`${testIdPrefix}-portion-actual-${entry.recipeId}-${line.ingredientId}`}>
-                                {line.actualAmount} {line.unit}
-                              </td>
-                              <td data-testid={`${testIdPrefix}-portion-difference-${entry.recipeId}-${line.ingredientId}`}>
-                                {required ? formatPortionDifference(required, line) : '—'}
-                              </td>
-                              <td data-testid={`${testIdPrefix}-deviation-${entry.recipeId}-${line.ingredientId}`}>
-                                {required ? formatPortionDeviation(required, line) : '—'}
-                              </td>
-                            </tr>
-                          );
-                        })}
-                      </tbody>
-                    </table>
-                  </div>
+                  {collapsePortionTable ? (
+                    <details
+                      className="kitchen-day-portion-details"
+                      data-testid={`${testIdPrefix}-portion-details-${entry.recipeId}`}
+                    >
+                      <summary>View recipe details</summary>
+                      <PortionCompositionTable
+                        entry={entry}
+                        recipe={recipe}
+                        testIdPrefix={testIdPrefix}
+                      />
+                    </details>
+                  ) : (
+                    <PortionCompositionTable
+                      entry={entry}
+                      recipe={recipe}
+                      testIdPrefix={testIdPrefix}
+                    />
+                  )}
                 </li>
               );
             })}
           </ul>
         )}
-      </section>
+      </EvidenceSection>
 
       {review ? (
         <section

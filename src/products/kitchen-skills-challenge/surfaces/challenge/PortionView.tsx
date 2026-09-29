@@ -3,6 +3,8 @@ import { useReadyKitchenSkillsSession } from '@/products/kitchen-skills-challeng
 import { formatPortionDeviation } from '@/products/kitchen-skills-challenge/domain/portion/copy';
 import { evaluatePortionLine } from '@/products/kitchen-skills-challenge/domain/portion/deviations';
 import { getRecipeReference, listRecipeReferences } from '@/products/kitchen-skills-challenge/domain/portion/recipes';
+import { KitchenSkillsRecipeCombobox } from '@/products/kitchen-skills-challenge/surfaces/challenge/KitchenSkillsRecipeCombobox';
+import { KitchenSkillsGramsInput } from '@/products/kitchen-skills-challenge/surfaces/shared/KitchenSkillsGramsInput';
 import {
   buildRecipeComposition,
   canSubmitPortion,
@@ -17,6 +19,11 @@ export function KitchenSkillsPortionView() {
   const [actuals, setActuals] = useState<Record<string, string>>({});
   const [finalWeightRaw, setFinalWeightRaw] = useState('');
   const [savedName, setSavedName] = useState<string | null>(null);
+  const [pickerKey, setPickerKey] = useState(0);
+  const recipeOptions = useMemo(
+    () => recipes.map((item) => ({ id: item.recipeId, label: item.recipeName })),
+    [recipes],
+  );
 
   const recipe = useMemo(() => (recipeId ? getRecipeReference(recipeId) : null), [recipeId]);
   const composition = recipe ? buildRecipeComposition(recipe, actuals) : null;
@@ -39,6 +46,14 @@ export function KitchenSkillsPortionView() {
     setRecipeId('');
     setActuals({});
     setFinalWeightRaw('');
+    setPickerKey((current) => current + 1);
+  }
+
+  function handleRecipeChange(nextRecipeId: string) {
+    setRecipeId(nextRecipeId);
+    setActuals({});
+    setFinalWeightRaw('');
+    setSavedName(null);
   }
 
   return (
@@ -46,24 +61,12 @@ export function KitchenSkillsPortionView() {
       <h2 className="kitchen-day-card__title">Portion Precision</h2>
       <label className="kitchen-day-field">
         <span>Recipe</span>
-        <select
-          className="kitchen-day-input"
-          data-testid="kitchen-day-recipe-select"
+        <KitchenSkillsRecipeCombobox
+          key={pickerKey}
+          options={recipeOptions}
           value={recipeId}
-          onChange={(event) => {
-            setRecipeId(event.target.value);
-            setActuals({});
-            setFinalWeightRaw('');
-            setSavedName(null);
-          }}
-        >
-          <option value="">Select a recipe</option>
-          {recipes.map((item) => (
-            <option key={item.recipeId} value={item.recipeId}>
-              {item.recipeName}
-            </option>
-          ))}
-        </select>
+          onChange={handleRecipeChange}
+        />
       </label>
 
       {recipe ? (
@@ -102,15 +105,13 @@ export function KitchenSkillsPortionView() {
                   <label className="kitchen-day-field">
                     <span>Actual</span>
                     <div className="kitchen-day-input-row">
-                      <input
-                        className="kitchen-day-input kitchen-day-input--numeric"
-                        inputMode="decimal"
-                        data-testid={`kitchen-day-actual-${line.ingredientId}`}
+                      <KitchenSkillsGramsInput
+                        testId={`kitchen-day-actual-${line.ingredientId}`}
                         value={actuals[line.ingredientId] ?? ''}
-                        onChange={(event) =>
+                        onChange={(next) =>
                           setActuals((current) => ({
                             ...current,
-                            [line.ingredientId]: event.target.value,
+                            [line.ingredientId]: next,
                           }))
                         }
                       />
@@ -134,12 +135,10 @@ export function KitchenSkillsPortionView() {
           <label className="kitchen-day-field">
             <span>Final recipe weight</span>
             <div className="kitchen-day-input-row">
-              <input
-                className="kitchen-day-input kitchen-day-input--numeric"
-                inputMode="decimal"
-                data-testid="kitchen-day-final-recipe-weight"
+              <KitchenSkillsGramsInput
+                testId="kitchen-day-final-recipe-weight"
                 value={finalWeightRaw}
-                onChange={(event) => setFinalWeightRaw(event.target.value)}
+                onChange={setFinalWeightRaw}
               />
               <span className="kitchen-day-unit">g</span>
             </div>

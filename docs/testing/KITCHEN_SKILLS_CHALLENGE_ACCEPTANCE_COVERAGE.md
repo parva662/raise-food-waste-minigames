@@ -3,14 +3,14 @@
 Approved Gherkin: `features/kitchen-skills-challenge/*.feature`
 Implementation: `main` (`#/kitchen-day`, `#/kitchen-day-progress`, `#/kitchen-day-tutor`). Those hashes are legacy-stable.
 
-**LIVE E2E BLOCKED BY GAMEBUS ADMIN ALIGNMENT.** Repository tests cover domain, UI, and mapper contracts only. There is no browser/live GameBus E2E suite.
+**LIVE E2E BLOCKED BY GAMEBUS ADMIN ALIGNMENT.** Repository tests cover domain, UI, mapper contracts, silent student posts, self-activity hydration, finish summary, and EXIT. There is no browser/live GameBus E2E suite.
 
 | Area | Covered in repo | Notes |
 |------|-----------------|-------|
 | Participant-specific session identity | `src/products/kitchen-skills-challenge/domain/session/*.test.ts`, `KitchenSkillsSessionContext.test.tsx` | `kitchen-day:<taskId>:<actorId>:<sessionDate>`; two students on the same TASK/date differ |
 | TASK wait / session locked once | `KitchenSkillsSessionContext.test.tsx`, `gamebus/taskTemplates.test.ts` | Embedded wait for TASK + `inputCollectionPari.me`; later refresh cannot replace the lock |
 | Europe/Helsinki session date lock | `src/products/kitchen-skills-challenge/domain/session/*.test.ts`, `KitchenSkillsSessionContext.test.tsx` | Locked across midnight for the page session |
-| Reload hydration / actor isolation | `read/kitchenSkillsReadModel.test.ts`, `KitchenSkillsSessionContext.test.tsx` | Fail closed on missing/mismatched actor; other students excluded |
+| Reload hydration / actor isolation | `read/kitchenSkillsReadModel.test.ts`, `KitchenSkillsSessionContext.test.tsx` | Student reads `kitchenGroupInputSelf.activities` without actor-id equality; group-only records do not leak into the student session |
 | Duplicate ingredient prevention | `domain/session/ingredientUniqueness.test.ts`, `kitchenSkills.flow.test.tsx` | Same `ingredientId` once; different ingredients allowed |
 | No ingredient category | `trim/validation.test.ts`, `kitchenSkills.flow.test.tsx`, `read/kitchenSkillsReadModel.test.ts`, mapper/live tests | Trim has no `ingredientCategory`; flow starts at Ingredient; obsolete persisted values ignored |
 | All ten trim techniques | `trim/techniques.ts`, `trim/techniqueSelection.test.tsx` | Locked enum; compact one-tap buttons, no dropdown |
@@ -27,7 +27,8 @@ Implementation: `main` (`#/kitchen-day`, `#/kitchen-day-progress`, `#/kitchen-da
 | Student Progress | `read/progressModel.test.ts`, `kitchenSkills.pages.test.tsx` | Own history; derived accuracy / final-weight trends |
 | Tutor evidence | `kitchenSkills.dashboard.test.tsx`, `kitchenSkills.pages.test.tsx` | Read-only measurements; actor isolation |
 | Tutor assessment | `kitchenSkills.review.test.tsx`, `domain/assessment/scores.test.ts` | Scores 0–5; 0 ≠ unanswered; one `wastePracticeReview` per session; not pre-filled |
-| Exact GameBus mapper contracts | `src/products/kitchen-skills-challenge/gamebus/mapKitchenSkillsTrimSmart.test.ts`, `mapRescueAndReuse.test.ts`, `mapPortionPrecision.test.ts`, `mapWastePracticeReview.test.ts` | No derived metrics posted |
+| Exact GameBus mapper contracts | `src/products/kitchen-skills-challenge/gamebus/mapKitchenSkillsTrimSmart.test.ts`, `mapRescueAndReuse.test.ts`, `mapPortionPrecision.test.ts`, `mapWastePracticeReview.test.ts`, `liveIntegration.test.ts` | Student Trim/Reuse/Portion `SILENT_ACTIVITY`; tutor review `ACTIVITY`; no derived metrics posted |
+| Recipe combobox / gram inputs / finish summary | `KitchenSkillsRecipeCombobox.test.tsx`, `gramsInput.test.ts`, `kitchenSkills.flow.test.tsx`, `postExit.test.ts` | Searchable recipe picker; digit-only grams; summary then `{ type: 'EXIT' }` on Finish challenge |
 | Live-integration guard | `src/products/kitchen-skills-challenge/gamebus/liveIntegration.test.ts` | Student live enabled; trainer `KITCHEN_SKILLS_TRAINER_LIVE_INTEGRATION_READY=false` |
 | Percentile / ranking | `@pending` | Sufficient-data rule not agreed |
 

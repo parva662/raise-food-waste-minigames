@@ -243,6 +243,6 @@ Validate participant association, multi-user visibility, and organization bounda
 
 See [`../product/kitchen-skills-challenge/IMPLEMENTATION_BLUEPRINT.md`](../product/kitchen-skills-challenge/IMPLEMENTATION_BLUEPRINT.md).
 
-The connected Trim / Rescue / Portion / review / progress / trainer surfaces are on `main` at `#/kitchen-day*`. Legacy Trim Smart v1 remains at `#/waste/trim-smart`.
+The connected Trim / Rescue / Portion / review / progress / trainer surfaces are on `main` at `#/kitchen-day*`. Student work uses `SILENT_ACTIVITY`, `kitchenGroupInputSelf`, and EXIT on Finish challenge. Legacy Trim Smart v1 remains at `#/waste/trim-smart`.
 
-Next product debugging step is **live GameBus E2E** (including the known Trim → Reuse reopen defect), not further product redesign.
+Remaining live work is foodtracker Custom Embed wiring and trainer on-behalf-of-student semantics, not the old Trim → Reuse iframe-close defect.

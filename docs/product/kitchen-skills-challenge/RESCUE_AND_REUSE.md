@@ -1,6 +1,6 @@
 # Rescue & Reuse — reuse suggestion
 
-> **APPROVED PRODUCT TARGET**. Not implemented on `main`.
+> **APPROVED PRODUCT TARGET**. Implemented on `main` at `#/kitchen-day/reuse`.
 >
 > Module of [`KITCHEN_SKILLS_CHALLENGE.md`](KITCHEN_SKILLS_CHALLENGE.md). Slug authority: [`GAMEBUS_SLUG_CONTRACT.md`](GAMEBUS_SLUG_CONTRACT.md).
 
@@ -47,7 +47,7 @@ Do **not** duplicate `ingredientName` or `ingredientWeightGrams`.
 
 ## 5. Journey
 
-Complete Trim through `actualWasteGrams` → enter reusable amount and destination → see calculated discarded remainder → save.
+Complete Trim through `actualWasteGrams` → enter reusable amount and destination → see calculated discarded remainder → save (`SILENT_ACTIVITY`) → continue to Portion in the same iframe.
 
 ## 6. Removed
 

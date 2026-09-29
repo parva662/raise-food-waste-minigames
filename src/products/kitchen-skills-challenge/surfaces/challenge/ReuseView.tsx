@@ -3,6 +3,7 @@ import { goToKitchenDaySection } from '@/app/routes';
 import { discardedWasteGrams } from '@/products/kitchen-skills-challenge/domain/trim/derived';
 import { formatGrams } from '@/products/kitchen-skills-challenge/format';
 import { useReadyKitchenSkillsSession } from '@/products/kitchen-skills-challenge/domain/session/KitchenSkillsSessionContext';
+import { KitchenSkillsGramsInput } from '@/products/kitchen-skills-challenge/surfaces/shared/KitchenSkillsGramsInput';
 import { canSaveRescueSuggestion, parseReusableWasteGrams, parseReuseDestination } from '@/products/kitchen-skills-challenge/domain/reuse/validation';
 
 export function KitchenSkillsReuseView() {
@@ -103,12 +104,10 @@ export function KitchenSkillsReuseView() {
           <label className="kitchen-day-field">
             <span>Reusable amount</span>
             <div className="kitchen-day-input-row">
-              <input
-                className="kitchen-day-input kitchen-day-input--numeric"
-                inputMode="decimal"
-                data-testid="kitchen-day-reusable-waste"
+              <KitchenSkillsGramsInput
+                testId="kitchen-day-reusable-waste"
                 value={reusableRaw}
-                onChange={(event) => setReusableRaw(event.target.value)}
+                onChange={setReusableRaw}
               />
               <span className="kitchen-day-unit">g</span>
             </div>

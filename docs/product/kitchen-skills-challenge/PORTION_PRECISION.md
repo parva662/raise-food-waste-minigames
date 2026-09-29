@@ -1,6 +1,6 @@
 # Portion Precision
 
-> **APPROVED PRODUCT TARGET**. Not implemented on `main`.
+> **APPROVED PRODUCT TARGET**. Implemented on `main` at `#/kitchen-day/portion`.
 >
 > Module of [`KITCHEN_SKILLS_CHALLENGE.md`](KITCHEN_SKILLS_CHALLENGE.md). Slug authority: [`GAMEBUS_SLUG_CONTRACT.md`](GAMEBUS_SLUG_CONTRACT.md).
 
@@ -54,7 +54,7 @@ These two recipe metrics stay separate. There is **no** automatic combined score
 
 ## 6. Journey
 
-Select recipe → see required lines → enter `actualAmount` per line → enter final recipe weight → submit one activity.
+Select recipe with a searchable combobox (match anywhere in the name; exact option selection required) → see required lines → enter `actualAmount` per line (digits / one decimal only) → enter final recipe weight (same sanitizer) → submit one `SILENT_ACTIVITY` → challenge summary (not EXIT until Finish challenge).
 
 ## 7. Tutor assessment
 

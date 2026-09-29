@@ -10,6 +10,6 @@ All files below are **APPROVED PRODUCT TARGET**. Public hashes remain `#/kitchen
 | [`portion-precision.feature`](portion-precision.feature) | Recipe-level `recipeComposition` + derived metrics |
 | [`chef-review.feature`](chef-review.feature) | Session Review, Progress, one session-level trainer assessment (`wastePracticeReview`) |
 
-Slug contract: [`../../docs/product/kitchen-skills-challenge/GAMEBUS_SLUG_CONTRACT.md`](../../docs/product/kitchen-skills-challenge/GAMEBUS_SLUG_CONTRACT.md)
+Slug contract: [`../../docs/product/kitchen-skills-challenge/GAMEBUS_SLUG_CONTRACT.md`](../../docs/product/kitchen-skills-challenge/GAMEBUS_SLUG_CONTRACT.md). GameBus protocol index: [`../../docs/contracts/GAMEBUS.md`](../../docs/contracts/GAMEBUS.md).
 
 Intentional `@pending`: percentile / ranking sufficient-data rule (analytics).

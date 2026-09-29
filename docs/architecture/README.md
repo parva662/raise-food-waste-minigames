@@ -54,7 +54,7 @@ product domain logic
 product surface
 ```
 
-`platform/gamebus` must not import `products/*` or `legacy/*`. Products post through `tryPostBuiltActivity` (already-built ACTIVITY message) or, for Kitchen Skills Challenge student/trainer writes, their own posting helper that still uses the same `postMessage` shape. Duplicate and in-flight handling in the bridge is generic (`once` vs keyed, optional `markOnce`), not product-named.
+`platform/gamebus` must not import `products/*` or `legacy/*`. Products post through `tryPostBuiltActivity` (already-built ACTIVITY or SILENT_ACTIVITY message) or, for Kitchen Skills Challenge student/trainer writes, their own posting helper that still uses the same `postMessage` shape. Duplicate and in-flight handling in the bridge is generic (`once` vs keyed, optional `markOnce`), not product-named. Kitchen Skills **Finish challenge** uses `postGameBusExit()` (`{ type: 'EXIT' }`).
 
 Shared calendar/menu/time/identifiers may be consumed by several products. Shared must not import `products/*` or `legacy/*`.
 
@@ -79,7 +79,7 @@ Workbooks stay under `reference/`. Do not edit generated JSON by hand.
 
 ## External contracts
 
-Activity slugs, property slugs, TASK expectations, INPUT_COLLECTIONS keys, and public hashes are documented under `docs/contracts/` and `docs/product/kitchen-skills-challenge/GAMEBUS_SLUG_CONTRACT.md`. Do not change them to match a folder rename.
+Official embed protocol (tasks vs pages vs menu items): [`../contracts/GAMEBUS.md`](../contracts/GAMEBUS.md). Activity slugs, property slugs, TASK expectations, INPUT_COLLECTIONS keys, and public hashes are documented under `docs/contracts/` and `docs/product/kitchen-skills-challenge/GAMEBUS_SLUG_CONTRACT.md`. Do not change them to match a folder rename.
 
 ## Legacy code boundary
 
@@ -114,10 +114,10 @@ Tests stay colocated (`*.test.ts` / `*.test.tsx` next to the code). `src/test/` 
 
 GitHub Pages, `base` `/raise-food-waste-minigames/`. Production URLs are not changed by this architecture. Do not deploy from a refactor branch unless explicitly requested.
 
-## ACTIVITY may close the iframe
+## Custom-task ACTIVITY may close the iframe
 
-GameBus ACTIVITY submission may destroy/close the embed. **No workflow may assume in-memory React state survives activity submission.** Hydration after reopen must come from GameBus TASK / INPUT_COLLECTIONS / group activities.
+On a GameBus **custom task**, `ACTIVITY` completes the task and may destroy the dialog iframe. `SILENT_ACTIVITY` stores `/api/me/activities` and keeps the iframe open. See [Custom tasks](https://docs.next.gamebus.eu/integrations/custom-embeds/custom-tasks).
 
-### Known defect (not fixed in the architecture refactor)
+**Kitchen Skills Challenge student flow:** Trim, Reuse, and Portion post `SILENT_ACTIVITY`, retain local session state, and continue in the same iframe. **Finish challenge** posts `{ type: 'EXIT' }`. Do not assume in-memory React state survives an `ACTIVITY` close on *other* games (lunch, forecast, closeout).
 
-Kitchen Skills Challenge Trim posts `trimSmart` → GameBus may close the iframe → the user reopens → Rescue & Reuse cannot see the prior Trim and the UI says Trim must be completed first. Session identity, hydration, and posting were left unchanged so this can be reproduced against live GameBus separately.
+Student challenge hydration uses `kitchenGroupInputSelf.activities`. Trainer/group still uses `kitchenGroupInput.activities`.

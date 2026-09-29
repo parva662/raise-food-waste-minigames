@@ -1,6 +1,50 @@
 import { SessionEvidence } from '@/products/kitchen-skills-challenge/surfaces/shared/SessionEvidence';
 import { postKitchenSkillsChallengeExit } from '@/products/kitchen-skills-challenge/gamebus/postExit';
 import { useReadyKitchenSkillsSession } from '@/products/kitchen-skills-challenge/domain/session/KitchenSkillsSessionContext';
+import { formatMetricPercent } from '@/products/kitchen-skills-challenge/domain/portion/copy';
+import { buildPortionRecipeMetrics } from '@/products/kitchen-skills-challenge/domain/portion/metrics';
+import { getRecipeReference } from '@/products/kitchen-skills-challenge/domain/portion/recipes';
+import { wastePercentage } from '@/products/kitchen-skills-challenge/domain/trim/derived';
+import { formatGrams, formatWastePercent } from '@/products/kitchen-skills-challenge/format';
+import type {
+  KitchenSkillsPortionEntry,
+  KitchenSkillsRescueEntry,
+  KitchenSkillsTrimEntry,
+} from '@/products/kitchen-skills-challenge/domain/types';
+
+function trimHeadline(entries: readonly KitchenSkillsTrimEntry[]): string {
+  if (entries.length === 0) return 'No trim recorded';
+  return entries
+    .map((entry) => {
+      const percent = wastePercentage(entry.actualWasteGrams, entry.ingredientWeightGrams);
+      return `${entry.ingredientName} · ${formatWastePercent(percent)} waste`;
+    })
+    .join('; ');
+}
+
+function reuseHeadline(
+  entries: readonly KitchenSkillsRescueEntry[],
+  trimEntries: readonly KitchenSkillsTrimEntry[],
+): string {
+  if (entries.length === 0) return 'No reuse recorded';
+  return entries
+    .map((entry) => {
+      const trim = trimEntries.find((item) => item.ingredientId === entry.ingredientId);
+      const name = trim?.ingredientName ?? entry.ingredientId;
+      return `${name} · ${formatGrams(entry.reusableWasteGrams)} to ${entry.reuseDestination}`;
+    })
+    .join('; ');
+}
+
+function portionHeadline(entries: readonly KitchenSkillsPortionEntry[]): string {
+  if (entries.length === 0) return 'No recipe recorded';
+  return entries
+    .map((entry) => {
+      const metrics = buildPortionRecipeMetrics(entry, getRecipeReference(entry.recipeId));
+      return `${entry.recipeName} · ${formatMetricPercent(metrics.recipeIngredientAccuracyPercent)} accuracy`;
+    })
+    .join('; ');
+}
 
 export function KitchenSkillsFinishSummary() {
   const { trimEntries, rescueEntries, portionEntries } = useReadyKitchenSkillsSession();
@@ -14,17 +58,36 @@ export function KitchenSkillsFinishSummary() {
         aria-labelledby="kitchen-day-finish-title"
         data-testid="kitchen-day-finish-summary"
       >
-        <h2 id="kitchen-day-finish-title" className="chef-zero-dialog__title">
-          Challenge complete
-        </h2>
-        <p className="chef-zero-dialog__text">Your Trim, Reuse, and Portion results for this session.</p>
-        <SessionEvidence
-          trimEntries={trimEntries}
-          rescueEntries={rescueEntries}
-          portionEntries={portionEntries}
-          testIdPrefix="kitchen-day-finish"
-        />
-        <div className="chef-zero-dialog__actions">
+        <header className="kitchen-day-finish-dialog__header">
+          <h2 id="kitchen-day-finish-title" className="chef-zero-dialog__title">
+            Challenge complete
+          </h2>
+          <ul className="kitchen-day-finish-overview">
+            <li data-testid="kitchen-day-finish-trim-headline">
+              <span>Trim Smart</span>
+              <strong>{trimHeadline(trimEntries)}</strong>
+            </li>
+            <li data-testid="kitchen-day-finish-reuse-headline">
+              <span>Rescue &amp; Reuse</span>
+              <strong>{reuseHeadline(rescueEntries, trimEntries)}</strong>
+            </li>
+            <li data-testid="kitchen-day-finish-portion-headline">
+              <span>Portion Precision</span>
+              <strong>{portionHeadline(portionEntries)}</strong>
+            </li>
+          </ul>
+        </header>
+        <div className="kitchen-day-finish-dialog__body" data-testid="kitchen-day-finish-body">
+          <SessionEvidence
+            trimEntries={trimEntries}
+            rescueEntries={rescueEntries}
+            portionEntries={portionEntries}
+            testIdPrefix="kitchen-day-finish"
+            collapsible
+            collapsePortionTable
+          />
+        </div>
+        <div className="chef-zero-dialog__actions kitchen-day-finish-dialog__actions">
           <button
             type="button"
             className="chef-zero-dialog__btn chef-zero-dialog__btn--confirm kitchen-day-button kitchen-day-button--primary"

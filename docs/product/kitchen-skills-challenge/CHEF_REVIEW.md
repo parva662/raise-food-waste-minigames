@@ -40,7 +40,8 @@ Tutor “on behalf of student” GameBus registration is unresolved until the li
 
 ## 4. Retrieval
 
-`src/platform/gamebus/groupActivities.ts` — `kitchenGroupInput.activities` → `GET /groups/activities`.
+- Student Session Review / challenge: `kitchenGroupInputSelf.activities` → `GET /api/me/activities`.
+- Tutor dashboard / group: `kitchenGroupInput.activities` → `GET /groups/activities` (`src/platform/gamebus/groupActivities.ts`).
 
 **Not** a platform blocker. **Not** a new API.
 

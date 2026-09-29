@@ -125,7 +125,7 @@ Canonical: [`../product/kitchen-skills-challenge/KITCHEN_SKILLS_CHALLENGE.md`](.
 
 **CURRENT IMPLEMENTATION on `main`:** Kitchen Skills Challenge is implemented at `#/kitchen-day*` (legacy-stable hashes). Source: `src/products/kitchen-skills-challenge/`. Legacy Trim Smart v1 remains at `#/waste/trim-smart`.
 
-**Known defect:** Trim → iframe close → Rescue & Reuse may not see prior Trim. Not fixed in the architecture refactor.
+**Student GameBus flow:** `SILENT_ACTIVITY` for Trim / Reuse / Portion; local retain; `kitchenGroupInputSelf.activities` (`GET /api/me/activities`) without actor-id equality; compact finish summary; `{ type: 'EXIT' }` only on Finish challenge. Trainer/group still reads `kitchenGroupInput`. The old Trim → iframe-close → Reuse-empty path is **fixed** by this flow.
 
 **Live GameBus (foodtracker.gamebus.eu):** Student Kitchen Skills Challenge activity schemas and properties were **manually verified** on `https://foodtracker.gamebus.eu`. Student posting is **enabled** for Trim / Rescue / Portion (`KITCHEN_SKILLS_STUDENT_LIVE_INTEGRATION_READY = true`). Trainer `wastePracticeReview` posting remains **blocked** (`KITCHEN_SKILLS_TRAINER_LIVE_INTEGRATION_READY = false`) until trainer-on-behalf-of-student semantics are confirmed. This is **not** a claim of trainer live end-to-end success.
 

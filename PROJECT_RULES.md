@@ -103,13 +103,13 @@ Avoid broad refactors that alter unrelated games while fixing one game.
 
 ## GameBus integration rules
 
-- Games run as Custom Embed Pages in GameBus.
-- GameBus sends `INPUT_COLLECTIONS` to the iframe.
-- Persisted game data is submitted using GameBus `ACTIVITY` messages.
+- Games run as GameBus custom **tasks** and/or custom **pages** (see [`docs/contracts/GAMEBUS.md`](./docs/contracts/GAMEBUS.md)).
+- GameBus sends `TASK` and/or `INPUT_COLLECTIONS` to the iframe after `IFRAME_READY`.
+- Most games persist with GameBus `ACTIVITY` (task completion may close the iframe). Kitchen Skills Challenge **student** Trim / Reuse / Portion persist with `SILENT_ACTIVITY` and leave with `{ type: 'EXIT' }` from Finish challenge. Tutor `wastePracticeReview` stays `ACTIVITY`.
 - Current GameBus integration uses property/activity **slugs**, not the legacy `reference` naming where the current code has migrated.
 - Never hard-code GameBus user IDs in React.
 - Authenticated user identity comes from `inputCollectionPari.me`.
-- Shared kitchen/group activities may come from `kitchenGroupInput.activities`.
+- Kitchen group activities may come from `kitchenGroupInput.activities` (`GET /groups/activities`). Kitchen Skills **student** challenge records come from `kitchenGroupInputSelf.activities` (`GET /api/me/activities`).
 - Preserve existing GameBus submission semantics unless a product requirement explicitly requires a change.
 - Do not infer GameBus capabilities that are not present in the current implementation or documented contract.
 

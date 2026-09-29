@@ -39,7 +39,8 @@ Pointers: `src/legacy/trim-smart-v1/gamebus/mapTrimSmart.ts`, `src/legacy/trim-s
 |--------------|-----|
 | `trimSmart` → `rescueAndReuse` | `sessionId` + `ingredientId` |
 | Session tutor assessment | same `sessionId` + `sessionDate` + actor |
-| Session Review / Progress / Tutor dashboard | existing `GET /groups/activities` via `kitchenGroupInput` |
+| Session Review | `kitchenGroupInputSelf.activities` (`GET /api/me/activities`) |
+| Progress / Tutor dashboard | `kitchenGroupInput.activities` (`GET /groups/activities`) for group/history |
 
 Do **not** use `sourceActivityId` or `preparationEntryId`.
 

@@ -127,11 +127,16 @@ One review per student Kitchen Day / session. Not one judgement per activity or 
 
 ## Retrieval
 
-Reuse the existing kitchen group-activities path (`kitchenGroupInput.activities` → `GET /groups/activities`, `src/platform/gamebus/groupActivities.ts`). Filter to Kitchen Day templates. Group client-side by actor, template, `sessionId`, `sessionDate`, `ingredientId`, `recipeId`.
+| Who | INPUT_COLLECTIONS | Endpoint |
+|-----|-------------------|----------|
+| Student Trim / Reuse / Portion / Session Review | `kitchenGroupInputSelf.activities` | `GET /api/me/activities` |
+| Trainer / group (and progress that needs kitchen-group history) | `kitchenGroupInput.activities` | `GET /groups/activities` |
 
-**TASK:** one Custom Embed task lists `trimSmart`, `rescueAndReuse`, and `portionPrecision`. Evidence and client rules: [`../../contracts/KITCHEN_SKILLS_CHALLENGE_TASK.md`](../../contracts/KITCHEN_SKILLS_CHALLENGE_TASK.md).
+Accessors: `getRawKitchenSelfActivitiesInput` and `getRawKitchenGroupActivitiesInput` in `src/platform/gamebus/groupActivities.ts`. Student hydration does **not** require `activity.actor.id === inputCollectionPari.me.id`. Keep `kitchenGroupInput` for trainer/group code.
 
-This is **not** a platform blocker and is **not** a new API.
+**TASK:** one Custom Embed **task** lists `trimSmart`, `rescueAndReuse`, and `portionPrecision`. Student writes are `SILENT_ACTIVITY`; **Finish challenge** posts `{ type: 'EXIT' }`. Tutor `wastePracticeReview` stays `ACTIVITY`. Protocol index: [`../../contracts/GAMEBUS.md`](../../contracts/GAMEBUS.md). Task rules: [`../../contracts/KITCHEN_SKILLS_CHALLENGE_TASK.md`](../../contracts/KITCHEN_SKILLS_CHALLENGE_TASK.md).
+
+This is **not** a platform blocker and is **not** a new API invented in the SPA.
 
 ---
 

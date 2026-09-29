@@ -17,6 +17,7 @@ import {
   startPreparationTimer,
   type PreparationTimerState,
 } from '@/products/kitchen-skills-challenge/domain/trim/timer';
+import { KitchenSkillsGramsInput } from '@/products/kitchen-skills-challenge/surfaces/shared/KitchenSkillsGramsInput';
 import {
   canContinueToEstimate,
   parseActualWasteGrams,
@@ -188,12 +189,10 @@ export function KitchenSkillsTrimView() {
           <label className="kitchen-day-field">
             <span>Weight</span>
             <div className="kitchen-day-input-row">
-              <input
-                className="kitchen-day-input kitchen-day-input--numeric"
-                inputMode="decimal"
-                data-testid="kitchen-day-starting-weight"
+              <KitchenSkillsGramsInput
+                testId="kitchen-day-starting-weight"
                 value={weightRaw}
-                onChange={(event) => setWeightRaw(event.target.value)}
+                onChange={setWeightRaw}
               />
               <span className="kitchen-day-unit">g</span>
             </div>
@@ -257,12 +256,10 @@ export function KitchenSkillsTrimView() {
           <label className="kitchen-day-field">
             <span>Estimate</span>
             <div className="kitchen-day-input-row">
-              <input
-                className="kitchen-day-input kitchen-day-input--numeric"
-                inputMode="decimal"
-                data-testid="kitchen-day-estimated-waste"
+              <KitchenSkillsGramsInput
+                testId="kitchen-day-estimated-waste"
                 value={estimateRaw}
-                onChange={(event) => setEstimateRaw(event.target.value)}
+                onChange={setEstimateRaw}
               />
               <span className="kitchen-day-unit">g</span>
             </div>
@@ -342,12 +339,10 @@ export function KitchenSkillsTrimView() {
           <label className="kitchen-day-field">
             <span>Measured waste</span>
             <div className="kitchen-day-input-row">
-              <input
-                className="kitchen-day-input kitchen-day-input--numeric"
-                inputMode="decimal"
-                data-testid="kitchen-day-actual-waste"
+              <KitchenSkillsGramsInput
+                testId="kitchen-day-actual-waste"
                 value={actualRaw}
-                onChange={(event) => setActualRaw(event.target.value)}
+                onChange={setActualRaw}
               />
               <span className="kitchen-day-unit">g</span>
             </div>
