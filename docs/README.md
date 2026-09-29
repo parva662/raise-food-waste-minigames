@@ -77,7 +77,7 @@ Stable facts, slugs, hashes, and external GameBus protocol:
 | [`contracts/STUDENT_LUNCH_GAMEBUS.md`](contracts/STUDENT_LUNCH_GAMEBUS.md) | `studentLunchCheckin` |
 | [`contracts/KITCHEN_FORECAST_GAMEBUS.md`](contracts/KITCHEN_FORECAST_GAMEBUS.md) | `chefForecast` |
 | [`contracts/SERVICE_CLOSEOUT_GAMEBUS.md`](contracts/SERVICE_CLOSEOUT_GAMEBUS.md) | `wasteMeasurement` |
-| [`product/UI_STANDARD.md`](product/UI_STANDARD.md) | Shared visual language |
+| [`product/UI_STANDARD.md`](product/UI_STANDARD.md) | Shared visual language plus density, form efficiency, and layout rules |
 | [`../.github/workflows/test.yml`](../.github/workflows/test.yml) | CI test policy |
 | [`../.github/workflows/deploy-pages.yml`](../.github/workflows/deploy-pages.yml) | GitHub Pages deploy |
 | [`../reference/README.md`](../reference/README.md) | Menu workbook reference |

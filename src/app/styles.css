@@ -4860,14 +4860,32 @@ ul {
 .kitchen-day-activity {
   max-width: 42rem;
   margin: 0 auto;
-  padding: var(--spacing-md) var(--spacing-md) var(--spacing-2xl);
+  padding: var(--spacing-md) var(--spacing-md) var(--spacing-xl);
+}
+
+@media (min-width: 768px) {
+  .kitchen-day-activity {
+    max-width: 64rem;
+  }
+}
+
+.kitchen-day-activity > .kitchen-mgmt-header {
+  margin-bottom: var(--spacing-sm);
+}
+
+.kitchen-day-activity .kitchen-mgmt-header__title {
+  font-size: var(--font-size-xl);
+}
+
+.kitchen-day-activity .kitchen-mgmt-header__lead {
+  font-size: var(--font-size-sm);
 }
 
 .kitchen-day-activity__nav {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: var(--spacing-sm);
-  margin: 0 0 var(--spacing-lg);
+  margin: 0 0 var(--spacing-md);
 }
 
 .kitchen-day-activity__nav-link {
@@ -4896,7 +4914,7 @@ ul {
   background: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
-  padding: var(--spacing-lg);
+  padding: var(--spacing-md);
   box-shadow: var(--shadow-sm);
 }
 
@@ -4908,20 +4926,21 @@ ul {
 .kitchen-day-card__copy,
 .kitchen-day-helper {
   color: var(--color-text-secondary);
-  margin: 0 0 var(--spacing-md);
+  margin: 0 0 var(--spacing-sm);
 }
 
 .kitchen-day-progress {
   font-weight: 700;
   color: var(--color-primary);
-  margin: 0 0 var(--spacing-md);
+  margin: 0 0 var(--spacing-sm);
+  font-size: var(--font-size-sm);
 }
 
 .kitchen-day-chip-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: var(--spacing-sm);
-  margin: var(--spacing-md) 0;
+  margin: var(--spacing-sm) 0;
 }
 
 .kitchen-day-chip-grid--techniques {
@@ -4966,19 +4985,37 @@ ul {
   display: flex;
   flex-direction: column;
   gap: var(--spacing-xs);
-  margin: var(--spacing-md) 0;
+  margin: var(--spacing-sm) 0;
   font-weight: 600;
+}
+
+.kitchen-day-field--compact {
+  margin: 0;
 }
 
 .kitchen-day-input-row {
   display: flex;
   align-items: stretch;
-  width: 100%;
-  max-width: 16rem;
+  width: 9.5rem;
+  max-width: 100%;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
   background: var(--color-surface);
   overflow: hidden;
+}
+
+.kitchen-day-input-row--grams {
+  width: 9.5rem;
+  flex: 0 0 auto;
+}
+
+.kitchen-day-input-row--grams .kitchen-day-input {
+  min-height: 2.75rem;
+  padding: var(--spacing-xs) var(--spacing-sm);
+}
+
+.kitchen-day-input-row--grams .kitchen-day-unit {
+  padding: 0 var(--spacing-sm);
 }
 
 .kitchen-day-input {
@@ -5084,6 +5121,48 @@ ul {
   gap: var(--spacing-sm);
 }
 
+.kitchen-day-form-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-sm);
+  margin-top: var(--spacing-sm);
+}
+
+.kitchen-day-form-actions .kitchen-day-button {
+  min-width: 8rem;
+}
+
+.kitchen-day-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.kitchen-day-reuse-meta {
+  display: grid;
+  gap: var(--spacing-sm);
+  align-items: end;
+  margin: 0 0 var(--spacing-sm);
+}
+
+.kitchen-day-reuse-waste {
+  margin: 0;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+}
+
+.kitchen-day-input--destination {
+  min-height: 4.25rem;
+  resize: vertical;
+  line-height: 1.4;
+}
+
 .kitchen-day-metric-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(8.5rem, 1fr));
@@ -5111,15 +5190,83 @@ ul {
   font-weight: 700;
 }
 
-.kitchen-day-recipe-line {
-  display: grid;
-  gap: var(--spacing-sm);
-  padding: var(--spacing-md) 0;
+.kitchen-day-recipe-line,
+.kitchen-day-portion-entry tbody tr {
   border-top: 1px solid var(--color-border);
 }
 
 .kitchen-day-recipe-line__name {
   font-weight: 700;
+}
+
+.kitchen-day-portion-entry-wrap {
+  width: 100%;
+  margin: 0 0 var(--spacing-sm);
+}
+
+.kitchen-day-portion-entry {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.kitchen-day-portion-entry th,
+.kitchen-day-portion-entry td {
+  padding: 0.35rem 0.4rem;
+  text-align: left;
+  vertical-align: middle;
+}
+
+.kitchen-day-portion-entry thead th {
+  font-size: var(--font-size-xs);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--color-text-secondary);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.kitchen-day-portion-entry tbody th {
+  font-weight: 700;
+}
+
+.kitchen-day-portion-entry__target {
+  white-space: nowrap;
+  color: var(--color-text-secondary);
+  font-weight: 600;
+}
+
+.kitchen-day-portion-entry__actual {
+  width: 10.5rem;
+}
+
+.kitchen-day-portion-entry__result {
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  min-width: 7rem;
+}
+
+.kitchen-day-portion-entry__result[data-outcome='exact match'] {
+  color: var(--color-success-text);
+}
+
+.kitchen-day-portion-entry__result[data-outcome='over-measure'] {
+  color: var(--color-meat);
+}
+
+.kitchen-day-portion-entry__result[data-outcome='under-measure'] {
+  color: var(--color-soup);
+}
+
+.kitchen-day-portion-footer {
+  display: grid;
+  gap: var(--spacing-sm);
+  margin-top: var(--spacing-sm);
+}
+
+.kitchen-day-portion-footer__expected {
+  margin: 0;
+  font-weight: 600;
+  color: var(--color-text-secondary);
 }
 
 .kitchen-day-success {
@@ -5142,7 +5289,7 @@ ul {
   gap: var(--spacing-sm);
   list-style: none;
   padding: 0;
-  margin: 0 0 var(--spacing-lg);
+  margin: 0 0 var(--spacing-md);
 }
 
 .kitchen-day-session-list a {
@@ -5306,20 +5453,105 @@ ul {
   .kitchen-day-chip-grid--techniques {
     grid-template-columns: repeat(5, minmax(0, 1fr));
   }
+
+  .kitchen-day-reuse-meta {
+    grid-template-columns: minmax(12rem, 1fr) auto;
+  }
+
+  .kitchen-day-portion-footer {
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: end;
+  }
+
+  .kitchen-day-portion-footer .kitchen-day-form-actions {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 767px) {
+  .kitchen-day-activity:has(.kitchen-day-form-actions--sticky) {
+    padding-bottom: 5.5rem;
+  }
+
+  .kitchen-day-form-actions--sticky {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 6;
+    width: 100%;
+    margin: 0;
+    padding: var(--spacing-sm) var(--spacing-md) calc(var(--spacing-sm) + env(safe-area-inset-bottom, 0px));
+    background: var(--color-surface);
+    border-top: 1px solid var(--color-border);
+    box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.08);
+  }
+
+  .kitchen-day-form-actions--sticky .kitchen-day-button {
+    flex: 1 1 auto;
+    width: 100%;
+  }
+
+  .kitchen-day-portion-entry thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+  }
+
+  .kitchen-day-portion-entry,
+  .kitchen-day-portion-entry tbody {
+    display: block;
+    width: 100%;
+  }
+
+  .kitchen-day-portion-entry tbody tr {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 0.15rem 0.5rem;
+    padding: 0.4rem 0;
+    border-top: 0;
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  .kitchen-day-portion-entry tbody th,
+  .kitchen-day-portion-entry tbody td {
+    border: 0;
+    padding: 0;
+    width: auto;
+  }
+
+  .kitchen-day-portion-entry tbody th {
+    grid-column: 1 / -1;
+  }
+
+  .kitchen-day-portion-entry__actual {
+    width: auto;
+    justify-self: end;
+  }
+
+  .kitchen-day-portion-entry__result {
+    grid-column: 1 / -1;
+    min-width: 0;
+  }
+
+  .kitchen-day-portion-entry__result[data-outcome=''] {
+    display: none;
+  }
+
+  .kitchen-day-portion-entry__target::before {
+    content: 'Target ';
+  }
 }
 
 @media (max-width: 640px) {
-  .kitchen-day-activity__nav,
   .kitchen-day-chip-grid {
     grid-template-columns: 1fr;
   }
 
   .kitchen-day-chip-grid.kitchen-day-chip-grid--techniques {
     grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .kitchen-day-input-row {
-    max-width: none;
   }
 
   .kitchen-day-facts {

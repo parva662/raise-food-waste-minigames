@@ -36,6 +36,7 @@ export function SessionReviewView() {
         rescueEntries={rescueEntries}
         portionEntries={portionEntries}
         review={review}
+        collapsePortionTable
       />
     </section>
   );

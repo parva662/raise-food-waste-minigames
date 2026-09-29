@@ -29,6 +29,7 @@ Implementation: `main` (`#/kitchen-day`, `#/kitchen-day-progress`, `#/kitchen-da
 | Tutor assessment | `kitchenSkills.review.test.tsx`, `domain/assessment/scores.test.ts` | Scores 0–5; 0 ≠ unanswered; one `wastePracticeReview` per session; not pre-filled |
 | Exact GameBus mapper contracts | `src/products/kitchen-skills-challenge/gamebus/mapKitchenSkillsTrimSmart.test.ts`, `mapRescueAndReuse.test.ts`, `mapPortionPrecision.test.ts`, `mapWastePracticeReview.test.ts`, `liveIntegration.test.ts` | Student Trim/Reuse/Portion `SILENT_ACTIVITY`; tutor review `ACTIVITY`; no derived metrics posted |
 | Recipe combobox / gram inputs / finish summary | `KitchenSkillsRecipeCombobox.test.tsx`, `gramsInput.test.ts`, `kitchenSkills.flow.test.tsx`, `postExit.test.ts` | Searchable recipe picker; digit-only grams; summary then `{ type: 'EXIT' }` on Finish challenge |
+| Compact Trim / Reuse / Portion layout | `kitchenSkills.layout.test.tsx`, `sessionReview.test.tsx` | Content-width grams; Portion table (Ingredient \| Target \| Actual \| Result); sticky actions; review recipe details collapsed |
 | Live-integration guard | `src/products/kitchen-skills-challenge/gamebus/liveIntegration.test.ts` | Student live enabled; trainer `KITCHEN_SKILLS_TRAINER_LIVE_INTEGRATION_READY=false` |
 | Percentile / ranking | `@pending` | Sufficient-data rule not agreed |
 

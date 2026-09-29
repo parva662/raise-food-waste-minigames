@@ -249,4 +249,17 @@ describe('Session review presentation', () => {
     expect(screen.getByTestId('kitchen-day-review-status')).toHaveTextContent('Portion Precision');
     expect(screen.queryByText(/All required modules/)).not.toBeInTheDocument();
   });
+
+  it('keeps recipe line tables behind progressive disclosure', () => {
+    render(
+      <SessionEvidence
+        trimEntries={trimEntries}
+        rescueEntries={rescueEntries}
+        portionEntries={portionEntries}
+        collapsePortionTable
+      />,
+    );
+    expect(screen.getByTestId('kitchen-day-portion-details-1')).not.toHaveAttribute('open');
+    expect(screen.getByTestId('kitchen-day-portion-accuracy-1')).toBeInTheDocument();
+  });
 });

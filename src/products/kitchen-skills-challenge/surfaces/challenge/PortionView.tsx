@@ -71,94 +71,122 @@ export function KitchenSkillsPortionView() {
 
       {recipe ? (
         <div data-testid={`kitchen-day-recipe-${recipe.recipeId}`}>
-          <ul className="kitchen-day-session-list">
-            {recipe.lines.map((line) => {
-              const actual = parseActualAmount(actuals[line.ingredientId] ?? '');
-              const outcome =
-                actual.ok
-                  ? evaluatePortionLine(line, {
-                      ingredientId: line.ingredientId,
-                      ingredientName: line.ingredientName,
-                      actualAmount: actual.value,
-                      unit: line.unit,
-                    })
-                  : null;
-              const copy =
-                actual.ok
-                  ? formatPortionDeviation(line, {
-                      ingredientId: line.ingredientId,
-                      ingredientName: line.ingredientName,
-                      actualAmount: actual.value,
-                      unit: line.unit,
-                    })
-                  : null;
-              return (
-                <li
-                  key={line.ingredientId}
-                  className="kitchen-day-recipe-line"
-                  data-testid={`kitchen-day-recipe-line-${line.ingredientId}`}
-                >
-                  <div className="kitchen-day-recipe-line__name">{line.ingredientName}</div>
-                  <p data-testid={`kitchen-day-required-${line.ingredientId}`}>
-                    Target: {line.requiredAmount} {line.unit}
-                  </p>
-                  <label className="kitchen-day-field">
-                    <span>Actual</span>
-                    <div className="kitchen-day-input-row">
-                      <KitchenSkillsGramsInput
-                        testId={`kitchen-day-actual-${line.ingredientId}`}
-                        value={actuals[line.ingredientId] ?? ''}
-                        onChange={(next) =>
-                          setActuals((current) => ({
-                            ...current,
-                            [line.ingredientId]: next,
-                          }))
-                        }
-                      />
-                      <span className="kitchen-day-unit">{line.unit}</span>
-                    </div>
-                  </label>
-                  {copy ? (
-                    <p data-testid={`kitchen-day-deviation-${line.ingredientId}`} data-outcome={outcome ?? ''}>
-                      {copy}
-                    </p>
-                  ) : null}
-                </li>
-              );
-            })}
-          </ul>
+          <div className="kitchen-day-portion-entry-wrap">
+            <table className="kitchen-day-portion-entry" aria-label="Recipe ingredients">
+              <thead>
+                <tr>
+                  <th scope="col">Ingredient</th>
+                  <th scope="col">Target</th>
+                  <th scope="col">Actual</th>
+                  <th scope="col">Result</th>
+                </tr>
+              </thead>
+              <tbody>
+                {recipe.lines.map((line) => {
+                  const actual = parseActualAmount(actuals[line.ingredientId] ?? '');
+                  const outcome =
+                    actual.ok
+                      ? evaluatePortionLine(line, {
+                          ingredientId: line.ingredientId,
+                          ingredientName: line.ingredientName,
+                          actualAmount: actual.value,
+                          unit: line.unit,
+                        })
+                      : null;
+                  const copy =
+                    actual.ok
+                      ? formatPortionDeviation(line, {
+                          ingredientId: line.ingredientId,
+                          ingredientName: line.ingredientName,
+                          actualAmount: actual.value,
+                          unit: line.unit,
+                        })
+                      : null;
+                  const inputId = `kitchen-day-actual-input-${line.ingredientId}`;
+                  return (
+                    <tr
+                      key={line.ingredientId}
+                      className="kitchen-day-recipe-line"
+                      data-testid={`kitchen-day-recipe-line-${line.ingredientId}`}
+                    >
+                      <th scope="row" className="kitchen-day-recipe-line__name">
+                        {line.ingredientName}
+                      </th>
+                      <td
+                        className="kitchen-day-portion-entry__target"
+                        data-testid={`kitchen-day-required-${line.ingredientId}`}
+                      >
+                        {line.requiredAmount} {line.unit}
+                      </td>
+                      <td className="kitchen-day-portion-entry__actual">
+                        <label className="kitchen-day-sr-only" htmlFor={inputId}>
+                          Actual {line.ingredientName}
+                        </label>
+                        <div className="kitchen-day-input-row kitchen-day-input-row--grams">
+                          <KitchenSkillsGramsInput
+                            id={inputId}
+                            testId={`kitchen-day-actual-${line.ingredientId}`}
+                            value={actuals[line.ingredientId] ?? ''}
+                            onChange={(next) =>
+                              setActuals((current) => ({
+                                ...current,
+                                [line.ingredientId]: next,
+                              }))
+                            }
+                          />
+                          <span className="kitchen-day-unit">{line.unit}</span>
+                        </div>
+                      </td>
+                      <td
+                        className="kitchen-day-portion-entry__result"
+                        data-testid={`kitchen-day-deviation-${line.ingredientId}`}
+                        data-outcome={outcome ?? ''}
+                      >
+                        {copy ?? '—'}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
 
-          <p data-testid="kitchen-day-expected-final-weight">
-            Expected final weight: {recipe.expectedFinalWeightGrams} g
-          </p>
+          <div className="kitchen-day-portion-footer">
+            <p className="kitchen-day-portion-footer__expected" data-testid="kitchen-day-expected-final-weight">
+              Expected final weight: {recipe.expectedFinalWeightGrams} g
+            </p>
 
-          <label className="kitchen-day-field">
-            <span>Final recipe weight</span>
-            <div className="kitchen-day-input-row">
-              <KitchenSkillsGramsInput
-                testId="kitchen-day-final-recipe-weight"
-                value={finalWeightRaw}
-                onChange={setFinalWeightRaw}
-              />
-              <span className="kitchen-day-unit">g</span>
+            <label className="kitchen-day-field kitchen-day-field--compact">
+              <span>Final recipe weight</span>
+              <div className="kitchen-day-input-row kitchen-day-input-row--grams">
+                <KitchenSkillsGramsInput
+                  testId="kitchen-day-final-recipe-weight"
+                  ariaLabel="Final recipe weight"
+                  value={finalWeightRaw}
+                  onChange={setFinalWeightRaw}
+                />
+                <span className="kitchen-day-unit">g</span>
+              </div>
+            </label>
+
+            <div className="kitchen-day-form-actions kitchen-day-form-actions--sticky">
+              <button
+                type="button"
+                className="kitchen-day-button kitchen-day-button--primary"
+                data-testid="kitchen-day-submit-portion"
+                disabled={
+                  !canSubmitPortion({
+                    recipe,
+                    actualsByIngredientId: actuals,
+                    finalWeightRaw,
+                  })
+                }
+                onClick={submit}
+              >
+                Save recipe
+              </button>
             </div>
-          </label>
-
-          <button
-            type="button"
-            className="kitchen-day-button kitchen-day-button--primary"
-            data-testid="kitchen-day-submit-portion"
-            disabled={
-              !canSubmitPortion({
-                recipe,
-                actualsByIngredientId: actuals,
-                finalWeightRaw,
-              })
-            }
-            onClick={submit}
-          >
-            Save recipe
-          </button>
+          </div>
         </div>
       ) : null}
 

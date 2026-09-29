@@ -54,7 +54,7 @@ These two recipe metrics stay separate. There is **no** automatic combined score
 
 ## 6. Journey
 
-Select recipe with a searchable combobox (match anywhere in the name; exact option selection required) → see required lines → enter `actualAmount` per line (digits / one decimal only) → enter final recipe weight (same sanitizer) → submit one `SILENT_ACTIVITY` → challenge summary (not EXIT until Finish challenge).
+Select recipe with a searchable combobox (match anywhere in the name; exact option selection required) → enter actuals in a compact Ingredient | Target | Actual | Result table (stacked tightly on small screens; gram fields stay content-width) → enter final recipe weight (same sanitizer, short field) → submit one `SILENT_ACTIVITY` → challenge summary (not EXIT until Finish challenge). Layout rules: [`../UI_STANDARD.md`](../UI_STANDARD.md).
 
 ## 7. Tutor assessment
 

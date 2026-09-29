@@ -172,14 +172,16 @@ export function KitchenSkillsTrimView() {
               This ingredient is already recorded in this session.
             </p>
           ) : null}
-          <button
-            type="button"
-            className="kitchen-day-button kitchen-day-button--primary"
-            disabled={!ingredientName.trim() || !normalizeIngredientId(ingredientName) || duplicate}
-            onClick={goNext}
-          >
-            Continue
-          </button>
+          <div className="kitchen-day-form-actions kitchen-day-form-actions--sticky">
+            <button
+              type="button"
+              className="kitchen-day-button kitchen-day-button--primary"
+              disabled={!ingredientName.trim() || !normalizeIngredientId(ingredientName) || duplicate}
+              onClick={goNext}
+            >
+              Continue
+            </button>
+          </div>
         </div>
       ) : null}
 
@@ -188,7 +190,7 @@ export function KitchenSkillsTrimView() {
           <h2 className="kitchen-day-card__title">Starting weight</h2>
           <label className="kitchen-day-field">
             <span>Weight</span>
-            <div className="kitchen-day-input-row">
+            <div className="kitchen-day-input-row kitchen-day-input-row--grams">
               <KitchenSkillsGramsInput
                 testId="kitchen-day-starting-weight"
                 value={weightRaw}
@@ -202,15 +204,17 @@ export function KitchenSkillsTrimView() {
               Enter a starting weight greater than 0 grams.
             </p>
           ) : null}
-          <button
-            type="button"
-            className="kitchen-day-button kitchen-day-button--primary"
-            data-testid="kitchen-day-weight-continue"
-            disabled={!weight.ok || setupIssues.length > 0}
-            onClick={goNext}
-          >
-            Continue
-          </button>
+          <div className="kitchen-day-form-actions kitchen-day-form-actions--sticky">
+            <button
+              type="button"
+              className="kitchen-day-button kitchen-day-button--primary"
+              data-testid="kitchen-day-weight-continue"
+              disabled={!weight.ok || setupIssues.length > 0}
+              onClick={goNext}
+            >
+              Continue
+            </button>
+          </div>
         </div>
       ) : null}
 
@@ -238,15 +242,17 @@ export function KitchenSkillsTrimView() {
               </button>
             ))}
           </div>
-          <button
-            type="button"
-            className="kitchen-day-button kitchen-day-button--primary"
-            data-testid="kitchen-day-technique-continue"
-            disabled={!canContinueToEstimate(technique)}
-            onClick={goNext}
-          >
-            Continue
-          </button>
+          <div className="kitchen-day-form-actions kitchen-day-form-actions--sticky">
+            <button
+              type="button"
+              className="kitchen-day-button kitchen-day-button--primary"
+              data-testid="kitchen-day-technique-continue"
+              disabled={!canContinueToEstimate(technique)}
+              onClick={goNext}
+            >
+              Continue
+            </button>
+          </div>
         </div>
       ) : null}
 
@@ -255,7 +261,7 @@ export function KitchenSkillsTrimView() {
           <h2 className="kitchen-day-card__title">Estimated waste</h2>
           <label className="kitchen-day-field">
             <span>Estimate</span>
-            <div className="kitchen-day-input-row">
+            <div className="kitchen-day-input-row kitchen-day-input-row--grams">
               <KitchenSkillsGramsInput
                 testId="kitchen-day-estimated-waste"
                 value={estimateRaw}
@@ -269,15 +275,17 @@ export function KitchenSkillsTrimView() {
               Estimate must be 0 g up to the starting weight.
             </p>
           ) : null}
-          <button
-            type="button"
-            className="kitchen-day-button kitchen-day-button--primary"
-            data-testid="kitchen-day-estimate-continue"
-            disabled={!estimate.ok}
-            onClick={goNext}
-          >
-            Continue
-          </button>
+          <div className="kitchen-day-form-actions kitchen-day-form-actions--sticky">
+            <button
+              type="button"
+              className="kitchen-day-button kitchen-day-button--primary"
+              data-testid="kitchen-day-estimate-continue"
+              disabled={!estimate.ok}
+              onClick={goNext}
+            >
+              Continue
+            </button>
+          </div>
         </div>
       ) : null}
 
@@ -289,14 +297,16 @@ export function KitchenSkillsTrimView() {
               <p className="kitchen-day-card__copy" data-testid="kitchen-day-timer-status">
                 Start when you begin physical work.
               </p>
-              <button
-                type="button"
-                className="kitchen-day-button kitchen-day-button--primary"
-                data-testid="kitchen-day-start-preparation"
-                onClick={() => setTimer((current) => startPreparationTimer(current, new Date()))}
-              >
-                Start preparation
-              </button>
+              <div className="kitchen-day-form-actions kitchen-day-form-actions--sticky">
+                <button
+                  type="button"
+                  className="kitchen-day-button kitchen-day-button--primary"
+                  data-testid="kitchen-day-start-preparation"
+                  onClick={() => setTimer((current) => startPreparationTimer(current, new Date()))}
+                >
+                  Start preparation
+                </button>
+              </div>
             </>
           ) : null}
           {timer.status === 'running' ? (
@@ -305,14 +315,16 @@ export function KitchenSkillsTrimView() {
                 Preparation in progress
               </p>
               <ElapsedPreparationTime startedAt={timer.startedAt} />
-              <button
-                type="button"
-                className="kitchen-day-button kitchen-day-button--primary"
-                data-testid="kitchen-day-finish-preparation"
-                onClick={() => setTimer((current) => finishPreparationTimer(current, new Date()))}
-              >
-                Finish preparation
-              </button>
+              <div className="kitchen-day-form-actions kitchen-day-form-actions--sticky">
+                <button
+                  type="button"
+                  className="kitchen-day-button kitchen-day-button--primary"
+                  data-testid="kitchen-day-finish-preparation"
+                  onClick={() => setTimer((current) => finishPreparationTimer(current, new Date()))}
+                >
+                  Finish preparation
+                </button>
+              </div>
             </>
           ) : null}
           {timer.status === 'finished' ? (
@@ -320,14 +332,16 @@ export function KitchenSkillsTrimView() {
               <p className="kitchen-day-card__copy" data-testid="kitchen-day-timer-status">
                 Preparation time {formatDurationFromMinutes(timer.durationMinutes)}
               </p>
-              <button
-                type="button"
-                className="kitchen-day-button kitchen-day-button--primary"
-                data-testid="kitchen-day-timer-continue"
-                onClick={goNext}
-              >
-                Continue
-              </button>
+              <div className="kitchen-day-form-actions kitchen-day-form-actions--sticky">
+                <button
+                  type="button"
+                  className="kitchen-day-button kitchen-day-button--primary"
+                  data-testid="kitchen-day-timer-continue"
+                  onClick={goNext}
+                >
+                  Continue
+                </button>
+              </div>
             </>
           ) : null}
         </div>
@@ -338,7 +352,7 @@ export function KitchenSkillsTrimView() {
           <h2 className="kitchen-day-card__title">Actual waste</h2>
           <label className="kitchen-day-field">
             <span>Measured waste</span>
-            <div className="kitchen-day-input-row">
+            <div className="kitchen-day-input-row kitchen-day-input-row--grams">
               <KitchenSkillsGramsInput
                 testId="kitchen-day-actual-waste"
                 value={actualRaw}
@@ -353,15 +367,17 @@ export function KitchenSkillsTrimView() {
             </p>
           ) : null}
           {submitError ? <p className="kitchen-day-error">{submitError}</p> : null}
-          <button
-            type="button"
-            className="kitchen-day-button kitchen-day-button--primary"
-            data-testid="kitchen-day-submit-trim"
-            disabled={!actual.ok || submitting}
-            onClick={submitEntry}
-          >
-            Save ingredient
-          </button>
+          <div className="kitchen-day-form-actions kitchen-day-form-actions--sticky">
+            <button
+              type="button"
+              className="kitchen-day-button kitchen-day-button--primary"
+              data-testid="kitchen-day-submit-trim"
+              disabled={!actual.ok || submitting}
+              onClick={submitEntry}
+            >
+              Save ingredient
+            </button>
+          </div>
         </div>
       ) : null}
 

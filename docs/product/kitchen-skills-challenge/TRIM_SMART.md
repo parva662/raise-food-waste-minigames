@@ -23,7 +23,7 @@ Standalone route, no estimate step, no timer, no reference comparison. Posts `pr
 ## 4. Target flow
 
 1. Name → `ingredientId` + starting weight (`ingredientWeightGrams`).
-2. Technique → `trimTechniques` (plural live slug; the ten locked values are one-tap buttons, compact on small screens).
+2. Technique → `trimTechniques` (plural live slug; the ten locked values are one-tap buttons, compact on small screens). Gram fields stay content-width; Continue/Save are sticky on small screens. Layout: [`../UI_STANDARD.md`](../UI_STANDARD.md).
 3. Estimate → `estimatedWasteGrams`.
 4. Timed preparation → `duration` (student does not type minutes).
 5. Actual waste → `actualWasteGrams`.

@@ -1,15 +1,12 @@
 ---
-description: Keep Kitchen Skills and GameBus docs aligned with implemented behaviour
-globs: docs/**/*.md
-alwaysApply: false
+description: Update canonical docs in the same change when documented behaviour changes
+alwaysApply: true
 ---
 
-# Documentation for this repo
+If an implementation change alters approved behavior, architecture, API usage, routes, schemas, or UX, update the affected canonical documentation in the same change.
 
-When an agreed Kitchen Skills or GameBus-integration change is implemented, update the canonical docs in the **same change**. Do not leave stale “reopen iframe” or “students hydrate only from `kitchenGroupInput`” statements.
+Do not edit docs for implementation-only changes that do not affect documented behavior.
 
-- Index: [`docs/README.md`](docs/README.md) (Diátaxis: Tutorials / How-to / Reference / Explanation).
-- Official GameBus pages: [`docs/contracts/GAMEBUS.md`](docs/contracts/GAMEBUS.md) — link them; do not paste those docs here.
-- Kitchen Skills product: [`docs/product/kitchen-skills-challenge/`](docs/product/kitchen-skills-challenge/).
-- Status: [`docs/current-state/IMPLEMENTATION_STATUS.md`](docs/current-state/IMPLEMENTATION_STATUS.md).
-- Do not rewrite [`docs/archive/`](docs/archive/) to match current behaviour.
+Remove stale statements caused by the change before completion.
+
+Do not rewrite `docs/archive/**`.

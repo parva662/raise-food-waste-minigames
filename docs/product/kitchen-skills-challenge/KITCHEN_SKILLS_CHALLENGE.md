@@ -7,7 +7,7 @@
 
 **Slug authority:** [`GAMEBUS_SLUG_CONTRACT.md`](GAMEBUS_SLUG_CONTRACT.md).
 
-UI pages: student activity `#/kitchen-day`, session review `#/kitchen-day/review`, progress `#/kitchen-day-progress`, tutor `#/kitchen-day-tutor`. Visual standard: [`../UI_STANDARD.md`](../UI_STANDARD.md). Route contract: [`../../contracts/KITCHEN_SKILLS_CHALLENGE_ROUTES.md`](../../contracts/KITCHEN_SKILLS_CHALLENGE_ROUTES.md). The product model is one **kitchen day / student session**.
+UI pages: student activity `#/kitchen-day`, session review `#/kitchen-day/review`, progress `#/kitchen-day-progress`, tutor `#/kitchen-day-tutor`. UI/UX standard: [`../UI_STANDARD.md`](../UI_STANDARD.md) (tokens plus density, compact repeating rows, sticky actions). Route contract: [`../../contracts/KITCHEN_SKILLS_CHALLENGE_ROUTES.md`](../../contracts/KITCHEN_SKILLS_CHALLENGE_ROUTES.md). The product model is one **kitchen day / student session**.
 
 ## 1. Purpose
 

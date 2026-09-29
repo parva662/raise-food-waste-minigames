@@ -129,6 +129,8 @@ Canonical: [`../product/kitchen-skills-challenge/KITCHEN_SKILLS_CHALLENGE.md`](.
 
 **Live GameBus (foodtracker.gamebus.eu):** Student Kitchen Skills Challenge activity schemas and properties were **manually verified** on `https://foodtracker.gamebus.eu`. Student posting is **enabled** for Trim / Rescue / Portion (`KITCHEN_SKILLS_STUDENT_LIVE_INTEGRATION_READY = true`). Trainer `wastePracticeReview` posting remains **blocked** (`KITCHEN_SKILLS_TRAINER_LIVE_INTEGRATION_READY = false`) until trainer-on-behalf-of-student semantics are confirmed. This is **not** a claim of trainer live end-to-end success.
 
+**Student activity layout:** Trim / Reuse / Portion follow [`../product/UI_STANDARD.md`](../product/UI_STANDARD.md): content-width gram fields, compact repeating Portion rows (Ingredient | Target | Actual | Result), sticky primary actions, review/finish summarise first. Check ~390px, ~768px, ~1200px.
+
 **v1 product-review baseline:** The current student/trainer UX, including Session Review at `#/kitchen-day/review`, is the approved product-review checkpoint for v1.
 
 Gherkin: [`../../features/kitchen-skills-challenge/`](../../features/kitchen-skills-challenge/) — all **APPROVED PRODUCT TARGET**. Intentional `@pending`: percentile / ranking sufficient-data rule.

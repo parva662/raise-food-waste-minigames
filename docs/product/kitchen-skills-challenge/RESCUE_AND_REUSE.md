@@ -47,7 +47,7 @@ Do **not** duplicate `ingredientName` or `ingredientWeightGrams`.
 
 ## 5. Journey
 
-Complete Trim through `actualWasteGrams` → enter reusable amount and destination → see calculated discarded remainder → save (`SILENT_ACTIVITY`) → continue to Portion in the same iframe.
+Complete Trim through `actualWasteGrams` → compact form (ingredient + actual waste on one row from tablet width; short reusable grams; two-row destination) → see calculated discarded remainder → save (`SILENT_ACTIVITY`) → continue to Portion in the same iframe. Layout: [`../UI_STANDARD.md`](../UI_STANDARD.md).
 
 ## 6. Removed
 
