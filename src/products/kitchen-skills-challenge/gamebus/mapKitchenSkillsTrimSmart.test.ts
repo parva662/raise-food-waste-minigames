@@ -9,9 +9,8 @@ const entry: KitchenSkillsTrimEntry = {
   sessionDate: '2026-09-23',
   submittedAt: '2026-09-23T10:05:00.000Z',
   ingredientId: 'carrot',
-  ingredientName: 'Carrot',
-  ingredientCategory: 'root',
-  ingredientWeightGrams: 5000,
+    ingredientName: 'Carrot',
+    ingredientWeightGrams: 5000,
   trimTechniques: 'trimming',
   estimatedWasteGrams: 600,
   actualWasteGrams: 450,
@@ -29,7 +28,6 @@ describe('Kitchen Day Trim mapper contract', () => {
       'submittedAt',
       'ingredientId',
       'ingredientName',
-      'ingredientCategory',
       'ingredientWeightGrams',
       'trimTechniques',
       'estimatedWasteGrams',
@@ -37,7 +35,7 @@ describe('Kitchen Day Trim mapper contract', () => {
       'duration',
     ]);
     const values = mapKitchenSkillsTrimSmart(entry);
-    expect(values.ingredientCategory).toEqual({ value: 'root' });
+    expect(values).not.toHaveProperty('ingredientCategory');
     expect(values.ingredientWeightGrams).toEqual({ value: 5000 });
     expect(values.trimTechniques).toEqual({ value: 'trimming' });
     expect(values.duration).toEqual({ value: 3, unit: 'minutes' });

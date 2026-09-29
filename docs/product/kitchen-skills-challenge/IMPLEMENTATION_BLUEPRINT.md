@@ -65,4 +65,4 @@ Retrieval is not blocked.
 
 ## 6. Risks
 
-Invented slugs; posted category labels; per-line Portion activities; `sourceActivityId`; per-ingredient tutor scores; storing calculated analytics; new retrieval API; inventing tutor-on-behalf-of-student behaviour.
+Invented slugs; posting `ingredientCategory` on Kitchen Skills Trim; per-line Portion activities; `sourceActivityId`; per-ingredient tutor scores; storing calculated analytics; new retrieval API; inventing tutor-on-behalf-of-student behaviour.

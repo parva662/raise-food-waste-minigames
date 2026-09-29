@@ -34,7 +34,6 @@ Within one Kitchen Day session, a student does **not** create more than one Trim
 | `submittedAt` | yes | `format: date-time` |
 | `ingredientId` | yes | non-empty string; keys reuse join and kitchen-reference lookup |
 | `ingredientName` | yes | non-empty string |
-| `ingredientCategory` | yes | locked enum: `root` \| `leafy` \| `fruit` \| `stem` \| `herbs` \| `other` |
 | `ingredientWeightGrams` | yes | number > 0 (`exclusiveMinimum: 0`) — starting weight before preparation |
 | `trimTechniques` | yes | live plural slug; one selected technique. **Do not** rename to `trimTechnique`. |
 | `estimatedWasteGrams` | yes | number ≥ 0 |
@@ -45,7 +44,9 @@ Live `trimTechniques` enum: `peeling`, `trimming`, `julienne`, `batonnet`, `minc
 
 **CURRENT IMPLEMENTATION / DEPRECATED for new target posts:** `practice`, `participantWasteGrams`.
 
-**Do not post:** `sourceActivityId`, `preparationEntryId`, calculated waste %, estimate error, kitchen average, percentile.
+**Do not post:** `ingredientCategory`, `sourceActivityId`, `preparationEntryId`, calculated waste %, estimate error, kitchen average, percentile.
+
+`ingredientCategory` is **not** part of Kitchen Skills Challenge. Unlink/remove it from the Kitchen Skills `trimSmart` activity template in GameBus admin. Do not change unrelated GameBus properties.
 
 ---
 
@@ -62,7 +63,7 @@ Join to Trim Smart with **`sessionId` + `ingredientId`** (unique within one stud
 | `reuseDestination` | yes | free text |
 | `submittedAt` | yes | `format: date-time` |
 
-**Do not store** on this activity: `ingredientName`, `ingredientCategory`, `ingredientWeightGrams` (read from the matching Trim activity).
+**Do not store** on this activity: `ingredientName`, `ingredientWeightGrams` (read from the matching Trim activity).
 
 **Do not create:** `sourceActivityId`, `preparationEntryId`.
 
@@ -140,7 +141,7 @@ This is **not** a platform blocker and is **not** a new API.
 
 - Fix `ingredientId` schema to non-empty string
 - Fix `ingredientName` schema to non-empty string
-- Keep `ingredientCategory` enum: `root`, `leafy`, `fruit`, `stem`, `herbs`, `other`
+- **Unlink/remove `ingredientCategory` from the Kitchen Skills `trimSmart` template.** It is no longer part of this product.
 - Keep `trimTechniques`
 - Link `duration`
 - Ensure `estimatedWasteGrams` and `actualWasteGrams` are linked
@@ -156,7 +157,7 @@ This is **not** a platform blocker and is **not** a new API.
 - Create/link `reuseDestination`
 - Keep/link `submittedAt`
 - Unlink `reuseMethod`
-- Unlink duplicated `ingredientName`, `ingredientCategory`, `ingredientWeightGrams`
+- Unlink duplicated `ingredientName`, `ingredientWeightGrams`
 - **Do not** create `sourceActivityId`
 
 ### Portion Precision
@@ -195,7 +196,7 @@ This is **not** a platform blocker and is **not** a new API.
 | `menuItemId`, `menuItemName` | Use `recipeId` / `recipeName` |
 | `finalProductWeightGrams` | Use `finalRecipeWeightGrams` |
 | top-level ingredient fields on `portionPrecision` | Nested inside `recipeComposition` |
-| `ingredientName` / `ingredientCategory` / `ingredientWeightGrams` on reuse | Read from Trim |
+| `ingredientName` / `ingredientWeightGrams` on reuse | Read from Trim |
+| `ingredientCategory` | Removed from Kitchen Skills Challenge; unlink from Kitchen Skills `trimSmart` only |
 | `reviewedActivityId`, `reviewedGame` | Review targets the session |
-| `vegetables`, `roots`, `fruits` as category values | Locked enum is `root` / `leafy` / `fruit` / `stem` / `herbs` / `other` |
 | `studentId`, `participantId` | GameBus actor identifies the student |

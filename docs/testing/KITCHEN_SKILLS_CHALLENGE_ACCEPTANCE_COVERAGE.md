@@ -10,11 +10,11 @@ Implementation: `main` (`#/kitchen-day`, `#/kitchen-day-progress`, `#/kitchen-da
 | Participant-specific session identity | `src/products/kitchen-skills-challenge/domain/session/*.test.ts`, `KitchenSkillsSessionContext.test.tsx` | `kitchen-day:<taskId>:<actorId>:<sessionDate>`; two students on the same TASK/date differ |
 | TASK wait / session locked once | `KitchenSkillsSessionContext.test.tsx`, `gamebus/taskTemplates.test.ts` | Embedded wait for TASK + `inputCollectionPari.me`; later refresh cannot replace the lock |
 | Europe/Helsinki session date lock | `src/products/kitchen-skills-challenge/domain/session/*.test.ts`, `KitchenSkillsSessionContext.test.tsx` | Locked across midnight for the page session |
-| Reload hydration / actor isolation | `read/kitchenDayReadModel.test.ts`, `KitchenSkillsSessionContext.test.tsx` | Fail closed on missing/mismatched actor; other students excluded |
+| Reload hydration / actor isolation | `read/kitchenSkillsReadModel.test.ts`, `KitchenSkillsSessionContext.test.tsx` | Fail closed on missing/mismatched actor; other students excluded |
 | Duplicate ingredient prevention | `domain/session/ingredientUniqueness.test.ts`, `kitchenSkills.flow.test.tsx` | Same `ingredientId` once; different ingredients allowed |
-| All six categories | `trim/validation.test.ts` | Labels map to `root` / `leafy` / `fruit` / `stem` / `herbs` / `other` |
+| No ingredient category | `trim/validation.test.ts`, `kitchenSkills.flow.test.tsx`, `read/kitchenSkillsReadModel.test.ts`, mapper/live tests | Trim has no `ingredientCategory`; flow starts at Ingredient; obsolete persisted values ignored |
 | All ten trim techniques | `trim/techniques.ts`, `trim/techniqueSelection.test.tsx` | Locked enum; compact one-tap buttons, no dropdown |
-| Compact technique selection | `trim/techniqueSelection.test.tsx` | Technique-specific grid modifier; category grid unchanged |
+| Compact technique selection | `trim/techniqueSelection.test.tsx` | Technique-specific grid; no category UI |
 | Timer | `trim/timer.test.ts`, flow | Start/finish records duration; student does not type minutes |
 | Trim validation | `trim/validation.test.ts`, flow | Weight, estimate, actual bounds |
 | Kitchen reference comparison | `trim/derived.test.ts`, `trim/reference.test.ts` | Seeded then historical; not stored; no percentile copy |

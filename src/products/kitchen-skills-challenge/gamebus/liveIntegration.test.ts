@@ -34,7 +34,6 @@ const trimEntry: KitchenSkillsTrimEntry = {
   submittedAt: '2026-09-23T10:05:00.000Z',
   ingredientId: 'carrot',
   ingredientName: 'Carrot',
-  ingredientCategory: 'root',
   ingredientWeightGrams: 5000,
   trimTechniques: 'trimming',
   estimatedWasteGrams: 600,
@@ -127,6 +126,7 @@ describe('Kitchen Day split live integration gates', () => {
     expect(result.message.type).toBe('ACTIVITY');
     expect(result.message.data.template).toBe('trimSmart');
     expect(postedPropertyTemplates(result.message)).toEqual(orderedKitchenSkillsTrimPropertyRefs());
+    expect(postedPropertyTemplates(result.message)).not.toContain('ingredientCategory');
     expect(result.message.data.properties.map((property) => property.obj)).toEqual(
       orderedKitchenSkillsTrimPropertyRefs().map((ref) => mapKitchenSkillsTrimSmart(trimEntry)[ref]),
     );

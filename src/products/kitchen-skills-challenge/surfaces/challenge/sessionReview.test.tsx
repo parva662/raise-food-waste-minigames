@@ -21,7 +21,6 @@ const trimEntries: KitchenSkillsTrimEntry[] = [
     submittedAt: '2026-09-23T10:03:00.000Z',
     ingredientId: 'potato',
     ingredientName: 'Potato',
-    ingredientCategory: 'root',
     ingredientWeightGrams: 222,
     trimTechniques: 'julienne',
     estimatedWasteGrams: 22,

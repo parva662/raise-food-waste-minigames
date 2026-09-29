@@ -27,7 +27,9 @@ Pointers: `src/legacy/trim-smart-v1/gamebus/mapTrimSmart.ts`, `src/legacy/trim-s
 
 ## 3. Target property set
 
-`sessionId`, `sessionDate`, `submittedAt`, `ingredientId` (non-empty), `ingredientName` (non-empty), `ingredientCategory` (`root` \| `leafy` \| `fruit` \| `stem` \| `herbs` \| `other`), `ingredientWeightGrams`, `trimTechniques`, `estimatedWasteGrams`, `actualWasteGrams`, `duration`.
+`sessionId`, `sessionDate`, `submittedAt`, `ingredientId` (non-empty), `ingredientName` (non-empty), `ingredientWeightGrams`, `trimTechniques`, `estimatedWasteGrams`, `actualWasteGrams`, `duration`.
+
+**Do not post or require** `ingredientCategory`. It is not part of Kitchen Skills Challenge. Unlink/remove it from the live `trimSmart` GameBus activity template. Existing persisted values, if present, are ignored on read.
 
 **DEPRECATED for new posts:** `practice`, `participantWasteGrams`, `trimTechnique`, `preparationMethod`, `preparationApproach`, `measurementMethod`, `finalUsableWeightGrams`.
 
@@ -43,4 +45,4 @@ Do **not** use `sourceActivityId` or `preparationEntryId`.
 
 ## 5. Migration notes (implementation)
 
-Replace Practice with `trimTechniques`; add estimate, timer, `actualWasteGrams`; post `duration`; align category labels; derive analytics in the app; keep a read adapter for v1 (`practice` + `participantWasteGrams`).
+Replace Practice with `trimTechniques`; add estimate, timer, `actualWasteGrams`; post `duration`; do not post `ingredientCategory`; derive analytics in the app; keep a read adapter for v1 (`practice` + `participantWasteGrams`).

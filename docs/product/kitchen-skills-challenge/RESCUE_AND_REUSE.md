@@ -27,7 +27,7 @@ reuseDestination:           "Carrot soup tomorrow"
 
 | Concept | Where it lives |
 |---------|----------------|
-| Waste, name, category, starting weight | Matching `trimSmart` |
+| Waste, name, starting weight | Matching `trimSmart` |
 | Reusable amount + destination | `rescueAndReuse` |
 | Discarded | Calculated — never stored |
 
@@ -35,7 +35,7 @@ reuseDestination:           "Carrot soup tomorrow"
 
 `sessionId`, `sessionDate`, `ingredientId`, `reusableWasteGrams`, `reuseDestination`, `submittedAt`.
 
-Do **not** duplicate `ingredientName`, `ingredientCategory`, or `ingredientWeightGrams`.
+Do **not** duplicate `ingredientName` or `ingredientWeightGrams`.
 
 ## 4. Rules
 
@@ -55,7 +55,7 @@ Complete Trim through `actualWasteGrams` → enter reusable amount and destinati
 |---------|-------------|
 | Standalone Rescue game | Kitchen Day module |
 | `sourceActivityId` / `preparationEntryId` | `sessionId` + `ingredientId` |
-| Duplicated ingredient name/category/weight | Read from Trim |
+| Duplicated ingredient name/weight | Read from Trim |
 | `reuseMethod` | `reuseDestination` |
 | Stored `discardedWasteGrams` | Calculated |
 | Separate tutor score | Evidence only |

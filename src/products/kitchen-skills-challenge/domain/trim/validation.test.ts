@@ -1,18 +1,32 @@
 import { describe, expect, it } from 'vitest';
-import { ingredientCategoryOptions, storedCategoryFromLabel } from '@/products/kitchen-skills-challenge/domain/trim/categories';
-import { canContinueToEstimate, parseActualWasteGrams, parseEstimatedWasteGrams, parseStartingWeightGrams } from '@/products/kitchen-skills-challenge/domain/trim/validation';
+import {
+  canContinueToEstimate,
+  parseActualWasteGrams,
+  parseEstimatedWasteGrams,
+  parseStartingWeightGrams,
+  validateIngredientSetup,
+} from '@/products/kitchen-skills-challenge/domain/trim/validation';
 
 describe('Kitchen Day Trim validation', () => {
-  it('maps every locked category label to the stored enum', () => {
-    expect(ingredientCategoryOptions()).toEqual([
-      { value: 'root', label: 'Root vegetables' },
-      { value: 'leafy', label: 'Leafy vegetables' },
-      { value: 'fruit', label: 'Fruit vegetables' },
-      { value: 'stem', label: 'Stem vegetables' },
-      { value: 'herbs', label: 'Herbs' },
-      { value: 'other', label: 'Other' },
-    ]);
-    expect(storedCategoryFromLabel('Root vegetables')).toBe('root');
+  it('validates name and starting weight without a category field', () => {
+    expect(
+      validateIngredientSetup({
+        ingredientName: 'Carrot',
+        startingWeightGrams: '5000',
+      }),
+    ).toEqual([]);
+    expect(
+      validateIngredientSetup({
+        ingredientName: '',
+        startingWeightGrams: '5000',
+      }),
+    ).toEqual(['ingredientName']);
+    expect(
+      validateIngredientSetup({
+        ingredientName: 'Carrot',
+        startingWeightGrams: '0',
+      }),
+    ).toEqual(['startingWeightGrams']);
   });
 
   it('requires a positive starting weight', () => {

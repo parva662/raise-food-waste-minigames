@@ -33,6 +33,7 @@ import {
   tryPostKitchenSkillsReview,
   tryPostKitchenSkillsTrim,
 } from '@/products/kitchen-skills-challenge/gamebus/postActivity';
+import { logKitchenSkillsIdentityDebug } from '@/products/kitchen-skills-challenge/gamebus/identityDebugLog';
 import type {
   KitchenSkillsLockedSession,
   KitchenSkillsPortionEntry,
@@ -134,7 +135,16 @@ export function KitchenSkillsSessionProvider({
     if (!embedded) return;
     const stopHandshake = startGameBusHandshake();
     const lockOnce = () => {
-      setSession((current) => current ?? tryLockEmbeddedSession());
+      setSession((current) => {
+        const next = current ?? tryLockEmbeddedSession();
+        queueMicrotask(() =>
+          logKitchenSkillsIdentityDebug({
+            sessionDate: next?.sessionDate ?? null,
+            lockedSessionId: next?.sessionId ?? null,
+          }),
+        );
+        return next;
+      });
     };
     const unsubscribeTask = subscribeGameBusTask(() => lockOnce());
     const unsubscribeInputs = subscribeGameBusInputCollections(lockOnce);
@@ -148,7 +158,13 @@ export function KitchenSkillsSessionProvider({
 
   useEffect(() => {
     if (!session) return;
-    const sync = () => setPersisted(readPersistedForSession(session.sessionId));
+    const sync = () => {
+      setPersisted(readPersistedForSession(session.sessionId));
+      logKitchenSkillsIdentityDebug({
+        sessionDate: session.sessionDate,
+        lockedSessionId: session.sessionId,
+      });
+    };
     sync();
     return subscribeGameBusInputCollections(sync);
   }, [session]);

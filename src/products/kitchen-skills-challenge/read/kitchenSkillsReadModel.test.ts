@@ -22,7 +22,6 @@ function trimActivity(overrides: Record<string, unknown> = {}) {
       { template: { slug: 'submittedAt' }, value: { value: '2026-09-23T10:03:00.000Z' } },
       { template: { slug: 'ingredientId' }, value: { value: 'carrot' } },
       { template: { slug: 'ingredientName' }, value: { value: 'Carrot' } },
-      { template: { slug: 'ingredientCategory' }, value: { value: 'root' } },
       { template: { slug: 'ingredientWeightGrams' }, value: { value: 5000 } },
       { template: { slug: 'trimTechniques' }, value: { value: 'trimming' } },
       { template: { slug: 'estimatedWasteGrams' }, value: { value: 600 } },
@@ -129,5 +128,49 @@ describe('Kitchen Day read model', () => {
     const merged = mergeKitchenSkillsRecords(local, persisted, (left, right) => left.ingredientId === right.ingredientId);
     expect(merged).toHaveLength(1);
     expect(merged[0]?.source).toBe('persisted');
+  });
+
+  it('parses persisted Trim when ingredientCategory is absent', () => {
+    const parsed = parsePersistedTrimEntry(trimActivity());
+    expect(parsed?.ingredientId).toBe('carrot');
+    expect(parsed).not.toHaveProperty('ingredientCategory');
+  });
+
+  it('parses persisted Trim when an obsolete ingredientCategory property is present', () => {
+    const parsed = parsePersistedTrimEntry(
+      trimActivity({
+        properties: [
+          ...(trimActivity().properties as object[]),
+          { template: { slug: 'ingredientCategory' }, value: { value: 'root' } },
+        ],
+      }),
+    );
+    expect(parsed?.ingredientId).toBe('carrot');
+    expect(parsed).not.toHaveProperty('ingredientCategory');
+  });
+
+  it('hydrates Trim for Rescue join without a category field', () => {
+    const model = buildKitchenSkillsReadModel(
+      [
+        trimActivity(),
+        {
+          id: 'act-rescue-1',
+          actor: { id: 'user-1' },
+          template: { slug: 'rescueAndReuse' },
+          properties: [
+            { template: { slug: 'sessionId' }, value: { value: sessionId } },
+            { template: { slug: 'sessionDate' }, value: { value: '2026-09-23' } },
+            { template: { slug: 'ingredientId' }, value: { value: 'carrot' } },
+            { template: { slug: 'reusableWasteGrams' }, value: { value: 200 } },
+            { template: { slug: 'reuseDestination' }, value: { value: 'Soup' } },
+            { template: { slug: 'submittedAt' }, value: { value: '2026-09-23T10:10:00.000Z' } },
+          ],
+        },
+      ],
+      { sessionId, actorId: 'user-1' },
+    );
+    expect(model.trimEntries).toHaveLength(1);
+    expect(model.rescueEntries).toHaveLength(1);
+    expect(model.rescueEntries[0]?.ingredientId).toBe(model.trimEntries[0]?.ingredientId);
   });
 });

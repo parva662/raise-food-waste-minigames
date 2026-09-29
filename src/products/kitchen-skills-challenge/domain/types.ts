@@ -5,17 +5,6 @@ export interface KitchenSkillsLockedSession {
   sessionDate: string;
 }
 
-export const KITCHEN_SKILLS_INGREDIENT_CATEGORIES = [
-  'root',
-  'leafy',
-  'fruit',
-  'stem',
-  'herbs',
-  'other',
-] as const;
-
-export type KitchenSkillsIngredientCategory = (typeof KITCHEN_SKILLS_INGREDIENT_CATEGORIES)[number];
-
 export const TRIM_TECHNIQUES = [
   'peeling',
   'trimming',
@@ -40,7 +29,6 @@ export interface KitchenSkillsTrimEntry {
   submittedAt: string;
   ingredientId: string;
   ingredientName: string;
-  ingredientCategory: KitchenSkillsIngredientCategory;
   ingredientWeightGrams: number;
   trimTechniques: TrimTechnique;
   estimatedWasteGrams: number;

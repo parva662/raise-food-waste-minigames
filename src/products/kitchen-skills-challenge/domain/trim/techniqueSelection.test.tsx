@@ -12,7 +12,6 @@ function setHash(hash: string) {
 }
 
 async function openTechniqueStep(user: ReturnType<typeof userEvent.setup>) {
-  await user.click(screen.getByTestId('kitchen-day-category-root'));
   await user.type(screen.getByTestId('kitchen-day-ingredient-name'), 'Carrot');
   await user.click(screen.getByRole('button', { name: 'Continue' }));
   await user.type(screen.getByTestId('kitchen-day-starting-weight'), '5000');
@@ -29,12 +28,11 @@ describe('Trim Smart technique selection', () => {
     setHash('');
   });
 
-  it('keeps category chips on the shared grid without the technique modifier', () => {
+  it('does not render a category step', () => {
     render(<AppRouter />);
-    const categories = screen.getByTestId('kitchen-day-category-list');
-    expect(categories).toHaveClass('kitchen-day-chip-grid');
-    expect(categories).not.toHaveClass('kitchen-day-chip-grid--techniques');
-    expect(screen.getByTestId('kitchen-day-category-root')).toBeInTheDocument();
+    expect(screen.getByTestId('kitchen-day-trim-step-ingredient')).toBeInTheDocument();
+    expect(screen.queryByTestId('kitchen-day-category-list')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('kitchen-day-category-root')).not.toBeInTheDocument();
     expect(screen.queryByRole('combobox')).not.toBeInTheDocument();
   });
 

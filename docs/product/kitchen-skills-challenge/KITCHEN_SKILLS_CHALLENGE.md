@@ -47,9 +47,7 @@ Kitchen day (student actor + sessionId + sessionDate)
 
 See [`TRIM_SMART.md`](TRIM_SMART.md).
 
-Stored: `sessionId`, `sessionDate`, `submittedAt`, `ingredientId`, `ingredientName`, `ingredientCategory`, `ingredientWeightGrams`, `trimTechniques`, `estimatedWasteGrams`, `actualWasteGrams`, `duration`.
-
-`ingredientCategory` is locked: `root` \| `leafy` \| `fruit` \| `stem` \| `herbs` \| `other` (UI labels only). Decision **closed**.
+Stored: `sessionId`, `sessionDate`, `submittedAt`, `ingredientId`, `ingredientName`, `ingredientWeightGrams`, `trimTechniques`, `estimatedWasteGrams`, `actualWasteGrams`, `duration`.
 
 Waste %, estimate error, reference comparison, and percentile are **calculated on read**.
 
@@ -61,7 +59,7 @@ Stored: `sessionId`, `sessionDate`, `ingredientId`, `reusableWasteGrams`, `reuse
 
 Join: **`sessionId` + `ingredientId`**. Do not use `sourceActivityId` or `preparationEntryId`.
 
-Do not duplicate `ingredientName`, `ingredientCategory`, or `ingredientWeightGrams`.
+Do not duplicate `ingredientName` or `ingredientWeightGrams`.
 
 `reuseDestination` is free text. No status workflow, later confirmation, or inventory. Discarded waste = Trim `actualWasteGrams − reusableWasteGrams` (not stored).
 
@@ -71,7 +69,7 @@ See [`PORTION_PRECISION.md`](PORTION_PRECISION.md).
 
 One activity per prepared recipe. Stored: `sessionId`, `sessionDate`, `submittedAt`, `recipeId`, `recipeName`, `recipeComposition`, `finalRecipeWeightGrams`.
 
-Required amounts and expected final weight come from the generated recipe reference (`npm run kitchen-skills:recipes` from `reference/kitchen-skills/kitchen_day_recipe_reference_clean.xlsx`). They are not copied into GameBus. Expected final weight is `Kypsä_kokonaispaino`, not `Saanto` and not the sum of ingredient targets. Ingredient accuracy and final-weight deviation are derived on read. `ingredientCategory` is not used. A future BarLaurea source can use the same adapter.
+Required amounts and expected final weight come from the generated recipe reference (`npm run kitchen-skills:recipes` from `reference/kitchen-skills/kitchen_day_recipe_reference_clean.xlsx`). They are not copied into GameBus. Expected final weight is `Kypsä_kokonaispaino`, not `Saanto` and not the sum of ingredient targets. Ingredient accuracy and final-weight deviation are derived on read. A future BarLaurea source can use the same adapter.
 
 ## 6. Session Review, Student Progress, Tutor dashboard
 

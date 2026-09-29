@@ -22,7 +22,7 @@ Standalone route, no estimate step, no timer, no reference comparison. Posts `pr
 
 ## 4. Target flow
 
-1. Category (`ingredientCategory`) + name → `ingredientId` + starting weight (`ingredientWeightGrams`).
+1. Name → `ingredientId` + starting weight (`ingredientWeightGrams`).
 2. Technique → `trimTechniques` (plural live slug; the ten locked values are one-tap buttons, compact on small screens).
 3. Estimate → `estimatedWasteGrams`.
 4. Timed preparation → `duration` (student does not type minutes).
@@ -30,31 +30,18 @@ Standalone route, no estimate step, no timer, no reference comparison. Posts `pr
 6. See calculated waste % and reference comparison.
 7. Optional reuse for this ingredient, another **different** ingredient, or Session Review.
 
-Worked example (stored facts): Carrot / `root` / 5000 g / `trimming` / estimate 600 g / actual 450 g / timed `duration`. Waste % 9% and the reference comparison are calculated, not stored.
+Worked example (stored facts): Carrot / 5000 g / `trimming` / estimate 600 g / actual 450 g / timed `duration`. Waste % 9% and the reference comparison are calculated, not stored.
 
-## 5. Categories (closed)
-
-| Posted | UI label |
-|--------|----------|
-| `root` | Root vegetables |
-| `leafy` | Leafy vegetables |
-| `fruit` | Fruit vegetables |
-| `stem` | Stem vegetables |
-| `herbs` | Herbs |
-| `other` | Other |
-
-Do not post `vegetables`, `roots`, or `fruits`.
-
-## 6. Calculated (never stored)
+## 5. Calculated (never stored)
 
 Waste %; estimate error; comparison to seeded then historical kitchen reference data by `ingredientId`; discarded waste after reuse.
 
 Percentile / ranking messaging is **@pending** until a sufficient-data rule is agreed.
 
-## 7. Tutor assessment
+## 6. Tutor assessment
 
 One end-of-session `wastePracticeReview` for the whole Kitchen Day. This module is evidence, not a separate tutor score.
 
-## 8. Non-goals
+## 7. Non-goals
 
 One ingredient only per day; same ingredient twice per session; tutor score from waste %; storing analytics; renaming `trimTechniques`.

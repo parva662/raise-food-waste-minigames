@@ -11,7 +11,6 @@ function setHash(hash: string) {
 }
 
 async function recordCarrot(user: ReturnType<typeof userEvent.setup>) {
-  await user.click(screen.getByTestId('kitchen-day-category-root'));
   await user.type(screen.getByTestId('kitchen-day-ingredient-name'), 'Carrot');
   await user.click(screen.getByRole('button', { name: 'Continue' }));
   await user.type(screen.getByTestId('kitchen-day-starting-weight'), '5000');
@@ -35,6 +34,15 @@ describe('Kitchen Day connected flow', () => {
   afterEach(() => {
     cleanup();
     setHash('');
+  });
+
+  it('starts Trim on Ingredient with no category UI', () => {
+    render(<AppRouter />);
+    expect(screen.getByTestId('kitchen-day-trim-progress')).toHaveTextContent('Step 1 of 7: Ingredient');
+    expect(screen.getByTestId('kitchen-day-trim-step-ingredient')).toBeInTheDocument();
+    expect(screen.queryByTestId('kitchen-day-trim-step-category')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('kitchen-day-category-list')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('kitchen-day-category-root')).not.toBeInTheDocument();
   });
 
   it('uses the kitchen-day route without replacing v1 trim-smart', () => {
@@ -88,7 +96,6 @@ describe('Kitchen Day connected flow', () => {
     render(<AppRouter />);
     await recordCarrot(user);
     await user.click(screen.getByTestId('kitchen-day-add-another-ingredient'));
-    await user.click(screen.getByTestId('kitchen-day-category-root'));
     await user.type(screen.getByTestId('kitchen-day-ingredient-name'), 'Carrot');
     expect(screen.getByTestId('kitchen-day-duplicate-ingredient')).toBeInTheDocument();
     await user.clear(screen.getByTestId('kitchen-day-ingredient-name'));

@@ -1,7 +1,7 @@
 # APPROVED PRODUCT TARGET
 # Product: docs/product/kitchen-skills-challenge/TRIM_SMART.md
 # Slugs: docs/product/kitchen-skills-challenge/GAMEBUS_SLUG_CONTRACT.md
-# CURRENT IMPLEMENTATION on main still uses practice / participantWasteGrams — not this target.
+# CURRENT IMPLEMENTATION: Kitchen Skills Trim at #/kitchen-day does not use ingredientCategory.
 #
 @trim-smart @waste-challenges @kitchen-day
 Feature: Ingredient preparation in a kitchen day
@@ -15,30 +15,19 @@ Feature: Ingredient preparation in a kitchen day
 
   Rule: One entry is one ingredient preparation task
 
+    Scenario: Trim starts with the ingredient, not a category
+      When the student opens ingredient preparation
+      Then the first step is ingredient name
+      And no ingredient category is shown or required
+
     Scenario: A valid ingredient setup can continue
-      When the student selects ingredient category "Root vegetables"
-      And enters ingredient name "Carrot"
+      When the student enters ingredient name "Carrot"
       And enters a starting weight of 5000 grams
       Then the ingredient setup is valid
-      And the recorded category value is "root"
       And the student can continue to technique selection
 
-    Scenario Outline: Locked categories are offered with friendly labels
-      When the student opens the ingredient category list
-      Then "<label>" is available
-      And it is recorded as "<value>"
-
-      Examples:
-        | label             | value |
-        | Root vegetables   | root  |
-        | Leafy vegetables  | leafy |
-        | Fruit vegetables  | fruit |
-        | Stem vegetables   | stem  |
-        | Herbs             | herbs |
-        | Other             | other |
-
     Scenario Outline: Invalid starting weight is blocked
-      Given the student has selected a valid category and name
+      Given the student has entered a valid name
       When the student enters <weight> as the starting weight
       Then the student cannot continue
       And a starting-weight validation message is shown

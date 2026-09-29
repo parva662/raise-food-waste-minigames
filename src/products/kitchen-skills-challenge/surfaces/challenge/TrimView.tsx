@@ -6,8 +6,7 @@ import { normalizeIngredientId } from '@/shared/identifiers/ingredientId';
 import { kitchenSkillsIngredientIdFromName, useReadyKitchenSkillsSession } from '@/products/kitchen-skills-challenge/domain/session/KitchenSkillsSessionContext';
 import { isIngredientAlreadyRecorded } from '@/products/kitchen-skills-challenge/domain/session/ingredientUniqueness';
 import { historicalTrimSamplesFromGroupActivities } from '@/products/kitchen-skills-challenge/read/selectKitchenSkillsActivities';
-import { TRIM_TECHNIQUES, type KitchenSkillsIngredientCategory, type TrimTechnique } from '@/products/kitchen-skills-challenge/domain/types';
-import { ingredientCategoryOptions } from '@/products/kitchen-skills-challenge/domain/trim/categories';
+import { TRIM_TECHNIQUES, type TrimTechnique } from '@/products/kitchen-skills-challenge/domain/types';
 import { wastePercentage } from '@/products/kitchen-skills-challenge/domain/trim/derived';
 import { compareToKitchenReference } from '@/products/kitchen-skills-challenge/domain/trim/reference';
 import { TRIM_TECHNIQUE_LABELS } from '@/products/kitchen-skills-challenge/domain/trim/techniques';
@@ -26,7 +25,6 @@ import {
 } from '@/products/kitchen-skills-challenge/domain/trim/validation';
 
 type TrimStep =
-  | 'category'
   | 'ingredient'
   | 'weight'
   | 'technique'
@@ -36,7 +34,6 @@ type TrimStep =
   | 'result';
 
 const STEP_ORDER: TrimStep[] = [
-  'category',
   'ingredient',
   'weight',
   'technique',
@@ -48,7 +45,6 @@ const STEP_ORDER: TrimStep[] = [
 
 function stepLabel(step: TrimStep): string {
   const labels: Record<TrimStep, string> = {
-    category: 'Category',
     ingredient: 'Ingredient',
     weight: 'Starting weight',
     technique: 'Technique',
@@ -62,8 +58,7 @@ function stepLabel(step: TrimStep): string {
 
 export function KitchenSkillsTrimView() {
   const { session, recordedIngredientIds, commitTrimEntry } = useReadyKitchenSkillsSession();
-  const [step, setStep] = useState<TrimStep>('category');
-  const [category, setCategory] = useState<KitchenSkillsIngredientCategory | ''>('');
+  const [step, setStep] = useState<TrimStep>('ingredient');
   const [ingredientName, setIngredientName] = useState('');
   const [weightRaw, setWeightRaw] = useState('');
   const [technique, setTechnique] = useState<TrimTechnique | null>(null);
@@ -78,7 +73,6 @@ export function KitchenSkillsTrimView() {
   const estimate = weight.ok ? parseEstimatedWasteGrams(estimateRaw, weight.value) : { ok: false as const, issue: 'invalid' as const };
   const actual = weight.ok ? parseActualWasteGrams(actualRaw, weight.value) : { ok: false as const, issue: 'invalid' as const };
   const setupIssues = validateIngredientSetup({
-    ingredientCategory: category,
     ingredientName,
     startingWeightGrams: weightRaw,
   });
@@ -96,8 +90,7 @@ export function KitchenSkillsTrimView() {
   }
 
   function resetForAnother() {
-    setStep('category');
-    setCategory('');
+    setStep('ingredient');
     setIngredientName('');
     setWeightRaw('');
     setTechnique(null);
@@ -108,7 +101,7 @@ export function KitchenSkillsTrimView() {
   }
 
   function submitEntry() {
-    if (!category || !ingredientId || !weight.ok || !technique || !estimate.ok || !actual.ok) return;
+    if (!ingredientId || !weight.ok || !technique || !estimate.ok || !actual.ok) return;
     if (timer.status !== 'finished' || submitting || duplicate) return;
     setSubmitting(true);
     const entry = {
@@ -117,7 +110,6 @@ export function KitchenSkillsTrimView() {
       submittedAt: new Date().toISOString(),
       ingredientId,
       ingredientName: ingredientName.trim(),
-      ingredientCategory: category,
       ingredientWeightGrams: weight.value,
       trimTechniques: technique,
       estimatedWasteGrams: estimate.value,
@@ -161,28 +153,6 @@ export function KitchenSkillsTrimView() {
       <p className="kitchen-day-progress" data-testid="kitchen-day-trim-progress">
         Step {STEP_ORDER.indexOf(step) + 1} of {STEP_ORDER.length}: {stepLabel(step)}
       </p>
-
-      {step === 'category' ? (
-        <div data-testid="kitchen-day-trim-step-category">
-          <h2 className="kitchen-day-card__title">Ingredient category</h2>
-          <div className="kitchen-day-chip-grid" data-testid="kitchen-day-category-list">
-            {ingredientCategoryOptions().map((option) => (
-              <button
-                key={option.value}
-                type="button"
-                className={category === option.value ? 'kitchen-day-chip kitchen-day-chip--active' : 'kitchen-day-chip'}
-                data-testid={`kitchen-day-category-${option.value}`}
-                onClick={() => {
-                  setCategory(option.value);
-                  setStep('ingredient');
-                }}
-              >
-                {option.label}
-              </button>
-            ))}
-          </div>
-        </div>
-      ) : null}
 
       {step === 'ingredient' ? (
         <div data-testid="kitchen-day-trim-step-ingredient">

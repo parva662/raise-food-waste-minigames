@@ -1,5 +1,4 @@
 import { getActivityTemplateReference } from '@/platform/gamebus/groupActivities';
-import { isKitchenSkillsIngredientCategory } from '@/products/kitchen-skills-challenge/domain/trim/categories';
 import { isTrimTechnique } from '@/products/kitchen-skills-challenge/domain/trim/techniques';
 import { isPortionUnit } from '@/products/kitchen-skills-challenge/domain/portion/validation';
 import { isKitchenSkillsReviewScore } from '@/products/kitchen-skills-challenge/domain/assessment/scores';
@@ -59,7 +58,6 @@ function readIso(activity: unknown, key: 'start' | 'end'): string | null {
 
 export function parsePersistedTrimEntry(activity: unknown): KitchenSkillsTrimEntry | null {
   if (getActivityTemplateReference(activity) !== 'trimSmart') return null;
-  const ingredientCategory = readActivityPropertyString(activity, 'ingredientCategory');
   const trimTechniques = readActivityPropertyString(activity, 'trimTechniques');
   const sessionId = readActivityPropertyString(activity, 'sessionId');
   const sessionDate = readActivityPropertyString(activity, 'sessionDate');
@@ -81,8 +79,6 @@ export function parsePersistedTrimEntry(activity: unknown): KitchenSkillsTrimEnt
     estimatedWasteGrams == null ||
     actualWasteGrams == null ||
     durationMinutes == null ||
-    !ingredientCategory ||
-    !isKitchenSkillsIngredientCategory(ingredientCategory) ||
     !trimTechniques ||
     !isTrimTechnique(trimTechniques)
   ) {
@@ -94,7 +90,6 @@ export function parsePersistedTrimEntry(activity: unknown): KitchenSkillsTrimEnt
     submittedAt,
     ingredientId,
     ingredientName,
-    ingredientCategory,
     ingredientWeightGrams,
     trimTechniques,
     estimatedWasteGrams,
