@@ -18,6 +18,17 @@ function isKitchenSkillsTemplate(template: string | null): template is (typeof K
   );
 }
 
+function summarizeActivity(activity: unknown) {
+  return {
+    activityId: readActivityId(activity),
+    template: getActivityTemplateReference(activity),
+    actorId: readActivityActorId(activity),
+    actorName: readActivityActorName(activity),
+    sessionId: readActivityPropertyString(activity, 'sessionId'),
+    sessionDate: readActivityPropertyString(activity, 'sessionDate'),
+  };
+}
+
 /**
  * Temporary diagnostic for live GameBus identity comparison.
  * Does not change session identity, filtering, or hydration.
@@ -30,27 +41,20 @@ export function logKitchenSkillsIdentityDebug(options: {
 
   const payload = getGameBusInputCollections();
   const me = getAuthenticatedGameBusUser(payload);
-  const activities = extractGroupActivities(getRawKitchenGroupActivitiesInput(payload));
-  const relevantActivities = activities.flatMap((activity) => {
-    const template = getActivityTemplateReference(activity);
-    if (!isKitchenSkillsTemplate(template)) return [];
-    return [
-      {
-        activityId: readActivityId(activity),
-        template,
-        actorId: readActivityActorId(activity),
-        actorName: readActivityActorName(activity),
-        sessionId: readActivityPropertyString(activity, 'sessionId'),
-        sessionDate: readActivityPropertyString(activity, 'sessionDate'),
-      },
-    ];
-  });
+  const rawActivitiesInput = getRawKitchenGroupActivitiesInput(payload);
+  const extractedActivities = extractGroupActivities(rawActivitiesInput).map(summarizeActivity);
+  const relevantActivities = extractedActivities.filter((activity) =>
+    isKitchenSkillsTemplate(activity.template),
+  );
 
   console.info(KITCHEN_SKILLS_IDENTITY_DEBUG_PREFIX, {
     taskId: getGameBusTask()?.id ?? null,
     sessionDate: options.sessionDate,
     lockedSessionId: options.lockedSessionId,
     authenticatedMe: me ? { id: me.id, name: me.name } : null,
+    rawActivitiesInput,
+    extractedActivitiesCount: extractedActivities.length,
+    extractedActivities,
     relevantActivities,
   });
 }
