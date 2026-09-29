@@ -1605,13 +1605,15 @@ ul {
   z-index: 1000;
 }
 
-.chef-zero-dialog {
-  background: var(--color-surface);
-  border-radius: var(--radius-lg);
-  padding: var(--spacing-lg);
-  max-width: 24rem;
-  width: 100%;
-  box-shadow: var(--shadow-lg);
+.kitchen-day-finish-dialog {
+  max-width: 42rem;
+  max-height: 80vh;
+  overflow: auto;
+}
+
+.kitchen-day-finish-dialog .kitchen-day-evidence {
+  text-align: left;
+  margin-bottom: var(--spacing-md);
 }
 
 .chef-zero-dialog__title {

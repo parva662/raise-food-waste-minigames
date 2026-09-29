@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { formatDurationFromMinutes, formatGrams, formatWastePercent } from '@/products/kitchen-skills-challenge/format';
+import { goToKitchenDaySection } from '@/app/routes';
 import { getGameBusInputCollections } from '@/platform/gamebus/bridge';
 import { extractGroupActivities, getRawKitchenGroupActivitiesInput } from '@/platform/gamebus/groupActivities';
 import { normalizeIngredientId } from '@/shared/identifiers/ingredientId';
@@ -129,9 +130,7 @@ export function KitchenSkillsTrimView() {
       return;
     }
     setSubmitting(false);
-    if (saved.mode === 'local') {
-      setStep('result');
-    }
+    goToKitchenDaySection('reuse');
   }
 
   const resultPercent =

@@ -46,6 +46,7 @@ describe('Kitchen Day Trim mapper contract', () => {
 
   it('uses the real preparation interval for ACTIVITY start and end', () => {
     const message = buildKitchenSkillsTrimSmartActivityMessage(kitchenSkillsTaskFixture, entry);
+    expect(message.type).toBe('SILENT_ACTIVITY');
     expect(message.data.start).toBe(entry.preparationStartedAt);
     expect(message.data.end).toBe(entry.preparationEndedAt);
     expect(message.data.template).toBe('trimSmart');

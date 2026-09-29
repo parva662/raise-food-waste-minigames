@@ -123,7 +123,7 @@ describe('Kitchen Day split live integration gates', () => {
     expect(result.ok).toBe(true);
     if (!result.ok) return;
     expect(result.status).toBe('posted_awaiting_persist');
-    expect(result.message.type).toBe('ACTIVITY');
+    expect(result.message.type).toBe('SILENT_ACTIVITY');
     expect(result.message.data.template).toBe('trimSmart');
     expect(postedPropertyTemplates(result.message)).toEqual(orderedKitchenSkillsTrimPropertyRefs());
     expect(postedPropertyTemplates(result.message)).not.toContain('ingredientCategory');
@@ -139,6 +139,7 @@ describe('Kitchen Day split live integration gates', () => {
     const result = tryPostKitchenSkillsRescue(rescueEntry);
     expect(result.ok).toBe(true);
     if (!result.ok) return;
+    expect(result.message.type).toBe('SILENT_ACTIVITY');
     expect(result.message.data.template).toBe('rescueAndReuse');
     expect(postedPropertyTemplates(result.message)).toEqual(orderedRescueAndReusePropertyRefs());
     expect(result.message.data.properties.map((property) => property.obj)).toEqual(
@@ -152,6 +153,7 @@ describe('Kitchen Day split live integration gates', () => {
     const result = tryPostKitchenSkillsPortion(portionEntry);
     expect(result.ok).toBe(true);
     if (!result.ok) return;
+    expect(result.message.type).toBe('SILENT_ACTIVITY');
     expect(result.message.data.template).toBe('portionPrecision');
     expect(postedPropertyTemplates(result.message)).toEqual(orderedPortionPrecisionPropertyRefs());
     expect(result.message.data.properties.map((property) => property.obj)).toEqual(

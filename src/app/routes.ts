@@ -172,6 +172,13 @@ export function kitchenDayHashFor(section: KitchenSkillsHashSection): string {
   return `${KITCHEN_DAY_HASH_ROUTE}/${section}`;
 }
 
+export function goToKitchenDaySection(section: KitchenSkillsHashSection): void {
+  const hash = kitchenDayHashFor(section);
+  if (window.location.hash === hash) return;
+  window.history.pushState({}, '', hash);
+  window.dispatchEvent(new HashChangeEvent('hashchange'));
+}
+
 export function kitchenDayTutorHashFor(sessionId?: string): string {
   if (!sessionId) return KITCHEN_DAY_TUTOR_HASH_ROUTE;
   return `${KITCHEN_DAY_TUTOR_HASH_ROUTE}?sessionId=${encodeURIComponent(sessionId)}`;

@@ -6,6 +6,7 @@ import { KitchenSkillsReuseView } from '@/products/kitchen-skills-challenge/surf
 import { parseKitchenDaySection } from '@/app/routes';
 import { SessionReviewView } from '@/products/kitchen-skills-challenge/surfaces/challenge/SessionReviewView';
 import { KitchenSkillsTrimView } from '@/products/kitchen-skills-challenge/surfaces/challenge/TrimView';
+import { KitchenSkillsFinishSummary } from '@/products/kitchen-skills-challenge/surfaces/challenge/KitchenSkillsFinishSummary';
 import { formatSessionDate } from '@/products/kitchen-skills-challenge/format';
 
 function KitchenSkillsInitializing() {
@@ -22,7 +23,7 @@ function KitchenSkillsInitializing() {
 }
 
 function KitchenSkillsBody() {
-  const { session } = useKitchenSkillsSession();
+  const { session, showFinishSummary } = useKitchenSkillsSession();
   const [section, setSection] = useState(() => parseKitchenDaySection());
 
   useEffect(() => {
@@ -54,6 +55,7 @@ function KitchenSkillsBody() {
           Session review
         </a>
       ) : null}
+      {showFinishSummary ? <KitchenSkillsFinishSummary /> : null}
     </div>
   );
 }

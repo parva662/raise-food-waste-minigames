@@ -9,17 +9,30 @@ export type ActivityPropertyPayload = {
   visibility?: 'public' | 'private' | 'hidden';
 };
 
+export type ActivityMessageData = {
+  template: string;
+  provider?: string | null;
+  start: string;
+  end: string;
+  properties: ActivityPropertyPayload[];
+  actors?: string | string[];
+  onlyPersistIfContributing?: boolean;
+};
+
 export type ActivityMessage = {
   type: 'ACTIVITY';
-  data: {
-    template: string;
-    provider?: string | null;
-    start: string;
-    end: string;
-    properties: ActivityPropertyPayload[];
-    actors?: string | string[];
-    onlyPersistIfContributing?: boolean;
-  };
+  data: ActivityMessageData;
+};
+
+export type SilentActivityMessage = {
+  type: 'SILENT_ACTIVITY';
+  data: ActivityMessageData;
+};
+
+export type GameBusOutboundActivityMessage = ActivityMessage | SilentActivityMessage;
+
+export type ExitMessage = {
+  type: 'EXIT';
 };
 
 export type TaskLinkedProperty = {
@@ -87,3 +100,8 @@ export type InputCollectionsMessage = {
 };
 
 export type ParentToChildMessage = TaskMessage | InputCollectionsMessage;
+
+export type ChildToParentMessage =
+  | IframeReadyMessage
+  | GameBusOutboundActivityMessage
+  | ExitMessage;

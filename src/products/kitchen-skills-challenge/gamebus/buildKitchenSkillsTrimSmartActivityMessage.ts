@@ -1,6 +1,6 @@
 import type { KitchenSkillsTrimEntry } from '@/products/kitchen-skills-challenge/domain/types';
 import { selectKitchenSkillsActivityTemplate } from '@/products/kitchen-skills-challenge/gamebus/taskTemplates';
-import type { ActivityMessage, TaskData } from '@/platform/gamebus/types';
+import type { SilentActivityMessage, TaskData } from '@/platform/gamebus/types';
 import {
   mapKitchenSkillsTrimSmart,
   orderedKitchenSkillsTrimPropertyRefs,
@@ -10,11 +10,11 @@ import {
 export function buildKitchenSkillsTrimSmartActivityMessage(
   task: TaskData,
   entry: KitchenSkillsTrimEntry,
-): ActivityMessage {
+): SilentActivityMessage {
   const template = selectKitchenSkillsActivityTemplate(task, 'trimSmart');
   const values = mapKitchenSkillsTrimSmart(entry);
   return {
-    type: 'ACTIVITY',
+    type: 'SILENT_ACTIVITY',
     data: {
       template,
       start: entry.preparationStartedAt,

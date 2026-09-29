@@ -158,7 +158,7 @@ describe('Session review presentation', () => {
       </KitchenSkillsSessionProvider>,
     );
     ingestInputCollectionsForTests({
-      kitchenGroupInput: {
+      kitchenGroupInputSelf: {
         activities: [
           {
             id: 'act-trim-1',
@@ -199,6 +199,10 @@ describe('Session review presentation', () => {
               },
             ],
           },
+        ],
+      },
+      kitchenGroupInput: {
+        activities: [
           {
             id: 'act-trim-other',
             actor: { id: 'user-2' },

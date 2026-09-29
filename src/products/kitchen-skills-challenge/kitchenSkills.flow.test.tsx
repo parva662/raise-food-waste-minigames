@@ -1,7 +1,7 @@
 /** @vitest-environment jsdom */
 import { cleanup, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { AppRouter } from '@/app/AppRouter';
 import { getAppMode } from '@/app/routes';
 
@@ -34,6 +34,7 @@ describe('Kitchen Day connected flow', () => {
   afterEach(() => {
     cleanup();
     setHash('');
+    vi.restoreAllMocks();
   });
 
   it('starts Trim on Ingredient with no category UI', () => {
@@ -58,22 +59,15 @@ describe('Kitchen Day connected flow', () => {
   it('records Trim, reuse, and Portion on the same session', async () => {
     const user = userEvent.setup();
     render(<AppRouter />);
-    const sessionLabel = screen.getByTestId('kitchen-day-header-session').textContent;
     await recordCarrot(user);
-    expect(screen.getByTestId('kitchen-day-waste-percent')).toHaveTextContent('9.0%');
-    expect(screen.getByTestId('kitchen-day-reference-comparison')).toHaveTextContent(
-      /percentage points/,
-    );
-    expect(screen.queryByText(/idle|percentile|LIVE E2E/i)).not.toBeInTheDocument();
-
-    await user.click(screen.getByTestId('kitchen-day-nav-reuse'));
     expect(screen.getByTestId('kitchen-day-rescue-actual-waste')).toHaveTextContent('450 g');
     await user.type(screen.getByTestId('kitchen-day-reusable-waste'), '200');
     await user.type(screen.getByTestId('kitchen-day-reuse-destination'), 'Carrot soup tomorrow');
     expect(screen.getByTestId('kitchen-day-discarded-waste')).toHaveTextContent('250 g');
+    const postMessage = vi.spyOn(window.parent, 'postMessage').mockImplementation(() => undefined);
     await user.click(screen.getByTestId('kitchen-day-save-rescue'));
 
-    await user.click(screen.getByTestId('kitchen-day-nav-portion'));
+    expect(screen.getByTestId('kitchen-day-portion')).toBeInTheDocument();
     await user.selectOptions(screen.getByTestId('kitchen-day-recipe-select'), '1');
     await user.type(screen.getByTestId('kitchen-day-actual-ankka-rintafilee'), '11250');
     await user.type(screen.getByTestId('kitchen-day-actual-rosmariini-tuore-100g'), '450');
@@ -82,20 +76,20 @@ describe('Kitchen Day connected flow', () => {
     await user.type(screen.getByTestId('kitchen-day-final-recipe-weight'), '13500');
     await user.click(screen.getByTestId('kitchen-day-submit-portion'));
 
-    await user.click(screen.getByTestId('kitchen-day-nav-review'));
-    expect(screen.getByTestId('kitchen-day-trim-carrot')).toBeInTheDocument();
-    expect(screen.getByTestId('kitchen-day-rescue-carrot')).toBeInTheDocument();
-    expect(screen.getByTestId('kitchen-day-portion-1')).toBeInTheDocument();
-    expect(screen.getByTestId('kitchen-day-portion-accuracy-1')).toHaveTextContent('100.0%');
-    expect(screen.getByTestId('kitchen-day-portion-final-deviation-1')).toHaveTextContent('0.0%');
-    expect(screen.getByTestId('kitchen-day-header-session')).toHaveTextContent(sessionLabel ?? '');
+    expect(screen.getByTestId('kitchen-day-finish-summary')).toBeInTheDocument();
+    expect(screen.getByTestId('kitchen-day-finish-trim-carrot')).toBeInTheDocument();
+    expect(screen.getByTestId('kitchen-day-finish-rescue-carrot')).toBeInTheDocument();
+    expect(postMessage).not.toHaveBeenCalled();
+    await user.click(screen.getByTestId('kitchen-day-finish-challenge'));
+    expect(postMessage).toHaveBeenCalledTimes(1);
+    expect(postMessage).toHaveBeenCalledWith({ type: 'EXIT' }, '*');
   });
 
   it('blocks a second carrot and allows potato', async () => {
     const user = userEvent.setup();
     render(<AppRouter />);
     await recordCarrot(user);
-    await user.click(screen.getByTestId('kitchen-day-add-another-ingredient'));
+    await user.click(screen.getByTestId('kitchen-day-nav-trim'));
     await user.type(screen.getByTestId('kitchen-day-ingredient-name'), 'Carrot');
     expect(screen.getByTestId('kitchen-day-duplicate-ingredient')).toBeInTheDocument();
     await user.clear(screen.getByTestId('kitchen-day-ingredient-name'));

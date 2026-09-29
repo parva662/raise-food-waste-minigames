@@ -8,6 +8,7 @@ import {
   resetGameBusBridgeForTests,
 } from '@/platform/gamebus/bridge';
 import { kitchenSkillsTaskFixture } from '@/products/kitchen-skills-challenge/gamebus/kitchenSkillsTaskFixtures';
+import { resetKitchenSkillsPostStateForTests } from '@/products/kitchen-skills-challenge/gamebus/postActivity';
 import { KitchenSkillsChallengeApp } from '@/products/kitchen-skills-challenge/surfaces/challenge/KitchenSkillsChallengeApp';
 import { KitchenSkillsSessionProvider, useKitchenSkillsSession } from '@/products/kitchen-skills-challenge/domain/session/KitchenSkillsSessionContext';
 import { ensureKitchenSkillsLockedSession } from '@/products/kitchen-skills-challenge/domain/session/lock';
@@ -31,7 +32,7 @@ function Probe() {
 }
 
 const persistedCollections = {
-  kitchenGroupInput: {
+  kitchenGroupInputSelf: {
     activities: [
       {
         id: 'act-trim-1',
@@ -98,6 +99,7 @@ describe('Kitchen Day session initialization and hydration', () => {
   afterEach(() => {
     cleanup();
     resetGameBusBridgeForTests();
+    resetKitchenSkillsPostStateForTests();
     vi.restoreAllMocks();
     setHash('');
   });
@@ -162,7 +164,7 @@ describe('Kitchen Day session initialization and hydration', () => {
     expect(reused.sessionId).toBe(locked.sessionId);
   });
 
-  it('hydrates Trim, Rescue, and Portion after reload from group activities', async () => {
+  it('hydrates Trim, Rescue, and Portion after reload from kitchenGroupInputSelf', async () => {
     const session = {
       sessionId: 'kitchen-day:kitchen-day-task-1:user-1:2026-09-23',
       sessionDate: '2026-09-23',
@@ -231,7 +233,7 @@ describe('Kitchen Day session initialization and hydration', () => {
     expect(document.body.dataset.duplicate).toBe('duplicate_ingredient');
   });
 
-  it('does not hydrate another participant\'s records into the authenticated student session', async () => {
+  it('does not hydrate kitchenGroupInput records into the student session', async () => {
     const session = {
       sessionId: 'kitchen-day:kitchen-day-task-1:user-1:2026-09-23',
       sessionDate: '2026-09-23',
@@ -244,9 +246,9 @@ describe('Kitchen Day session initialization and hydration', () => {
     ingestInputCollectionsForTests({
       kitchenGroupInput: {
         activities: [
-          persistedCollections.kitchenGroupInput.activities[0],
+          persistedCollections.kitchenGroupInputSelf.activities[0],
           {
-            ...persistedCollections.kitchenGroupInput.activities[0],
+            ...persistedCollections.kitchenGroupInputSelf.activities[0],
             id: 'act-other',
             actor: { id: 'user-2', name: 'Other' },
             properties: [
@@ -258,7 +260,6 @@ describe('Kitchen Day session initialization and hydration', () => {
               { template: { slug: 'submittedAt' }, value: { value: '2026-09-23T10:03:00.000Z' } },
               { template: { slug: 'ingredientId' }, value: { value: 'onion' } },
               { template: { slug: 'ingredientName' }, value: { value: 'Onion' } },
-              { template: { slug: 'ingredientCategory' }, value: { value: 'root' } },
               { template: { slug: 'ingredientWeightGrams' }, value: { value: 800 } },
               { template: { slug: 'trimTechniques' }, value: { value: 'dice' } },
               { template: { slug: 'estimatedWasteGrams' }, value: { value: 80 } },
@@ -271,9 +272,138 @@ describe('Kitchen Day session initialization and hydration', () => {
       inputCollectionPari: persistedCollections.inputCollectionPari,
     });
     await waitFor(() => {
+      expect(screen.getByTestId('kd-trim-count')).toHaveTextContent('0');
+    });
+  });
+
+  it('hydrates self activities without requiring activity.actor.id to match /api/me', async () => {
+    const session = {
+      sessionId: 'kitchen-day:kitchen-day-task-1:user-1:2026-09-23',
+      sessionDate: '2026-09-23',
+    };
+    render(
+      <KitchenSkillsSessionProvider initialSession={session}>
+        <Probe />
+      </KitchenSkillsSessionProvider>,
+    );
+    ingestInputCollectionsForTests({
+      kitchenGroupInputSelf: {
+        activities: [
+          {
+            ...persistedCollections.kitchenGroupInputSelf.activities[0],
+            actor: { id: 'other-gamebus-actor', name: 'staff1 Staff' },
+          },
+          persistedCollections.kitchenGroupInputSelf.activities[1],
+        ],
+      },
+      inputCollectionPari: persistedCollections.inputCollectionPari,
+    });
+    await waitFor(() => {
       expect(screen.getByTestId('kd-trim-count')).toHaveTextContent('1');
     });
     expect(screen.getByTestId('kd-ids')).toHaveTextContent('carrot');
-    expect(screen.getByTestId('kd-ids')).not.toHaveTextContent('onion');
+  });
+
+  it('retains a successful silent Trim locally immediately', async () => {
+    vi.spyOn(detectEmbed, 'isGameBusEmbed').mockReturnValue(true);
+    vi.spyOn(window.parent, 'postMessage').mockImplementation(() => undefined);
+    ingestTaskForTests(kitchenSkillsTaskFixture);
+    const session = {
+      sessionId: 'kitchen-day:kitchen-day-task-1:user-1:2026-09-23',
+      sessionDate: '2026-09-23',
+    };
+    function CommitProbe() {
+      const { commitTrimEntry, trimEntries, findTrimByIngredientId } = useKitchenSkillsSession();
+      return (
+        <button
+          type="button"
+          data-testid="kd-commit-trim"
+          onClick={() => {
+            commitTrimEntry({
+              sessionId: session.sessionId,
+              sessionDate: session.sessionDate,
+              submittedAt: '2026-09-23T12:00:00.000Z',
+              ingredientId: 'carrot',
+              ingredientName: 'Carrot',
+              ingredientWeightGrams: 5000,
+              trimTechniques: 'trimming',
+              estimatedWasteGrams: 600,
+              actualWasteGrams: 450,
+              durationMinutes: 3,
+              preparationStartedAt: '2026-09-23T11:57:00.000Z',
+              preparationEndedAt: '2026-09-23T12:00:00.000Z',
+              source: 'local',
+            });
+            document.body.dataset.trimCount = String(trimEntries.length);
+            document.body.dataset.hasCarrot = String(Boolean(findTrimByIngredientId('carrot')));
+          }}
+        >
+          commit
+        </button>
+      );
+    }
+    render(
+      <KitchenSkillsSessionProvider initialSession={session}>
+        <Probe />
+        <CommitProbe />
+      </KitchenSkillsSessionProvider>,
+    );
+    screen.getByTestId('kd-commit-trim').click();
+    await waitFor(() => {
+      expect(screen.getByTestId('kd-trim-count')).toHaveTextContent('1');
+    });
+    expect(screen.getByTestId('kd-ids')).toHaveTextContent('carrot');
+  });
+
+  it('deduplicates local Trim once persisted self activities arrive', async () => {
+    vi.spyOn(detectEmbed, 'isGameBusEmbed').mockReturnValue(true);
+    vi.spyOn(window.parent, 'postMessage').mockImplementation(() => undefined);
+    ingestTaskForTests(kitchenSkillsTaskFixture);
+    const session = {
+      sessionId: 'kitchen-day:kitchen-day-task-1:user-1:2026-09-23',
+      sessionDate: '2026-09-23',
+    };
+    function CommitProbe() {
+      const { commitTrimEntry } = useKitchenSkillsSession();
+      return (
+        <button
+          type="button"
+          data-testid="kd-commit-trim"
+          onClick={() => {
+            commitTrimEntry({
+              sessionId: session.sessionId,
+              sessionDate: session.sessionDate,
+              submittedAt: '2026-09-23T12:00:00.000Z',
+              ingredientId: 'carrot',
+              ingredientName: 'Carrot',
+              ingredientWeightGrams: 5000,
+              trimTechniques: 'trimming',
+              estimatedWasteGrams: 600,
+              actualWasteGrams: 450,
+              durationMinutes: 3,
+              preparationStartedAt: '2026-09-23T11:57:00.000Z',
+              preparationEndedAt: '2026-09-23T12:00:00.000Z',
+              source: 'local',
+            });
+          }}
+        >
+          commit
+        </button>
+      );
+    }
+    render(
+      <KitchenSkillsSessionProvider initialSession={session}>
+        <Probe />
+        <CommitProbe />
+      </KitchenSkillsSessionProvider>,
+    );
+    screen.getByTestId('kd-commit-trim').click();
+    await waitFor(() => {
+      expect(screen.getByTestId('kd-trim-count')).toHaveTextContent('1');
+    });
+    ingestInputCollectionsForTests(persistedCollections);
+    await waitFor(() => {
+      expect(screen.getByTestId('kd-trim-count')).toHaveTextContent('1');
+    });
   });
 });

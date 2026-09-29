@@ -15,7 +15,7 @@ import {
   subscribeGameBusInputCollections,
   subscribeGameBusTask,
 } from '@/platform/gamebus/bridge';
-import { extractGroupActivities, getRawKitchenGroupActivitiesInput } from '@/platform/gamebus/groupActivities';
+import { extractGroupActivities, getRawKitchenGroupActivitiesInput, getRawKitchenSelfActivitiesInput } from '@/platform/gamebus/groupActivities';
 import { getAuthenticatedGameBusUser } from '@/platform/gamebus/inputCollections';
 import { normalizeIngredientId } from '@/shared/identifiers/ingredientId';
 import { isIngredientAlreadyRecorded } from '@/products/kitchen-skills-challenge/domain/session/ingredientUniqueness';
@@ -33,7 +33,6 @@ import {
   tryPostKitchenSkillsReview,
   tryPostKitchenSkillsTrim,
 } from '@/products/kitchen-skills-challenge/gamebus/postActivity';
-import { logKitchenSkillsIdentityDebug } from '@/products/kitchen-skills-challenge/gamebus/identityDebugLog';
 import type {
   KitchenSkillsLockedSession,
   KitchenSkillsPortionEntry,
@@ -63,6 +62,7 @@ interface KitchenSkillsSessionValue {
   findTrimByIngredientId: (ingredientId: string) => KitchenSkillsTrimEntry | undefined;
   findRescueByIngredientId: (ingredientId: string) => KitchenSkillsRescueEntry | undefined;
   findReviewBySessionId: (sessionId: string) => KitchenSkillsReviewEntry | undefined;
+  showFinishSummary: boolean;
 }
 
 const KitchenSkillsSessionContext = createContext<KitchenSkillsSessionValue | null>(null);
@@ -75,14 +75,14 @@ function readPersistedForSession(sessionId: string): {
   groupSessions: KitchenSkillsTrainerSession[];
 } {
   const payload = getGameBusInputCollections();
-  const actorId = getAuthenticatedGameBusUser(payload)?.id ?? null;
-  const activities = extractGroupActivities(getRawKitchenGroupActivitiesInput(payload));
+  const groupActivities = extractGroupActivities(getRawKitchenGroupActivitiesInput(payload));
+  const selfActivities = extractGroupActivities(getRawKitchenSelfActivitiesInput(payload));
   return {
-    ...buildKitchenSkillsReadModel(activities, { sessionId, actorId }),
-    reviews: activities
+    ...buildKitchenSkillsReadModel(selfActivities, { sessionId }),
+    reviews: groupActivities
       .map((activity) => parsePersistedReviewEntry(activity))
       .filter((entry): entry is KitchenSkillsReviewEntry => entry !== null),
-    groupSessions: buildKitchenSkillsTrainerSessions(activities),
+    groupSessions: buildKitchenSkillsTrainerSessions(groupActivities),
   };
 }
 
@@ -121,6 +121,7 @@ export function KitchenSkillsSessionProvider({
   const [localRescue, setLocalRescue] = useState<KitchenSkillsRescueEntry[]>([]);
   const [localPortion, setLocalPortion] = useState<KitchenSkillsPortionEntry[]>([]);
   const [localReviews, setLocalReviews] = useState<KitchenSkillsReviewEntry[]>([]);
+  const [showFinishSummary, setShowFinishSummary] = useState(false);
   const [persisted, setPersisted] = useState(() =>
     session ? readPersistedForSession(session.sessionId) : {
       trimEntries: [] as KitchenSkillsTrimEntry[],
@@ -135,16 +136,7 @@ export function KitchenSkillsSessionProvider({
     if (!embedded) return;
     const stopHandshake = startGameBusHandshake();
     const lockOnce = () => {
-      setSession((current) => {
-        const next = current ?? tryLockEmbeddedSession();
-        queueMicrotask(() =>
-          logKitchenSkillsIdentityDebug({
-            sessionDate: next?.sessionDate ?? null,
-            lockedSessionId: next?.sessionId ?? null,
-          }),
-        );
-        return next;
-      });
+      setSession((current) => current ?? tryLockEmbeddedSession());
     };
     const unsubscribeTask = subscribeGameBusTask(() => lockOnce());
     const unsubscribeInputs = subscribeGameBusInputCollections(lockOnce);
@@ -160,10 +152,6 @@ export function KitchenSkillsSessionProvider({
     if (!session) return;
     const sync = () => {
       setPersisted(readPersistedForSession(session.sessionId));
-      logKitchenSkillsIdentityDebug({
-        sessionDate: session.sessionDate,
-        lockedSessionId: session.sessionId,
-      });
     };
     sync();
     return subscribeGameBusInputCollections(sync);
@@ -217,6 +205,11 @@ export function KitchenSkillsSessionProvider({
       if (!posted.ok) {
         return { ok: false, reason: posted.reason, keepDraft: true };
       }
+      setLocalTrim((current) =>
+        current.some((item) => item.ingredientId === entry.ingredientId)
+          ? current
+          : [...current, { ...entry, source: 'local' }],
+      );
       return { ok: true, mode: 'posted_awaiting_persist' };
     }
     setLocalTrim((current) =>
@@ -239,6 +232,7 @@ export function KitchenSkillsSessionProvider({
       if (!posted.ok) {
         return { ok: false, reason: posted.reason, keepDraft: true };
       }
+      setLocalRescue((current) => [...current, { ...entry, source: 'local' }]);
       return { ok: true, mode: 'posted_awaiting_persist' };
     }
     setLocalRescue((current) => [...current, { ...entry, source: 'local' }]);
@@ -251,9 +245,12 @@ export function KitchenSkillsSessionProvider({
       if (!posted.ok) {
         return { ok: false, reason: posted.reason, keepDraft: true };
       }
+      setLocalPortion((current) => [...current, { ...entry, source: 'local' }]);
+      setShowFinishSummary(true);
       return { ok: true, mode: 'posted_awaiting_persist' };
     }
     setLocalPortion((current) => [...current, { ...entry, source: 'local' }]);
+    setShowFinishSummary(true);
     return { ok: true, mode: 'local' };
   }, []);
 
@@ -306,6 +303,7 @@ export function KitchenSkillsSessionProvider({
       findTrimByIngredientId,
       findRescueByIngredientId,
       findReviewBySessionId,
+      showFinishSummary,
     }),
     [
       session,
@@ -322,6 +320,7 @@ export function KitchenSkillsSessionProvider({
       findTrimByIngredientId,
       findRescueByIngredientId,
       findReviewBySessionId,
+      showFinishSummary,
     ],
   );
 

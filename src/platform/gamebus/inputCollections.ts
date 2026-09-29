@@ -3,8 +3,10 @@ import { parseGameBusAuthenticatedUser, type GameBusAuthenticatedUser } from '@/
 
 export {
   KITCHEN_GROUP_INPUT_COLLECTION_KEY,
+  KITCHEN_GROUP_SELF_INPUT_COLLECTION_KEY,
   KITCHEN_GROUP_ACTIVITIES_REQUEST_KEY,
   getRawKitchenGroupActivitiesInput,
+  getRawKitchenSelfActivitiesInput,
 } from '@/platform/gamebus/groupActivities';
 
 /** Canonical GameBus Input Collection key (admin configuration). */

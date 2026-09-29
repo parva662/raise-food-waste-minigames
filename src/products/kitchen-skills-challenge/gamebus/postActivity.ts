@@ -3,7 +3,7 @@ import { buildPortionPrecisionActivityMessage } from '@/products/kitchen-skills-
 import { buildRescueAndReuseActivityMessage } from '@/products/kitchen-skills-challenge/gamebus/buildRescueAndReuseActivityMessage';
 import { buildWastePracticeReviewActivityMessage } from '@/products/kitchen-skills-challenge/gamebus/buildWastePracticeReviewActivityMessage';
 import { getGameBusTask } from '@/platform/gamebus/bridge';
-import type { ActivityMessage, TaskData } from '@/platform/gamebus/types';
+import type { GameBusOutboundActivityMessage, TaskData } from '@/platform/gamebus/types';
 import {
   KITCHEN_SKILLS_STUDENT_LIVE_BLOCK_REASON,
   KITCHEN_SKILLS_TRAINER_LIVE_BLOCK_REASON,
@@ -18,7 +18,7 @@ import type {
 } from '@/products/kitchen-skills-challenge/domain/types';
 
 export type KitchenSkillsPostResult =
-  | { ok: true; status: 'posted_awaiting_persist'; message: ActivityMessage }
+  | { ok: true; status: 'posted_awaiting_persist'; message: GameBusOutboundActivityMessage }
   | { ok: false; reason: string };
 
 const attemptedKeys = new Set<string>();
@@ -31,7 +31,7 @@ export function resetKitchenSkillsPostStateForTests(): void {
 
 export function tryPostKitchenSkillsActivity(
   task: TaskData | null,
-  messageBuilder: (task: TaskData) => ActivityMessage,
+  messageBuilder: (task: TaskData) => GameBusOutboundActivityMessage,
   attemptKey: string,
   canPost: boolean,
   blockReason: string,

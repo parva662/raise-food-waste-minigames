@@ -1,6 +1,6 @@
 import type { KitchenSkillsPortionEntry } from '@/products/kitchen-skills-challenge/domain/types';
 import { selectKitchenSkillsActivityTemplate } from '@/products/kitchen-skills-challenge/gamebus/taskTemplates';
-import type { ActivityMessage, TaskData } from '@/platform/gamebus/types';
+import type { SilentActivityMessage, TaskData } from '@/platform/gamebus/types';
 import {
   mapPortionPrecision,
   orderedPortionPrecisionPropertyRefs,
@@ -10,12 +10,12 @@ import {
 export function buildPortionPrecisionActivityMessage(
   task: TaskData,
   entry: KitchenSkillsPortionEntry,
-): ActivityMessage {
+): SilentActivityMessage {
   const template = selectKitchenSkillsActivityTemplate(task, 'portionPrecision');
   const values = mapPortionPrecision(entry);
   const start = new Date(entry.submittedAt);
   return {
-    type: 'ACTIVITY',
+    type: 'SILENT_ACTIVITY',
     data: {
       template,
       start: start.toISOString(),

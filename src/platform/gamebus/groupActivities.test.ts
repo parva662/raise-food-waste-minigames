@@ -4,6 +4,7 @@ import {
   filterActivitiesByTemplateReference,
   getActivityTemplateReference,
   getRawKitchenGroupActivitiesInput,
+  getRawKitchenSelfActivitiesInput,
   KITCHEN_GROUP_ACTIVITIES_REQUEST_KEY,
   KITCHEN_GROUP_INPUT_COLLECTION_KEY,
 } from '@/platform/gamebus/groupActivities';
@@ -17,6 +18,23 @@ describe('groupActivities input adapter', () => {
     };
     expect(getRawKitchenGroupActivitiesInput(payload)).toEqual([
       { id: 'a-1', template: { slug: 'chefForecast' } },
+    ]);
+  });
+
+  it('reads kitchenGroupInputSelf.activities from INPUT_COLLECTIONS', () => {
+    const payload = {
+      kitchenGroupInputSelf: {
+        activities: [{ id: 'me-1', template: { slug: 'trimSmart' } }],
+      },
+      kitchenGroupInput: {
+        activities: [{ id: 'group-1', template: { slug: 'trimSmart' } }],
+      },
+    };
+    expect(getRawKitchenSelfActivitiesInput(payload)).toEqual([
+      { id: 'me-1', template: { slug: 'trimSmart' } },
+    ]);
+    expect(getRawKitchenGroupActivitiesInput(payload)).toEqual([
+      { id: 'group-1', template: { slug: 'trimSmart' } },
     ]);
   });
 

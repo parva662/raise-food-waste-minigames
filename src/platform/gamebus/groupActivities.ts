@@ -4,6 +4,9 @@ import type { GameBusInputCollectionsPayload } from '@/platform/gamebus/types';
 /** Canonical GameBus Input Collection key for kitchen group activities. */
 export const KITCHEN_GROUP_INPUT_COLLECTION_KEY = 'kitchenGroupInput';
 
+/** Canonical GameBus Input Collection key for the authenticated student's own activities. */
+export const KITCHEN_GROUP_SELF_INPUT_COLLECTION_KEY = 'kitchenGroupInputSelf';
+
 /** Input Request key within `kitchenGroupInput` (`GET /groups/activities`). */
 export const KITCHEN_GROUP_ACTIVITIES_REQUEST_KEY = 'activities';
 
@@ -27,6 +30,23 @@ export function getRawKitchenGroupActivitiesInput(
   }
 
   return payload[KITCHEN_GROUP_ACTIVITIES_REQUEST_KEY];
+}
+
+/**
+ * Raw `kitchenGroupInputSelf.activities` value (`GET /api/me/activities`) without parsing.
+ */
+export function getRawKitchenSelfActivitiesInput(
+  payload: GameBusInputCollectionsPayload | null,
+): unknown {
+  if (!payload) return undefined;
+
+  const collection = payload[KITCHEN_GROUP_SELF_INPUT_COLLECTION_KEY];
+  if (isRecord(collection)) {
+    const nested = collection[KITCHEN_GROUP_ACTIVITIES_REQUEST_KEY];
+    if (nested !== undefined) return nested;
+  }
+
+  return undefined;
 }
 
 /** Extracts activity objects from array or paginated `{ docs: [...] }` envelopes. */

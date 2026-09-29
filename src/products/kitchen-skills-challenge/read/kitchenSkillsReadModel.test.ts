@@ -173,4 +173,29 @@ describe('Kitchen Day read model', () => {
     expect(model.rescueEntries).toHaveLength(1);
     expect(model.rescueEntries[0]?.ingredientId).toBe(model.trimEntries[0]?.ingredientId);
   });
+
+  it('hydrates persisted Trim for Rescue without actor equality filtering', () => {
+    const model = buildKitchenSkillsReadModel(
+      [
+        trimActivity({ actor: { id: 'other-actor', name: 'Other' } }),
+        {
+          id: 'act-rescue-1',
+          actor: { id: 'other-actor' },
+          template: { slug: 'rescueAndReuse' },
+          properties: [
+            { template: { slug: 'sessionId' }, value: { value: sessionId } },
+            { template: { slug: 'sessionDate' }, value: { value: '2026-09-23' } },
+            { template: { slug: 'ingredientId' }, value: { value: 'carrot' } },
+            { template: { slug: 'reusableWasteGrams' }, value: { value: 200 } },
+            { template: { slug: 'reuseDestination' }, value: { value: 'Soup' } },
+            { template: { slug: 'submittedAt' }, value: { value: '2026-09-23T10:10:00.000Z' } },
+          ],
+        },
+      ],
+      { sessionId },
+    );
+    expect(model.trimEntries).toHaveLength(1);
+    expect(model.rescueEntries).toHaveLength(1);
+    expect(model.rescueEntries[0]?.ingredientId).toBe(model.trimEntries[0]?.ingredientId);
+  });
 });

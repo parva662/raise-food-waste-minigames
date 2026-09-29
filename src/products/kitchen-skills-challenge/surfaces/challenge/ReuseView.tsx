@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { goToKitchenDaySection } from '@/app/routes';
 import { discardedWasteGrams } from '@/products/kitchen-skills-challenge/domain/trim/derived';
 import { formatGrams } from '@/products/kitchen-skills-challenge/format';
 import { useReadyKitchenSkillsSession } from '@/products/kitchen-skills-challenge/domain/session/KitchenSkillsSessionContext';
@@ -38,9 +39,7 @@ export function KitchenSkillsReuseView() {
     };
     const result = commitRescueEntry({ ...entry, source: 'local' });
     if (!result.ok) return;
-    if (result.mode === 'local') {
-      setSaved(true);
-    }
+    goToKitchenDaySection('portion');
   }
 
   if (completedTrim.length === 0) {

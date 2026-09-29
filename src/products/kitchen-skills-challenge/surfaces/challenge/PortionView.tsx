@@ -35,7 +35,6 @@ export function KitchenSkillsPortionView() {
     };
     const result = commitPortionEntry({ ...entry, source: 'local' });
     if (!result.ok) return;
-    if (result.mode !== 'local') return;
     setSavedName(recipe.recipeName);
     setRecipeId('');
     setActuals({});

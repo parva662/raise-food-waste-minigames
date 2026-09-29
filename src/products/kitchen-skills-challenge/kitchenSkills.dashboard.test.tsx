@@ -27,6 +27,52 @@ function trimProps(sessionId: string, ingredientId: string, name: string) {
 }
 
 const groupCollections = {
+  kitchenGroupInputSelf: {
+    activities: [
+      {
+        id: 'act-trim-1',
+        actor: { id: 'user-1', name: 'Student One' },
+        template: { slug: 'trimSmart' },
+        start: '2026-09-23T10:00:00.000Z',
+        end: '2026-09-23T10:03:00.000Z',
+        properties: trimProps(sessionOne, 'carrot', 'Carrot'),
+      },
+      {
+        id: 'act-rescue-1',
+        actor: { id: 'user-1', name: 'Student One' },
+        template: { slug: 'rescueAndReuse' },
+        properties: [
+          { template: { slug: 'sessionId' }, value: { value: sessionOne } },
+          { template: { slug: 'sessionDate' }, value: { value: '2026-09-23' } },
+          { template: { slug: 'ingredientId' }, value: { value: 'carrot' } },
+          { template: { slug: 'reusableWasteGrams' }, value: { value: 200 } },
+          { template: { slug: 'reuseDestination' }, value: { value: 'Soup' } },
+          { template: { slug: 'submittedAt' }, value: { value: '2026-09-23T10:10:00.000Z' } },
+        ],
+      },
+      {
+        id: 'act-portion-1',
+        actor: { id: 'user-1', name: 'Student One' },
+        template: { slug: 'portionPrecision' },
+        properties: [
+          { template: { slug: 'sessionId' }, value: { value: sessionOne } },
+          { template: { slug: 'sessionDate' }, value: { value: '2026-09-23' } },
+          { template: { slug: 'submittedAt' }, value: { value: '2026-09-23T11:00:00.000Z' } },
+          { template: { slug: 'recipeId' }, value: { value: 'mayonnaise' } },
+          { template: { slug: 'recipeName' }, value: { value: 'Mayonnaise' } },
+          { template: { slug: 'finalRecipeWeightGrams' }, value: { value: 1850 } },
+          {
+            template: { slug: 'recipeComposition' },
+            value: {
+              value: [
+                { ingredientId: 'yogurt', ingredientName: 'Yogurt', actualAmount: 1000, unit: 'g' },
+              ],
+            },
+          },
+        ],
+      },
+    ],
+  },
   kitchenGroupInput: {
     activities: [
       {
