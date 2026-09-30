@@ -21,7 +21,11 @@ Tutor `wastePracticeReview` posts **`SILENT_ACTIVITY`** with the same review pro
 
 Do **not** split Kitchen Day into three embeds. Embedded `sessionId` is one student + one Kitchen Day: `kitchen-day:<taskId>:<actorId>:<sessionDate>`. Do not persist actor id as a Kitchen Day activity property.
 
-`wastePracticeReview` stays on the tutor TASK. It is not required on the student Kitchen Day TASK. Review posts validate that template on the current TASK before building the silent activity. Trainer listing still uses `kitchenGroupInput.activities` (`GET /groups/activities`); students with no Kitchen Skills activity are out of scope until a later group-members collection.
+`wastePracticeReview` stays on the tutor TASK. It is not required on the student Kitchen Day TASK. Review posts validate that template on the current TASK before building the silent activity. Trainer listing uses dedicated `kitchenSkillsTrainerInput.activities`. GameBus request:
+
+`/api/groups/activities?where={"activity":{"template":{"$in":["trimSmart","rescueAndReuse","portionPrecision","wastePracticeReview"]}}}`
+
+Do not reuse `kitchenGroupInput` (that collection is `chefForecast` / `wasteMeasurement`). Student Progress uses `kitchenGroupInputSelf.activities` (`GET /api/me/activities`) and does not wait for tutor review.
 
 ## Evidence (inspected, not inferred)
 
@@ -32,7 +36,8 @@ Do **not** split Kitchen Day into three embeds. Embedded `sessionId` is one stud
 ## Client rules
 
 - Embedded Kitchen Day waits for a valid TASK **and** `inputCollectionPari.me`, then locks `sessionId` / `sessionDate` once. Later TASK or INPUT_COLLECTIONS refreshes cannot replace them.
-- Embedded student hydration uses `getRawKitchenSelfActivitiesInput` (no actor-id equality filter).
+- Embedded student hydration and Student Progress use `getRawKitchenSelfActivitiesInput` (no actor-id equality filter).
+- Embedded trainer listing and persisted tutor reviews use `getRawKitchenSkillsTrainerActivitiesInput`. Do not read `kitchenGroupInput` on Kitchen Skills trainer.
 - Builders call `selectKitchenSkillsActivityTemplate(task, slug)` and fail if any of the three templates is missing.
 - Review builders call `selectWastePracticeReviewTemplate(task)` and fail if `wastePracticeReview` is missing.
 - `KITCHEN_SKILLS_STUDENT_LIVE_INTEGRATION_READY` is `true` after manual verification of the student activity/property setup on foodtracker.

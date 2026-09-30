@@ -99,7 +99,8 @@ describe('Kitchen Day session-level chef review', () => {
     setHash(`#/kitchen-day-tutor?sessionId=${encodeURIComponent(sessionOne)}`);
     render(<AppRouter />);
     ingestInputCollectionsForTests({
-      kitchenGroupInput: { activities: baseActivities },
+      kitchenGroupInput: { activities: [{ id: 'chef-forecast', template: { slug: 'chefForecast' }, actor: { id: 'chef-1', name: 'Chef' }, properties: [] }] },
+      kitchenSkillsTrainerInput: { activities: baseActivities },
       inputCollectionPari: { me: { id: 'chef-1', firstName: 'Chef', lastName: 'One' } },
     });
     await waitFor(() => {
@@ -138,6 +139,16 @@ describe('Kitchen Day session-level chef review', () => {
     ingestInputCollectionsForTests({
       kitchenGroupInput: {
         activities: [
+          {
+            id: 'chef-forecast',
+            actor: { id: 'chef-1', name: 'Chef' },
+            template: { slug: 'chefForecast' },
+            properties: [],
+          },
+        ],
+      },
+      kitchenSkillsTrainerInput: {
+        activities: [
           ...baseActivities,
           {
             id: 'act-review-1',
@@ -164,18 +175,19 @@ describe('Kitchen Day session-level chef review', () => {
     expect(screen.queryByTestId('kitchen-day-review-submit')).not.toBeInTheDocument();
   });
 
-  it('lists trainer sessions from kitchenGroupInput.activities only', async () => {
+  it('lists trainer sessions from kitchenSkillsTrainerInput.activities only', async () => {
     setHash('#/kitchen-day-tutor');
     render(<AppRouter />);
     ingestInputCollectionsForTests({
       kitchenGroupInputSelf: { activities: [selfOnlyTrimActivity()] },
-      kitchenGroupInput: { activities: [...baseActivities, secondStudentTrimActivity()] },
+      kitchenGroupInput: { activities: [secondStudentTrimActivity()] },
+      kitchenSkillsTrainerInput: { activities: baseActivities },
       inputCollectionPari: { me: { id: 'chef-1', firstName: 'Chef', lastName: 'One' } },
     });
     await waitFor(() => {
       expect(screen.getByTestId(`kitchen-day-chef-session-${sessionOne}`)).toBeInTheDocument();
     });
-    expect(screen.getByTestId(`kitchen-day-chef-session-${sessionTwo}`)).toBeInTheDocument();
+    expect(screen.queryByTestId(`kitchen-day-chef-session-${sessionTwo}`)).not.toBeInTheDocument();
     expect(screen.queryByTestId(`kitchen-day-chef-session-${sessionSelfOnly}`)).not.toBeInTheDocument();
     expect(screen.queryByText('Self Only')).not.toBeInTheDocument();
   });
@@ -188,7 +200,10 @@ describe('Kitchen Day session-level chef review', () => {
     setHash(`#/kitchen-day-tutor?sessionId=${encodeURIComponent(sessionOne)}`);
     render(<AppRouter />);
     ingestInputCollectionsForTests({
-      kitchenGroupInput: { activities: [...baseActivities, secondStudentTrimActivity()] },
+      kitchenGroupInput: {
+        activities: [{ id: 'chef-forecast', template: { slug: 'chefForecast' }, actor: { id: 'chef-1', name: 'Chef' }, properties: [] }],
+      },
+      kitchenSkillsTrainerInput: { activities: [...baseActivities, secondStudentTrimActivity()] },
       inputCollectionPari: { me: { id: 'chef-1', firstName: 'Chef', lastName: 'One' } },
     });
     await waitFor(() => {

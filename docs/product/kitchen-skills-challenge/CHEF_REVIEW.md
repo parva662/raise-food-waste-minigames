@@ -38,8 +38,8 @@ Stored properties: `sessionId`, `sessionDate`, `submittedAt`, `timeEfficiencySco
 
 ## 4. Retrieval
 
-- Student Session Review / challenge: `kitchenGroupInputSelf.activities` → `GET /api/me/activities`.
-- Tutor dashboard / group: `kitchenGroupInput.activities` → `GET /groups/activities` (`src/platform/gamebus/groupActivities.ts`), grouped/filtered by actor.
+- Student Session Review / challenge / Student Progress: `kitchenGroupInputSelf.activities` → `GET /api/me/activities`. Progress shows Trim / Reuse / Portion before tutor review exists.
+- Tutor dashboard: `kitchenSkillsTrainerInput.activities` → `GET /api/groups/activities` filtered to Kitchen Skills templates (`src/platform/gamebus/groupActivities.ts` `getRawKitchenSkillsTrainerActivitiesInput`), grouped by actor. Do not reuse `kitchenGroupInput`.
 
 This phase does **not** use a group-members Input Collection. Students with zero Kitchen Skills activity are not listed.
 

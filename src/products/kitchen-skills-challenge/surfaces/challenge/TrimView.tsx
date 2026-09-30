@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { formatDurationFromMinutes, formatGrams, formatWastePercent } from '@/products/kitchen-skills-challenge/format';
 import { goToKitchenDaySection } from '@/app/routes';
 import { getGameBusInputCollections } from '@/platform/gamebus/bridge';
-import { extractGroupActivities, getRawKitchenGroupActivitiesInput } from '@/platform/gamebus/groupActivities';
+import { extractGroupActivities, getRawKitchenSelfActivitiesInput } from '@/platform/gamebus/groupActivities';
 import { normalizeIngredientId } from '@/shared/identifiers/ingredientId';
 import { kitchenSkillsIngredientIdFromName, useReadyKitchenSkillsSession } from '@/products/kitchen-skills-challenge/domain/session/KitchenSkillsSessionContext';
 import { isIngredientAlreadyRecorded } from '@/products/kitchen-skills-challenge/domain/session/ingredientUniqueness';
@@ -82,7 +82,7 @@ export function KitchenSkillsTrimView() {
     ingredientId !== null && isIngredientAlreadyRecorded(recordedIngredientIds, ingredientId);
 
   const historicalSamples = useMemo(() => {
-    const raw = getRawKitchenGroupActivitiesInput(getGameBusInputCollections());
+    const raw = getRawKitchenSelfActivitiesInput(getGameBusInputCollections());
     return historicalTrimSamplesFromGroupActivities(extractGroupActivities(raw));
   }, []);
 

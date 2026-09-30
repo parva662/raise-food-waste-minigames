@@ -7,7 +7,13 @@ export const KITCHEN_GROUP_INPUT_COLLECTION_KEY = 'kitchenGroupInput';
 /** Canonical GameBus Input Collection key for the authenticated student's own activities. */
 export const KITCHEN_GROUP_SELF_INPUT_COLLECTION_KEY = 'kitchenGroupInputSelf';
 
-/** Input Request key within `kitchenGroupInput` (`GET /groups/activities`). */
+/**
+ * Canonical GameBus Input Collection key for Kitchen Skills trainer evidence.
+ * Dedicated collection — do not reuse `kitchenGroupInput` (chefForecast / wasteMeasurement).
+ */
+export const KITCHEN_SKILLS_TRAINER_INPUT_COLLECTION_KEY = 'kitchenSkillsTrainerInput';
+
+/** Input Request key within kitchen group / self / trainer collections (`activities`). */
 export const KITCHEN_GROUP_ACTIVITIES_REQUEST_KEY = 'activities';
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -41,6 +47,26 @@ export function getRawKitchenSelfActivitiesInput(
   if (!payload) return undefined;
 
   const collection = payload[KITCHEN_GROUP_SELF_INPUT_COLLECTION_KEY];
+  if (isRecord(collection)) {
+    const nested = collection[KITCHEN_GROUP_ACTIVITIES_REQUEST_KEY];
+    if (nested !== undefined) return nested;
+  }
+
+  return undefined;
+}
+
+/**
+ * Raw `kitchenSkillsTrainerInput.activities` value from INPUT_COLLECTIONS.
+ * GameBus request: `GET /api/groups/activities` filtered to
+ * `trimSmart`, `rescueAndReuse`, `portionPrecision`, and `wastePracticeReview`.
+ * Does not fall back to `kitchenGroupInput` or a top-level `activities` key.
+ */
+export function getRawKitchenSkillsTrainerActivitiesInput(
+  payload: GameBusInputCollectionsPayload | null,
+): unknown {
+  if (!payload) return undefined;
+
+  const collection = payload[KITCHEN_SKILLS_TRAINER_INPUT_COLLECTION_KEY];
   if (isRecord(collection)) {
     const nested = collection[KITCHEN_GROUP_ACTIVITIES_REQUEST_KEY];
     if (nested !== undefined) return nested;

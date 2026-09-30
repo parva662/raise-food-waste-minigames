@@ -1,3 +1,4 @@
+import { getActivityTemplateReference } from '@/platform/gamebus/groupActivities';
 import type { KitchenSkillsTrainerSession } from '@/products/kitchen-skills-challenge/domain/types';
 import {
   parsePersistedPortionEntry,
@@ -8,8 +9,60 @@ import {
   readActivityActorName,
 } from '@/products/kitchen-skills-challenge/read/kitchenSkillsReadModel';
 
+const KITCHEN_SKILLS_EVIDENCE_TEMPLATES = ['trimSmart', 'rescueAndReuse', 'portionPrecision'] as const;
+
 export function chefSessionKey(actorId: string, sessionId: string): string {
   return `${actorId}::${sessionId}`;
+}
+
+export type KitchenSkillsTrainerFeedClassification = {
+  total: number;
+  templateCounts: Record<string, number>;
+  kitchenSkillsEvidenceCount: number;
+  parsedEvidenceCount: number;
+  parsedEvidenceMissingActorCount: number;
+  kitchenSkillsTemplateUnparseableCount: number;
+};
+
+/**
+ * Classify a Kitchen Skills trainer activity feed the way the session builder does.
+ * Sessions are created only from parsed trim/rescue/portion activities that also have `actor.id`.
+ */
+export function classifyKitchenSkillsTrainerFeed(
+  activities: readonly unknown[],
+): KitchenSkillsTrainerFeedClassification {
+  const templateCounts: Record<string, number> = {};
+  let kitchenSkillsEvidenceCount = 0;
+  let parsedEvidenceCount = 0;
+  let parsedEvidenceMissingActorCount = 0;
+  let kitchenSkillsTemplateUnparseableCount = 0;
+  const evidenceTemplates = new Set<string>(KITCHEN_SKILLS_EVIDENCE_TEMPLATES);
+
+  for (const activity of activities) {
+    const template = getActivityTemplateReference(activity) ?? '(missing)';
+    templateCounts[template] = (templateCounts[template] ?? 0) + 1;
+    const isEvidenceTemplate = evidenceTemplates.has(template);
+    if (isEvidenceTemplate) kitchenSkillsEvidenceCount += 1;
+    const parsed =
+      parsePersistedTrimEntry(activity) ??
+      parsePersistedRescueEntry(activity) ??
+      parsePersistedPortionEntry(activity);
+    if (parsed) {
+      if (readActivityActorId(activity)) parsedEvidenceCount += 1;
+      else parsedEvidenceMissingActorCount += 1;
+    } else if (isEvidenceTemplate) {
+      kitchenSkillsTemplateUnparseableCount += 1;
+    }
+  }
+
+  return {
+    total: activities.length,
+    templateCounts,
+    kitchenSkillsEvidenceCount,
+    parsedEvidenceCount,
+    parsedEvidenceMissingActorCount,
+    kitchenSkillsTemplateUnparseableCount,
+  };
 }
 
 export function buildKitchenSkillsTrainerSessions(

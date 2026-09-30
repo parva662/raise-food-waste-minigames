@@ -75,8 +75,8 @@ Required amounts and expected final weight come from the generated recipe refere
 
 Read-only surfaces over completed Kitchen Day records.
 
-- **Student session / Session Review** hydrate Trim, Reuse, and Portion from `kitchenGroupInputSelf.activities` (`GET /api/me/activities`). That collection is already self-scoped.
-- **Tutor dashboard and group history** still use `kitchenGroupInput.activities` (`GET /groups/activities`). Do not remove or repurpose that collection.
+- **Student session / Session Review / Student Progress** hydrate Trim, Reuse, and Portion from `kitchenGroupInputSelf.activities` (`GET /api/me/activities`). That collection is already self-scoped. Progress must show those results before any tutor review exists.
+- **Tutor dashboard** uses dedicated `kitchenSkillsTrainerInput.activities` (`GET /api/groups/activities` filtered to `trimSmart`, `rescueAndReuse`, `portionPrecision`, `wastePracticeReview`). Do not reuse `kitchenGroupInput` (that collection is `chefForecast` / `wasteMeasurement` for forecast/closeout).
 
 **Not** a retrieval blocker and **not** a new REST API invented in this app. GameBus fills INPUT_COLLECTIONS from those endpoints.
 
@@ -101,7 +101,7 @@ Initially seeded kitchen reference data keyed by `ingredientId`. Later accumulat
 - One Portion activity per ingredient line
 - One tutor assessment or score per activity / ingredient
 - Storing calculated analytics
-- Inventing a Kitchen Day retrieval endpoint (use configured INPUT_COLLECTIONS: `kitchenGroupInputSelf` for the student, `kitchenGroupInput` for group/trainer)
+- Inventing a Kitchen Day retrieval endpoint (use configured INPUT_COLLECTIONS: `kitchenGroupInputSelf` for the student, `kitchenSkillsTrainerInput` for trainer/chef feedback; keep `kitchenGroupInput` for forecast/closeout)
 
 ## 10. Related
 

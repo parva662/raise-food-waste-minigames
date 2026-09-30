@@ -17,6 +17,7 @@ export {
   getRawChefForecastsInput,
   getRawKitchenGroupActivitiesInput,
   getRawKitchenSelfActivitiesInput,
+  getRawKitchenSkillsTrainerActivitiesInput,
   getRawAuthenticatedMeInput,
   getAuthenticatedGameBusUser,
   SERVICE_CLOSEOUT_CHEF_FORECASTS_REQUEST_KEY,
@@ -27,6 +28,7 @@ export {
   INPUT_COLLECTION_PARI_ME_REQUEST_KEY,
   KITCHEN_GROUP_INPUT_COLLECTION_KEY,
   KITCHEN_GROUP_SELF_INPUT_COLLECTION_KEY,
+  KITCHEN_SKILLS_TRAINER_INPUT_COLLECTION_KEY,
   KITCHEN_GROUP_ACTIVITIES_REQUEST_KEY,
 } from '@/platform/gamebus/inputCollections';
 export { parseGameBusAuthenticatedUser, type GameBusAuthenticatedUser } from '@/platform/gamebus/authenticatedUser';

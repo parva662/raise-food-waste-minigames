@@ -36,6 +36,15 @@ Feature: Session Review, Student Progress, and tutor assessment
       When the tutor opens the student's kitchen day
       Then the unfinished entry is not treated as completed evidence
 
+  Rule: Student Progress is the student's own history
+
+    Scenario: Progress shows completed work before tutor review
+      Given the student completed Trim, Reuse, and Portion
+      And the tutor has not reviewed the kitchen day
+      When the student opens Progress
+      Then those completed records are listed
+      And tutor assessment is shown as not yet scored
+
   Rule: One session-level tutor assessment
 
     Scenario Outline: Time efficiency accepts 0 to 5

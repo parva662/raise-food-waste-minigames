@@ -109,7 +109,7 @@ Avoid broad refactors that alter unrelated games while fixing one game.
 - Current GameBus integration uses property/activity **slugs**, not the legacy `reference` naming where the current code has migrated.
 - Never hard-code GameBus user IDs in React.
 - Authenticated user identity comes from `inputCollectionPari.me`.
-- Kitchen group activities may come from `kitchenGroupInput.activities` (`GET /groups/activities`). Kitchen Skills **student** challenge records come from `kitchenGroupInputSelf.activities` (`GET /api/me/activities`).
+- Kitchen group activities for forecast/closeout come from `kitchenGroupInput.activities` (`GET /groups/activities` filtered to `chefForecast` / `wasteMeasurement`). Kitchen Skills **student** challenge and Progress records come from `kitchenGroupInputSelf.activities` (`GET /api/me/activities`). Kitchen Skills **trainer** evidence comes from dedicated `kitchenSkillsTrainerInput.activities` (`GET /api/groups/activities` filtered to `trimSmart`, `rescueAndReuse`, `portionPrecision`, `wastePracticeReview`). Do not reuse `kitchenGroupInput` for Kitchen Skills.
 - Preserve existing GameBus submission semantics unless a product requirement explicitly requires a change.
 - Do not infer GameBus capabilities that are not present in the current implementation or documented contract.
 

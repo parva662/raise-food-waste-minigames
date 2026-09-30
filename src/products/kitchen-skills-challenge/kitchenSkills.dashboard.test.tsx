@@ -73,7 +73,7 @@ const groupCollections = {
       },
     ],
   },
-  kitchenGroupInput: {
+  kitchenSkillsTrainerInput: {
     activities: [
       {
         id: 'act-trim-1',
@@ -129,6 +129,16 @@ const groupCollections = {
         template: { slug: 'trimSmart' },
         actor: { id: 'user-1', name: 'Student One' },
         properties: [{ template: { slug: 'ingredientId' }, value: { value: 'unfinished' } }],
+      },
+    ],
+  },
+  kitchenGroupInput: {
+    activities: [
+      {
+        id: 'chef-forecast',
+        actor: { id: 'chef-1', name: 'Chef' },
+        template: { slug: 'chefForecast', name: 'Chef forecast' },
+        properties: [],
       },
     ],
   },

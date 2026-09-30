@@ -50,7 +50,7 @@ describe('Kitchen Day page split', () => {
     setHash('#/kitchen-day-progress');
     render(<AppRouter />);
     ingestInputCollectionsForTests({
-      kitchenGroupInput: {
+      kitchenGroupInputSelf: {
         activities: [
           {
             id: 'own',
@@ -72,6 +72,10 @@ describe('Kitchen Day page split', () => {
               { template: { slug: 'duration' }, obj: { value: 3, unit: 'minutes' } },
             ],
           },
+        ],
+      },
+      kitchenSkillsTrainerInput: {
+        activities: [
           {
             id: 'other',
             actor: { id: 'user-2', name: 'Student Two' },
@@ -94,11 +98,65 @@ describe('Kitchen Day page split', () => {
           },
         ],
       },
+      kitchenGroupInput: {
+        activities: [
+          {
+            id: 'chef-forecast',
+            actor: { id: 'chef-1', name: 'Chef' },
+            template: { slug: 'chefForecast', name: 'Chef forecast' },
+            properties: [],
+          },
+        ],
+      },
       inputCollectionPari: { me: { id: 'user-1', firstName: 'Student', lastName: 'One' } },
     });
     await waitFor(() => {
       expect(screen.getByTestId('kitchen-day-progress-trim-carrot')).toBeInTheDocument();
     });
     expect(screen.queryByTestId('kitchen-day-progress-trim-onion')).not.toBeInTheDocument();
+  });
+
+  it('shows the student own Trim result from self activities before tutor review exists', async () => {
+    setHash('#/kitchen-day-progress');
+    render(<AppRouter />);
+    ingestInputCollectionsForTests({
+      kitchenGroupInputSelf: {
+        activities: [
+          {
+            id: 'own-unreviewed',
+            template: { slug: 'trimSmart' },
+            start: '2026-09-23T10:00:00.000Z',
+            end: '2026-09-23T10:03:00.000Z',
+            properties: [
+              { template: { slug: 'sessionId' }, value: { value: 'kitchen-day:t:user-1:2026-09-23' } },
+              { template: { slug: 'sessionDate' }, value: { value: '2026-09-23' } },
+              { template: { slug: 'submittedAt' }, value: { value: '2026-09-23T10:03:00.000Z' } },
+              { template: { slug: 'ingredientId' }, value: { value: 'carrot' } },
+              { template: { slug: 'ingredientName' }, value: { value: 'Carrot' } },
+              { template: { slug: 'ingredientWeightGrams' }, value: { value: 5000 } },
+              { template: { slug: 'trimTechniques' }, value: { value: 'trimming' } },
+              { template: { slug: 'estimatedWasteGrams' }, value: { value: 600 } },
+              { template: { slug: 'actualWasteGrams' }, value: { value: 450 } },
+              { template: { slug: 'duration' }, obj: { value: 3, unit: 'minutes' } },
+            ],
+          },
+        ],
+      },
+      kitchenGroupInput: {
+        activities: [
+          {
+            id: 'chef-forecast',
+            actor: { id: 'chef-1', name: 'Chef' },
+            template: { slug: 'chefForecast', name: 'Chef forecast' },
+            properties: [],
+          },
+        ],
+      },
+      inputCollectionPari: { me: { id: 'user-1', firstName: 'Student', lastName: 'One' } },
+    });
+    await waitFor(() => {
+      expect(screen.getByTestId('kitchen-day-progress-trim-carrot')).toBeInTheDocument();
+    });
+    expect(screen.getByText('No tutor assessment yet.')).toBeInTheDocument();
   });
 });

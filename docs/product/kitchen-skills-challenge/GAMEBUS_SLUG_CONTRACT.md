@@ -129,10 +129,13 @@ One review per student Kitchen Day / session. Not one judgement per activity or 
 
 | Who | INPUT_COLLECTIONS | Endpoint |
 |-----|-------------------|----------|
-| Student Trim / Reuse / Portion / Session Review | `kitchenGroupInputSelf.activities` | `GET /api/me/activities` |
-| Trainer / group (and progress that needs kitchen-group history) | `kitchenGroupInput.activities` | `GET /groups/activities` |
+| Student Trim / Reuse / Portion / Session Review / Student Progress | `kitchenGroupInputSelf.activities` | `GET /api/me/activities` |
+| Trainer / chef feedback | `kitchenSkillsTrainerInput.activities` | `GET /api/groups/activities` filtered to `trimSmart`, `rescueAndReuse`, `portionPrecision`, `wastePracticeReview` |
+| Forecast / closeout (unchanged) | `kitchenGroupInput.activities` | `GET /groups/activities` filtered to `chefForecast`, `wasteMeasurement` |
 
-Accessors: `getRawKitchenSelfActivitiesInput` and `getRawKitchenGroupActivitiesInput` in `src/platform/gamebus/groupActivities.ts`. Student hydration does **not** require `activity.actor.id === inputCollectionPari.me.id`. Keep `kitchenGroupInput` for trainer/group code.
+Accessors: `getRawKitchenSelfActivitiesInput`, `getRawKitchenSkillsTrainerActivitiesInput`, and `getRawKitchenGroupActivitiesInput` in `src/platform/gamebus/groupActivities.ts`. Student hydration and Progress do **not** require `activity.actor.id === inputCollectionPari.me.id`. Do **not** reuse `kitchenGroupInput` for Kitchen Skills trainer or Progress.
+
+`kitchenGroupInput` is an operational Chef-group feed. Its live request is `where.activity.template.$in: ["chefForecast","wasteMeasurement"]`, so it can never return Kitchen Skills templates. Trainer listing reads dedicated `kitchenSkillsTrainerInput`. Parsers stay on the observed live shape (`template: { slug, name }`, `properties[].template.slug` + `value.value`, `actor.id`). Student SILENT_ACTIVITY lives on `/api/me/activities` and is read back through `kitchenGroupInputSelf`.
 
 **TASK:** one Custom Embed **task** lists `trimSmart`, `rescueAndReuse`, and `portionPrecision`. Student writes are `SILENT_ACTIVITY`; **Finish challenge** posts `{ type: 'EXIT' }`. Tutor `wastePracticeReview` posts `SILENT_ACTIVITY` with `actors: [selectedStudentActorId]` (no `studentId` property). Protocol index: [`../../contracts/GAMEBUS.md`](../../contracts/GAMEBUS.md). Task rules: [`../../contracts/KITCHEN_SKILLS_CHALLENGE_TASK.md`](../../contracts/KITCHEN_SKILLS_CHALLENGE_TASK.md).
 

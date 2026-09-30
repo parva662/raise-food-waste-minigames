@@ -1,5 +1,9 @@
 import type { ReactNode } from 'react';
-import { extractGroupActivities, getRawKitchenGroupActivitiesInput } from '@/platform/gamebus/groupActivities';
+import {
+  extractGroupActivities,
+  getRawKitchenSelfActivitiesInput,
+  getRawKitchenSkillsTrainerActivitiesInput,
+} from '@/platform/gamebus/groupActivities';
 import { getGameBusInputCollections } from '@/platform/gamebus/bridge';
 import { discardedWasteGrams, wastePercentage } from '@/products/kitchen-skills-challenge/domain/trim/derived';
 import { TRIM_TECHNIQUE_LABELS } from '@/products/kitchen-skills-challenge/domain/trim/techniques';
@@ -129,9 +133,11 @@ export function SessionEvidence({
   collapsible?: boolean;
   collapsePortionTable?: boolean;
 }) {
-  const historicalSamples = historicalTrimSamplesFromGroupActivities(
-    extractGroupActivities(getRawKitchenGroupActivitiesInput(getGameBusInputCollections())),
-  );
+  const payload = getGameBusInputCollections();
+  const historicalSamples = historicalTrimSamplesFromGroupActivities([
+    ...extractGroupActivities(getRawKitchenSelfActivitiesInput(payload)),
+    ...extractGroupActivities(getRawKitchenSkillsTrainerActivitiesInput(payload)),
+  ]);
 
   return (
     <div className="kitchen-day-evidence" data-testid={`${testIdPrefix}-evidence`} data-readonly="true">

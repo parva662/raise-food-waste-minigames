@@ -79,7 +79,7 @@ Orchestration: [`docs/product/kitchen-skills-challenge/KITCHEN_SKILLS_CHALLENGE.
 ## System boundaries
 
 - **In scope:** Custom embed UIs, client-side validation, mapping to GameBus ACTIVITY payloads, standalone demo modes, GitHub Pages deployment, automated unit/integration tests (Vitest).
-- **Out of scope (unless explicitly added):** GameBus server administration, live template editing, badge/result engines. Kitchen Skills Challenge is on `main` at `#/kitchen-day*`. Student retrieval uses `kitchenGroupInputSelf` / `/api/me/activities`; trainer/group still uses `kitchenGroupInput`.
+- **Out of scope (unless explicitly added):** GameBus server administration, live template editing, badge/result engines. Kitchen Skills Challenge is on `main` at `#/kitchen-day*`. Student retrieval uses `kitchenGroupInputSelf` / `/api/me/activities`; trainer/chef feedback uses dedicated `kitchenSkillsTrainerInput`. Forecast/closeout keep `kitchenGroupInput`.
 - **Authority:** [`PROJECT_RULES.md`](./PROJECT_RULES.md) for engineering process; **approved** `.feature` files for product targets; **source on `main`** for production-built games; GameBus contracts under [`docs/contracts/`](./docs/contracts/); product pages under [`docs/product/`](./docs/product/).
 
 ---

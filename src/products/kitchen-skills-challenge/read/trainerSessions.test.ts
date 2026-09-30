@@ -1,5 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { buildKitchenSkillsTrainerSessions } from '@/products/kitchen-skills-challenge/read/trainerSessions';
+import { getActivityTemplateReference } from '@/platform/gamebus/groupActivities';
+import {
+  buildKitchenSkillsTrainerSessions,
+  classifyKitchenSkillsTrainerFeed,
+} from '@/products/kitchen-skills-challenge/read/trainerSessions';
 
 const sessionA = 'kitchen-day:task-1:user-1:2026-09-23';
 const sessionB = 'kitchen-day:task-1:user-2:2026-09-23';
@@ -49,5 +53,36 @@ describe('Kitchen Day chef session grouping', () => {
       { ...trimActivity('user-1', sessionA, 'carrot'), actor: undefined },
     ]);
     expect(sessions).toHaveLength(0);
+  });
+
+  it('produces no sessions from a Chef-group /groups/activities mix with no Kitchen Skills templates', () => {
+    const templates = ['chefForecast', 'wasteMeasurement', 'studentLunchCheckin'] as const;
+    const activities = Array.from({ length: 96 }, (_, index) => ({
+      id: `group-${index}`,
+      actor: { id: `chef-${index % 4}`, name: `Chef ${index % 4}` },
+      template: { slug: templates[index % templates.length], name: templates[index % templates.length] },
+      properties: [{ template: { slug: 'submittedAt', name: 'Submitted at' }, value: { value: '2026-09-23T10:00:00.000Z' } }],
+    }));
+    const classified = classifyKitchenSkillsTrainerFeed(activities);
+    expect(classified.total).toBe(96);
+    expect(classified.kitchenSkillsEvidenceCount).toBe(0);
+    expect(classified.parsedEvidenceCount).toBe(0);
+    expect(classified.templateCounts.trimSmart).toBeUndefined();
+    expect(classified.templateCounts.rescueAndReuse).toBeUndefined();
+    expect(classified.templateCounts.portionPrecision).toBeUndefined();
+    expect(buildKitchenSkillsTrainerSessions(activities)).toEqual([]);
+  });
+
+  it('reads live group template objects as slug, not string template or reference', () => {
+    expect(getActivityTemplateReference({ template: { slug: 'chefForecast', name: 'Chef forecast' } })).toBe(
+      'chefForecast',
+    );
+    expect(getActivityTemplateReference({ template: 'trimSmart' })).toBeNull();
+    expect(getActivityTemplateReference({ template: { reference: 'trimSmart' } })).toBeNull();
+    expect(
+      buildKitchenSkillsTrainerSessions([
+        { ...trimActivity('user-1', sessionA, 'carrot'), template: 'trimSmart' },
+      ]),
+    ).toEqual([]);
   });
 });

@@ -5,8 +5,10 @@ import {
   getActivityTemplateReference,
   getRawKitchenGroupActivitiesInput,
   getRawKitchenSelfActivitiesInput,
+  getRawKitchenSkillsTrainerActivitiesInput,
   KITCHEN_GROUP_ACTIVITIES_REQUEST_KEY,
   KITCHEN_GROUP_INPUT_COLLECTION_KEY,
+  KITCHEN_SKILLS_TRAINER_INPUT_COLLECTION_KEY,
 } from '@/platform/gamebus/groupActivities';
 
 describe('groupActivities input adapter', () => {
@@ -36,6 +38,26 @@ describe('groupActivities input adapter', () => {
     expect(getRawKitchenGroupActivitiesInput(payload)).toEqual([
       { id: 'group-1', template: { slug: 'trimSmart' } },
     ]);
+  });
+
+  it('reads kitchenSkillsTrainerInput.activities and does not fall back to kitchenGroupInput', () => {
+    const payload = {
+      [KITCHEN_SKILLS_TRAINER_INPUT_COLLECTION_KEY]: {
+        [KITCHEN_GROUP_ACTIVITIES_REQUEST_KEY]: [{ id: 'ks-1', template: { slug: 'trimSmart' } }],
+      },
+      [KITCHEN_GROUP_INPUT_COLLECTION_KEY]: {
+        [KITCHEN_GROUP_ACTIVITIES_REQUEST_KEY]: [{ id: 'forecast-1', template: { slug: 'chefForecast' } }],
+      },
+    };
+    expect(getRawKitchenSkillsTrainerActivitiesInput(payload)).toEqual([
+      { id: 'ks-1', template: { slug: 'trimSmart' } },
+    ]);
+    expect(getRawKitchenSkillsTrainerActivitiesInput({
+      [KITCHEN_GROUP_INPUT_COLLECTION_KEY]: {
+        [KITCHEN_GROUP_ACTIVITIES_REQUEST_KEY]: [{ id: 'forecast-1', template: { slug: 'chefForecast' } }],
+      },
+      activities: [{ id: 'top-level', template: { slug: 'trimSmart' } }],
+    })).toBeUndefined();
   });
 
   it('extracts activities from paginated docs envelope', () => {

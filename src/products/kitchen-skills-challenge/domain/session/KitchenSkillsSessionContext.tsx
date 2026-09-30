@@ -15,7 +15,7 @@ import {
   subscribeGameBusInputCollections,
   subscribeGameBusTask,
 } from '@/platform/gamebus/bridge';
-import { extractGroupActivities, getRawKitchenGroupActivitiesInput, getRawKitchenSelfActivitiesInput } from '@/platform/gamebus/groupActivities';
+import { extractGroupActivities, getRawKitchenSelfActivitiesInput, getRawKitchenSkillsTrainerActivitiesInput } from '@/platform/gamebus/groupActivities';
 import { getAuthenticatedGameBusUser } from '@/platform/gamebus/inputCollections';
 import { normalizeIngredientId } from '@/shared/identifiers/ingredientId';
 import { isIngredientAlreadyRecorded } from '@/products/kitchen-skills-challenge/domain/session/ingredientUniqueness';
@@ -75,14 +75,14 @@ function readPersistedForSession(sessionId: string): {
   groupSessions: KitchenSkillsTrainerSession[];
 } {
   const payload = getGameBusInputCollections();
-  const groupActivities = extractGroupActivities(getRawKitchenGroupActivitiesInput(payload));
+  const trainerActivities = extractGroupActivities(getRawKitchenSkillsTrainerActivitiesInput(payload));
   const selfActivities = extractGroupActivities(getRawKitchenSelfActivitiesInput(payload));
   return {
     ...buildKitchenSkillsReadModel(selfActivities, { sessionId }),
-    reviews: groupActivities
+    reviews: trainerActivities
       .map((activity) => parsePersistedReviewEntry(activity))
       .filter((entry): entry is KitchenSkillsReviewEntry => entry !== null),
-    groupSessions: buildKitchenSkillsTrainerSessions(groupActivities),
+    groupSessions: buildKitchenSkillsTrainerSessions(trainerActivities),
   };
 }
 

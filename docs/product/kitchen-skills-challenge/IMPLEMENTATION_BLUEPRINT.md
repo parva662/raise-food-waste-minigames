@@ -20,7 +20,7 @@ Kitchen Skills Challenge is on `main` under `src/products/kitchen-skills-challen
 
 Legacy Trim Smart v1 remains under `src/legacy/trim-smart-v1/` at `#/waste/trim-smart` (`practice`, `participantWasteGrams`, old categories). Do not use it for new Kitchen Skills Challenge work.
 
-Reusable platform read: `src/platform/gamebus/groupActivities.ts` (`kitchenGroupInput` + `kitchenGroupInputSelf`). Session identity helpers live in the Kitchen Skills Challenge product.
+Reusable platform read: `src/platform/gamebus/groupActivities.ts` (`kitchenGroupInput` for forecast/closeout, `kitchenGroupInputSelf` for student Kitchen Skills, `kitchenSkillsTrainerInput` for trainer/chef feedback). Session identity helpers live in the Kitchen Skills Challenge product.
 
 ## 3. Decisions
 
@@ -32,7 +32,7 @@ Reusable platform read: `src/platform/gamebus/groupActivities.ts` (`kitchenGroup
 - One Portion activity per recipe; actuals in `recipeComposition`.
 - Recipe targets come from the generated extract of the clean professional workbook, not a hand-maintained stub.
 - One tutor assessment per session; modules are evidence.
-- Retrieve student challenge records via `kitchenGroupInputSelf.activities`; group/trainer via `kitchenGroupInput.activities`.
+- Retrieve student challenge, Session Review, and Student Progress via `kitchenGroupInputSelf.activities`; trainer/chef feedback via `kitchenSkillsTrainerInput.activities`. Keep `kitchenGroupInput` for forecast/closeout.
 - Property names only from the slug contract.
 
 ## 4. Implementation order

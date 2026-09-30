@@ -1,17 +1,13 @@
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import { formatSessionDate, formatWastePercent } from '@/products/kitchen-skills-challenge/format';
 import { buildKitchenSkillsProgressPoints } from '@/products/kitchen-skills-challenge/read/progressModel';
 import { SessionEvidence } from '@/products/kitchen-skills-challenge/surfaces/shared/SessionEvidence';
 import { Sparkline } from '@/products/kitchen-skills-challenge/surfaces/progress/Sparkline';
-import { useKitchenSkillsGroupData } from '@/products/kitchen-skills-challenge/read/useGroupData';
+import { useKitchenSkillsStudentProgressData } from '@/products/kitchen-skills-challenge/read/useGroupData';
 
 export function KitchenSkillsProgressApp() {
-  const { actorId, sessions } = useKitchenSkillsGroupData();
+  const { sessions: ownSessions } = useKitchenSkillsStudentProgressData();
   const [tab, setTab] = useState<'overview' | 'progress'>('overview');
-  const ownSessions = useMemo(
-    () => (actorId ? sessions.filter((session) => session.actorId === actorId) : []),
-    [actorId, sessions],
-  );
   const latest = ownSessions[ownSessions.length - 1] ?? ownSessions[0];
   const points = buildKitchenSkillsProgressPoints(ownSessions);
 

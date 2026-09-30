@@ -12,8 +12,8 @@ Each row is a separate GameBus left-menu Custom Embed (or equivalent). Do not co
 | Page | Stable URL | Role | Posts | Required TASK templates | Required inputs |
 |------|------------|------|-------|-------------------------|-----------------|
 | Student Kitchen Day | `#/kitchen-day` (modules: `#/kitchen-day/reuse`, `#/kitchen-day/portion`, `#/kitchen-day/review`) | Student | `SILENT_ACTIVITY` for `trimSmart`, `rescueAndReuse`, `portionPrecision`; `{ type: 'EXIT' }` on Finish challenge | Those three templates on one TASK | `inputCollectionPari.me`; `kitchenGroupInputSelf.activities` (`GET /api/me/activities`) |
-| Student Kitchen Day Progress | `#/kitchen-day-progress` | Student | none | none | `inputCollectionPari.me`; `kitchenGroupInput.activities` for group/history including `wastePracticeReview` |
-| Tutor Kitchen Day Dashboard | `#/kitchen-day-tutor` (selected session: `?sessionId=`) | Tutor | `SILENT_ACTIVITY` `wastePracticeReview` with `actors: [selectedStudentActorId]` | `wastePracticeReview` on the tutor TASK | `kitchenGroupInput.activities` (`GET /groups/activities`) grouped by actor |
+| Student Kitchen Day Progress | `#/kitchen-day-progress` | Student | none | none | `inputCollectionPari.me`; `kitchenGroupInputSelf.activities` (`GET /api/me/activities`) |
+| Tutor Kitchen Day Dashboard | `#/kitchen-day-tutor` (selected session: `?sessionId=`) | Tutor | `SILENT_ACTIVITY` `wastePracticeReview` with `actors: [selectedStudentActorId]` | `wastePracticeReview` on the tutor TASK | `kitchenSkillsTrainerInput.activities` (`GET /api/groups/activities` filtered to Kitchen Skills templates) grouped by actor |
 
 Notes:
 

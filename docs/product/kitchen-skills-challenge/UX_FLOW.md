@@ -67,6 +67,6 @@ Review, Progress, and Tutor show ingredient accuracy and final-weight deviation 
 
 ## 7. Retrieval
 
-- **Student challenge hydration:** `kitchenGroupInputSelf.activities` (`GET /api/me/activities`). Self-scoped; do not filter on `activity.actor.id === inputCollectionPari.me.id`.
-- **Trainer / group / progress history that needs the kitchen group:** `kitchenGroupInput.activities` (`GET /groups/activities`). Do not globally repurpose that collection.
+- **Student challenge hydration and Student Progress:** `kitchenGroupInputSelf.activities` (`GET /api/me/activities`). Self-scoped; do not filter on `activity.actor.id === inputCollectionPari.me.id`. Progress does not wait for `wastePracticeReview`.
+- **Trainer / chef feedback:** `kitchenSkillsTrainerInput.activities` (`GET /api/groups/activities` filtered to `trimSmart`, `rescueAndReuse`, `portionPrecision`, `wastePracticeReview`). Do not reuse `kitchenGroupInput`.
 - After a silent post, local session state is enough for the next step. When self activities later arrive, local and persisted records are merged and deduplicated.

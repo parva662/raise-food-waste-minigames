@@ -30,7 +30,7 @@ Kitchen Skills Challenge **student work** is a custom **task**: Trim, Reuse, and
 
 Tutor `wastePracticeReview` posts **`SILENT_ACTIVITY`** with `actors: [selectedStudentActorId]` so the tutor iframe stays open for the next student. Lunch, forecast, and closeout still post `ACTIVITY` so those tasks can complete and close.
 
-Input collections in this repo include `inputCollectionPari.me`, `kitchenGroupInput.activities` (`GET /groups/activities`), and Kitchen Skills student self-read `kitchenGroupInputSelf.activities` (`GET /api/me/activities`).
+Input collections in this repo include `inputCollectionPari.me`; `kitchenGroupInput.activities` (`GET /groups/activities` filtered to `chefForecast` / `wasteMeasurement` for forecast/closeout); Kitchen Skills student `kitchenGroupInputSelf.activities` (`GET /api/me/activities`); and Kitchen Skills trainer `kitchenSkillsTrainerInput.activities` (`GET /api/groups/activities` filtered to `trimSmart`, `rescueAndReuse`, `portionPrecision`, `wastePracticeReview`). Do not reuse `kitchenGroupInput` for Kitchen Skills.
 
 ## Repo contracts
 

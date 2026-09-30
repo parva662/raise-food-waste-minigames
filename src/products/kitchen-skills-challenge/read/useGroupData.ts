@@ -5,12 +5,12 @@ import {
   subscribeGameBusInputCollections,
 } from '@/platform/gamebus/bridge';
 import { isGameBusEmbed } from '@/platform/gamebus/detectEmbed';
-import { extractGroupActivities, getRawKitchenGroupActivitiesInput } from '@/platform/gamebus/groupActivities';
+import { extractGroupActivities, getRawKitchenSelfActivitiesInput } from '@/platform/gamebus/groupActivities';
 import { getAuthenticatedGameBusUser } from '@/platform/gamebus/inputCollections';
-import { buildKitchenSkillsTrainerSessions } from '@/products/kitchen-skills-challenge/read/trainerSessions';
+import { buildKitchenSkillsStudentProgressSessions } from '@/products/kitchen-skills-challenge/read/studentProgressSessions';
 import type { KitchenSkillsTrainerSession } from '@/products/kitchen-skills-challenge/domain/types';
 
-export function useKitchenSkillsGroupData(): {
+export function useKitchenSkillsStudentProgressData(): {
   actorId: string | null;
   sessions: KitchenSkillsTrainerSession[];
 } {
@@ -21,10 +21,12 @@ export function useKitchenSkillsGroupData(): {
     const stop = isGameBusEmbed() ? startGameBusHandshake() : () => undefined;
     const sync = () => {
       const payload = getGameBusInputCollections();
-      setActorId(getAuthenticatedGameBusUser(payload)?.id ?? null);
+      const user = getAuthenticatedGameBusUser(payload);
+      setActorId(user?.id ?? null);
       setSessions(
-        buildKitchenSkillsTrainerSessions(
-          extractGroupActivities(getRawKitchenGroupActivitiesInput(payload)),
+        buildKitchenSkillsStudentProgressSessions(
+          extractGroupActivities(getRawKitchenSelfActivitiesInput(payload)),
+          { actorId: user?.id ?? null, actorName: user?.name ?? null },
         ),
       );
     };
