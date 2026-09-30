@@ -5,7 +5,7 @@
 **Status:** Implemented on `main`. Ready for production GitHub Pages Custom Embed URLs.
 **Active GameBus environment:** `https://foodtracker.gamebus.eu`
 **Student posting:** Enabled for Trim / Rescue / Portion after manual schema verification.
-**Tutor posting:** Still blocked pending verified trainer-on-behalf-of-student semantics.
+**Tutor posting:** Enabled. `wastePracticeReview` is `SILENT_ACTIVITY` with `actors: [selectedStudentActorId]`.
 
 Each row is a separate GameBus left-menu Custom Embed (or equivalent). Do not combine them into one student activity navigation.
 
@@ -13,7 +13,7 @@ Each row is a separate GameBus left-menu Custom Embed (or equivalent). Do not co
 |------|------------|------|-------|-------------------------|-----------------|
 | Student Kitchen Day | `#/kitchen-day` (modules: `#/kitchen-day/reuse`, `#/kitchen-day/portion`, `#/kitchen-day/review`) | Student | `SILENT_ACTIVITY` for `trimSmart`, `rescueAndReuse`, `portionPrecision`; `{ type: 'EXIT' }` on Finish challenge | Those three templates on one TASK | `inputCollectionPari.me`; `kitchenGroupInputSelf.activities` (`GET /api/me/activities`) |
 | Student Kitchen Day Progress | `#/kitchen-day-progress` | Student | none | none | `inputCollectionPari.me`; `kitchenGroupInput.activities` for group/history including `wastePracticeReview` |
-| Tutor Kitchen Day Dashboard | `#/kitchen-day-tutor` (selected session: `?sessionId=`) | Tutor | `wastePracticeReview` | `wastePracticeReview` on the tutor TASK | Group Kitchen Day activities + review activities |
+| Tutor Kitchen Day Dashboard | `#/kitchen-day-tutor` (selected session: `?sessionId=`) | Tutor | `SILENT_ACTIVITY` `wastePracticeReview` with `actors: [selectedStudentActorId]` | `wastePracticeReview` on the tutor TASK | `kitchenGroupInput.activities` (`GET /groups/activities`) grouped by actor |
 
 Notes:
 
@@ -23,6 +23,5 @@ Notes:
   - `https://parva662.github.io/raise-food-waste-minigames/#/kitchen-day`
   - `https://parva662.github.io/raise-food-waste-minigames/#/kitchen-day-progress`
   - `https://parva662.github.io/raise-food-waste-minigames/#/kitchen-day-tutor`
-- Next GameBus action: create those three Custom Embed Pages on foodtracker.gamebus.eu.
-- Tutor GameBus “on behalf of student” registration is still unresolved. Do not submit tutor review in production until that mechanism is confirmed.
+- Tutor review posts `SILENT_ACTIVITY` with `actors: [selectedStudentActorId]`. No `studentId` property. The tutor iframe stays open after submit. Trainer listing does not use a group-members collection in this phase.
 - `#/waste/trim-smart` remains Trim Smart v1 and is unchanged.

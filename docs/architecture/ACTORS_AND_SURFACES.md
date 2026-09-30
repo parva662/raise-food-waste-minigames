@@ -21,9 +21,7 @@ People working in the kitchen (in this pilot they are often students of the kitc
 
 ### 3. Chef / trainer
 
-Supervisory role. Uses the Kitchen Skills Challenge **trainer** surface (`#/kitchen-day-tutor`) to inspect student evidence and optionally post `wastePracticeReview`.
-
-Exact GameBus on-behalf-of-student posting is still unresolved. Trainer live posting stays **disabled** (`KITCHEN_SKILLS_TRAINER_LIVE_INTEGRATION_READY = false`).
+Supervisory role. Uses the Kitchen Skills Challenge **trainer** surface (`#/kitchen-day-tutor`) to inspect student evidence and post `wastePracticeReview` as `SILENT_ACTIVITY` with `actors: [selectedStudentActorId]`. Trainer listing comes from `kitchenGroupInput.activities`. Live trainer posting is **enabled**.
 
 ### 4. Admin viewer
 

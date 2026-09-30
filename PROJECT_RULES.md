@@ -105,7 +105,7 @@ Avoid broad refactors that alter unrelated games while fixing one game.
 
 - Games run as GameBus custom **tasks** and/or custom **pages** (see [`docs/contracts/GAMEBUS.md`](./docs/contracts/GAMEBUS.md)).
 - GameBus sends `TASK` and/or `INPUT_COLLECTIONS` to the iframe after `IFRAME_READY`.
-- Most games persist with GameBus `ACTIVITY` (task completion may close the iframe). Kitchen Skills Challenge **student** Trim / Reuse / Portion persist with `SILENT_ACTIVITY` and leave with `{ type: 'EXIT' }` from Finish challenge. Tutor `wastePracticeReview` stays `ACTIVITY`.
+- Most games persist with GameBus `ACTIVITY` (task completion may close the iframe). Kitchen Skills Challenge **student** Trim / Reuse / Portion persist with `SILENT_ACTIVITY` and leave with `{ type: 'EXIT' }` from Finish challenge. Tutor `wastePracticeReview` posts `SILENT_ACTIVITY` with `actors: [selectedStudentActorId]` so the tutor iframe stays open.
 - Current GameBus integration uses property/activity **slugs**, not the legacy `reference` naming where the current code has migrated.
 - Never hard-code GameBus user IDs in React.
 - Authenticated user identity comes from `inputCollectionPari.me`.

@@ -127,7 +127,7 @@ Canonical: [`../product/kitchen-skills-challenge/KITCHEN_SKILLS_CHALLENGE.md`](.
 
 **Student GameBus flow:** `SILENT_ACTIVITY` for Trim / Reuse / Portion; local retain; `kitchenGroupInputSelf.activities` (`GET /api/me/activities`) without actor-id equality; compact finish summary; `{ type: 'EXIT' }` only on Finish challenge. Trainer/group still reads `kitchenGroupInput`. The old Trim → iframe-close → Reuse-empty path is **fixed** by this flow.
 
-**Live GameBus (foodtracker.gamebus.eu):** Student Kitchen Skills Challenge activity schemas and properties were **manually verified** on `https://foodtracker.gamebus.eu`. Student posting is **enabled** for Trim / Rescue / Portion (`KITCHEN_SKILLS_STUDENT_LIVE_INTEGRATION_READY = true`). Trainer `wastePracticeReview` posting remains **blocked** (`KITCHEN_SKILLS_TRAINER_LIVE_INTEGRATION_READY = false`) until trainer-on-behalf-of-student semantics are confirmed. This is **not** a claim of trainer live end-to-end success.
+**Live GameBus (foodtracker.gamebus.eu):** Student Kitchen Skills Challenge activity schemas and properties were **manually verified** on `https://foodtracker.gamebus.eu`. Student posting is **enabled** for Trim / Rescue / Portion (`KITCHEN_SKILLS_STUDENT_LIVE_INTEGRATION_READY = true`). Trainer `wastePracticeReview` posting is **enabled** (`KITCHEN_SKILLS_TRAINER_LIVE_INTEGRATION_READY = true`): `SILENT_ACTIVITY` with `actors: [selectedStudentActorId]`, one review per student session, iframe stays open.
 
 **Student activity layout:** Trim / Reuse / Portion follow [`../product/UI_STANDARD.md`](../product/UI_STANDARD.md): content-width gram fields, compact repeating Portion rows (Ingredient | Target | Actual | Result), sticky primary actions, review/finish summarise first. Check ~390px, ~768px, ~1200px.
 
@@ -140,7 +140,7 @@ Gherkin: [`../../features/kitchen-skills-challenge/`](../../features/kitchen-ski
 | Trim Smart | `#/kitchen-day` | Estimate → timed prep → actual; unique `ingredientId` per session |
 | Rescue & Reuse | `#/kitchen-day/reuse` | Join `sessionId` + `ingredientId` |
 | Portion Precision | `#/kitchen-day/portion` | Generated recipe reference; derived accuracy |
-| Session Review / Progress / trainer | `#/kitchen-day/review`, `#/kitchen-day-progress`, `#/kitchen-day-tutor` | Review is read-only; trainer posting disabled |
+| Session Review / Progress / trainer | `#/kitchen-day/review`, `#/kitchen-day-progress`, `#/kitchen-day-tutor` | Review is read-only; trainer `wastePracticeReview` is `SILENT_ACTIVITY` with `actors` |
 | Legacy Trim Smart v1 | `#/waste/trim-smart` | Deprecated; old payload |
 
 ---

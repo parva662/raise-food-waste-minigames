@@ -3,7 +3,7 @@
 **Status:** Implemented on `main`. Production routes are ready for Custom Embed Pages.
 **Active GameBus environment:** `https://foodtracker.gamebus.eu`
 **Student schemas:** Manually verified on foodtracker. Student `trimSmart` / `rescueAndReuse` / `portionPrecision` posting is enabled.
-**Tutor review:** `wastePracticeReview` posting remains blocked until trainer-on-behalf-of-student semantics are confirmed. Do not treat this as tutor live E2E success.
+**Tutor review:** `wastePracticeReview` posts `SILENT_ACTIVITY` with `actors: [selectedStudentActorId]`. Live trainer posting is enabled. The tutor iframe stays open after submit.
 
 ## Decision
 
@@ -17,17 +17,17 @@ The iframe receives **one** `TASK` (later TASK messages are ignored by `src/plat
 
 Student Trim / Reuse / Portion each post **`SILENT_ACTIVITY`** with the same activity `data` as before (`template`, `start`, `end`, `properties`). That matches GameBus custom-task behaviour: silent posts store `/api/me/activities` and **do not close** the task dialog. After each successful silent post the SPA keeps the entry in local session state and continues Trim → Reuse → Portion → summary. **Finish challenge** then posts `{ type: 'EXIT' }` (`src/platform/gamebus/exit.ts`). Official protocol: [`GAMEBUS.md`](GAMEBUS.md).
 
-Tutor `wastePracticeReview` remains **`ACTIVITY`**.
+Tutor `wastePracticeReview` posts **`SILENT_ACTIVITY`** with the same review properties as before plus `actors: [selectedStudentActorId]`. Do **not** add a `studentId` property. One review per student session. After submit the tutor iframe stays open so the chef can review another student.
 
 Do **not** split Kitchen Day into three embeds. Embedded `sessionId` is one student + one Kitchen Day: `kitchen-day:<taskId>:<actorId>:<sessionDate>`. Do not persist actor id as a Kitchen Day activity property.
 
-`wastePracticeReview` stays on the tutor TASK. It is not required on the student Kitchen Day TASK. Review posts validate that template on the current TASK before building the ACTIVITY. Tutor on-behalf-of-student GameBus registration is unresolved until the live mechanism is inspected.
+`wastePracticeReview` stays on the tutor TASK. It is not required on the student Kitchen Day TASK. Review posts validate that template on the current TASK before building the silent activity. Trainer listing still uses `kitchenGroupInput.activities` (`GET /groups/activities`); students with no Kitchen Skills activity are out of scope until a later group-members collection.
 
 ## Evidence (inspected, not inferred)
 
 1. Live foodtracker TASK payloads already use `activityTemplates: TaskActivityTemplate[]`.
 2. Live chef-mission **service-closeout** embed `01a081a9-4fee-7772-b1c6-bdfc7a362ecb` lists **three** templates on one `USER_TRIGGERED_EMBEDDED` task: `chefForecast`, `kitchenServiceCloseout`, `wasteMeasurement`.
-3. Existing Trim Smart v1 still posts **`ACTIVITY`** from `#/waste/trim-smart`. Kitchen Skills Challenge student modules on `#/kitchen-day*` post **`SILENT_ACTIVITY`** instead so the iframe is not destroyed between Trim, Reuse, and Portion.
+3. Existing Trim Smart v1 still posts **`ACTIVITY`** from `#/waste/trim-smart`. Kitchen Skills Challenge student modules on `#/kitchen-day*` post **`SILENT_ACTIVITY`** instead so the iframe is not destroyed between Trim, Reuse, and Portion. Trainer `wastePracticeReview` also posts **`SILENT_ACTIVITY`** so the chef can continue to the next student.
 
 ## Client rules
 
@@ -36,4 +36,4 @@ Do **not** split Kitchen Day into three embeds. Embedded `sessionId` is one stud
 - Builders call `selectKitchenSkillsActivityTemplate(task, slug)` and fail if any of the three templates is missing.
 - Review builders call `selectWastePracticeReviewTemplate(task)` and fail if `wastePracticeReview` is missing.
 - `KITCHEN_SKILLS_STUDENT_LIVE_INTEGRATION_READY` is `true` after manual verification of the student activity/property setup on foodtracker.
-- `KITCHEN_SKILLS_TRAINER_LIVE_INTEGRATION_READY` remains `false` until the trainer → student submission mechanism is confirmed.
+- `KITCHEN_SKILLS_TRAINER_LIVE_INTEGRATION_READY` is `true` after confirmation of trainer on-behalf-of-student posting (`actors: [selectedStudentActorId]`).

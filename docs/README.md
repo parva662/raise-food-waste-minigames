@@ -71,7 +71,7 @@ Stable facts, slugs, hashes, and external GameBus protocol:
 | Path | Notes |
 |------|--------|
 | [`contracts/GAMEBUS.md`](contracts/GAMEBUS.md) | Index of official GameBus docs (tasks, pages, menu items, Core API) |
-| [`contracts/KITCHEN_SKILLS_CHALLENGE_TASK.md`](contracts/KITCHEN_SKILLS_CHALLENGE_TASK.md) | One student TASK, three templates; `SILENT_ACTIVITY` + `EXIT` |
+| [`contracts/KITCHEN_SKILLS_CHALLENGE_TASK.md`](contracts/KITCHEN_SKILLS_CHALLENGE_TASK.md) | One student TASK, three templates; student `SILENT_ACTIVITY` + `EXIT`; trainer review `SILENT_ACTIVITY` + `actors` |
 | [`contracts/KITCHEN_SKILLS_CHALLENGE_ROUTES.md`](contracts/KITCHEN_SKILLS_CHALLENGE_ROUTES.md) | Left-menu hashes `#/kitchen-day*` |
 | [`product/kitchen-skills-challenge/GAMEBUS_SLUG_CONTRACT.md`](product/kitchen-skills-challenge/GAMEBUS_SLUG_CONTRACT.md) | Locked activity/property slugs |
 | [`contracts/STUDENT_LUNCH_GAMEBUS.md`](contracts/STUDENT_LUNCH_GAMEBUS.md) | `studentLunchCheckin` |

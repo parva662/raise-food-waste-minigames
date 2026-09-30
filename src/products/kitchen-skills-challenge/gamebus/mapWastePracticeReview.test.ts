@@ -34,6 +34,7 @@ describe('wastePracticeReview mapper', () => {
       'preparationQualityScore',
     ]);
     expect(values).not.toHaveProperty('chefFeedback');
+    expect(values).not.toHaveProperty('studentId');
     expect(values).not.toHaveProperty('reviewedActivityId');
     expect(values).not.toHaveProperty('reviewedGame');
     expect(values).not.toHaveProperty('reasonCode');
@@ -51,10 +52,17 @@ describe('wastePracticeReview mapper', () => {
   });
 
   it('validates wastePracticeReview against the TASK template before build', () => {
-    expect(buildWastePracticeReviewActivityMessage(kitchenSkillsTrainerTaskFixture, entry).data.template).toBe(
-      'wastePracticeReview',
+    const message = buildWastePracticeReviewActivityMessage(kitchenSkillsTrainerTaskFixture, entry, 'user-1');
+    expect(message.type).toBe('SILENT_ACTIVITY');
+    expect(message.data.template).toBe('wastePracticeReview');
+    expect(message.data.actors).toEqual(['user-1']);
+    expect(message.data.start).toBe(entry.submittedAt);
+    expect(message.data.end).toBe(entry.submittedAt);
+    expect(message.data.properties.map((property) => property.template)).toEqual(
+      orderedWastePracticeReviewPropertyRefs(entry),
     );
-    expect(() => buildWastePracticeReviewActivityMessage(kitchenSkillsTaskFixture, entry)).toThrow(
+    expect(message.data.properties.map((property) => property.template)).not.toContain('studentId');
+    expect(() => buildWastePracticeReviewActivityMessage(kitchenSkillsTaskFixture, entry, 'user-1')).toThrow(
       /wastePracticeReview/,
     );
   });

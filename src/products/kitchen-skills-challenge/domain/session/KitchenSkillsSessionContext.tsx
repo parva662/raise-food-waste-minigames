@@ -58,7 +58,7 @@ interface KitchenSkillsSessionValue {
   commitTrimEntry: (entry: KitchenSkillsTrimEntry) => KitchenSkillsCommitResult;
   commitRescueEntry: (entry: KitchenSkillsRescueEntry) => KitchenSkillsCommitResult;
   commitPortionEntry: (entry: KitchenSkillsPortionEntry) => KitchenSkillsCommitResult;
-  commitReview: (entry: KitchenSkillsReviewEntry) => KitchenSkillsCommitResult;
+  commitReview: (entry: KitchenSkillsReviewEntry, studentActorId: string) => KitchenSkillsCommitResult;
   findTrimByIngredientId: (ingredientId: string) => KitchenSkillsTrimEntry | undefined;
   findRescueByIngredientId: (ingredientId: string) => KitchenSkillsRescueEntry | undefined;
   findReviewBySessionId: (sessionId: string) => KitchenSkillsReviewEntry | undefined;
@@ -254,15 +254,20 @@ export function KitchenSkillsSessionProvider({
     return { ok: true, mode: 'local' };
   }, []);
 
-  const commitReview = useCallback((entry: KitchenSkillsReviewEntry): KitchenSkillsCommitResult => {
+  const commitReview = useCallback((entry: KitchenSkillsReviewEntry, studentActorId: string): KitchenSkillsCommitResult => {
     if (reviews.some((item) => item.sessionId === entry.sessionId)) {
       return { ok: false, reason: 'duplicate_review', keepDraft: true };
     }
     if (isGameBusEmbed()) {
-      const posted = tryPostKitchenSkillsReview(entry);
+      const posted = tryPostKitchenSkillsReview(entry, studentActorId);
       if (!posted.ok) {
         return { ok: false, reason: posted.reason, keepDraft: true };
       }
+      setLocalReviews((current) =>
+        current.some((item) => item.sessionId === entry.sessionId)
+          ? current
+          : [...current, { ...entry, source: 'local' }],
+      );
       return { ok: true, mode: 'posted_awaiting_persist' };
     }
     setLocalReviews((current) =>

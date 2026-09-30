@@ -95,15 +95,18 @@ export function KitchenSkillsTrainerReviewForm({ selected }: { selected: Kitchen
             setError('Enter integer scores from 0 to 5. Blank is not a score.');
             return;
           }
-          const result = commitReview({
-            sessionId: selected.sessionId,
-            sessionDate: selected.sessionDate,
-            submittedAt: new Date().toISOString(),
-            timeEfficiencyScore: parsedTime.value,
-            preparationQualityScore: parsedQuality.value,
-            ...(feedback.trim() ? { chefFeedback: feedback.trim() } : {}),
-            source: 'local',
-          });
+          const result = commitReview(
+            {
+              sessionId: selected.sessionId,
+              sessionDate: selected.sessionDate,
+              submittedAt: new Date().toISOString(),
+              timeEfficiencyScore: parsedTime.value,
+              preparationQualityScore: parsedQuality.value,
+              ...(feedback.trim() ? { chefFeedback: feedback.trim() } : {}),
+              source: 'local',
+            },
+            selected.actorId,
+          );
           if (!result.ok) {
             setError(
               result.reason === 'tutor_live_blocked'

@@ -118,6 +118,6 @@ GitHub Pages, `base` `/raise-food-waste-minigames/`. Production URLs are not cha
 
 On a GameBus **custom task**, `ACTIVITY` completes the task and may destroy the dialog iframe. `SILENT_ACTIVITY` stores `/api/me/activities` and keeps the iframe open. See [Custom tasks](https://docs.next.gamebus.eu/integrations/custom-embeds/custom-tasks).
 
-**Kitchen Skills Challenge student flow:** Trim, Reuse, and Portion post `SILENT_ACTIVITY`, retain local session state, and continue in the same iframe. **Finish challenge** posts `{ type: 'EXIT' }`. Do not assume in-memory React state survives an `ACTIVITY` close on *other* games (lunch, forecast, closeout).
+**Kitchen Skills Challenge student flow:** Trim, Reuse, and Portion post `SILENT_ACTIVITY`, retain local session state, and continue in the same iframe. **Finish challenge** posts `{ type: 'EXIT' }`. Trainer `wastePracticeReview` also posts `SILENT_ACTIVITY` with `actors: [selectedStudentActorId]` so the chef can continue to another student. Do not assume in-memory React state survives an `ACTIVITY` close on *other* games (lunch, forecast, closeout).
 
 Student challenge hydration uses `kitchenGroupInputSelf.activities`. Trainer/group still uses `kitchenGroupInput.activities`.

@@ -47,7 +47,7 @@ Reusable platform read: `src/platform/gamebus/groupActivities.ts` (`kitchenGroup
 
 **Phase 4** — Portion Precision (generated recipe reference + `recipeComposition` + derived metrics). **Done on `main`.**
 
-**Phase 5** — Session Review, Student Progress, trainer dashboard + session-level `wastePracticeReview`. **Done on `main`.** Trainer live posting remains disabled.
+**Phase 5** — Session Review, Student Progress, trainer dashboard + session-level `wastePracticeReview`. **Done on `main`.** Trainer live posting is enabled (`SILENT_ACTIVITY` + `actors`).
 
 **Phase 6** — Repository tests / build verification. **Done on `main`.** Student silent flow, finish summary, and EXIT are covered in Vitest. Live GameBus E2E against foodtracker remains a manual check.
 

@@ -243,6 +243,6 @@ Validate participant association, multi-user visibility, and organization bounda
 
 See [`../product/kitchen-skills-challenge/IMPLEMENTATION_BLUEPRINT.md`](../product/kitchen-skills-challenge/IMPLEMENTATION_BLUEPRINT.md).
 
-The connected Trim / Rescue / Portion / review / progress / trainer surfaces are on `main` at `#/kitchen-day*`. Student work uses `SILENT_ACTIVITY`, `kitchenGroupInputSelf`, and EXIT on Finish challenge. Legacy Trim Smart v1 remains at `#/waste/trim-smart`.
+The connected Trim / Rescue / Portion / review / progress / trainer surfaces are on `main` at `#/kitchen-day*`. Student work uses `SILENT_ACTIVITY`, `kitchenGroupInputSelf`, and EXIT on Finish challenge. Trainer `wastePracticeReview` uses `SILENT_ACTIVITY` with `actors: [selectedStudentActorId]`. Legacy Trim Smart v1 remains at `#/waste/trim-smart`.
 
-Remaining live work is foodtracker Custom Embed wiring and trainer on-behalf-of-student semantics, not the old Trim → Reuse iframe-close defect.
+Remaining live work is foodtracker Custom Embed wiring, not trainer on-behalf-of-student posting (confirmed) and not the old Trim → Reuse iframe-close defect.

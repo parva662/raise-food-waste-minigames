@@ -28,7 +28,7 @@ All three embed kinds use `window.parent.postMessage`. The child sends `IFRAME_R
 
 Kitchen Skills Challenge **student work** is a custom **task**: Trim, Reuse, and Portion post `SILENT_ACTIVITY` so the same iframe can continue. **Finish challenge** then posts `{ type: 'EXIT' }` from this app (`src/platform/gamebus/exit.ts`). `EXIT` is the current Kitchen Skills close handshake; confirm against live GameBus if the official task page later documents a different leave message.
 
-Tutor `wastePracticeReview` remains `ACTIVITY`. Lunch, forecast, and closeout also post `ACTIVITY` so those tasks can complete and close.
+Tutor `wastePracticeReview` posts **`SILENT_ACTIVITY`** with `actors: [selectedStudentActorId]` so the tutor iframe stays open for the next student. Lunch, forecast, and closeout still post `ACTIVITY` so those tasks can complete and close.
 
 Input collections in this repo include `inputCollectionPari.me`, `kitchenGroupInput.activities` (`GET /groups/activities`), and Kitchen Skills student self-read `kitchenGroupInputSelf.activities` (`GET /api/me/activities`).
 

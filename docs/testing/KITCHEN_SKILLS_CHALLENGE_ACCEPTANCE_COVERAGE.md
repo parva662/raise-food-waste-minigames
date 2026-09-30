@@ -26,11 +26,11 @@ Implementation: `main` (`#/kitchen-day`, `#/kitchen-day-progress`, `#/kitchen-da
 | Session Review | `surfaces/challenge/sessionReview.test.tsx`, `kitchenSkills.flow.test.tsx` | Current session only; labelled rows; `sessionId` hidden |
 | Student Progress | `read/progressModel.test.ts`, `kitchenSkills.pages.test.tsx` | Own history; derived accuracy / final-weight trends |
 | Tutor evidence | `kitchenSkills.dashboard.test.tsx`, `kitchenSkills.pages.test.tsx` | Read-only measurements; actor isolation |
-| Tutor assessment | `kitchenSkills.review.test.tsx`, `domain/assessment/scores.test.ts` | Scores 0–5; 0 ≠ unanswered; one `wastePracticeReview` per session; not pre-filled |
-| Exact GameBus mapper contracts | `src/products/kitchen-skills-challenge/gamebus/mapKitchenSkillsTrimSmart.test.ts`, `mapRescueAndReuse.test.ts`, `mapPortionPrecision.test.ts`, `mapWastePracticeReview.test.ts`, `liveIntegration.test.ts` | Student Trim/Reuse/Portion `SILENT_ACTIVITY`; tutor review `ACTIVITY`; no derived metrics posted |
+| Tutor assessment | `kitchenSkills.review.test.tsx`, `domain/assessment/scores.test.ts`, `liveIntegration.test.ts` | Scores 0–5; 0 ≠ unanswered; one `wastePracticeReview` per session; `SILENT_ACTIVITY` + `actors`; iframe stays open |
+| Exact GameBus mapper contracts | `src/products/kitchen-skills-challenge/gamebus/mapKitchenSkillsTrimSmart.test.ts`, `mapRescueAndReuse.test.ts`, `mapPortionPrecision.test.ts`, `mapWastePracticeReview.test.ts`, `liveIntegration.test.ts` | Student Trim/Reuse/Portion `SILENT_ACTIVITY`; tutor review `SILENT_ACTIVITY` with `actors: [selectedStudentActorId]`; no derived metrics posted |
 | Recipe combobox / gram inputs / finish summary | `KitchenSkillsRecipeCombobox.test.tsx`, `gramsInput.test.ts`, `kitchenSkills.flow.test.tsx`, `postExit.test.ts` | Searchable recipe picker; digit-only grams; summary then `{ type: 'EXIT' }` on Finish challenge |
 | Compact Trim / Reuse / Portion layout | `kitchenSkills.layout.test.tsx`, `sessionReview.test.tsx` | Content-width grams; Portion table (Ingredient \| Target \| Actual \| Result); sticky actions; review recipe details collapsed |
-| Live-integration guard | `src/products/kitchen-skills-challenge/gamebus/liveIntegration.test.ts` | Student live enabled; trainer `KITCHEN_SKILLS_TRAINER_LIVE_INTEGRATION_READY=false` |
+| Live-integration guard | `src/products/kitchen-skills-challenge/gamebus/liveIntegration.test.ts` | Student live enabled; trainer live enabled (`KITCHEN_SKILLS_TRAINER_LIVE_INTEGRATION_READY=true`) |
 | Percentile / ranking | `@pending` | Sufficient-data rule not agreed |
 
 Gherkin filenames `chef-review.feature` / `CHEF_REVIEW.md` are historical. Product wording is Tutor / Tutor assessment. The activity slug remains `wastePracticeReview`.

@@ -5,6 +5,7 @@ import { kitchenSkillsTrainerTaskFixture, kitchenSkillsTaskFixture } from '@/pro
 import { mapKitchenSkillsTrimSmart, orderedKitchenSkillsTrimPropertyRefs } from '@/products/kitchen-skills-challenge/gamebus/mapKitchenSkillsTrimSmart';
 import { mapPortionPrecision, orderedPortionPrecisionPropertyRefs } from '@/products/kitchen-skills-challenge/gamebus/mapPortionPrecision';
 import { mapRescueAndReuse, orderedRescueAndReusePropertyRefs } from '@/products/kitchen-skills-challenge/gamebus/mapRescueAndReuse';
+import { mapWastePracticeReview, orderedWastePracticeReviewPropertyRefs } from '@/products/kitchen-skills-challenge/gamebus/mapWastePracticeReview';
 import {
   KITCHEN_SKILLS_STUDENT_LIVE_BLOCK_REASON,
   KITCHEN_SKILLS_STUDENT_LIVE_INTEGRATION_READY,
@@ -92,11 +93,11 @@ describe('Kitchen Day split live integration gates', () => {
     vi.restoreAllMocks();
   });
 
-  it('enables student posting and keeps tutor review blocked', () => {
+  it('enables student posting and trainer review posting', () => {
     expect(KITCHEN_SKILLS_STUDENT_LIVE_INTEGRATION_READY).toBe(true);
-    expect(KITCHEN_SKILLS_TRAINER_LIVE_INTEGRATION_READY).toBe(false);
+    expect(KITCHEN_SKILLS_TRAINER_LIVE_INTEGRATION_READY).toBe(true);
     expect(canPostKitchenSkillsStudentActivity()).toBe(true);
-    expect(canPostKitchenSkillsTrainerReview()).toBe(false);
+    expect(canPostKitchenSkillsTrainerReview()).toBe(true);
   });
 
   it('does not run a builder when the supplied gate is closed', () => {
@@ -161,12 +162,53 @@ describe('Kitchen Day split live integration gates', () => {
     );
   });
 
-  it('blocks wastePracticeReview even when the tutor TASK is present', () => {
+  it('posts wastePracticeReview as SILENT_ACTIVITY for the selected student actor', () => {
     ingestTaskForTests(kitchenSkillsTrainerTaskFixture);
     const postMessage = vi.spyOn(window.parent, 'postMessage').mockImplementation(() => undefined);
-    expect(tryPostKitchenSkillsReview(reviewEntry)).toEqual({
+    const result = tryPostKitchenSkillsReview(reviewEntry, 'user-1');
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.message.type).toBe('SILENT_ACTIVITY');
+    expect(result.message.data.template).toBe('wastePracticeReview');
+    expect(result.message.data.actors).toEqual(['user-1']);
+    expect(result.message.data.start).toBe(reviewEntry.submittedAt);
+    expect(result.message.data.end).toBe(reviewEntry.submittedAt);
+    expect(postedPropertyTemplates(result.message)).toEqual([
+      'sessionId',
+      'sessionDate',
+      'submittedAt',
+      'timeEfficiencyScore',
+      'preparationQualityScore',
+    ]);
+    expect(postedPropertyTemplates(result.message)).not.toContain('studentId');
+    expect(result.message.data.properties.map((property) => property.obj)).toEqual(
+      orderedWastePracticeReviewPropertyRefs(reviewEntry).map(
+        (ref) => mapWastePracticeReview(reviewEntry)[ref],
+      ),
+    );
+    expect(postMessage).toHaveBeenCalledTimes(1);
+    expect(postMessage).toHaveBeenCalledWith(result.message, '*');
+    expect(postMessage.mock.calls.some((call) => call[0] && (call[0] as { type?: string }).type === 'EXIT')).toBe(
+      false,
+    );
+    expect(postMessage.mock.calls.some((call) => call[0] && (call[0] as { type?: string }).type === 'ACTIVITY')).toBe(
+      false,
+    );
+  });
+
+  it('rejects a second wastePracticeReview for the same session', () => {
+    ingestTaskForTests(kitchenSkillsTrainerTaskFixture);
+    vi.spyOn(window.parent, 'postMessage').mockImplementation(() => undefined);
+    expect(tryPostKitchenSkillsReview(reviewEntry, 'user-1').ok).toBe(true);
+    expect(tryPostKitchenSkillsReview(reviewEntry, 'user-1')).toEqual({ ok: false, reason: 'duplicate' });
+  });
+
+  it('does not post a review without a selected student actor id', () => {
+    ingestTaskForTests(kitchenSkillsTrainerTaskFixture);
+    const postMessage = vi.spyOn(window.parent, 'postMessage').mockImplementation(() => undefined);
+    expect(tryPostKitchenSkillsReview(reviewEntry, '  ')).toEqual({
       ok: false,
-      reason: KITCHEN_SKILLS_TRAINER_LIVE_BLOCK_REASON,
+      reason: 'missing_student_actor',
     });
     expect(postMessage).not.toHaveBeenCalled();
   });
@@ -176,10 +218,7 @@ describe('Kitchen Day split live integration gates', () => {
     expect(tryPostKitchenSkillsTrim(trimEntry)).toEqual({ ok: false, reason: 'no_task' });
     expect(tryPostKitchenSkillsRescue(rescueEntry)).toEqual({ ok: false, reason: 'no_task' });
     expect(tryPostKitchenSkillsPortion(portionEntry)).toEqual({ ok: false, reason: 'no_task' });
-    expect(tryPostKitchenSkillsReview(reviewEntry)).toEqual({
-      ok: false,
-      reason: KITCHEN_SKILLS_TRAINER_LIVE_BLOCK_REASON,
-    });
+    expect(tryPostKitchenSkillsReview(reviewEntry, 'user-1')).toEqual({ ok: false, reason: 'no_task' });
     expect(postMessage).not.toHaveBeenCalled();
   });
 

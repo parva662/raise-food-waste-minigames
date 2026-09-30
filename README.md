@@ -11,7 +11,7 @@ This is **one npm package**, **one SPA**, and **one GitHub Pages deployment**. P
 Embeddable web surfaces that:
 
 - collect structured lunch, forecast, closeout, and practical-kitchen data
-- post GameBus `ACTIVITY` messages (Kitchen Skills student Trim / Reuse / Portion use `SILENT_ACTIVITY`; Finish challenge posts `EXIT`)
+- post GameBus `ACTIVITY` messages (Kitchen Skills student Trim / Reuse / Portion use `SILENT_ACTIVITY`; Finish challenge posts `EXIT`; trainer `wastePracticeReview` uses `SILENT_ACTIVITY` with `actors`)
 - read `TASK` and `INPUT_COLLECTIONS` from the GameBus parent iframe
 
 They are research/pilot tools, not a restaurant ERP.
@@ -22,7 +22,7 @@ They are research/pilot tools, not a restaurant ERP.
 |-------|------|
 | Canteen participant | Lunch Declaration (default route). Source still says “student” in places; that terminology is not renamed here. |
 | Kitchen staff | Kitchen Forecast, Service Closeout, Forecast Results, Kitchen Skills Challenge |
-| Chef / trainer | Kitchen Skills Challenge trainer surface (assessment posting is disabled until GameBus on-behalf-of-student is confirmed) |
+| Chef / trainer | Kitchen Skills Challenge trainer surface (`wastePracticeReview` as `SILENT_ACTIVITY` with `actors`) |
 | Admin viewer | Forecast Results admin dashboard (`#/chef-results-admin`; platform visibility, no frontend auth) |
 
 Roles determine access. They do **not** determine the source-tree layout.

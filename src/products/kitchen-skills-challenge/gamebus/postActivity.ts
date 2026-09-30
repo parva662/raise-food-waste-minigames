@@ -95,10 +95,17 @@ export function tryPostKitchenSkillsPortion(entry: KitchenSkillsPortionEntry): K
   );
 }
 
-export function tryPostKitchenSkillsReview(entry: KitchenSkillsReviewEntry): KitchenSkillsPostResult {
+export function tryPostKitchenSkillsReview(
+  entry: KitchenSkillsReviewEntry,
+  studentActorId: string,
+): KitchenSkillsPostResult {
+  const actorId = studentActorId.trim();
+  if (!actorId) {
+    return { ok: false, reason: 'missing_student_actor' };
+  }
   return tryPostKitchenSkillsActivity(
     getGameBusTask(),
-    (task) => buildWastePracticeReviewActivityMessage(task, entry),
+    (task) => buildWastePracticeReviewActivityMessage(task, entry, actorId),
     `review:${entry.sessionId}`,
     canPostKitchenSkillsTrainerReview(),
     KITCHEN_SKILLS_TRAINER_LIVE_BLOCK_REASON,

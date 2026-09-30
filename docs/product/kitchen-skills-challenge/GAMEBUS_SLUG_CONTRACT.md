@@ -134,7 +134,7 @@ One review per student Kitchen Day / session. Not one judgement per activity or 
 
 Accessors: `getRawKitchenSelfActivitiesInput` and `getRawKitchenGroupActivitiesInput` in `src/platform/gamebus/groupActivities.ts`. Student hydration does **not** require `activity.actor.id === inputCollectionPari.me.id`. Keep `kitchenGroupInput` for trainer/group code.
 
-**TASK:** one Custom Embed **task** lists `trimSmart`, `rescueAndReuse`, and `portionPrecision`. Student writes are `SILENT_ACTIVITY`; **Finish challenge** posts `{ type: 'EXIT' }`. Tutor `wastePracticeReview` stays `ACTIVITY`. Protocol index: [`../../contracts/GAMEBUS.md`](../../contracts/GAMEBUS.md). Task rules: [`../../contracts/KITCHEN_SKILLS_CHALLENGE_TASK.md`](../../contracts/KITCHEN_SKILLS_CHALLENGE_TASK.md).
+**TASK:** one Custom Embed **task** lists `trimSmart`, `rescueAndReuse`, and `portionPrecision`. Student writes are `SILENT_ACTIVITY`; **Finish challenge** posts `{ type: 'EXIT' }`. Tutor `wastePracticeReview` posts `SILENT_ACTIVITY` with `actors: [selectedStudentActorId]` (no `studentId` property). Protocol index: [`../../contracts/GAMEBUS.md`](../../contracts/GAMEBUS.md). Task rules: [`../../contracts/KITCHEN_SKILLS_CHALLENGE_TASK.md`](../../contracts/KITCHEN_SKILLS_CHALLENGE_TASK.md).
 
 This is **not** a platform blocker and is **not** a new API invented in the SPA.
 
@@ -178,6 +178,8 @@ This is **not** a platform blocker and is **not** a new API invented in the SPA.
 - Make `wastePracticeReview` session-level
 - Keep: `sessionId`, `sessionDate`, `submittedAt`, `timeEfficiencyScore`, `preparationQualityScore`, `chefFeedback`
 - `chefFeedback` optional
+- Post `SILENT_ACTIVITY` with `actors: [selectedStudentActorId]`
+- Do **not** add `studentId`
 - Unlink / stop requiring: `reviewedActivityId`, `reviewedGame`, `reasonCode`, `freeTextNote`, `unusualEvent`, `serviceDate`
 
 ---

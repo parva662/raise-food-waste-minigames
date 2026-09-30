@@ -38,7 +38,7 @@ The student Kitchen Day TASK stays open until **Finish challenge**.
 4. Summary shows compact Trim / Reuse / Portion headlines. Detail sections are collapsed. Portion’s ingredient table is behind **View recipe details**.
 5. **Finish challenge** (always visible at the bottom) posts `{ type: 'EXIT' }` via `postKitchenSkillsChallengeExit`. That is the only EXIT in this flow.
 
-Do not send EXIT after Trim, Reuse, or immediately after Portion. Tutor review posting is unchanged (`ACTIVITY`).
+Do not send EXIT after Trim, Reuse, or immediately after Portion. Tutor review posts `SILENT_ACTIVITY` with `actors: [selectedStudentActorId]` and keeps the tutor iframe open.
 
 ## 4. Trim Smart
 

@@ -57,7 +57,7 @@ Orchestration: [`docs/product/kitchen-skills-challenge/KITCHEN_SKILLS_CHALLENGE.
 - **Trim Smart (Kitchen Skills Challenge)** — estimate → timed prep → actual waste at `#/kitchen-day`. Legacy v1 remains at `#/waste/trim-smart`.
 - **Rescue & Reuse** — `#/kitchen-day/reuse`; join `sessionId` + `ingredientId`.
 - **Portion Precision** — `#/kitchen-day/portion`; professional recipe reference extract.
-- **Session Review / Progress / trainer assessment** — `#/kitchen-day/review`, `#/kitchen-day-progress`, `#/kitchen-day-tutor`. Trainer `wastePracticeReview` posting is disabled.
+- **Session Review / Progress / trainer assessment** — `#/kitchen-day/review`, `#/kitchen-day-progress`, `#/kitchen-day-tutor`. Trainer `wastePracticeReview` posts `SILENT_ACTIVITY` with `actors: [selectedStudentActorId]`.
 
 ### Student missions (broader study)
 

@@ -1,6 +1,6 @@
 # Session Review, Student Progress, and tutor assessment
 
-> **APPROVED PRODUCT TARGET**. Implemented on `main` at `#/kitchen-day/review`, `#/kitchen-day-progress`, and `#/kitchen-day-tutor`. Trainer `wastePracticeReview` posting remains disabled.
+> **APPROVED PRODUCT TARGET**. Implemented on `main` at `#/kitchen-day/review`, `#/kitchen-day-progress`, and `#/kitchen-day-tutor`. Trainer `wastePracticeReview` posts `SILENT_ACTIVITY` with `actors: [selectedStudentActorId]`.
 >
 > Filename is historical. Product wording is **Tutor** / **Tutor assessment**. The GameBus activity slug remains `wastePracticeReview`.
 >
@@ -26,22 +26,22 @@ Neither posts measurement activities. Progress does not invent ranking.
 
 ## 3. Tutor dashboard — one assessment per session
 
-The tutor opens a student's completed Kitchen Day on `#/kitchen-day-tutor`, inspects Trim / reuse / Portion as **evidence**, enters the two 0–5 scores and optional feedback, and submits **one** `wastePracticeReview`.
+The tutor opens a student's completed Kitchen Day on `#/kitchen-day-tutor`, inspects Trim / reuse / Portion as **evidence**, enters the two 0–5 scores and optional feedback, and submits **one** `wastePracticeReview` as `SILENT_ACTIVITY` with `actors: [selectedStudentActorId]`. The tutor iframe stays open so the chef can review another student.
 
 Not one review per activity. Not one score per ingredient. Trim, reuse, and Portion do not receive separate first-release tutor scores.
 
-Stored: `sessionId`, `sessionDate`, `submittedAt`, `timeEfficiencyScore`, `preparationQualityScore`, optional `chefFeedback`.
+Stored properties: `sessionId`, `sessionDate`, `submittedAt`, `timeEfficiencyScore`, `preparationQualityScore`, optional `chefFeedback`. Do **not** add `studentId`. The selected student is `actors: [selectedStudentActorId]` on the activity message.
 
 `0` is a valid score and must stay distinct from "not yet scored".
 
 **DEPRECATED:** `reviewedActivityId`, `reviewedGame`, `reasonCode`, `freeTextNote`, `unusualEvent`, `serviceDate`.
 
-Tutor “on behalf of student” GameBus registration is unresolved until the live tutor mechanism is inspected. Do not invent it.
-
 ## 4. Retrieval
 
 - Student Session Review / challenge: `kitchenGroupInputSelf.activities` → `GET /api/me/activities`.
-- Tutor dashboard / group: `kitchenGroupInput.activities` → `GET /groups/activities` (`src/platform/gamebus/groupActivities.ts`).
+- Tutor dashboard / group: `kitchenGroupInput.activities` → `GET /groups/activities` (`src/platform/gamebus/groupActivities.ts`), grouped/filtered by actor.
+
+This phase does **not** use a group-members Input Collection. Students with zero Kitchen Skills activity are not listed.
 
 **Not** a platform blocker. **Not** a new API.
 
