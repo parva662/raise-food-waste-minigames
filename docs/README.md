@@ -67,7 +67,8 @@ Always separate **intended product behaviour**, **current implementation**, and 
 
 1. [`contracts/GAMEBUS.md`](contracts/GAMEBUS.md) — official GameBus doc index  
 2. [`contracts/KITCHEN_FORECAST_ADMIN_SETUP.md`](contracts/KITCHEN_FORECAST_ADMIN_SETUP.md) — forecast admin checklist  
-3. [`product/kitchen-skills-challenge/GAMEBUS_SLUG_CONTRACT.md`](product/kitchen-skills-challenge/GAMEBUS_SLUG_CONTRACT.md) — Kitchen Skills locked slugs  
+3. [`how-to/verify-input-collections.md`](how-to/verify-input-collections.md) — verify embed Input Collections  
+4. [`product/kitchen-skills-challenge/GAMEBUS_SLUG_CONTRACT.md`](product/kitchen-skills-challenge/GAMEBUS_SLUG_CONTRACT.md) — Kitchen Skills locked slugs  
 
 ### AI agents (Cursor and similar)
 
@@ -75,8 +76,9 @@ Always separate **intended product behaviour**, **current implementation**, and 
 2. This map (`docs/README.md`)  
 3. [`architecture/`](architecture/) + [`contracts/`](contracts/) + [`../features/`](../features/)  
 4. [`testing/`](testing/) coverage maps for the area under change  
-5. [`current-state/IMPLEMENTATION_STATUS.md`](current-state/IMPLEMENTATION_STATUS.md)  
-6. **Do not** treat [`archive/`](archive/) or the master plan as behaviour SoT  
+5. [`how-to/`](how-to/) when diagnosing live embed / results issues  
+6. [`current-state/IMPLEMENTATION_STATUS.md`](current-state/IMPLEMENTATION_STATUS.md)  
+7. **Do not** treat [`archive/`](archive/) or the master plan as behaviour SoT  
 
 ---
 
@@ -94,6 +96,8 @@ Goal-oriented recipes for a concrete job:
 
 | Path | Notes |
 |------|--------|
+| [`how-to/diagnose-chef-results.md`](how-to/diagnose-chef-results.md) | Diagnose `#/chef-results` empty / wrong Progress (product vs code vs live feed) |
+| [`how-to/verify-input-collections.md`](how-to/verify-input-collections.md) | Verify which GameBus Input Collections the embed received |
 | [`contracts/KITCHEN_FORECAST_ADMIN_SETUP.md`](contracts/KITCHEN_FORECAST_ADMIN_SETUP.md) | Configure / verify Kitchen Forecast on GameBus |
 | [`../reference/README.md`](../reference/README.md) | Menu / recipe workbook and regenerate pipelines |
 
@@ -142,7 +146,7 @@ Understanding-oriented context: why the product and architecture look this way.
 | [`product/kitchen-skills-challenge/RESCUE_AND_REUSE.md`](product/kitchen-skills-challenge/RESCUE_AND_REUSE.md) | Reuse |
 | [`product/kitchen-skills-challenge/PORTION_PRECISION.md`](product/kitchen-skills-challenge/PORTION_PRECISION.md) | Portion Precision |
 | [`product/kitchen-skills-challenge/CHEF_REVIEW.md`](product/kitchen-skills-challenge/CHEF_REVIEW.md) | Session Review, Progress, trainer |
-| [`product/kitchen-skills-challenge/IMPLEMENTATION_BLUEPRINT.md`](product/kitchen-skills-challenge/IMPLEMENTATION_BLUEPRINT.md) | Phases 0–6 (overlaps current-state; phase 2 cleanup) |
+| [`product/kitchen-skills-challenge/IMPLEMENTATION_BLUEPRINT.md`](product/kitchen-skills-challenge/IMPLEMENTATION_BLUEPRINT.md) | Architectural constraints + remaining admin risks (status lives in current-state) |
 | [`product/STUDENT_LUNCH.md`](product/STUDENT_LUNCH.md) | Student Lunch |
 | [`product/KITCHEN_FORECAST.md`](product/KITCHEN_FORECAST.md) | Kitchen Forecast |
 | [`product/SERVICE_CLOSEOUT.md`](product/SERVICE_CLOSEOUT.md) | Service Closeout |
@@ -185,6 +189,7 @@ Understanding-oriented context: why the product and architecture look this way.
 ```
 docs/
 ├── README.md                 ← this map
+├── how-to/                   ← practical diagnosis / verification recipes
 ├── product/                  ← mostly Explanation (+ some Reference)
 ├── architecture/             ← Explanation
 ├── contracts/                ← Reference (+ some How-to)

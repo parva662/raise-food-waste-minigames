@@ -1,17 +1,18 @@
 # Session Review, Student Progress, and tutor assessment
 
-> **APPROVED PRODUCT TARGET**. Implemented on `main` at `#/kitchen-day/review`, `#/kitchen-day-progress`, and `#/kitchen-day-tutor`. Trainer `wastePracticeReview` posts `SILENT_ACTIVITY` with `actors: [selectedStudentActorId]`.
+> **Documentation role:** Explanation — feedback surfaces and tutor workflow.
+> **APPROVED PRODUCT TARGET**. Implemented on `main` at `#/kitchen-day/review`, `#/kitchen-day-progress`, and `#/kitchen-day-tutor`.
 >
 > Filename is historical. Product wording is **Tutor** / **Tutor assessment**. The GameBus activity slug remains `wastePracticeReview`.
 >
-> [`KITCHEN_SKILLS_CHALLENGE.md`](KITCHEN_SKILLS_CHALLENGE.md) · [`GAMEBUS_SLUG_CONTRACT.md`](GAMEBUS_SLUG_CONTRACT.md).
+> Slugs / properties: [`GAMEBUS_SLUG_CONTRACT.md`](GAMEBUS_SLUG_CONTRACT.md). Routes: [`../../contracts/KITCHEN_SKILLS_CHALLENGE_ROUTES.md`](../../contracts/KITCHEN_SKILLS_CHALLENGE_ROUTES.md). Protocol: [`../../contracts/GAMEBUS.md`](../../contracts/GAMEBUS.md).
 
 ## 1. Two feedback layers
 
 | Layer | Content |
 |-------|---------|
-| System performance | Calculated waste % vs seeded kitchen reference, later vs historical Trim data by `ingredientId`; Portion ingredient accuracy and final-weight deviation from the current recipe reference. Percentile / ranking **@pending** a sufficient-data rule. |
-| Tutor assessment | One review per completed module (`reviewedGame`): `timeEfficiencyScore`, `preparationQualityScore`, optional `chefFeedback` |
+| System performance | Calculated waste % vs kitchen reference; Portion ingredient accuracy and final-weight deviation. Percentile / ranking **@pending** a sufficient-data rule. |
+| Tutor assessment | One review per completed module (`reviewedGame`): time / quality scores and optional feedback |
 
 System comparison never pre-fills tutor scores. Analytics are never stored as activity properties. There is no automatic combined Portion score or overall tutor score.
 
@@ -19,40 +20,34 @@ System comparison never pre-fills tutor scores. Analytics are never stored as ac
 
 | Surface | Route | Scope |
 |---------|-------|-------|
-| Session Review | `#/kitchen-day/review` | Current locked Kitchen Day only; read-only; per-module tutor readbacks |
-| Student Progress | `#/kitchen-day-progress` | Own history; Overview / Progress; Progress module tabs (Trim / Rescue / Portion) default to **Recent** (last 8 module sessions + calendar span, Recent-only charts, latest tutor, short list) with a secondary **History** archive (date/review filters, ~10 rows/page); no leaderboard |
+| Session Review | `#/kitchen-day/review` | Current locked session only; read-only; per-module tutor readbacks |
+| Student Progress | `#/kitchen-day-progress` | Own history; Overview / Progress; module tabs default to **Recent** (last 8 sessions + span, Recent-only charts) with **History** archive (filters, ~10 rows/page); no leaderboard |
 
 Neither posts measurement activities. Progress does not invent ranking or an overall tutor score.
 
 ## 3. Tutor dashboard — one assessment per module
 
-The trainer opens `#/kitchen-day-tutor` in three levels: **staff list** (name search, modules awaiting assessment) → **staff sessions** split into **Needs assessment** / **Reviewed** tabs (evidence modules without a matching `wastePracticeReview` keep a session in Needs assessment, including partial reviews; modules without evidence do not block Reviewed) → **session detail** with module tabs (Trim Smart / Rescue & Reuse / Portion Precision). Session cards show module-level status or compact score summaries; ordering is newest first.
+`#/kitchen-day-tutor`: **staff list** → **Needs assessment** / **Reviewed** session tabs → **session detail** with module tabs (Trim / Rescue / Portion).
 
-A compact sticky header keeps a secondary **Close** control visible while scrolling.
+- Evidence without a matching review keeps the session in Needs assessment (including partial reviews). Modules without evidence do not block Reviewed.
+- Independent draft per module tab; scores **0–5** (empty ≠ `0`).
+- Submit one `wastePracticeReview` per module with evidence as `SILENT_ACTIVITY` + RAISE `actors: [selectedStudentActorId]` and `reviewedGame` set to that module slug. Exact properties: slug contract.
+- **Close** posts `{ type: 'EXIT' }` only (no review). Confirm if the active draft is dirty.
+- Duplicate posts for the same `sessionId` + `reviewedGame` are rejected.
 
-Each module tab has an **independent** assessment form. Switching modules remounts / clears draft inputs so Trim scores do not leak into Rescue or Portion. Score fields accept only empty or a single digit **0–5**; Submit stays disabled until both scores parse (`parseKitchenSkillsReviewScore`).
+**DEPRECATED property names:** see slug contract (`reviewedActivityId`, `reasonCode`, `freeTextNote`, `unusualEvent`, `serviceDate`, …).
 
-For each module that has evidence, the tutor inspects that module’s evidence and submits one `wastePracticeReview` as `SILENT_ACTIVITY` with `actors: [selectedStudentActorId]` and `reviewedGame` set to the module slug (`trimSmart`, `rescueAndReuse`, or `portionPrecision`). Modules without evidence show a message and no form. The tutor iframe stays open so the chef can review another student or module.
+## 4. Retrieval (product rules)
 
-A secondary **Close** control posts `{ type: 'EXIT' }` via `postKitchenSkillsChallengeExit` and **does not** post a review. If the active module form has a dirty draft (time, quality, or feedback non-empty and not yet submitted), Close asks for confirmation first.
+| Who | Product rule | Feed |
+|-----|--------------|------|
+| Student | Progress shows Trim / Reuse / Portion before tutor review exists; attach reviews by `sessionId` + `reviewedGame` (no actor-id equality required) | `kitchenGroupInputSelf` |
+| Tutor | Group by actor; actor match when attaching reviews | `kitchenSkillsTrainerInput` |
+| Session Review | May hydrate reviews from both self and trainer feeds (dedupe) | both |
 
-Not one score per ingredient. Duplicate posts for the same `sessionId` + `reviewedGame` are rejected.
+Do **not** reuse `kitchenGroupInput`. Do **not** invent child REST pagination — UX windowing consumes whatever INPUT_COLLECTIONS delivers. Students with zero Kitchen Skills activity are not listed (no group-members collection in this phase).
 
-Stored properties: `sessionId`, `sessionDate`, `submittedAt`, `reviewedGame`, `timeEfficiencyScore`, `preparationQualityScore`, optional `chefFeedback`. Do **not** add `studentId`. The selected student is `actors: [selectedStudentActorId]` on the activity message.
-
-`0` is a valid score and must stay distinct from "not yet scored".
-
-**DEPRECATED:** `reviewedActivityId`, `reasonCode`, `freeTextNote`, `unusualEvent`, `serviceDate`.
-
-## 4. Retrieval
-
-- Student Session Review / challenge / Student Progress: `kitchenGroupInputSelf.activities` → `GET /api/me/activities`. Progress shows Trim / Reuse / Portion before tutor review exists. Progress **Recent** windows charts and the short session list to the last **8** module sessions (labeled with that window’s calendar span); **History** is a filtered, paged archive (~10 rows/page). Phase A still consumes whatever the Input Collection delivers—UX windowing is mandatory; inventing child REST pagination is not. When attaching `wastePracticeReview` onto Progress sessions, match by `sessionId` + `reviewedGame` (do not require `activity.actor.id` equality — self evidence may use a fallback actor id while the review carries the real actor, or vice versa). A review may create a session shell when evidence for that `sessionId` is absent. With `?gamebusDebug=1` (or DEV), Progress logs a compact self-feed review summary (`kitchen-skills-progress.self-feed-reviews`) so missing tutor assessments can be diagnosed without changing data sources.
-- Tutor dashboard: `kitchenSkillsTrainerInput.activities` → `GET /api/groups/activities` filtered to Kitchen Skills templates (`src/platform/gamebus/groupActivities.ts` `getRawKitchenSkillsTrainerActivitiesInput`), grouped by actor (actor match required when attaching reviews). Do not reuse `kitchenGroupInput`.
-- Session Review in the student embed hydrates reviews from **both** self and trainer input collections (deduped by `persistId` or `sessionId` + `reviewedGame`).
-
-This phase does **not** use a group-members Input Collection. Students with zero Kitchen Skills activity are not listed.
-
-**Not** a platform blocker. **Not** a new API.
+Debug: with `?gamebusDebug=1` (or DEV), Progress can log `kitchen-skills-progress.self-feed-reviews`.
 
 ## 5. Non-goals
 

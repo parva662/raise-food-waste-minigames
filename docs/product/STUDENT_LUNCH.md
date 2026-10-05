@@ -1,7 +1,8 @@
 # Student Lunch
 
-**Documentation role:** Canonical product navigation page (not a full specification).
+**Documentation role:** Explanation — product navigation page (not a full specification).
 **Audience:** Developers and AI assistants starting Student Lunch work.
+**Acceptance / schema SoT:** approved Gherkin and [`../contracts/STUDENT_LUNCH_GAMEBUS.md`](../contracts/STUDENT_LUNCH_GAMEBUS.md) — do not duplicate those tables here.
 
 ---
 
@@ -51,6 +52,6 @@ Do **not** rewrite the approved `.feature` merely to match current code.
 
 ## Related reading
 
-- Study context: [`RAISE_BARLAUREA_MASTER_PLAN.md`](RAISE_BARLAUREA_MASTER_PLAN.md)
+- Study context (explanation only): [`RAISE_BARLAUREA_MASTER_PLAN.md`](RAISE_BARLAUREA_MASTER_PLAN.md)
 - Roadmap: [`../current-state/ROADMAP.md`](../current-state/ROADMAP.md)
 - Docs index: [`../README.md`](../README.md)

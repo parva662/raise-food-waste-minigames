@@ -1,14 +1,15 @@
 # Rescue & Reuse — reuse suggestion
 
+> **Documentation role:** Explanation — module intent and rules.
 > **APPROVED PRODUCT TARGET**. Implemented on `main` at `#/kitchen-day/reuse`.
 >
-> Module of [`KITCHEN_SKILLS_CHALLENGE.md`](KITCHEN_SKILLS_CHALLENGE.md). Slug authority: [`GAMEBUS_SLUG_CONTRACT.md`](GAMEBUS_SLUG_CONTRACT.md).
+> Module of [`KITCHEN_SKILLS_CHALLENGE.md`](KITCHEN_SKILLS_CHALLENGE.md). Locked properties: [`GAMEBUS_SLUG_CONTRACT.md`](GAMEBUS_SLUG_CONTRACT.md).
 
 ## 1. Purpose
 
-After a Trim Smart entry records `actualWasteGrams`, the student records how much of **that ingredient's** waste can be reused and where.
+After a Trim Smart entry records actual waste, the student records how much of **that ingredient's** waste can be reused and where.
 
-Not a scored mini-game. First-release tutor assessment does not score this module separately.
+Not a scored mini-game. The tutor may still submit a module assessment for Rescue when evidence exists (`reviewedGame: rescueAndReuse`); system metrics do not set those scores.
 
 ## 2. Connection
 
@@ -18,48 +19,36 @@ Because a student does not record the same ingredient twice in one session, the 
 
 Do **not** create `sourceActivityId` or `preparationEntryId`.
 
-```text
-Trim actualWasteGrams:     1000 g
-reusableWasteGrams:         500 g
-Discarded (calculated):     500 g
-reuseDestination:           "Carrot soup tomorrow"
-```
-
 | Concept | Where it lives |
 |---------|----------------|
 | Waste, name, starting weight | Matching `trimSmart` |
 | Reusable amount + destination | `rescueAndReuse` |
 | Discarded | Calculated — never stored |
 
-## 3. Stored properties
+Exact stored properties: slug contract. Do **not** duplicate `ingredientName` or `ingredientWeightGrams` on Reuse.
 
-`sessionId`, `sessionDate`, `ingredientId`, `reusableWasteGrams`, `reuseDestination`, `submittedAt`.
+## 3. Rules
 
-Do **not** duplicate `ingredientName` or `ingredientWeightGrams`.
-
-## 4. Rules
-
-1. `reuseDestination` is free text (e.g. "Carrot soup tomorrow", "Use in today's vegetable stock").
+1. `reuseDestination` is free text.
 2. No reuse status, later confirmation, inventory, or "was it used?" tracking.
 3. `reusableWasteGrams` is 0 … that Trim entry's `actualWasteGrams`.
 4. Each Trim ingredient may have at most one reuse suggestion.
-5. No reuse points or reuse tutor score.
+5. No reuse points; no automatic reuse tutor score.
 
-## 5. Journey
+## 4. Journey
 
-Complete Trim through `actualWasteGrams` → compact form (ingredient + actual waste on one row from tablet width; short reusable grams; two-row destination) → see calculated discarded remainder → save (`SILENT_ACTIVITY`) → continue to Portion in the same iframe. Layout: [`../UI_STANDARD.md`](../UI_STANDARD.md).
+Complete Trim through actual waste → compact reuse form → see calculated discarded remainder → save (`SILENT_ACTIVITY`) → continue to Portion in the same iframe. Layout: [`../UI_STANDARD.md`](../UI_STANDARD.md).
 
-## 6. Removed
+## 5. Removed (historical naming)
 
 | Removed | Replacement |
 |---------|-------------|
-| Standalone Rescue game | Kitchen Day module |
+| Standalone Rescue game | Kitchen Skills Challenge module |
 | `sourceActivityId` / `preparationEntryId` | `sessionId` + `ingredientId` |
 | Duplicated ingredient name/weight | Read from Trim |
 | `reuseMethod` | `reuseDestination` |
 | Stored `discardedWasteGrams` | Calculated |
-| Separate tutor score | Evidence only |
 
-## 7. GameBus admin
+## 6. GameBus admin
 
-Keep/link session, date, `ingredientId`, `reusableWasteGrams`, `submittedAt`. Create/link `reuseDestination`. Unlink `reuseMethod` and duplicated ingredient fields. Do not create `sourceActivityId`.
+See slug contract for the live property set. Create/link `reuseDestination`; unlink `reuseMethod` and duplicated ingredient fields. Do not create `sourceActivityId`.

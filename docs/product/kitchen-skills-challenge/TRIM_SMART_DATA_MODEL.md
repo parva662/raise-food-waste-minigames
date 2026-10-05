@@ -1,13 +1,14 @@
 # Trim Smart — Data Model Specification
 
+**Documentation role:** Reference — Trim field / join facts for Kitchen Skills Challenge.
+**Slug authority:** [`GAMEBUS_SLUG_CONTRACT.md`](GAMEBUS_SLUG_CONTRACT.md). Do not treat this file as a second property schema when it overlaps the slug contract.
+
 > **CURRENT IMPLEMENTATION** — §2 (v1 on `main`).
 > **APPROVED PRODUCT TARGET** — §3 onward.
 
-**Slug authority:** [`GAMEBUS_SLUG_CONTRACT.md`](GAMEBUS_SLUG_CONTRACT.md).
-
 ## 1. Goals
 
-1. Multiple **different** `trimSmart` activities per student Kitchen Day.
+1. Multiple **different** `trimSmart` activities per student Kitchen Skills session.
 2. Same `ingredientId` is **not** posted twice in one session.
 3. Store only §3 facts; calculate analytics on read.
 4. Tutor judgement is one Trim module `wastePracticeReview` (`reviewedGame=trimSmart`), not per Trim entry and not one overall session review.

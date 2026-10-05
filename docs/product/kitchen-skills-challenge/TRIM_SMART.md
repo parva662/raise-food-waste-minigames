@@ -1,16 +1,16 @@
 # Trim Smart — ingredient preparation entry
 
+> **Documentation role:** Explanation — module intent and flow.
 > **APPROVED PRODUCT TARGET** — module of [`KITCHEN_SKILLS_CHALLENGE.md`](KITCHEN_SKILLS_CHALLENGE.md).
 >
-> **CURRENT IMPLEMENTATION:** Kitchen Skills Challenge Trim is on `main` at `#/kitchen-day`. Legacy Trim Smart v1 remains at `#/waste/trim-smart` (`practice` / `participantWasteGrams`).
-
-**Slug authority:** [`GAMEBUS_SLUG_CONTRACT.md`](GAMEBUS_SLUG_CONTRACT.md).
+> **CURRENT IMPLEMENTATION:** `#/kitchen-day`. Legacy Trim Smart v1 remains at `#/waste/trim-smart`.
+> Locked properties: [`GAMEBUS_SLUG_CONTRACT.md`](GAMEBUS_SLUG_CONTRACT.md). Field / join reference: [`TRIM_SMART_DATA_MODEL.md`](TRIM_SMART_DATA_MODEL.md).
 
 ## 1. Purpose
 
 Estimate waste before preparation, measure actual waste after, and compare to kitchen reference data. System comparison is **not** a tutor assessment.
 
-## 2. Place in Kitchen Day
+## 2. Place in the session
 
 One `trimSmart` activity = one ingredient preparation entry. A student records **multiple different ingredients** in one session. The **same ingredient is not recorded twice** in that session.
 
@@ -22,15 +22,13 @@ Standalone route, no estimate step, no timer, no reference comparison. Posts `pr
 
 ## 4. Target flow
 
-1. Name → `ingredientId` + starting weight (`ingredientWeightGrams`).
-2. Technique → `trimTechniques` (plural live slug; the ten locked values are one-tap buttons, compact on small screens). Gram fields stay content-width; Continue/Save are sticky on small screens. Layout: [`../UI_STANDARD.md`](../UI_STANDARD.md).
-3. Estimate → `estimatedWasteGrams`.
-4. Timed preparation → `duration` (student does not type minutes).
-5. Actual waste → `actualWasteGrams`.
-6. See calculated waste % and reference comparison.
-7. **Save ingredient** posts `SILENT_ACTIVITY` and continues to Reuse in the same iframe.
+1. Name → `ingredientId` + starting weight.
+2. Technique → live plural slug `trimTechniques` (ten locked one-tap values). Layout: [`../UI_STANDARD.md`](../UI_STANDARD.md).
+3. Estimate → actual waste after timed preparation (`duration` from the timer — student does not type minutes).
+4. See calculated waste % and reference comparison (not stored).
+5. **Save ingredient** posts `SILENT_ACTIVITY` and continues to Reuse in the same iframe.
 
-Worked example (stored facts): Carrot / 5000 g / `trimming` / estimate 600 g / actual 450 g / timed `duration`. Waste % 9% and the reference comparison are calculated, not stored.
+Exact property list and types: slug contract. Worked example numbers belong in acceptance examples / tests, not as a second schema.
 
 ## 5. Calculated (never stored)
 
@@ -40,7 +38,7 @@ Percentile / ranking messaging is **@pending** until a sufficient-data rule is a
 
 ## 6. Tutor assessment
 
-One end-of-session `wastePracticeReview` for the whole Kitchen Day. This module is evidence, not a separate tutor score.
+This module is **evidence** for one optional `wastePracticeReview` with `reviewedGame: trimSmart`. It is not a separate automatic score and not one review for the whole session. See [`CHEF_REVIEW.md`](CHEF_REVIEW.md).
 
 ## 7. Non-goals
 

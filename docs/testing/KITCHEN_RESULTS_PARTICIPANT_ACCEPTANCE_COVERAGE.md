@@ -5,6 +5,7 @@ Maps approved Gherkin in
 to Vitest coverage. This is not a second specification.
 
 Route: `#/chef-results`. Timezone: `Europe/Helsinki`.
+How-to: [`../how-to/diagnose-chef-results.md`](../how-to/diagnose-chef-results.md).
 
 **Product decisions locked in this audit:**
 

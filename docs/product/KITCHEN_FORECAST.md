@@ -1,7 +1,7 @@
 # Kitchen Forecast
 
-**Documentation role:** Canonical product navigation page.
-**Does not invent new product rules** — organizes existing documentation.
+**Documentation role:** Explanation — product navigation page.
+**Does not invent new product rules** — organizes existing documentation. Timing, property lists, and eligibility SoT: Gherkin + [`../contracts/KITCHEN_FORECAST_GAMEBUS.md`](../contracts/KITCHEN_FORECAST_GAMEBUS.md).
 
 ---
 
@@ -19,13 +19,13 @@ Authorized kitchen staff declare an expected lunch forecast for an operational l
 | **GameBus contract** | [`../contracts/KITCHEN_FORECAST_GAMEBUS.md`](../contracts/KITCHEN_FORECAST_GAMEBUS.md) | **EXTERNAL / GAMEBUS CONTRACT** |
 | **Admin / template setup** | [`../contracts/KITCHEN_FORECAST_ADMIN_SETUP.md`](../contracts/KITCHEN_FORECAST_ADMIN_SETUP.md) | Operational checklist |
 | **Implementation status** | [`../current-state/IMPLEMENTATION_STATUS.md`](../current-state/IMPLEMENTATION_STATUS.md) | **CURRENT IMPLEMENTATION** |
-| **Study / system plan** | [`RAISE_BARLAUREA_MASTER_PLAN.md`](RAISE_BARLAUREA_MASTER_PLAN.md) | Mixed study + product |
+| **Study / system explanation** | [`RAISE_BARLAUREA_MASTER_PLAN.md`](RAISE_BARLAUREA_MASTER_PLAN.md) | Explanation only — not product SoT |
 | **Legacy mixed spec** | [`../archive/SPEC_LEGACY.md`](../archive/SPEC_LEGACY.md) §9 | **HISTORICAL** |
 | **Roadmap** | [`../current-state/ROADMAP.md`](../current-state/ROADMAP.md) | Integration steps |
 
-[`features/kitchen/kitchen-forecast.feature`](../../features/kitchen/kitchen-forecast.feature) is the approved acceptance specification. The timing/target-date model below is implemented on `main`; the only `@pending` scenario left is the open-page rollover edge case.
+[`features/kitchen/kitchen-forecast.feature`](../../features/kitchen/kitchen-forecast.feature) is the approved acceptance specification. The timing/target-date model below is a **summary** of that Gherkin + contract §A.1; if they diverge, fix this page — do not invent new rules. The only `@pending` scenario left is the open-page rollover edge case.
 
-The GameBus contract carries the same timing model in [§A.1](../contracts/KITCHEN_FORECAST_GAMEBUS.md) (the earlier "tomorrow's published menu" wording was stale and has been corrected). No live GameBus configuration was changed.
+The GameBus contract carries the same timing model in [§A.1](../contracts/KITCHEN_FORECAST_GAMEBUS.md). No live GameBus configuration was changed by documentation edits.
 
 ---
 
@@ -65,20 +65,14 @@ This is **temporary operational test configuration**. It does not redefine Kitch
 
 Replay availability is governed by the **GameBus task/play configuration**, not by the minigame. The minigame does not need to retrieve and display an earlier forecast on a fresh page purely to enforce production finality, and **no edit/replace workflow** exists.
 
-Because the pilot can leave several activities behind, **retrieval must be robust**. An activity for exact `targetDate = D` is **eligible** only when `submittedAt` falls in one of these Europe/Helsinki windows:
+Because the pilot can leave several activities behind, **retrieval must be robust**. Eligibility windows and “latest eligible” selection are defined in the GameBus contract / shared eligibility policy — summarize only:
 
-1. on the immediately previous operational service day `P`, **08:30:00–23:59:59**; or
-2. on `D` itself, **08:00:00–08:29:59**.
+1. exact `targetDate = D` for the authenticated actor;
+2. `submittedAt` in the Europe/Helsinki windows documented in [`../contracts/KITCHEN_FORECAST_GAMEBUS.md`](../contracts/KITCHEN_FORECAST_GAMEBUS.md);
+3. latest eligible wins; later ineligible never replaces earlier eligible;
+4. never fall back to another `targetDate`.
 
-For a given authenticated actor + `targetDate`:
-
-1. collect `chefForecast` activities carrying that exact `targetDate`;
-2. remove activities outside the two windows above;
-3. if several eligible activities remain, use the one with the **latest** `submittedAt`;
-4. a later **ineligible** activity must never replace an earlier eligible one;
-5. never fall back to a forecast for another `targetDate`.
-
-"Latest eligible activity" exists to make pilot data deterministic. It is **not** permission for production users to submit multiple forecasts, and the current replay count must not be hard-coded into product logic.
+"Latest eligible activity" exists to make pilot data deterministic. It is **not** permission for production users to submit multiple forecasts. Diagnosis: [`../how-to/diagnose-chef-results.md`](../how-to/diagnose-chef-results.md).
 
 ---
 

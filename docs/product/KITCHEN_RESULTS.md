@@ -1,6 +1,6 @@
 # Kitchen Results (staff and management dashboards)
 
-**Documentation role:** Explanation — canonical product navigation page for results views.
+**Documentation role:** Explanation — product navigation page for results views.
 **Does not invent new product rules** — organizes existing documentation. Acceptance SoT: approved `.feature` files; implementation: `src/products/forecast-results/` + `docs/current-state/`.
 
 ---
@@ -47,6 +47,8 @@ Two surfaces exist in the current repository:
 - Admin keeps its historical service-date selector (not a "today dashboard").
 - No composite score, ranking, or winner language.
 - Shared calculation engine for participant and admin for the same actor + targetDate.
+
+Diagnosis: [`../how-to/diagnose-chef-results.md`](../how-to/diagnose-chef-results.md) · Input Collections: [`../how-to/verify-input-collections.md`](../how-to/verify-input-collections.md).
 
 ---
 

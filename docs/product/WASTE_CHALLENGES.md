@@ -1,9 +1,11 @@
 # Waste challenges / Kitchen Skills Challenge (practical kitchen)
 
-**APPROVED PRODUCT TARGET** for product logic and property names. **Implemented on `main`** at `#/kitchen-day*` (legacy-stable hashes). Legacy Trim Smart v1 remains at `#/waste/trim-smart`.
+**Documentation role:** Explanation — family overview / navigation hub.
+**APPROVED PRODUCT TARGET** for product logic. Property names: slug contract. **Implemented on `main`** at `#/kitchen-day*` (legacy-stable hashes). Legacy Trim Smart v1 remains at `#/waste/trim-smart`.
 
 Canonical orchestration: [`kitchen-skills-challenge/KITCHEN_SKILLS_CHALLENGE.md`](kitchen-skills-challenge/KITCHEN_SKILLS_CHALLENGE.md).
 Property slugs: [`kitchen-skills-challenge/GAMEBUS_SLUG_CONTRACT.md`](kitchen-skills-challenge/GAMEBUS_SLUG_CONTRACT.md).
+Routes: [`../contracts/KITCHEN_SKILLS_CHALLENGE_ROUTES.md`](../contracts/KITCHEN_SKILLS_CHALLENGE_ROUTES.md).
 
 ---
 

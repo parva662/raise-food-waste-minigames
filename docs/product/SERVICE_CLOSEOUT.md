@@ -1,7 +1,7 @@
 # Service Closeout
 
-**Documentation role:** Canonical product navigation page.
-**Does not invent new product rules** — organizes existing documentation.
+**Documentation role:** Explanation — product navigation page.
+**Does not invent new product rules** — organizes existing documentation. Property / mapper SoT: [`../contracts/SERVICE_CLOSEOUT_GAMEBUS.md`](../contracts/SERVICE_CLOSEOUT_GAMEBUS.md).
 
 ---
 
@@ -21,7 +21,7 @@ One shared whole-canteen closeout per service date. Authenticated GameBus `activ
 | **Acceptance coverage** | [`../testing/SERVICE_CLOSEOUT_ACCEPTANCE_COVERAGE.md`](../testing/SERVICE_CLOSEOUT_ACCEPTANCE_COVERAGE.md) | Traceability |
 | **GameBus contract** | [`../contracts/SERVICE_CLOSEOUT_GAMEBUS.md`](../contracts/SERVICE_CLOSEOUT_GAMEBUS.md) | **EXTERNAL / GAMEBUS CONTRACT** |
 | **Implementation status** | [`../current-state/IMPLEMENTATION_STATUS.md`](../current-state/IMPLEMENTATION_STATUS.md) | **CURRENT IMPLEMENTATION** |
-| **Study / system plan** | [`RAISE_BARLAUREA_MASTER_PLAN.md`](RAISE_BARLAUREA_MASTER_PLAN.md) | Mixed study + product (stale head-chef / IC wording corrected where verified) |
+| **Study / system explanation** | [`RAISE_BARLAUREA_MASTER_PLAN.md`](RAISE_BARLAUREA_MASTER_PLAN.md) | Explanation only — not product SoT |
 | **Legacy mixed spec** | [`../archive/SPEC_LEGACY.md`](../archive/SPEC_LEGACY.md) §10 | **HISTORICAL** |
 | **Related forecast contract** | [`../contracts/KITCHEN_FORECAST_GAMEBUS.md`](../contracts/KITCHEN_FORECAST_GAMEBUS.md) | Inbound forecast eligibility |
 | **Roadmap** | [`../current-state/ROADMAP.md`](../current-state/ROADMAP.md) | Integration steps |
@@ -48,7 +48,9 @@ One shared whole-canteen closeout per service date. Authenticated GameBus `activ
 - Overproduction cannot exceed prepared weight; zero prepared + positive waste is invalid.
 - Forecast is read-only context; missing forecast does not block closeout.
 - Synthetic forecast fallback is pilot/dev only; disable before production data collection.
-- Exactly fifteen `wasteMeasurement` properties; no portion weights / headChefUserId / forecast fields posted.
+- Exactly fifteen `wasteMeasurement` properties; no portion weights / headChefUserId / forecast fields posted (exact list: closeout contract).
+
+Diagnosis helpers: [`../how-to/verify-input-collections.md`](../how-to/verify-input-collections.md).
 
 ---
 
