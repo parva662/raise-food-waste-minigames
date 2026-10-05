@@ -103,15 +103,16 @@ describe('participant privacy', () => {
     await user.click(screen.getByTestId('participant-primary-tab-progress'));
     expect(screen.getByTestId('your-progress-section')).toBeInTheDocument();
     expect(screen.getByText(/Your progress/i)).toBeInTheDocument();
-    expect(screen.getByRole('tab', { name: 'Week' })).toHaveAttribute('aria-selected', 'true');
-    expect(screen.getByTestId('progress-bar-chart')).toBeInTheDocument();
+    expect(screen.getByRole('tab', { name: 'Recent' })).toHaveAttribute('aria-selected', 'true');
+    expect(screen.getByTestId('progress-recent-chart')).toBeInTheDocument();
   });
 
   it('uses participant-facing kitchen progress wording', async () => {
     const user = userEvent.setup();
     render(<AppRouter />);
     await user.click(screen.getByTestId('participant-primary-tab-progress'));
-    expect(screen.getByText('Services completed this week')).toBeInTheDocument();
+    expect(screen.getByTestId('kitchen-progress-scope-label')).toHaveTextContent('This week');
+    expect(screen.getByText(/Services completed this week/i)).toBeInTheDocument();
     expect(screen.getByText('Anonymous team average estimated surplus')).toBeInTheDocument();
     expect(screen.queryByText(/Fixture services/i)).not.toBeInTheDocument();
     expect(screen.queryByText(/Reserved for a future/i)).not.toBeInTheDocument();

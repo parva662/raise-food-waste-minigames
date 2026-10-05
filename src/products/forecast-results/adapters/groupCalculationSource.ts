@@ -20,9 +20,27 @@ import {
   selectWasteMeasurementForDate,
 } from '@/products/forecast-results/adapters/parseGameBusWasteMeasurement';
 import { gameBusWasteMeasurementToCalculationInput } from '@/products/forecast-results/adapters/wasteMeasurementAdapter';
+import { addDaysToIsoDate } from '@/shared/time/dates';
+import { parse } from 'date-fns';
 
 const CHEF_FORECAST_TEMPLATE = 'chefForecast';
 const WASTE_MEASUREMENT_TEMPLATE = 'wasteMeasurement';
+
+type ParsedGroupKitchenActivities = {
+  chefForecasts: ReturnType<typeof parseGameBusChefForecastActivities>['valid'];
+  wasteMeasurements: ReturnType<typeof parseGameBusWasteMeasurementActivities>['valid'];
+};
+
+let groupKitchenActivityParseCount = 0;
+
+/** Test hook: count calls to `parseGroupKitchenActivities`. */
+export function resetGroupKitchenActivityParseCountForTests(): void {
+  groupKitchenActivityParseCount = 0;
+}
+
+export function getGroupKitchenActivityParseCountForTests(): number {
+  return groupKitchenActivityParseCount;
+}
 
 function participationFromForecasts(
   serviceDate: string,
@@ -39,7 +57,10 @@ function participationFromForecasts(
   };
 }
 
-function parseGroupKitchenActivities(inputCollections: GameBusInputCollectionsPayload | null) {
+function parseGroupKitchenActivities(
+  inputCollections: GameBusInputCollectionsPayload | null,
+): ParsedGroupKitchenActivities {
+  groupKitchenActivityParseCount += 1;
   const raw = getRawKitchenGroupActivitiesInput(inputCollections);
   const activities = extractGroupActivities(raw);
   const chefForecastActivities = filterActivitiesByTemplateReference(
@@ -57,6 +78,108 @@ function parseGroupKitchenActivities(inputCollections: GameBusInputCollectionsPa
   );
 
   return { chefForecasts, wasteMeasurements };
+}
+
+function getGroupResultServiceDatesFromParsed(
+  parsed: ParsedGroupKitchenActivities,
+): readonly string[] {
+  const closeoutDates = new Set(parsed.wasteMeasurements.map((entry) => entry.serviceDate));
+  const dates: string[] = [];
+
+  for (const date of closeoutDates) {
+    const forecastsForDate = selectForecastsForDate(parsed.chefForecasts, date);
+    if (forecastsForDate.length > 0) {
+      dates.push(date);
+    }
+  }
+
+  return dates.sort();
+}
+
+function getParticipantGroupResultServiceDatesFromParsed(
+  parsed: ParsedGroupKitchenActivities,
+  authenticatedUserId: string,
+): readonly string[] {
+  if (!authenticatedUserId) return [];
+
+  const closeoutDates = new Set(parsed.wasteMeasurements.map((entry) => entry.serviceDate));
+  const dates: string[] = [];
+
+  for (const date of closeoutDates) {
+    const forecastsForDate = selectForecastsForDate(parsed.chefForecasts, date);
+    if (forecastsForDate.some((forecast) => forecast.actorId === authenticatedUserId)) {
+      dates.push(date);
+    }
+  }
+
+  return dates.sort();
+}
+
+function buildGroupDailyServiceResultsFromParsed(
+  parsed: ParsedGroupKitchenActivities,
+  serviceDate: string,
+): DailyServiceResults | null {
+  const wasteMeasurement = selectWasteMeasurementForDate(parsed.wasteMeasurements, serviceDate);
+  if (!wasteMeasurement) return null;
+
+  const forecasts = selectForecastsForDate(parsed.chefForecasts, serviceDate)
+    .map(gameBusChefForecastToCalculationInput)
+    .filter((forecast): forecast is ChefForecastForCalculation => forecast !== null);
+
+  if (forecasts.length === 0) return null;
+
+  const closeout = gameBusWasteMeasurementToCalculationInput(wasteMeasurement);
+  const participation = participationFromForecasts(serviceDate, forecasts);
+
+  return calculateDailyServiceResults(closeout, participation, forecasts);
+}
+
+export type GroupKitchenCalculationCache = {
+  getDailyServiceResults(serviceDate: string): DailyServiceResults | null;
+  getGroupResultServiceDates(): readonly string[];
+  getParticipantResultServiceDates(authenticatedUserId: string): readonly string[];
+  hasCloseoutForDate(serviceDate: string): boolean;
+  getParticipantEligibleForecastForDate(
+    authenticatedUserId: string,
+    serviceDate: string,
+  ): ChefForecastForCalculation | null;
+};
+
+export function createGroupKitchenCalculationCache(
+  inputCollections: GameBusInputCollectionsPayload | null,
+): GroupKitchenCalculationCache {
+  const parsed = parseGroupKitchenActivities(inputCollections);
+  const dailyByDate = new Map<string, DailyServiceResults>();
+
+  for (const date of getGroupResultServiceDatesFromParsed(parsed)) {
+    const daily = buildGroupDailyServiceResultsFromParsed(parsed, date);
+    if (daily) {
+      dailyByDate.set(date, daily);
+    }
+  }
+
+  return {
+    getDailyServiceResults(serviceDate: string) {
+      return dailyByDate.get(serviceDate) ?? null;
+    },
+    getGroupResultServiceDates() {
+      return getGroupResultServiceDatesFromParsed(parsed);
+    },
+    getParticipantResultServiceDates(authenticatedUserId: string) {
+      return getParticipantGroupResultServiceDatesFromParsed(parsed, authenticatedUserId);
+    },
+    hasCloseoutForDate(serviceDate: string) {
+      return selectWasteMeasurementForDate(parsed.wasteMeasurements, serviceDate) !== null;
+    },
+    getParticipantEligibleForecastForDate(authenticatedUserId: string, serviceDate: string) {
+      if (!authenticatedUserId) return null;
+      const selected = selectForecastsForDate(parsed.chefForecasts, serviceDate).find(
+        (forecast) => forecast.actorId === authenticatedUserId,
+      );
+      if (!selected) return null;
+      return gameBusChefForecastToCalculationInput(selected);
+    },
+  };
 }
 
 export function buildChefForecastsForCalculationFromGroup(
@@ -87,40 +210,24 @@ export function getGroupServiceDates(
 
 export function getGroupResultServiceDates(
   inputCollections: GameBusInputCollectionsPayload | null,
+  cache?: GroupKitchenCalculationCache | null,
 ): readonly string[] {
-  const { chefForecasts, wasteMeasurements } = parseGroupKitchenActivities(inputCollections);
-  const closeoutDates = new Set(wasteMeasurements.map((entry) => entry.serviceDate));
-  const dates: string[] = [];
-
-  for (const date of closeoutDates) {
-    const forecastsForDate = selectForecastsForDate(chefForecasts, date);
-    if (forecastsForDate.length > 0) {
-      dates.push(date);
-    }
-  }
-
-  return dates.sort();
+  if (cache) return cache.getGroupResultServiceDates();
+  return getGroupResultServiceDatesFromParsed(parseGroupKitchenActivities(inputCollections));
 }
 
 /** Service dates where the authenticated participant has a valid forecast and a matching closeout. */
 export function getParticipantGroupResultServiceDates(
   inputCollections: GameBusInputCollectionsPayload | null,
   authenticatedUserId: string,
+  cache?: GroupKitchenCalculationCache | null,
 ): readonly string[] {
   if (!authenticatedUserId) return [];
-
-  const { chefForecasts, wasteMeasurements } = parseGroupKitchenActivities(inputCollections);
-  const closeoutDates = new Set(wasteMeasurements.map((entry) => entry.serviceDate));
-  const dates: string[] = [];
-
-  for (const date of closeoutDates) {
-    const forecastsForDate = selectForecastsForDate(chefForecasts, date);
-    if (forecastsForDate.some((forecast) => forecast.actorId === authenticatedUserId)) {
-      dates.push(date);
-    }
-  }
-
-  return dates.sort();
+  if (cache) return cache.getParticipantResultServiceDates(authenticatedUserId);
+  return getParticipantGroupResultServiceDatesFromParsed(
+    parseGroupKitchenActivities(inputCollections),
+    authenticatedUserId,
+  );
 }
 
 export function getLatestParticipantGroupResultDate(
@@ -135,21 +242,13 @@ export function getLatestParticipantGroupResultDate(
 export function buildGroupDailyServiceResults(
   inputCollections: GameBusInputCollectionsPayload | null,
   serviceDate: string,
+  cache?: GroupKitchenCalculationCache | null,
 ): DailyServiceResults | null {
-  const { chefForecasts, wasteMeasurements } = parseGroupKitchenActivities(inputCollections);
-  const wasteMeasurement = selectWasteMeasurementForDate(wasteMeasurements, serviceDate);
-  if (!wasteMeasurement) return null;
-
-  const forecasts = selectForecastsForDate(chefForecasts, serviceDate)
-    .map(gameBusChefForecastToCalculationInput)
-    .filter((forecast): forecast is ChefForecastForCalculation => forecast !== null);
-
-  if (forecasts.length === 0) return null;
-
-  const closeout = gameBusWasteMeasurementToCalculationInput(wasteMeasurement);
-  const participation = participationFromForecasts(serviceDate, forecasts);
-
-  return calculateDailyServiceResults(closeout, participation, forecasts);
+  if (cache) return cache.getDailyServiceResults(serviceDate);
+  return buildGroupDailyServiceResultsFromParsed(
+    parseGroupKitchenActivities(inputCollections),
+    serviceDate,
+  );
 }
 
 /** Closeout-only observed reality when no eligible staff forecasts exist for the date. */
@@ -229,7 +328,9 @@ export function resolveAdminServicePartialState(
 export function hasGroupCloseoutForDate(
   inputCollections: GameBusInputCollectionsPayload | null,
   serviceDate: string,
+  cache?: GroupKitchenCalculationCache | null,
 ): boolean {
+  if (cache) return cache.hasCloseoutForDate(serviceDate);
   const { wasteMeasurements } = parseGroupKitchenActivities(inputCollections);
   return selectWasteMeasurementForDate(wasteMeasurements, serviceDate) !== null;
 }
@@ -239,8 +340,12 @@ export function getParticipantEligibleForecastForDate(
   inputCollections: GameBusInputCollectionsPayload | null,
   authenticatedUserId: string,
   serviceDate: string,
+  cache?: GroupKitchenCalculationCache | null,
 ): ChefForecastForCalculation | null {
   if (!authenticatedUserId) return null;
+  if (cache) {
+    return cache.getParticipantEligibleForecastForDate(authenticatedUserId, serviceDate);
+  }
   const { chefForecasts } = parseGroupKitchenActivities(inputCollections);
   const selected = selectForecastsForDate(chefForecasts, serviceDate).find(
     (forecast) => forecast.actorId === authenticatedUserId,
@@ -251,9 +356,12 @@ export function getParticipantEligibleForecastForDate(
 
 export function buildAllGroupDailyServiceResults(
   inputCollections: GameBusInputCollectionsPayload | null,
+  cache?: GroupKitchenCalculationCache | null,
 ): DailyServiceResults[] {
-  return getGroupResultServiceDates(inputCollections)
-    .map((date) => buildGroupDailyServiceResults(inputCollections, date))
+  const resolvedCache = cache ?? createGroupKitchenCalculationCache(inputCollections);
+  return resolvedCache
+    .getGroupResultServiceDates()
+    .map((date) => resolvedCache.getDailyServiceResults(date))
     .filter((result): result is DailyServiceResults => result !== null);
 }
 
@@ -269,39 +377,91 @@ export function buildGroupWeeklySummaries(
 export type KitchenProgressSummary = {
   servicesCompletedCount: number;
   anonymousTeamAverageOverproductionGrams: number;
+  scopeLabel: string;
 };
 
 export const EMPTY_KITCHEN_PROGRESS: KitchenProgressSummary = {
   servicesCompletedCount: 0,
   anonymousTeamAverageOverproductionGrams: 0,
+  scopeLabel: 'This week',
 };
 
 export function buildGroupKitchenProgress(
   inputCollections: GameBusInputCollectionsPayload | null,
 ): KitchenProgressSummary {
   const days = buildAllGroupDailyServiceResults(inputCollections);
-  return buildKitchenProgressFromDays(days);
+  return buildKitchenProgressFromDays(days, 'All time');
 }
 
 export function buildParticipantKitchenProgress(
   inputCollections: GameBusInputCollectionsPayload | null,
   userId: string,
+  options?: {
+    asOfServiceDate?: string;
+    cache?: GroupKitchenCalculationCache | null;
+  },
 ): KitchenProgressSummary {
-  const participantDates = getParticipantGroupResultServiceDates(inputCollections, userId);
+  const cache = options?.cache ?? null;
+  const participantDates = getParticipantGroupResultServiceDates(inputCollections, userId, cache);
   if (participantDates.length === 0) {
     return EMPTY_KITCHEN_PROGRESS;
   }
 
-  const days = participantDates
-    .map((date) => buildGroupDailyServiceResults(inputCollections, date))
+  if (!options?.asOfServiceDate) {
+    const days = participantDates
+      .map((date) => buildGroupDailyServiceResults(inputCollections, date, cache))
+      .filter((result): result is DailyServiceResults => result !== null);
+    return buildKitchenProgressFromDays(days, 'All time');
+  }
+
+  const scopedDates = filterParticipantDatesToCurrentWeek(
+    participantDates,
+    options.asOfServiceDate,
+  );
+
+  const days = scopedDates
+    .map((date) => buildGroupDailyServiceResults(inputCollections, date, cache))
     .filter((result): result is DailyServiceResults => result !== null);
 
-  return buildKitchenProgressFromDays(days);
+  return buildKitchenProgressFromDays(days, 'This week');
 }
 
-function buildKitchenProgressFromDays(days: DailyServiceResults[]): KitchenProgressSummary {
+function getCalendarWeekRangeContaining(isoDate: string): { start: string; end: string } {
+  const parsed = parse(isoDate, 'yyyy-MM-dd', new Date());
+  const dayIndex = parsed.getDay();
+  const daysFromMonday = dayIndex === 0 ? 6 : dayIndex - 1;
+  const monday = addDaysToIsoDate(isoDate, -daysFromMonday);
+  const sunday = addDaysToIsoDate(monday, 6);
+  return { start: monday, end: sunday };
+}
+
+function filterParticipantDatesToCurrentWeek(
+  participantDates: readonly string[],
+  asOfServiceDate?: string,
+): readonly string[] {
+  if (!asOfServiceDate) return participantDates;
+  const { start, end } = getCalendarWeekRangeContaining(asOfServiceDate);
+  return participantDates.filter(
+    (date) => date >= start && date <= end && date <= asOfServiceDate,
+  );
+}
+
+export function anonymousTeamAverageOverproductionForDay(
+  daily: DailyServiceResults,
+): number {
+  const teamTotal = daily.staffResults.reduce(
+    (inner, result) => inner + result.totalSimulatedOverproductionGrams,
+    0,
+  );
+  return teamTotal / Math.max(1, daily.staffResults.length);
+}
+
+function buildKitchenProgressFromDays(
+  days: DailyServiceResults[],
+  scopeLabel: string,
+): KitchenProgressSummary {
   if (days.length === 0) {
-    return { servicesCompletedCount: 0, anonymousTeamAverageOverproductionGrams: 0 };
+    return { servicesCompletedCount: 0, anonymousTeamAverageOverproductionGrams: 0, scopeLabel };
   }
 
   const anonymousTeamAverageOverproductionGrams =
@@ -316,6 +476,7 @@ function buildKitchenProgressFromDays(days: DailyServiceResults[]): KitchenProgr
   return {
     servicesCompletedCount: days.length,
     anonymousTeamAverageOverproductionGrams,
+    scopeLabel,
   };
 }
 

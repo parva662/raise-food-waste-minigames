@@ -265,7 +265,8 @@ describe('dashboard headings and progress discoverability', () => {
     expect(screen.queryByText('Your result')).not.toBeInTheDocument();
     await user.click(screen.getByTestId('participant-primary-tab-progress'));
     expect(screen.getByTestId('your-progress-section')).toBeInTheDocument();
-    expect(screen.getByTestId('progress-period-tabs')).toBeInTheDocument();
+    expect(screen.getByTestId('progress-view-tabs')).toBeInTheDocument();
+    expect(screen.getByTestId('progress-view-tab-recent')).toHaveAttribute('aria-selected', 'true');
   });
 
   it('shows progress while current service has no personal forecast', async () => {
@@ -275,7 +276,7 @@ describe('dashboard headings and progress discoverability', () => {
     expect(screen.queryByTestId('forecast-impact-section')).not.toBeInTheDocument();
     await user.click(screen.getByTestId('participant-primary-tab-progress'));
     expect(screen.getByTestId('your-progress-section')).toBeInTheDocument();
-    expect(screen.getByTestId('progress-bar-chart')).toBeInTheDocument();
+    expect(screen.getByTestId('progress-recent-chart')).toBeInTheDocument();
   });
 });
 
@@ -288,13 +289,12 @@ describe('ParticipantProgressSection period summary', () => {
 
     render(<ParticipantProgressSection servicePoints={points} asOfServiceDate="2026-07-31" />);
 
-    expect(screen.getByTestId('progress-period-summary')).toBeInTheDocument();
-    expect(screen.getByText('Period summary')).toBeInTheDocument();
+    expect(screen.getByTestId('progress-recent-summary')).toBeInTheDocument();
+    expect(screen.getByText('Recent summary')).toBeInTheDocument();
     expect(screen.getByTestId('progress-average-overproduction')).toBeInTheDocument();
     expect(screen.getByTestId('progress-shortage-risk')).toBeInTheDocument();
     expect(screen.getByTestId('progress-average-customer-error')).toBeInTheDocument();
     expect(screen.getByTestId('progress-completed-services')).toBeInTheDocument();
-    expect(screen.getByTestId('progress-previous-comparison')).toBeInTheDocument();
     expect(period.periodRangeLabel).toMatch(/July/);
   });
 });

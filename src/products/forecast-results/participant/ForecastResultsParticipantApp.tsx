@@ -10,10 +10,13 @@ import {
   hasFixtureCloseoutForDate,
 } from '@/products/forecast-results/adapters/fixtureCalculationSource';
 import {
+  anonymousTeamAverageOverproductionForDay,
   buildGroupCloseoutOnlyResults,
   buildParticipantKitchenProgress,
+  createGroupKitchenCalculationCache,
   getParticipantEligibleForecastForDate,
   hasGroupCloseoutForDate,
+  type GroupKitchenCalculationCache,
 } from '@/products/forecast-results/adapters/groupCalculationSource';
 import {
   isOperationalServiceDay,
@@ -109,6 +112,11 @@ export function ForecastResultsParticipantApp() {
   const canLoadParticipantData = !isEmbeddedLoading && (!embedded || inputCollectionsReady);
   const canLoadProgress = canLoadParticipantData && Boolean(currentUserId || !embedded);
 
+  const kitchenCalculationCache = useMemo((): GroupKitchenCalculationCache | null => {
+    if (!embedded || !inputCollectionsReady) return null;
+    return createGroupKitchenCalculationCache(inputCollections);
+  }, [embedded, inputCollections, inputCollectionsReady]);
+
   const resultsState = useForecastResultsData(isServiceDay ? resultsServiceDate : '');
   const completeDailyResults =
     isServiceDay && resultsState.status === 'ready' ? resultsState.dailyResults : null;
@@ -116,7 +124,7 @@ export function ForecastResultsParticipantApp() {
   const hasCloseout = useMemo(() => {
     if (!isServiceDay || isEmbeddedLoading) return false;
     if (embedded && inputCollectionsReady) {
-      return hasGroupCloseoutForDate(inputCollections, resultsServiceDate);
+      return hasGroupCloseoutForDate(inputCollections, resultsServiceDate, kitchenCalculationCache);
     }
     return hasFixtureCloseoutForDate(resultsServiceDate);
   }, [
@@ -126,6 +134,7 @@ export function ForecastResultsParticipantApp() {
     isEmbeddedLoading,
     isServiceDay,
     resultsServiceDate,
+    kitchenCalculationCache,
   ]);
 
   const closeoutOnlyResults = useMemo((): DailyServiceResults | null => {
@@ -163,6 +172,7 @@ export function ForecastResultsParticipantApp() {
         inputCollections,
         currentUserId,
         resultsServiceDate,
+        kitchenCalculationCache,
       );
     }
     return (
@@ -182,6 +192,7 @@ export function ForecastResultsParticipantApp() {
     inputCollectionsReady,
     isServiceDay,
     resultsServiceDate,
+    kitchenCalculationCache,
   ]);
 
   const progressServicePoints = useMemo(() => {
@@ -191,6 +202,7 @@ export function ForecastResultsParticipantApp() {
         currentUserId,
         resultsServiceDate,
         inputCollections,
+        kitchenCalculationCache,
       );
     }
     return buildParticipantProgressServicePoints(fixtureUserId, resultsServiceDate);
@@ -201,16 +213,40 @@ export function ForecastResultsParticipantApp() {
     fixtureUserId,
     inputCollections,
     inputCollectionsReady,
+    kitchenCalculationCache,
     resultsServiceDate,
   ]);
+
+  const teamSurplusGramsByDate = useMemo(() => {
+    const map = new Map<string, number>();
+    if (!kitchenCalculationCache || !currentUserId) return map;
+    for (const date of kitchenCalculationCache.getParticipantResultServiceDates(currentUserId)) {
+      const daily = kitchenCalculationCache.getDailyServiceResults(date);
+      if (daily) {
+        map.set(date, anonymousTeamAverageOverproductionForDay(daily));
+      }
+    }
+    return map;
+  }, [currentUserId, kitchenCalculationCache]);
 
   const kitchenProgress = useMemo(() => {
     if (!canLoadProgress) return null;
     if (embedded && inputCollectionsReady) {
-      return buildParticipantKitchenProgress(inputCollections, currentUserId);
+      return buildParticipantKitchenProgress(inputCollections, currentUserId, {
+        asOfServiceDate: resultsServiceDate,
+        cache: kitchenCalculationCache,
+      });
     }
-    return buildFixtureKitchenProgress();
-  }, [canLoadProgress, currentUserId, embedded, inputCollections, inputCollectionsReady]);
+    return buildFixtureKitchenProgress(resultsServiceDate);
+  }, [
+    canLoadProgress,
+    currentUserId,
+    embedded,
+    inputCollections,
+    inputCollectionsReady,
+    kitchenCalculationCache,
+    resultsServiceDate,
+  ]);
 
   const peerBenchmark =
     completeDailyResults && ownResult
@@ -268,6 +304,7 @@ export function ForecastResultsParticipantApp() {
                 servicePoints={progressServicePoints}
                 asOfServiceDate={resultsServiceDate}
                 kitchenProgress={canLoadProgress ? kitchenProgress : null}
+                teamSurplusGramsByDate={teamSurplusGramsByDate}
               />
             );
           }}

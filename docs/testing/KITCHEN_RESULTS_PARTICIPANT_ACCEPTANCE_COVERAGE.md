@@ -29,6 +29,7 @@ Route: `#/chef-results`. Timezone: `Europe/Helsinki`.
 | Eligible forecast selection | Exact actor + targetDate; latest eligible wins | `selectCloseoutForecast.test.ts` (shared KF rules) | COVERED |
 | Waiting vs Progress | History remains when current service waits | `kitchenResultsProgressIndependence.test.ts`; `ForecastResultsParticipantApp` progress path | COVERED |
 | Progress chart 0/1/2+ | Single-point chart without trend claim | `participantProgressSection.test.tsx`; `participantProgressData.test.ts` | COVERED |
+| Progress Recent / Trends / History | Recent = last 8 completed services; Trends Week/Month/Year; History paged/filtered; kitchen context scope label | `participantProgressWindowing.test.ts`; `participantProgressSection.test.tsx`; `groupCalculationSource.test.ts` (parse cache) | COVERED |
 | Other-staff threshold | Compare at 1 peer; labels | `teamComparison.test.ts`; `chefResultsParticipantDashboard.test.tsx` | COVERED |
 | Closeout, no personal forecast | Actual outcome + explanation | `ParticipantOverviewSection` + closeout-only path | COVERED (UI path) |
 | Forecast, no closeout | Pending forecast summary + history | `ForecastResultsParticipantApp` pendingForecast path | COVERED (UI path) |

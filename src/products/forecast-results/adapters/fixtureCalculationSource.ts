@@ -13,7 +13,10 @@ import { getPortionWeightGrams } from '@/products/service-closeout/portionWeight
 import type { CloseoutCategoryKey } from '@/products/service-closeout/types';
 import { aggregateWeeklyResults } from '@/products/forecast-results/calculations/aggregateWeeklyResults';
 import { calculateDailyServiceResults } from '@/products/forecast-results/calculations/calculateDailyResults';
+import { addDaysToIsoDate } from '@/shared/time/dates';
+import { parse } from 'date-fns';
 import { closeoutToCalculationInput } from '@/products/forecast-results/adapters/closeoutAdapter';
+import type { KitchenProgressSummary } from '@/products/forecast-results/adapters/groupCalculationSource';
 import type {
   ChefForecastForCalculation,
   DailyServiceResults,
@@ -95,15 +98,31 @@ export function buildFixtureWeeklySummaries(): StaffWeeklySummary[] {
   return aggregateWeeklyResults(dailyStaffResults);
 }
 
-export type KitchenProgressSummary = {
-  servicesCompletedCount: number;
-  anonymousTeamAverageOverproductionGrams: number;
-};
+function getCalendarWeekRangeContaining(isoDate: string): { start: string; end: string } {
+  const parsed = parse(isoDate, 'yyyy-MM-dd', new Date());
+  const dayIndex = parsed.getDay();
+  const daysFromMonday = dayIndex === 0 ? 6 : dayIndex - 1;
+  const monday = addDaysToIsoDate(isoDate, -daysFromMonday);
+  const sunday = addDaysToIsoDate(monday, 6);
+  return { start: monday, end: sunday };
+}
 
-export function buildFixtureKitchenProgress(): KitchenProgressSummary {
-  const days = buildAllFixtureDailyServiceResults();
+export function buildFixtureKitchenProgress(asOfServiceDate?: string): KitchenProgressSummary {
+  const allDays = buildAllFixtureDailyServiceResults();
+  const days =
+    asOfServiceDate === undefined
+      ? allDays
+      : allDays.filter((day) => {
+          const { start, end } = getCalendarWeekRangeContaining(asOfServiceDate);
+          return day.serviceDate >= start && day.serviceDate <= end && day.serviceDate <= asOfServiceDate;
+        });
+
   if (days.length === 0) {
-    return { servicesCompletedCount: 0, anonymousTeamAverageOverproductionGrams: 0 };
+    return {
+      servicesCompletedCount: 0,
+      anonymousTeamAverageOverproductionGrams: 0,
+      scopeLabel: asOfServiceDate ? 'This week' : 'All time',
+    };
   }
 
   const anonymousTeamAverageOverproductionGrams =
@@ -118,5 +137,6 @@ export function buildFixtureKitchenProgress(): KitchenProgressSummary {
   return {
     servicesCompletedCount: days.length,
     anonymousTeamAverageOverproductionGrams,
+    scopeLabel: asOfServiceDate ? 'This week' : 'All time',
   };
 }

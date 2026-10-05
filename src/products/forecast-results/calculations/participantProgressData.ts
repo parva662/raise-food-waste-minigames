@@ -6,6 +6,7 @@ import { buildAllFixtureDailyServiceResults } from '@/products/forecast-results/
 import {
   buildGroupDailyServiceResults,
   getParticipantGroupResultServiceDates,
+  type GroupKitchenCalculationCache,
 } from '@/products/forecast-results/adapters/groupCalculationSource';
 import type { StaffDailyResult } from '@/products/forecast-results/types';
 
@@ -100,19 +101,102 @@ export function staffResultToProgressPoint(result: StaffDailyResult): Participan
   };
 }
 
+/** Primary Forecast Progress Recent window: last N completed participant service days. */
+export const FORECAST_PROGRESS_RECENT_SERVICE_LIMIT = 8;
+
+/** History archive page size for compact service rows. */
+export const FORECAST_PROGRESS_HISTORY_PAGE_SIZE = 10;
+
+export function sortParticipantProgressPointsNewestFirst(
+  points: readonly ParticipantProgressServicePoint[],
+): ParticipantProgressServicePoint[] {
+  return [...points].sort((left, right) => right.serviceDate.localeCompare(left.serviceDate));
+}
+
+export function takeRecentParticipantProgressPoints(
+  points: readonly ParticipantProgressServicePoint[],
+  limit: number = FORECAST_PROGRESS_RECENT_SERVICE_LIMIT,
+): ParticipantProgressServicePoint[] {
+  return sortParticipantProgressPointsNewestFirst(points).slice(0, Math.max(0, limit));
+}
+
+function formatForecastProgressDate(isoDate: string): string {
+  const [year, month, day] = isoDate.split('-').map(Number);
+  if (!year || !month || !day) return isoDate;
+  return new Intl.DateTimeFormat('en-GB', {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+    timeZone: 'UTC',
+  }).format(new Date(Date.UTC(year, month - 1, day, 12, 0, 0)));
+}
+
+export function recentCompletedServicesLabel(
+  recentPoints: readonly ParticipantProgressServicePoint[],
+): string {
+  if (recentPoints.length === 0) return 'No completed services yet';
+  const newestFirst = sortParticipantProgressPointsNewestFirst(recentPoints);
+  const newest = newestFirst[0]!.serviceDate;
+  const oldest = newestFirst[newestFirst.length - 1]!.serviceDate;
+  const countLabel =
+    newestFirst.length === 1
+      ? 'Last 1 completed service'
+      : `Last ${newestFirst.length} completed services`;
+  const span =
+    newest === oldest
+      ? formatForecastProgressDate(newest)
+      : `${formatForecastProgressDate(oldest)} – ${formatForecastProgressDate(newest)}`;
+  return `${countLabel} · ${span}`;
+}
+
+export function filterParticipantProgressHistory(
+  points: readonly ParticipantProgressServicePoint[],
+  fromDate?: string | null,
+  toDate?: string | null,
+): ParticipantProgressServicePoint[] {
+  const from = fromDate?.trim() || null;
+  const to = toDate?.trim() || null;
+  return sortParticipantProgressPointsNewestFirst(points).filter((point) => {
+    if (from && point.serviceDate < from) return false;
+    if (to && point.serviceDate > to) return false;
+    return true;
+  });
+}
+
+export function paginateParticipantProgressHistory<T>(
+  items: readonly T[],
+  page: number,
+  pageSize: number = FORECAST_PROGRESS_HISTORY_PAGE_SIZE,
+): { pageItems: T[]; page: number; totalPages: number; totalItems: number } {
+  const safePageSize = Math.max(1, pageSize);
+  const totalItems = items.length;
+  const totalPages = Math.max(1, Math.ceil(totalItems / safePageSize));
+  const safePage = Math.min(Math.max(1, page), totalPages);
+  const start = (safePage - 1) * safePageSize;
+  return {
+    pageItems: items.slice(start, start + safePageSize) as T[],
+    page: safePage,
+    totalPages,
+    totalItems,
+  };
+}
+
 export function buildParticipantProgressServicePoints(
   userId: string,
   asOfServiceDate: string,
   inputCollections?: GameBusInputCollectionsPayload | null,
+  cache?: GroupKitchenCalculationCache | null,
 ): readonly ParticipantProgressServicePoint[] {
   const points: ParticipantProgressServicePoint[] = [];
 
   if (inputCollections !== undefined) {
-    const participantDates = getParticipantGroupResultServiceDates(inputCollections, userId).filter(
-      (date) => date <= asOfServiceDate,
-    );
+    const participantDates = getParticipantGroupResultServiceDates(
+      inputCollections,
+      userId,
+      cache,
+    ).filter((date) => date <= asOfServiceDate);
     for (const date of participantDates) {
-      const daily = buildGroupDailyServiceResults(inputCollections, date);
+      const daily = buildGroupDailyServiceResults(inputCollections, date, cache);
       const own = daily?.staffResults.find((result) => result.userId === userId);
       if (own) {
         points.push(staffResultToProgressPoint(own));
@@ -284,6 +368,13 @@ function buildWeekBuckets(points: readonly ParticipantProgressServicePoint[]): P
       meanCustomerForecastAbsoluteError: point.customerForecastAbsoluteError,
     };
   });
+}
+
+/** One chart bucket per service day (used for Recent daily chart). */
+export function buildDailyServiceChartBuckets(
+  points: readonly ParticipantProgressServicePoint[],
+): ProgressChartBucket[] {
+  return buildWeekBuckets(points);
 }
 
 function buildMonthBuckets(

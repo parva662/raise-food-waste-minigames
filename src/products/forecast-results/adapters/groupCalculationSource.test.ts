@@ -14,9 +14,12 @@ import {
   buildGroupKitchenDiagnostics,
   buildGroupKitchenProgress,
   buildParticipantKitchenProgress,
+  createGroupKitchenCalculationCache,
+  getGroupKitchenActivityParseCountForTests,
   getGroupResultServiceDates,
   getParticipantGroupResultServiceDates,
   hasGroupCloseoutForDate,
+  resetGroupKitchenActivityParseCountForTests,
 } from '@/products/forecast-results/adapters/groupCalculationSource';
 import { parseGameBusWasteMeasurementActivities, selectWasteMeasurementForDate } from '@/products/forecast-results/adapters/parseGameBusWasteMeasurement';
 import { gameBusWasteMeasurementToCalculationInput } from '@/products/forecast-results/adapters/wasteMeasurementAdapter';
@@ -523,8 +526,53 @@ describe('group kitchen activities integration', () => {
       },
     };
 
-    expect(buildParticipantKitchenProgress(inputCollections, 'staff1').servicesCompletedCount).toBe(0);
+    expect(
+      buildParticipantKitchenProgress(inputCollections, 'staff1', { asOfServiceDate: sep2 })
+        .servicesCompletedCount,
+    ).toBe(0);
     expect(buildGroupKitchenProgress(inputCollections).servicesCompletedCount).toBe(1);
+    expect(buildGroupKitchenProgress(inputCollections).scopeLabel).toBe('All time');
+  });
+
+  it('parses kitchenGroupInput once when using the calculation cache for progress points', () => {
+    resetGroupKitchenActivityParseCountForTests();
+    const inputCollections = {
+      [KITCHEN_GROUP_INPUT_COLLECTION_KEY]: {
+        [KITCHEN_GROUP_ACTIVITIES_REQUEST_KEY]: [
+          buildAnonymizedChefForecastActivity({ actorId: 'staff1', targetDate: serviceDate }),
+          buildAnonymizedChefForecastActivity({ actorId: 'staff1', targetDate: '2026-07-30' }),
+          wasteMeasurementActivity(),
+          wasteMeasurementActivity({
+            id: 'wm-2',
+            properties: [
+              { template: { slug: 'serviceDate' }, value: { value: '2026-07-30' } },
+              { template: { slug: 'actualCustomers' }, value: { value: 150 } },
+              { template: { slug: 'mainItemId' }, value: { value: 'meatballs' } },
+              { template: { slug: 'preparedMainQuantity' }, value: { value: 110 } },
+              { template: { slug: 'vegetarianItemId' }, value: { value: 'quorn' } },
+              { template: { slug: 'preparedVegetarianQuantity' }, value: { value: 52 } },
+              { template: { slug: 'soupItemId' }, value: { value: 'pumpkin-soup' } },
+              { template: { slug: 'preparedSoupQuantity' }, value: { value: 40 } },
+              { template: { slug: 'dessertItemId' }, value: { value: 'apple-compote' } },
+              { template: { slug: 'preparedDessertQuantity' }, value: { value: 35 } },
+              { template: { slug: 'overproductionMeatKg' }, value: { value: 0.85 } },
+              { template: { slug: 'overproductionVegetarianKg' }, value: { value: 0.36 } },
+              { template: { slug: 'overproductionSoupKg' }, value: { value: 0.5 } },
+              { template: { slug: 'overproductionDessertKg' }, value: { value: 0.18 } },
+              { template: { slug: 'submittedAt' }, value: { value: '2026-07-30T15:00:00.000Z' } },
+            ],
+          }),
+        ],
+      },
+    };
+
+    const cache = createGroupKitchenCalculationCache(inputCollections);
+    expect(getGroupKitchenActivityParseCountForTests()).toBe(1);
+    buildParticipantProgressServicePoints('staff1', '2026-07-31', inputCollections, cache);
+    expect(getGroupKitchenActivityParseCountForTests()).toBe(1);
+    expect(buildParticipantProgressServicePoints('staff1', '2026-07-31', inputCollections, cache)).toHaveLength(
+      2,
+    );
   });
 
   it('detects whether a group closeout exists for a service date', () => {
