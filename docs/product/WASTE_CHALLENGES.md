@@ -29,7 +29,7 @@ Acceptance: [`../../features/kitchen-skills-challenge/`](../../features/kitchen-
 | Estimate / actual waste / system vs kitchen reference | Trim Smart |
 | Reuse suggestion (`sessionId` + `ingredientId`) | Rescue & Reuse |
 | `recipeComposition` + final recipe weight + derived accuracy | Portion Precision |
-| Session Review, Student Progress, one session trainer assessment | [`CHEF_REVIEW.md`](kitchen-skills-challenge/CHEF_REVIEW.md) |
+| Session Review, Student Progress, per-module trainer assessment | [`CHEF_REVIEW.md`](kitchen-skills-challenge/CHEF_REVIEW.md) |
 
 **@pending:** percentile / ranking sufficient-data rule.
 

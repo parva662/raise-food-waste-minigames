@@ -98,6 +98,8 @@ One activity = one prepared recipe. Not one activity per ingredient line.
 
 Required recipe amounts and expected final weight are **not** copied into GameBus. They come from the generated recipe reference (`generated-data/kitchen-skills/recipes.json`, produced from `reference/kitchen-skills/kitchen_day_recipe_reference_clean.xlsx`). A future BarLaurea source can replace that extract behind the same adapter.
 
+**New posts require linked `recipeComposition`.** Live GameBus may still store `recipeId` as a number. The reader tolerates missing `recipeComposition` for listing only (recipe identity and `finalRecipeWeightGrams` on Session Review / Progress / trainer). Ingredient-line accuracy needs `recipeComposition`; final-weight deviation can still use the recipe reference.
+
 **Do not post:** ingredient accuracy, ingredient error, expected final weight, final-weight deviation, or any combined Portion score. Those are derived on read.
 
 This activity does **not** use `ingredientCategory`.
@@ -106,22 +108,23 @@ This activity does **not** use `ingredientCategory`.
 
 ---
 
-## `wastePracticeReview` — one end-of-session tutor assessment
+## `wastePracticeReview` — one tutor assessment per completed module
 
 The GameBus activity slug remains `wastePracticeReview`. The product UI wording is Tutor assessment.
 
-One review per student Kitchen Day / session. Not one judgement per activity or ingredient.
+One review per student Kitchen Day module (`reviewedGame`), not one judgement per activity or ingredient. A session may have up to three reviews (Trim Smart, Rescue & Reuse, Portion Precision) when each has evidence.
 
 | Slug | Required | Notes |
 |------|----------|-------|
 | `sessionId` | yes | reviewed student's session |
 | `sessionDate` | yes | |
 | `submittedAt` | yes | |
+| `reviewedGame` | yes | `trimSmart` \| `rescueAndReuse` \| `portionPrecision` |
 | `timeEfficiencyScore` | yes | integer 0–5 |
 | `preparationQualityScore` | yes | integer 0–5 |
 | `chefFeedback` | no | optional free text |
 
-**DEPRECATED / unlink or stop requiring:** `reviewedActivityId`, `reviewedGame`, `reasonCode`, `freeTextNote`, `unusualEvent`, `serviceDate`.
+**DEPRECATED / unlink or stop requiring:** `reviewedActivityId`, `reasonCode`, `freeTextNote`, `unusualEvent`, `serviceDate`.
 
 ---
 
@@ -178,12 +181,13 @@ This is **not** a platform blocker and is **not** a new API invented in the SPA.
 
 ### Tutor assessment (`wastePracticeReview`)
 
-- Make `wastePracticeReview` session-level
-- Keep: `sessionId`, `sessionDate`, `submittedAt`, `timeEfficiencyScore`, `preparationQualityScore`, `chefFeedback`
+- Make `wastePracticeReview` one assessment per completed module (`reviewedGame`)
+- Keep: `sessionId`, `sessionDate`, `submittedAt`, `reviewedGame`, `timeEfficiencyScore`, `preparationQualityScore`, `chefFeedback`
+- `reviewedGame` values: `trimSmart`, `rescueAndReuse`, `portionPrecision`
 - `chefFeedback` optional
 - Post `SILENT_ACTIVITY` with `actors: [selectedStudentActorId]`
 - Do **not** add `studentId`
-- Unlink / stop requiring: `reviewedActivityId`, `reviewedGame`, `reasonCode`, `freeTextNote`, `unusualEvent`, `serviceDate`
+- Unlink / stop requiring: `reviewedActivityId`, `reasonCode`, `freeTextNote`, `unusualEvent`, `serviceDate`
 
 ---
 
@@ -208,5 +212,5 @@ This is **not** a platform blocker and is **not** a new API invented in the SPA.
 | top-level ingredient fields on `portionPrecision` | Nested inside `recipeComposition` |
 | `ingredientName` / `ingredientWeightGrams` on reuse | Read from Trim |
 | `ingredientCategory` | Removed from Kitchen Skills Challenge; unlink from Kitchen Skills `trimSmart` only |
-| `reviewedActivityId`, `reviewedGame` | Review targets the session |
+| `reviewedActivityId` | Review targets the session module via `reviewedGame` |
 | `studentId`, `participantId` | GameBus actor identifies the student |

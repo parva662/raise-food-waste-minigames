@@ -38,6 +38,7 @@ import type {
   KitchenSkillsPortionEntry,
   KitchenSkillsRescueEntry,
   KitchenSkillsReviewEntry,
+  KitchenSkillsReviewedModule,
   KitchenSkillsTrimEntry,
 } from '@/products/kitchen-skills-challenge/domain/types';
 
@@ -61,7 +62,10 @@ interface KitchenSkillsSessionValue {
   commitReview: (entry: KitchenSkillsReviewEntry, studentActorId: string) => KitchenSkillsCommitResult;
   findTrimByIngredientId: (ingredientId: string) => KitchenSkillsTrimEntry | undefined;
   findRescueByIngredientId: (ingredientId: string) => KitchenSkillsRescueEntry | undefined;
-  findReviewBySessionId: (sessionId: string) => KitchenSkillsReviewEntry | undefined;
+  findReviewBySessionAndModule: (
+    sessionId: string,
+    reviewedGame: KitchenSkillsReviewedModule,
+  ) => KitchenSkillsReviewEntry | undefined;
   showFinishSummary: boolean;
 }
 
@@ -186,7 +190,8 @@ export function KitchenSkillsSessionProvider({
       mergeKitchenSkillsRecords(
         localReviews,
         persisted.reviews,
-        (left, right) => left.sessionId === right.sessionId,
+        (left, right) =>
+          left.sessionId === right.sessionId && left.reviewedGame === right.reviewedGame,
       ),
     [localReviews, persisted.reviews],
   );
@@ -255,7 +260,11 @@ export function KitchenSkillsSessionProvider({
   }, []);
 
   const commitReview = useCallback((entry: KitchenSkillsReviewEntry, studentActorId: string): KitchenSkillsCommitResult => {
-    if (reviews.some((item) => item.sessionId === entry.sessionId)) {
+    if (
+      reviews.some(
+        (item) => item.sessionId === entry.sessionId && item.reviewedGame === entry.reviewedGame,
+      )
+    ) {
       return { ok: false, reason: 'duplicate_review', keepDraft: true };
     }
     if (isGameBusEmbed()) {
@@ -264,14 +273,18 @@ export function KitchenSkillsSessionProvider({
         return { ok: false, reason: posted.reason, keepDraft: true };
       }
       setLocalReviews((current) =>
-        current.some((item) => item.sessionId === entry.sessionId)
+        current.some(
+          (item) => item.sessionId === entry.sessionId && item.reviewedGame === entry.reviewedGame,
+        )
           ? current
           : [...current, { ...entry, source: 'local' }],
       );
       return { ok: true, mode: 'posted_awaiting_persist' };
     }
     setLocalReviews((current) =>
-      current.some((item) => item.sessionId === entry.sessionId)
+      current.some(
+        (item) => item.sessionId === entry.sessionId && item.reviewedGame === entry.reviewedGame,
+      )
         ? current
         : [...current, { ...entry, source: 'local' }],
     );
@@ -286,8 +299,11 @@ export function KitchenSkillsSessionProvider({
     (ingredientId: string) => rescueEntries.find((entry) => entry.ingredientId === ingredientId),
     [rescueEntries],
   );
-  const findReviewBySessionId = useCallback(
-    (sessionId: string) => reviews.find((entry) => entry.sessionId === sessionId),
+  const findReviewBySessionAndModule = useCallback(
+    (sessionId: string, reviewedGame: KitchenSkillsReviewedModule) =>
+      reviews.find(
+        (entry) => entry.sessionId === sessionId && entry.reviewedGame === reviewedGame,
+      ),
     [reviews],
   );
 
@@ -307,7 +323,7 @@ export function KitchenSkillsSessionProvider({
       commitReview,
       findTrimByIngredientId,
       findRescueByIngredientId,
-      findReviewBySessionId,
+      findReviewBySessionAndModule,
       showFinishSummary,
     }),
     [
@@ -324,7 +340,7 @@ export function KitchenSkillsSessionProvider({
       commitReview,
       findTrimByIngredientId,
       findRescueByIngredientId,
-      findReviewBySessionId,
+      findReviewBySessionAndModule,
       showFinishSummary,
     ],
   );

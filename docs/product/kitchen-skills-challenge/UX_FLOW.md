@@ -24,9 +24,9 @@ Tutor dashboard    #/kitchen-day-tutor      (separate left-menu page)
 ```
 
 - Activity page: practical work only. No Progress tab. No tutor functions.
-- Session review: current locked session, read-only summaries, tutor assessment if already submitted.
+- Session review: current locked session, read-only summaries, per-module tutor assessment readbacks if already submitted.
 - Progress: own history, Overview / Progress tabs, approved comparisons only. No leaderboard or percentile copy.
-- Tutor: student/session list, evidence, then qualitative scores (0–5). System metrics support judgement; they do not set the scores.
+- Tutor: staff list → sessions → module tabs; evidence per module, then qualitative scores (0–5) for that module. System metrics support judgement; they do not set the scores.
 
 ## 3. Continuous student challenge (same iframe)
 
@@ -38,7 +38,7 @@ The student Kitchen Day TASK stays open until **Finish challenge**.
 4. Summary shows compact Trim / Reuse / Portion headlines. Detail sections are collapsed. Portion’s ingredient table is behind **View recipe details**.
 5. **Finish challenge** (always visible at the bottom) posts `{ type: 'EXIT' }` via `postKitchenSkillsChallengeExit`. That is the only EXIT in this flow.
 
-Do not send EXIT after Trim, Reuse, or immediately after Portion. Tutor review posts `SILENT_ACTIVITY` with `actors: [selectedStudentActorId]` and keeps the tutor iframe open.
+Do not send EXIT after Trim, Reuse, or immediately after Portion. Tutor review posts one `SILENT_ACTIVITY` per completed module (`reviewedGame`) with `actors: [selectedStudentActorId]` and keeps the tutor iframe open.
 
 ## 4. Trim Smart
 

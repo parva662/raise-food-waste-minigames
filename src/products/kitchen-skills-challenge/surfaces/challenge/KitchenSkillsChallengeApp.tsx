@@ -68,9 +68,9 @@ function KitchenSkillsGate() {
   return <KitchenSkillsBody />;
 }
 
-export function KitchenSkillsChallengeApp() {
+export function KitchenSkillsChallengeApp({ now }: { now?: Date } = {}) {
   return (
-    <KitchenSkillsSessionProvider>
+    <KitchenSkillsSessionProvider now={now}>
       <KitchenSkillsGate />
     </KitchenSkillsSessionProvider>
   );

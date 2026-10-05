@@ -1,11 +1,20 @@
 import { SessionEvidence } from '@/products/kitchen-skills-challenge/surfaces/shared/SessionEvidence';
 import { formatSessionDate } from '@/products/kitchen-skills-challenge/format';
 import { useReadyKitchenSkillsSession } from '@/products/kitchen-skills-challenge/domain/session/KitchenSkillsSessionContext';
+import { emptyModuleReviews } from '@/products/kitchen-skills-challenge/read/trainerSessions';
+import type { KitchenSkillsModuleReviews } from '@/products/kitchen-skills-challenge/domain/types';
 
 export function SessionReviewView() {
-  const { session, trimEntries, rescueEntries, portionEntries, findReviewBySessionId } =
-    useReadyKitchenSkillsSession();
-  const review = findReviewBySessionId(session.sessionId);
+  const { session, trimEntries, rescueEntries, portionEntries, reviews } = useReadyKitchenSkillsSession();
+  const moduleReviews = reviews
+    .filter((entry) => entry.sessionId === session.sessionId)
+    .reduce<KitchenSkillsModuleReviews>((acc, entry) => {
+      const existing = acc[entry.reviewedGame];
+      if (!existing || entry.submittedAt.localeCompare(existing.submittedAt) > 0) {
+        acc[entry.reviewedGame] = entry;
+      }
+      return acc;
+    }, emptyModuleReviews());
   const missing: string[] = [];
   if (trimEntries.length === 0) missing.push('Trim Smart');
   if (portionEntries.length === 0) missing.push('Portion Precision');
@@ -35,7 +44,7 @@ export function SessionReviewView() {
         trimEntries={trimEntries}
         rescueEntries={rescueEntries}
         portionEntries={portionEntries}
-        review={review}
+        moduleReviews={moduleReviews}
         collapsePortionTable
       />
     </section>

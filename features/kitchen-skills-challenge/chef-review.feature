@@ -3,12 +3,12 @@
 # Slugs: docs/product/kitchen-skills-challenge/GAMEBUS_SLUG_CONTRACT.md
 # Filename is historical. Product wording is Tutor / Tutor assessment.
 # GameBus activity slug remains wastePracticeReview.
-# Not implemented on main.
+# Implemented on main.
 #
 @chef-review @waste-challenges @kitchen-day
 Feature: Session Review, Student Progress, and tutor assessment
   As a student or tutor
-  I want one current-session review, one historical Progress page, and one qualitative tutor assessment
+  I want one current-session review, one historical Progress page, and one qualitative tutor assessment per completed module
   So that system performance stays separate from tutor judgement
 
   Background:
@@ -40,15 +40,15 @@ Feature: Session Review, Student Progress, and tutor assessment
 
     Scenario: Progress shows completed work before tutor review
       Given the student completed Trim, Reuse, and Portion
-      And the tutor has not reviewed the kitchen day
+      And the tutor has not reviewed any module
       When the student opens Progress
       Then those completed records are listed
       And tutor assessment is shown as not yet scored
 
-  Rule: One session-level tutor assessment
+  Rule: One tutor assessment per completed module
 
     Scenario Outline: Time efficiency accepts 0 to 5
-      When the tutor gives the kitchen day a time efficiency score of <score>
+      When the tutor gives the Trim Smart module a time efficiency score of <score>
       Then the time efficiency score is accepted
 
       Examples:
@@ -61,7 +61,7 @@ Feature: Session Review, Student Progress, and tutor assessment
         | 5     |
 
     Scenario Outline: Preparation quality accepts 0 to 5
-      When the tutor gives the kitchen day a preparation quality score of <score>
+      When the tutor gives the Trim Smart module a preparation quality score of <score>
       Then the preparation quality score is accepted
 
       Examples:
@@ -74,20 +74,22 @@ Feature: Session Review, Student Progress, and tutor assessment
         | 5     |
 
     Scenario: Score zero is distinct from not yet scored
-      When the tutor has not scored preparation quality
+      When the tutor has not scored preparation quality for a module
       Then preparation quality is shown as not yet scored
       When the tutor sets preparation quality to 0
       Then preparation quality is scored as 0
 
     Scenario: Tutor feedback is optional
-      When the tutor submits the two scores without feedback
-      Then the end-of-session review is accepted
+      When the tutor submits the two scores for a module without feedback
+      Then the module review is accepted
 
-    Scenario: One review covers the whole kitchen day
-      When the tutor submits the review
-      Then one review is recorded for the student's session
-      And the review is not one judgement per ingredient or per module
-      And Trim Smart, reuse, and Portion Precision do not receive separate tutor scores
+    Scenario: One review covers one module only
+      Given the kitchen day has Trim Smart and Rescue & Reuse evidence
+      When the tutor submits a Trim Smart review
+      Then one review is recorded for that session and reviewedGame trimSmart
+      And Rescue & Reuse remains open for assessment
+      And the review is not one judgement per ingredient
+      And there is no overall session-level tutor score
 
   Rule: System performance is not tutor scoring
 

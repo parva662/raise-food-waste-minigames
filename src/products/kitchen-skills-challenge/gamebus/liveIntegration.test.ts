@@ -72,6 +72,7 @@ const reviewEntry: KitchenSkillsReviewEntry = {
   sessionId: 'kitchen-day:kitchen-day-task-1:user-1:2026-09-23',
   sessionDate: '2026-09-23',
   submittedAt: '2026-09-23T14:00:00.000Z',
+  reviewedGame: 'trimSmart',
   timeEfficiencyScore: 0,
   preparationQualityScore: 5,
   source: 'local',
@@ -177,6 +178,7 @@ describe('Kitchen Day split live integration gates', () => {
       'sessionId',
       'sessionDate',
       'submittedAt',
+      'reviewedGame',
       'timeEfficiencyScore',
       'preparationQualityScore',
     ]);
@@ -196,11 +198,14 @@ describe('Kitchen Day split live integration gates', () => {
     );
   });
 
-  it('rejects a second wastePracticeReview for the same session', () => {
+  it('rejects a second wastePracticeReview for the same session and module', () => {
     ingestTaskForTests(kitchenSkillsTrainerTaskFixture);
     vi.spyOn(window.parent, 'postMessage').mockImplementation(() => undefined);
     expect(tryPostKitchenSkillsReview(reviewEntry, 'user-1').ok).toBe(true);
     expect(tryPostKitchenSkillsReview(reviewEntry, 'user-1')).toEqual({ ok: false, reason: 'duplicate' });
+    expect(
+      tryPostKitchenSkillsReview({ ...reviewEntry, reviewedGame: 'portionPrecision' }, 'user-1').ok,
+    ).toBe(true);
   });
 
   it('does not post a review without a selected student actor id', () => {

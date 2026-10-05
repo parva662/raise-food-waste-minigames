@@ -11,7 +11,11 @@ describe('Kitchen Day progress derived metrics', () => {
         sessionDate: '2026-09-22',
         trimEntries: [],
         rescueEntries: [],
-        review: null,
+        moduleReviews: {
+          trimSmart: null,
+          rescueAndReuse: null,
+          portionPrecision: null,
+        },
         portionEntries: [
           {
             sessionId: 's1',

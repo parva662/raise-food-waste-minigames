@@ -2304,10 +2304,6 @@ ul {
   word-break: break-word;
 }
 
-.kitchen-day-tutor-debug__raw {
-  max-height: 20rem;
-}
-
 /* Chef results (read-only simulation dashboard) */
 .chef-results-page {
   max-width: 1100px;
@@ -5305,6 +5301,83 @@ ul {
   text-decoration: none;
   color: var(--color-text);
   box-shadow: var(--shadow-sm);
+}
+
+.kitchen-day-staff-list {
+  display: grid;
+  gap: var(--spacing-sm);
+  list-style: none;
+  padding: 0;
+  margin: 0 0 var(--spacing-md);
+}
+
+.kitchen-day-staff-list a {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-md);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  text-decoration: none;
+  color: var(--color-text);
+  box-shadow: var(--shadow-sm);
+}
+
+.kitchen-day-staff-list__name {
+  font-weight: 600;
+}
+
+.kitchen-day-staff-list__meta {
+  color: var(--color-text-secondary);
+  font-size: 0.9375rem;
+}
+
+.kitchen-day-tutor-staff-search {
+  margin-bottom: var(--spacing-md);
+}
+
+.kitchen-day-tutor-back {
+  margin: 0 0 var(--spacing-md);
+}
+
+.kitchen-day-tutor-back a {
+  color: var(--color-primary);
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.kitchen-day-tutor-session-group__title {
+  margin: 0 0 var(--spacing-sm);
+  font-size: 1rem;
+}
+
+.kitchen-day-module-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-xs);
+  border-bottom: 1px solid var(--color-border);
+  padding-bottom: var(--spacing-xs);
+  margin-bottom: var(--spacing-md);
+}
+
+.kitchen-day-module-tabs__tab {
+  min-height: 2.5rem;
+  padding: var(--spacing-xs) var(--spacing-md);
+  border: 0;
+  border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+  background: transparent;
+  font-size: 0.9375rem;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+}
+
+.kitchen-day-module-tabs__tab--active {
+  color: var(--color-text);
+  font-weight: 600;
+  box-shadow: inset 0 -2px 0 var(--color-accent, #2563eb);
 }
 
 .kitchen-day-week-chart {

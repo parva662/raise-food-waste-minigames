@@ -1,5 +1,11 @@
 import { getActivityTemplateReference } from '@/platform/gamebus/groupActivities';
-import type { KitchenSkillsTrainerSession } from '@/products/kitchen-skills-challenge/domain/types';
+import type {
+  KitchenSkillsReviewedModule,
+  KitchenSkillsReviewEntry,
+  KitchenSkillsTrainerSession,
+  KitchenSkillsTrainerStaffSummary,
+} from '@/products/kitchen-skills-challenge/domain/types';
+import { KITCHEN_SKILLS_REVIEWED_MODULES } from '@/products/kitchen-skills-challenge/domain/types';
 import {
   parsePersistedPortionEntry,
   parsePersistedRescueEntry,
@@ -10,6 +16,78 @@ import {
 } from '@/products/kitchen-skills-challenge/read/kitchenSkillsReadModel';
 
 const KITCHEN_SKILLS_EVIDENCE_TEMPLATES = ['trimSmart', 'rescueAndReuse', 'portionPrecision'] as const;
+
+export function emptyModuleReviews(): KitchenSkillsTrainerSession['moduleReviews'] {
+  return {
+    trimSmart: null,
+    rescueAndReuse: null,
+    portionPrecision: null,
+  };
+}
+
+export function moduleHasEvidence(
+  session: KitchenSkillsTrainerSession,
+  module: KitchenSkillsReviewedModule,
+): boolean {
+  switch (module) {
+    case 'trimSmart':
+      return session.trimEntries.length > 0;
+    case 'rescueAndReuse':
+      return session.rescueEntries.length > 0;
+    case 'portionPrecision':
+      return session.portionEntries.length > 0;
+  }
+}
+
+export function findModuleReview(
+  session: KitchenSkillsTrainerSession,
+  module: KitchenSkillsReviewedModule,
+): KitchenSkillsReviewEntry | null {
+  return session.moduleReviews[module];
+}
+
+/** Latest submitted module review for read-only summaries until per-module UI lands. */
+export function latestModuleReview(
+  session: KitchenSkillsTrainerSession,
+): KitchenSkillsReviewEntry | null {
+  const reviews = KITCHEN_SKILLS_REVIEWED_MODULES.map((module) => session.moduleReviews[module]).filter(
+    (entry): entry is KitchenSkillsReviewEntry => entry !== null,
+  );
+  if (reviews.length === 0) return null;
+  return [...reviews].sort((left, right) => right.submittedAt.localeCompare(left.submittedAt))[0];
+}
+
+export function modulesAwaitingAssessmentCount(session: KitchenSkillsTrainerSession): number {
+  let count = 0;
+  for (const module of KITCHEN_SKILLS_REVIEWED_MODULES) {
+    if (moduleHasEvidence(session, module) && findModuleReview(session, module) === null) {
+      count += 1;
+    }
+  }
+  return count;
+}
+
+export function attachModuleReviewToMatchingSessions(
+  sessions: Iterable<KitchenSkillsTrainerSession>,
+  activity: unknown,
+  review: KitchenSkillsReviewEntry,
+): void {
+  const reviewActorId = readActivityActorId(activity);
+  const candidates = [...sessions].filter((session) => session.sessionId === review.sessionId);
+  if (candidates.length === 0) return;
+
+  const targetSessions =
+    reviewActorId != null
+      ? candidates.filter((session) => session.actorId === reviewActorId)
+      : candidates.length === 1
+        ? candidates
+        : [];
+
+  for (const session of targetSessions) {
+    if (session.moduleReviews[review.reviewedGame] !== null) continue;
+    session.moduleReviews[review.reviewedGame] = review;
+  }
+}
 
 export function chefSessionKey(actorId: string, sessionId: string): string {
   return `${actorId}::${sessionId}`;
@@ -84,7 +162,7 @@ export function buildKitchenSkillsTrainerSessions(
       trimEntries: [],
       rescueEntries: [],
       portionEntries: [],
-      review: null,
+      moduleReviews: emptyModuleReviews(),
     };
     sessions.set(key, created);
     return created;
@@ -113,24 +191,61 @@ export function buildKitchenSkillsTrainerSessions(
   for (const activity of activities) {
     const review = parsePersistedReviewEntry(activity);
     if (!review) continue;
-    for (const session of sessions.values()) {
-      if (session.sessionId === review.sessionId && !session.review) {
-        session.review = review;
-      }
-    }
+    attachModuleReviewToMatchingSessions(sessions.values(), activity, review);
   }
 
   return [...sessions.values()].sort((left, right) => {
     const byName = left.actorName.localeCompare(right.actorName);
     if (byName !== 0) return byName;
+    const byDate = right.sessionDate.localeCompare(left.sessionDate);
+    if (byDate !== 0) return byDate;
     return left.sessionId.localeCompare(right.sessionId);
+  });
+}
+
+export function buildKitchenSkillsTrainerStaffSummaries(
+  sessions: readonly KitchenSkillsTrainerSession[],
+): KitchenSkillsTrainerStaffSummary[] {
+  const byActor = new Map<string, KitchenSkillsTrainerStaffSummary>();
+
+  for (const session of sessions) {
+    const existing = byActor.get(session.actorId);
+    if (existing) {
+      existing.sessions.push(session);
+      existing.sessionCount += 1;
+      if (session.sessionDate.localeCompare(existing.latestSessionDate) > 0) {
+        existing.latestSessionDate = session.sessionDate;
+      }
+      existing.modulesAwaitingAssessment += modulesAwaitingAssessmentCount(session);
+      continue;
+    }
+    byActor.set(session.actorId, {
+      actorId: session.actorId,
+      actorName: session.actorName,
+      sessions: [session],
+      sessionCount: 1,
+      latestSessionDate: session.sessionDate,
+      modulesAwaitingAssessment: modulesAwaitingAssessmentCount(session),
+    });
+  }
+
+  return [...byActor.values()].sort((left, right) => {
+    if (left.modulesAwaitingAssessment !== right.modulesAwaitingAssessment) {
+      return right.modulesAwaitingAssessment - left.modulesAwaitingAssessment;
+    }
+    return left.actorName.localeCompare(right.actorName);
   });
 }
 
 export function findKitchenSkillsTrainerSession(
   sessions: readonly KitchenSkillsTrainerSession[],
   sessionId: string | null,
+  actorId?: string | null,
 ): KitchenSkillsTrainerSession | undefined {
   if (!sessionId) return undefined;
-  return sessions.find((session) => session.sessionId === sessionId);
+  return sessions.find(
+    (session) =>
+      session.sessionId === sessionId &&
+      (actorId == null || actorId === '' || session.actorId === actorId),
+  );
 }

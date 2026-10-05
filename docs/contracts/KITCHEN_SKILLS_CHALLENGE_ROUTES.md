@@ -13,7 +13,7 @@ Each row is a separate GameBus left-menu Custom Embed (or equivalent). Do not co
 |------|------------|------|-------|-------------------------|-----------------|
 | Student Kitchen Day | `#/kitchen-day` (modules: `#/kitchen-day/reuse`, `#/kitchen-day/portion`, `#/kitchen-day/review`) | Student | `SILENT_ACTIVITY` for `trimSmart`, `rescueAndReuse`, `portionPrecision`; `{ type: 'EXIT' }` on Finish challenge | Those three templates on one TASK | `inputCollectionPari.me`; `kitchenGroupInputSelf.activities` (`GET /api/me/activities`) |
 | Student Kitchen Day Progress | `#/kitchen-day-progress` | Student | none | none | `inputCollectionPari.me`; `kitchenGroupInputSelf.activities` (`GET /api/me/activities`) |
-| Tutor Kitchen Day Dashboard | `#/kitchen-day-tutor` (selected session: `?sessionId=`) | Tutor | `SILENT_ACTIVITY` `wastePracticeReview` with `actors: [selectedStudentActorId]` | `wastePracticeReview` on the tutor TASK | `kitchenSkillsTrainerInput.activities` (`GET /api/groups/activities` filtered to Kitchen Skills templates) grouped by actor |
+| Tutor Kitchen Day Dashboard | `#/kitchen-day-tutor` (staff list → sessions → modules; selected: `?actorId=` + `?sessionId=`) | Tutor | `SILENT_ACTIVITY` `wastePracticeReview` with `actors: [selectedStudentActorId]` and required `reviewedGame` | `wastePracticeReview` on the tutor TASK | `kitchenSkillsTrainerInput.activities` (`GET /api/groups/activities` filtered to Kitchen Skills templates) grouped by actor |
 
 Notes:
 
@@ -23,5 +23,5 @@ Notes:
   - `https://parva662.github.io/raise-food-waste-minigames/#/kitchen-day`
   - `https://parva662.github.io/raise-food-waste-minigames/#/kitchen-day-progress`
   - `https://parva662.github.io/raise-food-waste-minigames/#/kitchen-day-tutor`
-- Tutor review posts `SILENT_ACTIVITY` with `actors: [selectedStudentActorId]`. No `studentId` property. The tutor iframe stays open after submit. Trainer listing does not use a group-members collection in this phase.
+- Tutor UX is staff → sessions → module tabs. Each completed module gets its own `wastePracticeReview` (`reviewedGame`). No `studentId` property. The tutor iframe stays open after submit. Trainer listing does not use a group-members collection in this phase.
 - `#/waste/trim-smart` remains Trim Smart v1 and is unchanged.

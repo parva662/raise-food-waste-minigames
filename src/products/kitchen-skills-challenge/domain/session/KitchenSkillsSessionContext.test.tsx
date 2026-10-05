@@ -107,7 +107,7 @@ describe('Kitchen Day session initialization and hydration', () => {
   it('shows initializing in embed until TASK and authenticated user both exist', async () => {
     vi.spyOn(detectEmbed, 'isGameBusEmbed').mockReturnValue(true);
     setHash('#/kitchen-day');
-    render(<KitchenSkillsChallengeApp />);
+    render(<KitchenSkillsChallengeApp now={new Date('2026-09-23T10:00:00.000Z')} />);
     expect(screen.getByTestId('kitchen-day-initializing')).toBeInTheDocument();
     ingestTaskForTests(kitchenSkillsTaskFixture);
     expect(screen.getByTestId('kitchen-day-initializing')).toBeInTheDocument();
@@ -117,7 +117,9 @@ describe('Kitchen Day session initialization and hydration', () => {
     await waitFor(() => {
       expect(screen.getByTestId('kitchen-day-page')).toBeInTheDocument();
     });
-    expect(screen.getByTestId('kitchen-day-header-session')).toHaveTextContent(/2026-09-23|September|Wednesday/);
+    expect(screen.getByTestId('kitchen-day-header-session')).toHaveTextContent(
+      'Wednesday, 23 September 2026',
+    );
   });
 
   it('does not replace a locked session when a later TASK or participant refresh arrives', async () => {

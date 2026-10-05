@@ -25,10 +25,17 @@ export function readActivityPropertyValue(activity: unknown, slug: string): unkn
 
 export function readActivityPropertyString(activity: unknown, slug: string): string | null {
   const value = readActivityPropertyValue(activity, slug);
-  return typeof value === 'string' && value.length > 0 ? value : null;
+  if (typeof value === 'string' && value.length > 0) return value;
+  if (typeof value === 'number' && Number.isFinite(value)) return String(value);
+  return null;
 }
 
 export function readActivityPropertyNumber(activity: unknown, slug: string): number | null {
   const value = readActivityPropertyValue(activity, slug);
-  return typeof value === 'number' && Number.isFinite(value) ? value : null;
+  if (typeof value === 'number' && Number.isFinite(value)) return value;
+  if (typeof value === 'string' && value.trim().length > 0) {
+    const parsed = Number(value);
+    return Number.isFinite(parsed) ? parsed : null;
+  }
+  return null;
 }

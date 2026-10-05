@@ -7,7 +7,6 @@ import { ingestInputCollectionsForTests, ingestTaskForTests, resetGameBusBridgeF
 import { AppRouter } from '@/app/AppRouter';
 import { kitchenSkillsTrainerTaskFixture } from '@/products/kitchen-skills-challenge/gamebus/kitchenSkillsTaskFixtures';
 import { resetKitchenSkillsPostStateForTests } from '@/products/kitchen-skills-challenge/gamebus/postActivity';
-import { orderedWastePracticeReviewPropertyRefs } from '@/products/kitchen-skills-challenge/gamebus/mapWastePracticeReview';
 
 const sessionOne = 'kitchen-day:kitchen-day-task-1:user-1:2026-09-23';
 const sessionTwo = 'kitchen-day:kitchen-day-task-1:user-2:2026-09-23';
@@ -85,7 +84,7 @@ function secondStudentTrimActivity() {
   };
 }
 
-describe('Kitchen Day session-level chef review', () => {
+describe('Kitchen Day module chef review', () => {
   afterEach(() => {
     cleanup();
     resetGameBusBridgeForTests();
@@ -152,12 +151,13 @@ describe('Kitchen Day session-level chef review', () => {
           ...baseActivities,
           {
             id: 'act-review-1',
-            actor: { id: 'chef-1', name: 'Chef One' },
+            actor: { id: 'user-1', name: 'Student One' },
             template: { slug: 'wastePracticeReview' },
             properties: [
               { template: { slug: 'sessionId' }, value: { value: sessionOne } },
               { template: { slug: 'sessionDate' }, value: { value: '2026-09-23' } },
               { template: { slug: 'submittedAt' }, value: { value: '2026-09-23T15:00:00.000Z' } },
+              { template: { slug: 'reviewedGame' }, value: { value: 'trimSmart' } },
               { template: { slug: 'timeEfficiencyScore' }, value: { value: 4 } },
               { template: { slug: 'preparationQualityScore' }, value: { value: 3 } },
               { template: { slug: 'chefFeedback' }, value: { value: 'Steady work.' } },
@@ -175,7 +175,67 @@ describe('Kitchen Day session-level chef review', () => {
     expect(screen.queryByTestId('kitchen-day-review-submit')).not.toBeInTheDocument();
   });
 
-  it('lists trainer sessions from kitchenSkillsTrainerInput.activities only', async () => {
+  it('leaves Rescue open for assessment after a Trim review', async () => {
+    const user = userEvent.setup();
+    setHash(`#/kitchen-day-tutor?sessionId=${encodeURIComponent(sessionOne)}`);
+    render(<AppRouter />);
+    ingestInputCollectionsForTests({
+      kitchenGroupInput: {
+        activities: [
+          {
+            id: 'chef-forecast',
+            actor: { id: 'chef-1', name: 'Chef' },
+            template: { slug: 'chefForecast' },
+            properties: [],
+          },
+        ],
+      },
+      kitchenSkillsTrainerInput: {
+        activities: [
+          ...baseActivities,
+          {
+            id: 'act-rescue-1',
+            actor: { id: 'user-1', name: 'Student One' },
+            template: { slug: 'rescueAndReuse' },
+            properties: [
+              { template: { slug: 'sessionId' }, value: { value: sessionOne } },
+              { template: { slug: 'sessionDate' }, value: { value: '2026-09-23' } },
+              { template: { slug: 'ingredientId' }, value: { value: 'carrot' } },
+              { template: { slug: 'reusableWasteGrams' }, value: { value: 200 } },
+              { template: { slug: 'reuseDestination' }, value: { value: 'Soup' } },
+              { template: { slug: 'submittedAt' }, value: { value: '2026-09-23T10:10:00.000Z' } },
+            ],
+          },
+          {
+            id: 'act-review-trim',
+            actor: { id: 'user-1', name: 'Student One' },
+            template: { slug: 'wastePracticeReview' },
+            properties: [
+              { template: { slug: 'sessionId' }, value: { value: sessionOne } },
+              { template: { slug: 'sessionDate' }, value: { value: '2026-09-23' } },
+              { template: { slug: 'submittedAt' }, value: { value: '2026-09-23T15:00:00.000Z' } },
+              { template: { slug: 'reviewedGame' }, value: { value: 'trimSmart' } },
+              { template: { slug: 'timeEfficiencyScore' }, value: { value: 4 } },
+              { template: { slug: 'preparationQualityScore' }, value: { value: 3 } },
+            ],
+          },
+        ],
+      },
+      inputCollectionPari: { me: { id: 'chef-1', firstName: 'Chef', lastName: 'One' } },
+    });
+    await waitFor(() => {
+      expect(screen.getByTestId('kitchen-day-review-submitted')).toBeInTheDocument();
+    });
+    expect(screen.queryByTestId('kitchen-day-review-form')).not.toBeInTheDocument();
+
+    await user.click(screen.getByTestId('kitchen-day-tutor-module-tab-rescueAndReuse'));
+    await waitFor(() => {
+      expect(screen.getByTestId('kitchen-day-review-rescueAndReuse-form')).toBeInTheDocument();
+    });
+    expect(screen.queryByTestId('kitchen-day-review-rescueAndReuse-submitted')).not.toBeInTheDocument();
+  });
+
+  it('lists trainer staff from kitchenSkillsTrainerInput.activities only', async () => {
     setHash('#/kitchen-day-tutor');
     render(<AppRouter />);
     ingestInputCollectionsForTests({
@@ -185,10 +245,10 @@ describe('Kitchen Day session-level chef review', () => {
       inputCollectionPari: { me: { id: 'chef-1', firstName: 'Chef', lastName: 'One' } },
     });
     await waitFor(() => {
-      expect(screen.getByTestId(`kitchen-day-chef-session-${sessionOne}`)).toBeInTheDocument();
+      expect(screen.getByTestId('kitchen-day-tutor-staff-user-1')).toBeInTheDocument();
     });
-    expect(screen.queryByTestId(`kitchen-day-chef-session-${sessionTwo}`)).not.toBeInTheDocument();
-    expect(screen.queryByTestId(`kitchen-day-chef-session-${sessionSelfOnly}`)).not.toBeInTheDocument();
+    expect(screen.queryByTestId('kitchen-day-tutor-staff-user-2')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('kitchen-day-tutor-staff-user-self')).not.toBeInTheDocument();
     expect(screen.queryByText('Self Only')).not.toBeInTheDocument();
   });
 
@@ -197,7 +257,7 @@ describe('Kitchen Day session-level chef review', () => {
     vi.spyOn(detectEmbed, 'isGameBusEmbed').mockReturnValue(true);
     const postMessage = vi.spyOn(window.parent, 'postMessage').mockImplementation(() => undefined);
     ingestTaskForTests(kitchenSkillsTrainerTaskFixture);
-    setHash(`#/kitchen-day-tutor?sessionId=${encodeURIComponent(sessionOne)}`);
+    setHash(`#/kitchen-day-tutor?actorId=user-1&sessionId=${encodeURIComponent(sessionOne)}`);
     render(<AppRouter />);
     ingestInputCollectionsForTests({
       kitchenGroupInput: {
@@ -228,29 +288,39 @@ describe('Kitchen Day session-level chef review', () => {
     expect(reviewMessage?.data?.template).toBe('wastePracticeReview');
     expect(reviewMessage?.data?.actors).toEqual(['user-1']);
     const properties = reviewMessage?.data?.properties ?? [];
-    expect(properties.map((property) => property.template)).toEqual(
-      orderedWastePracticeReviewPropertyRefs({
-        sessionId: sessionOne,
-        sessionDate: '2026-09-23',
-        submittedAt: '2026-09-23T15:00:00.000Z',
-        timeEfficiencyScore: 4,
-        preparationQualityScore: 5,
-        chefFeedback: 'Steady work.',
-        source: 'local',
-      }),
-    );
+    expect(properties.map((property) => property.template)).toEqual([
+      'sessionId',
+      'sessionDate',
+      'submittedAt',
+      'reviewedGame',
+      'timeEfficiencyScore',
+      'preparationQualityScore',
+      'chefFeedback',
+    ]);
     expect(properties.map((property) => property.template)).not.toContain('studentId');
     expect(properties.find((property) => property.template === 'sessionId')?.obj).toEqual({ value: sessionOne });
     expect(properties.find((property) => property.template === 'sessionDate')?.obj).toEqual({ value: '2026-09-23' });
+    expect(properties.find((property) => property.template === 'reviewedGame')?.obj).toEqual({ value: 'trimSmart' });
     expect(properties.find((property) => property.template === 'timeEfficiencyScore')?.obj).toEqual({ value: 4 });
     expect(properties.find((property) => property.template === 'preparationQualityScore')?.obj).toEqual({ value: 5 });
     expect(properties.find((property) => property.template === 'chefFeedback')?.obj).toEqual({ value: 'Steady work.' });
     expect(activityCalls.some((payload) => payload.type === 'ACTIVITY')).toBe(false);
     expect(activityCalls.some((payload) => payload.type === 'EXIT')).toBe(false);
     expect(screen.getByTestId('kitchen-day-tutor-page')).toBeInTheDocument();
-    expect(screen.getByTestId(`kitchen-day-chef-session-${sessionTwo}`)).toBeInTheDocument();
     expect(screen.queryByTestId('kitchen-day-review-submit')).not.toBeInTheDocument();
 
+    await user.click(screen.getByTestId('kitchen-day-tutor-back-staff'));
+    await waitFor(() => {
+      expect(screen.getByTestId('kitchen-day-tutor-back-staff-list')).toBeInTheDocument();
+    });
+    await user.click(screen.getByTestId('kitchen-day-tutor-back-staff-list'));
+    await waitFor(() => {
+      expect(screen.getByTestId('kitchen-day-tutor-staff-user-2')).toBeInTheDocument();
+    });
+    await user.click(screen.getByTestId('kitchen-day-tutor-staff-user-2'));
+    await waitFor(() => {
+      expect(screen.getByTestId(`kitchen-day-chef-session-${sessionTwo}`)).toBeInTheDocument();
+    });
     await user.click(screen.getByTestId(`kitchen-day-chef-session-${sessionTwo}`));
     await waitFor(() => {
       expect(screen.getByTestId('kitchen-day-review-form')).toBeInTheDocument();

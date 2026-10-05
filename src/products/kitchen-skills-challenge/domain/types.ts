@@ -70,16 +70,38 @@ export interface KitchenSkillsPortionEntry {
   persistId?: string;
 }
 
+/** Module discriminator for `wastePracticeReview.reviewedGame` — activity slugs, not display labels. */
+export const KITCHEN_SKILLS_REVIEWED_MODULES = [
+  'trimSmart',
+  'rescueAndReuse',
+  'portionPrecision',
+] as const;
+
+export type KitchenSkillsReviewedModule = (typeof KITCHEN_SKILLS_REVIEWED_MODULES)[number];
+
+export const KITCHEN_SKILLS_MODULE_TITLES: Record<KitchenSkillsReviewedModule, string> = {
+  trimSmart: 'Trim Smart',
+  rescueAndReuse: 'Rescue & Reuse',
+  portionPrecision: 'Portion Precision',
+};
+
 export interface KitchenSkillsReviewEntry {
   sessionId: string;
   sessionDate: string;
   submittedAt: string;
+  reviewedGame: KitchenSkillsReviewedModule;
   timeEfficiencyScore: number;
   preparationQualityScore: number;
   chefFeedback?: string;
   source: KitchenSkillsRecordSource;
   persistId?: string;
 }
+
+export type KitchenSkillsModuleReviews = {
+  trimSmart: KitchenSkillsReviewEntry | null;
+  rescueAndReuse: KitchenSkillsReviewEntry | null;
+  portionPrecision: KitchenSkillsReviewEntry | null;
+};
 
 export interface KitchenSkillsTrainerSession {
   actorId: string;
@@ -89,5 +111,14 @@ export interface KitchenSkillsTrainerSession {
   trimEntries: KitchenSkillsTrimEntry[];
   rescueEntries: KitchenSkillsRescueEntry[];
   portionEntries: KitchenSkillsPortionEntry[];
-  review: KitchenSkillsReviewEntry | null;
+  moduleReviews: KitchenSkillsModuleReviews;
+}
+
+export interface KitchenSkillsTrainerStaffSummary {
+  actorId: string;
+  actorName: string;
+  sessions: KitchenSkillsTrainerSession[];
+  sessionCount: number;
+  latestSessionDate: string;
+  modulesAwaitingAssessment: number;
 }

@@ -22,7 +22,7 @@ Kitchen day (student actor + sessionId + sessionDate)
   ├── Portion Precision entry (0..n recipes/components)          → portionPrecision
   ├── Session Review (current Kitchen Day only, read-only)
   ├── Student Progress (own history, separate page)
-  └── One tutor assessment at end of session                     → wastePracticeReview
+  └── Tutor assessment per completed module (reviewedGame)       → wastePracticeReview
 ```
 
 | Module | Activity |
@@ -82,11 +82,11 @@ Read-only surfaces over completed Kitchen Day records.
 
 - Session Review (`#/kitchen-day/review`) is the current locked session only.
 - Student Progress (`#/kitchen-day-progress`) is own history.
-- Tutor dashboard (`#/kitchen-day-tutor`) is evidence plus one optional tutor assessment.
+- Tutor dashboard (`#/kitchen-day-tutor`) is staff → sessions → module tabs; one optional tutor assessment per completed module.
 
 ## 7. Tutor assessment
 
-See [`CHEF_REVIEW.md`](CHEF_REVIEW.md). **One** session-level `wastePracticeReview`: `timeEfficiencyScore`, `preparationQualityScore`, optional `chefFeedback`. Modules are evidence only. System metrics do not set those scores. No per-activity or per-ingredient tutor scores.
+See [`CHEF_REVIEW.md`](CHEF_REVIEW.md). **One** `wastePracticeReview` per completed module (`reviewedGame`: `trimSmart` \| `rescueAndReuse` \| `portionPrecision`): `timeEfficiencyScore`, `preparationQualityScore`, optional `chefFeedback`. System metrics do not set those scores. No per-activity or per-ingredient tutor scores. No single overall session review.
 
 ## 8. Kitchen reference (analytics)
 

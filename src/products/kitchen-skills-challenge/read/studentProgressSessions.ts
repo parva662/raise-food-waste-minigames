@@ -7,6 +7,10 @@ import {
   readActivityActorId,
   readActivityActorName,
 } from '@/products/kitchen-skills-challenge/read/kitchenSkillsReadModel';
+import {
+  attachModuleReviewToMatchingSessions,
+  emptyModuleReviews,
+} from '@/products/kitchen-skills-challenge/read/trainerSessions';
 
 /**
  * Group the authenticated student's own Kitchen Skills activities by session.
@@ -41,7 +45,7 @@ export function buildKitchenSkillsStudentProgressSessions(
       trimEntries: [],
       rescueEntries: [],
       portionEntries: [],
-      review: null,
+      moduleReviews: emptyModuleReviews(),
     };
     sessions.set(sessionId, created);
     return created;
@@ -70,11 +74,7 @@ export function buildKitchenSkillsStudentProgressSessions(
   for (const activity of activities) {
     const review = parsePersistedReviewEntry(activity);
     if (!review) continue;
-    for (const session of sessions.values()) {
-      if (session.sessionId === review.sessionId && !session.review) {
-        session.review = review;
-      }
-    }
+    attachModuleReviewToMatchingSessions(sessions.values(), activity, review);
   }
 
   return [...sessions.values()].sort((left, right) => {

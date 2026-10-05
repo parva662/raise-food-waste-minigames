@@ -63,7 +63,9 @@ describe('Student Progress sessions from kitchenGroupInputSelf', () => {
       },
     ]);
     expect(sessions).toHaveLength(1);
-    expect(sessions[0]?.review).toBeNull();
+    expect(sessions[0]?.moduleReviews.trimSmart).toBeNull();
+    expect(sessions[0]?.moduleReviews.rescueAndReuse).toBeNull();
+    expect(sessions[0]?.moduleReviews.portionPrecision).toBeNull();
     expect(sessions[0]?.trimEntries[0]?.ingredientId).toBe('carrot');
     expect(sessions[0]?.rescueEntries[0]?.reuseDestination).toBe('Soup');
     expect(sessions[0]?.portionEntries[0]?.recipeId).toBe('mayonnaise');

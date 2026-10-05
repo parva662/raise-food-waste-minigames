@@ -66,6 +66,7 @@ const review: KitchenSkillsReviewEntry = {
   sessionId,
   sessionDate: '2026-09-23',
   submittedAt: '2026-09-23T12:00:00.000Z',
+  reviewedGame: 'trimSmart',
   timeEfficiencyScore: 4,
   preparationQualityScore: 5,
   chefFeedback: 'Keep the julienne even.',
@@ -102,8 +103,9 @@ describe('Session review presentation', () => {
     expect(evidence).not.toHaveClass('chef-results-metrics');
     expect(following(trim, rescue)).toBe(true);
     expect(following(rescue, portion)).toBe(true);
-    expect(following(portion, tutor)).toBe(true);
+    expect(following(tutor, rescue)).toBe(true);
     expect(tutor).toHaveClass('kitchen-day-evidence-section--assessment');
+    expect(trim).toContainElement(tutor);
 
     const potato = screen.getByTestId('kitchen-day-trim-potato');
     expect(potato.querySelector('h4')).toHaveTextContent('Potato');
@@ -144,7 +146,8 @@ describe('Session review presentation', () => {
     expect(tutor).toHaveTextContent('4 / 5');
     expect(tutor).toHaveTextContent('5 / 5');
     expect(tutor).toHaveTextContent('Keep the julienne even.');
-    expect(trim).not.toHaveTextContent('Tutor assessment');
+    expect(rescue).not.toHaveTextContent('Tutor assessment');
+    expect(portion).not.toHaveTextContent('Tutor assessment');
     expect(container.textContent).not.toContain(sessionId);
     expect(container.textContent).not.toMatch(/ingredientWeightGrams|trimTechniques|actualWasteGrams/);
   });

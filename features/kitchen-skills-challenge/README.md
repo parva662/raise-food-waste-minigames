@@ -8,7 +8,7 @@ All files below are **APPROVED PRODUCT TARGET**. Public hashes remain `#/kitchen
 | [`trim-smart.feature`](trim-smart.feature) | Ingredient preparation |
 | [`rescue-and-reuse.feature`](rescue-and-reuse.feature) | Reuse joined by `sessionId` + `ingredientId` |
 | [`portion-precision.feature`](portion-precision.feature) | Recipe-level `recipeComposition` + derived metrics |
-| [`chef-review.feature`](chef-review.feature) | Session Review, Progress, one session-level trainer assessment (`wastePracticeReview`) |
+| [`chef-review.feature`](chef-review.feature) | Session Review, Progress, one tutor assessment per completed module (`wastePracticeReview` + `reviewedGame`) |
 
 Slug contract: [`../../docs/product/kitchen-skills-challenge/GAMEBUS_SLUG_CONTRACT.md`](../../docs/product/kitchen-skills-challenge/GAMEBUS_SLUG_CONTRACT.md). GameBus protocol index: [`../../docs/contracts/GAMEBUS.md`](../../docs/contracts/GAMEBUS.md).
 

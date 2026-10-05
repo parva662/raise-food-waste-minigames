@@ -11,6 +11,7 @@ const entry: KitchenSkillsReviewEntry = {
   sessionId: 'kitchen-day:task-1:user-1:2026-09-23',
   sessionDate: '2026-09-23',
   submittedAt: '2026-09-23T14:00:00.000Z',
+  reviewedGame: 'trimSmart',
   timeEfficiencyScore: 0,
   preparationQualityScore: 5,
   source: 'local',
@@ -22,6 +23,7 @@ describe('wastePracticeReview mapper', () => {
       'sessionId',
       'sessionDate',
       'submittedAt',
+      'reviewedGame',
       'timeEfficiencyScore',
       'preparationQualityScore',
     ]);
@@ -30,13 +32,14 @@ describe('wastePracticeReview mapper', () => {
       'sessionId',
       'sessionDate',
       'submittedAt',
+      'reviewedGame',
       'timeEfficiencyScore',
       'preparationQualityScore',
     ]);
+    expect(values.reviewedGame).toEqual({ value: 'trimSmart' });
     expect(values).not.toHaveProperty('chefFeedback');
     expect(values).not.toHaveProperty('studentId');
     expect(values).not.toHaveProperty('reviewedActivityId');
-    expect(values).not.toHaveProperty('reviewedGame');
     expect(values).not.toHaveProperty('reasonCode');
     expect(values).not.toHaveProperty('freeTextNote');
     expect(values).not.toHaveProperty('unusualEvent');

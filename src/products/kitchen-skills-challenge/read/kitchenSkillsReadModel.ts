@@ -2,6 +2,7 @@ import { getActivityTemplateReference } from '@/platform/gamebus/groupActivities
 import { isTrimTechnique } from '@/products/kitchen-skills-challenge/domain/trim/techniques';
 import { isPortionUnit } from '@/products/kitchen-skills-challenge/domain/portion/validation';
 import { isKitchenSkillsReviewScore } from '@/products/kitchen-skills-challenge/domain/assessment/scores';
+import { isKitchenSkillsReviewedModule } from '@/products/kitchen-skills-challenge/gamebus/mapWastePracticeReview';
 import type {
   KitchenSkillsPortionEntry,
   KitchenSkillsRescueEntry,
@@ -133,26 +134,40 @@ export function parsePersistedRescueEntry(activity: unknown): KitchenSkillsRescu
   };
 }
 
-function parseComposition(value: unknown): RecipeCompositionLine[] | null {
-  if (!Array.isArray(value) || value.length === 0) return null;
+function parseComposition(value: unknown): RecipeCompositionLine[] {
+  const raw = typeof value === 'string' ? tryParseJsonArray(value) : value;
+  if (!Array.isArray(raw) || raw.length === 0) return [];
   const lines: RecipeCompositionLine[] = [];
-  for (const item of value) {
-    if (!isRecord(item)) return null;
-    const ingredientId = typeof item.ingredientId === 'string' ? item.ingredientId : '';
+  for (const item of raw) {
+    if (!isRecord(item)) continue;
+    const ingredientId =
+      typeof item.ingredientId === 'string'
+        ? item.ingredientId
+        : typeof item.ingredientId === 'number' && Number.isFinite(item.ingredientId)
+          ? String(item.ingredientId)
+          : '';
     const ingredientName = typeof item.ingredientName === 'string' ? item.ingredientName : '';
-    const actualAmount = item.actualAmount;
+    const actualAmount =
+      typeof item.actualAmount === 'number' && Number.isFinite(item.actualAmount)
+        ? item.actualAmount
+        : typeof item.actualAmount === 'string'
+          ? Number(item.actualAmount)
+          : Number.NaN;
     const unit = typeof item.unit === 'string' ? item.unit : '';
-    if (
-      !ingredientId ||
-      !ingredientName ||
-      typeof actualAmount !== 'number' ||
-      !isPortionUnit(unit)
-    ) {
-      return null;
+    if (!ingredientId || !ingredientName || !Number.isFinite(actualAmount) || !isPortionUnit(unit)) {
+      continue;
     }
     lines.push({ ingredientId, ingredientName, actualAmount, unit });
   }
   return lines;
+}
+
+function tryParseJsonArray(value: string): unknown {
+  try {
+    return JSON.parse(value);
+  } catch {
+    return null;
+  }
 }
 
 export function parsePersistedPortionEntry(activity: unknown): KitchenSkillsPortionEntry | null {
@@ -163,15 +178,13 @@ export function parsePersistedPortionEntry(activity: unknown): KitchenSkillsPort
   const recipeId = readActivityPropertyString(activity, 'recipeId');
   const recipeName = readActivityPropertyString(activity, 'recipeName');
   const finalRecipeWeightGrams = readActivityPropertyNumber(activity, 'finalRecipeWeightGrams');
-  const recipeComposition = parseComposition(readActivityPropertyValue(activity, 'recipeComposition'));
   if (
     !sessionId ||
     !sessionDate ||
     !submittedAt ||
     !recipeId ||
     !recipeName ||
-    finalRecipeWeightGrams == null ||
-    !recipeComposition
+    finalRecipeWeightGrams == null
   ) {
     return null;
   }
@@ -181,7 +194,7 @@ export function parsePersistedPortionEntry(activity: unknown): KitchenSkillsPort
     submittedAt,
     recipeId,
     recipeName,
-    recipeComposition,
+    recipeComposition: parseComposition(readActivityPropertyValue(activity, 'recipeComposition')),
     finalRecipeWeightGrams,
     source: 'persisted',
     persistId: readActivityId(activity) ?? undefined,
@@ -196,10 +209,13 @@ export function parsePersistedReviewEntry(activity: unknown): KitchenSkillsRevie
   const timeEfficiencyScore = readActivityPropertyNumber(activity, 'timeEfficiencyScore');
   const preparationQualityScore = readActivityPropertyNumber(activity, 'preparationQualityScore');
   const chefFeedback = readActivityPropertyString(activity, 'chefFeedback');
+  const reviewedGame = readActivityPropertyString(activity, 'reviewedGame');
   if (
     !sessionId ||
     !sessionDate ||
     !submittedAt ||
+    !reviewedGame ||
+    !isKitchenSkillsReviewedModule(reviewedGame) ||
     timeEfficiencyScore == null ||
     preparationQualityScore == null ||
     !isKitchenSkillsReviewScore(timeEfficiencyScore) ||
@@ -211,6 +227,7 @@ export function parsePersistedReviewEntry(activity: unknown): KitchenSkillsRevie
     sessionId,
     sessionDate,
     submittedAt,
+    reviewedGame,
     timeEfficiencyScore,
     preparationQualityScore,
     ...(chefFeedback ? { chefFeedback } : {}),

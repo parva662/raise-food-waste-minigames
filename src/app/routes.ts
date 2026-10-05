@@ -167,6 +167,13 @@ export function parseKitchenDaySelectedSessionId(
   return sessionId && sessionId.length > 0 ? sessionId : null;
 }
 
+export function parseKitchenDaySelectedActorId(
+  hash: string = typeof window === 'undefined' ? '' : window.location.hash,
+): string | null {
+  const actorId = new URLSearchParams(hashSearch(hash)).get('actorId')?.trim();
+  return actorId && actorId.length > 0 ? actorId : null;
+}
+
 export function kitchenDayHashFor(section: KitchenSkillsHashSection): string {
   if (section === 'trim') return KITCHEN_DAY_HASH_ROUTE;
   return `${KITCHEN_DAY_HASH_ROUTE}/${section}`;
@@ -179,9 +186,16 @@ export function goToKitchenDaySection(section: KitchenSkillsHashSection): void {
   window.dispatchEvent(new HashChangeEvent('hashchange'));
 }
 
-export function kitchenDayTutorHashFor(sessionId?: string): string {
-  if (!sessionId) return KITCHEN_DAY_TUTOR_HASH_ROUTE;
-  return `${KITCHEN_DAY_TUTOR_HASH_ROUTE}?sessionId=${encodeURIComponent(sessionId)}`;
+export function kitchenDayTutorHashFor(
+  options?: string | { actorId?: string; sessionId?: string },
+): string {
+  const resolved =
+    typeof options === 'string' ? { sessionId: options } : options ?? {};
+  if (!resolved.actorId && !resolved.sessionId) return KITCHEN_DAY_TUTOR_HASH_ROUTE;
+  const params = new URLSearchParams();
+  if (resolved.actorId) params.set('actorId', resolved.actorId);
+  if (resolved.sessionId) params.set('sessionId', resolved.sessionId);
+  return `${KITCHEN_DAY_TUTOR_HASH_ROUTE}?${params.toString()}`;
 }
 
 export function kitchenDayHashMatches(hash: string): boolean {

@@ -75,6 +75,28 @@ describe('Kitchen Day read model', () => {
     ).toBe('mayonnaise');
   });
 
+  it('hydrates a live GameBus Portion activity when recipeId is numeric and recipeComposition is absent', () => {
+    const entry = parsePersistedPortionEntry({
+      id: 'act-portion-live',
+      template: { slug: 'portionPrecision', name: 'Portion Precision' },
+      properties: [
+        {
+          template: { slug: 'sessionId' },
+          value: { value: 'kitchen-day:01e0e772-76e6-791e-078e-be4009eab14f:019ff626-7720-7e60-8547-da4ab1243c79:2026-09-30' },
+        },
+        { template: { slug: 'sessionDate' }, value: { value: '2026-09-30' } },
+        { template: { slug: 'submittedAt' }, value: { value: '2026-09-30T09:43:56.955Z' } },
+        { template: { slug: 'recipeId' }, value: { value: 143 } },
+        { template: { slug: 'recipeName' }, value: { value: 'Pottuvoi FLOW SYKSY - KOPIO' } },
+        { template: { slug: 'finalRecipeWeightGrams' }, value: { value: 3200 } },
+      ],
+    });
+    expect(entry?.recipeId).toBe('143');
+    expect(entry?.recipeName).toBe('Pottuvoi FLOW SYKSY - KOPIO');
+    expect(entry?.finalRecipeWeightGrams).toBe(3200);
+    expect(entry?.recipeComposition).toEqual([]);
+  });
+
   it('ignores malformed, historical v1, and unrelated activities', () => {
     expect(parsePersistedTrimEntry({ template: { slug: 'chefForecast' } })).toBeNull();
     expect(

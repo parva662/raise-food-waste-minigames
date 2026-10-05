@@ -20,6 +20,8 @@ All actual measurements live in **one** property: `recipeComposition`. No per-in
 
 Each `recipeComposition` entry: `ingredientId`, `ingredientName`, `actualAmount`, `unit`. `actualAmount` is nested, not a GameBus property.
 
+`recipeId` may be stored as a number on live GameBus. **New posts require linked `recipeComposition`** (schema fixed). The reader may still hydrate listing (recipe name and final weight) without composition for older rows. Ingredient accuracy stays blank until composition is stored.
+
 Accuracy, error, and final-weight deviation are **derived at display time**. They are not stored on the activity.
 
 ## 4. Recipe data outside GameBus

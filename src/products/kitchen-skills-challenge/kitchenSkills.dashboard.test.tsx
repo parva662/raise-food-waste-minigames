@@ -190,18 +190,24 @@ describe('Kitchen Day student and chef dashboards', () => {
     render(<AppRouter />);
     ingestInputCollectionsForTests(groupCollections);
     await waitFor(() => {
-      expect(screen.getByTestId(`kitchen-day-chef-session-${sessionOne}`)).toBeInTheDocument();
+      expect(screen.getByTestId('kitchen-day-tutor-staff-user-1')).toBeInTheDocument();
     });
-    expect(screen.getByTestId(`kitchen-day-chef-session-${sessionTwo}`)).toBeInTheDocument();
+    expect(screen.getByTestId('kitchen-day-tutor-staff-user-2')).toBeInTheDocument();
     expect(screen.getByTestId('kitchen-day-tutor-page')).toBeInTheDocument();
     expect(screen.queryByText(/leaderboard/i)).not.toBeInTheDocument();
+    await user.click(screen.getByTestId('kitchen-day-tutor-staff-user-1'));
+    await waitFor(() => {
+      expect(screen.getByTestId(`kitchen-day-chef-session-${sessionOne}`)).toBeInTheDocument();
+    });
     await user.click(screen.getByTestId(`kitchen-day-chef-session-${sessionOne}`));
     await waitFor(() => {
       expect(screen.getByTestId('kitchen-day-chef-selected')).toBeInTheDocument();
     });
     expect(screen.getByTestId('kitchen-day-chef-readonly')).toBeInTheDocument();
     expect(screen.getByTestId('kitchen-day-chef-trim-carrot')).toBeInTheDocument();
+    await user.click(screen.getByTestId('kitchen-day-tutor-module-tab-rescueAndReuse'));
     expect(screen.getByTestId('kitchen-day-chef-rescue-carrot')).toBeInTheDocument();
+    await user.click(screen.getByTestId('kitchen-day-tutor-module-tab-portionPrecision'));
     expect(screen.getByTestId('kitchen-day-chef-portion-mayonnaise')).toBeInTheDocument();
     expect(screen.queryByTestId('kitchen-day-chef-trim-onion')).not.toBeInTheDocument();
     expect(screen.queryByTestId('kitchen-day-chef-trim-unfinished')).not.toBeInTheDocument();

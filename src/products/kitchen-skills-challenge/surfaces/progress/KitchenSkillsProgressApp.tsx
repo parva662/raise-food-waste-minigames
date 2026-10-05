@@ -4,12 +4,40 @@ import { buildKitchenSkillsProgressPoints } from '@/products/kitchen-skills-chal
 import { SessionEvidence } from '@/products/kitchen-skills-challenge/surfaces/shared/SessionEvidence';
 import { Sparkline } from '@/products/kitchen-skills-challenge/surfaces/progress/Sparkline';
 import { useKitchenSkillsStudentProgressData } from '@/products/kitchen-skills-challenge/read/useGroupData';
+import { KITCHEN_SKILLS_MODULE_TITLES } from '@/products/kitchen-skills-challenge/domain/types';
+import type {
+  KitchenSkillsReviewedModule,
+  KitchenSkillsTrainerSession,
+} from '@/products/kitchen-skills-challenge/domain/types';
+import { KITCHEN_SKILLS_REVIEWED_MODULES } from '@/products/kitchen-skills-challenge/domain/types';
+
+function ModuleReviewSummary({
+  module,
+  session,
+}: {
+  module: KitchenSkillsReviewedModule;
+  session: KitchenSkillsTrainerSession;
+}) {
+  const review = session.moduleReviews[module];
+  if (!review) return null;
+  return (
+    <div className="chef-results-panel" data-testid={`kitchen-day-progress-tutor-${module}`}>
+      <h3 className="chef-results-panel__title">{KITCHEN_SKILLS_MODULE_TITLES[module]} tutor review</h3>
+      <p>Time efficiency {review.timeEfficiencyScore}</p>
+      <p>Preparation quality {review.preparationQualityScore}</p>
+      {review.chefFeedback ? <p>{review.chefFeedback}</p> : null}
+    </div>
+  );
+}
 
 export function KitchenSkillsProgressApp() {
   const { sessions: ownSessions } = useKitchenSkillsStudentProgressData();
   const [tab, setTab] = useState<'overview' | 'progress'>('overview');
   const latest = ownSessions[ownSessions.length - 1] ?? ownSessions[0];
   const points = buildKitchenSkillsProgressPoints(ownSessions);
+  const hasAnyModuleReview =
+    latest &&
+    KITCHEN_SKILLS_REVIEWED_MODULES.some((module) => latest.moduleReviews[module] !== null);
 
   return (
     <div className="chef-results-page chef-results-page--participant kitchen-mgmt-page" data-testid="kitchen-day-progress-page">
@@ -59,12 +87,11 @@ export function KitchenSkillsProgressApp() {
             <>
               <h2 className="kitchen-mgmt-module-title">Latest challenge session</h2>
               <p>{formatSessionDate(latest.sessionDate)}</p>
-              {latest.review ? (
-                <div className="chef-results-panel" data-testid="kitchen-day-progress-tutor">
-                  <h3 className="chef-results-panel__title">Tutor review</h3>
-                  <p>Time efficiency {latest.review.timeEfficiencyScore}</p>
-                  <p>Preparation quality {latest.review.preparationQualityScore}</p>
-                  {latest.review.chefFeedback ? <p>{latest.review.chefFeedback}</p> : null}
+              {hasAnyModuleReview ? (
+                <div data-testid="kitchen-day-progress-tutor">
+                  {KITCHEN_SKILLS_REVIEWED_MODULES.map((module) => (
+                    <ModuleReviewSummary key={module} module={module} session={latest} />
+                  ))}
                 </div>
               ) : (
                 <p className="chef-results-empty">No tutor assessment yet.</p>
@@ -73,6 +100,7 @@ export function KitchenSkillsProgressApp() {
                 trimEntries={latest.trimEntries}
                 rescueEntries={latest.rescueEntries}
                 portionEntries={latest.portionEntries}
+                moduleReviews={latest.moduleReviews}
                 testIdPrefix="kitchen-day-progress"
               />
             </>
@@ -108,17 +136,45 @@ export function KitchenSkillsProgressApp() {
             )}
           />
           <Sparkline
-            label="Tutor time efficiency"
-            testId="kitchen-day-progress-time-trend"
+            label="Trim Smart time efficiency"
+            testId="kitchen-day-progress-trim-time-trend"
             values={points.flatMap((point) =>
-              point.timeEfficiencyScore == null ? [] : [point.timeEfficiencyScore],
+              point.trimTimeEfficiencyScore == null ? [] : [point.trimTimeEfficiencyScore],
             )}
           />
           <Sparkline
-            label="Tutor preparation quality"
-            testId="kitchen-day-progress-quality-trend"
+            label="Trim Smart preparation quality"
+            testId="kitchen-day-progress-trim-quality-trend"
             values={points.flatMap((point) =>
-              point.preparationQualityScore == null ? [] : [point.preparationQualityScore],
+              point.trimPreparationQualityScore == null ? [] : [point.trimPreparationQualityScore],
+            )}
+          />
+          <Sparkline
+            label="Rescue & Reuse time efficiency"
+            testId="kitchen-day-progress-rescue-time-trend"
+            values={points.flatMap((point) =>
+              point.rescueTimeEfficiencyScore == null ? [] : [point.rescueTimeEfficiencyScore],
+            )}
+          />
+          <Sparkline
+            label="Rescue & Reuse preparation quality"
+            testId="kitchen-day-progress-rescue-quality-trend"
+            values={points.flatMap((point) =>
+              point.rescuePreparationQualityScore == null ? [] : [point.rescuePreparationQualityScore],
+            )}
+          />
+          <Sparkline
+            label="Portion Precision time efficiency"
+            testId="kitchen-day-progress-portion-time-trend"
+            values={points.flatMap((point) =>
+              point.portionTimeEfficiencyScore == null ? [] : [point.portionTimeEfficiencyScore],
+            )}
+          />
+          <Sparkline
+            label="Portion Precision preparation quality"
+            testId="kitchen-day-progress-portion-quality-trend"
+            values={points.flatMap((point) =>
+              point.portionPreparationQualityScore == null ? [] : [point.portionPreparationQualityScore],
             )}
           />
           <ul className="kitchen-day-session-list">

@@ -10,8 +10,12 @@ export interface KitchenSkillsProgressPoint {
   durationMinutes: number | null;
   ingredientAccuracyPercent: number | null;
   finalWeightDeviationPercent: number | null;
-  timeEfficiencyScore: number | null;
-  preparationQualityScore: number | null;
+  trimTimeEfficiencyScore: number | null;
+  trimPreparationQualityScore: number | null;
+  rescueTimeEfficiencyScore: number | null;
+  rescuePreparationQualityScore: number | null;
+  portionTimeEfficiencyScore: number | null;
+  portionPreparationQualityScore: number | null;
 }
 
 export function buildKitchenSkillsProgressPoints(
@@ -27,6 +31,7 @@ export function buildKitchenSkillsProgressPoints(
       const portionMetrics = session.portionEntries.map((entry) =>
         buildPortionRecipeMetrics(entry, getRecipeReference(entry.recipeId)),
       );
+      const { trimSmart, rescueAndReuse, portionPrecision } = session.moduleReviews;
       return {
         sessionId: session.sessionId,
         sessionDate: session.sessionDate,
@@ -42,8 +47,12 @@ export function buildKitchenSkillsProgressPoints(
             item.finalWeightDeviationPercent == null ? [] : [item.finalWeightDeviationPercent],
           ),
         ),
-        timeEfficiencyScore: session.review?.timeEfficiencyScore ?? null,
-        preparationQualityScore: session.review?.preparationQualityScore ?? null,
+        trimTimeEfficiencyScore: trimSmart?.timeEfficiencyScore ?? null,
+        trimPreparationQualityScore: trimSmart?.preparationQualityScore ?? null,
+        rescueTimeEfficiencyScore: rescueAndReuse?.timeEfficiencyScore ?? null,
+        rescuePreparationQualityScore: rescueAndReuse?.preparationQualityScore ?? null,
+        portionTimeEfficiencyScore: portionPrecision?.timeEfficiencyScore ?? null,
+        portionPreparationQualityScore: portionPrecision?.preparationQualityScore ?? null,
       };
     });
 }
