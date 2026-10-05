@@ -35,6 +35,7 @@ Do **not** create empty tutorial or how-to folders just to fill the map. Paths s
 |---------|---------------|-----------|
 | Behaviour acceptance | [`../features/**/*.feature`](../features/) | Product MD (must not contradict) |
 | GameBus activity / property slugs & TASK | [`contracts/`](contracts/) + [`product/kitchen-skills-challenge/GAMEBUS_SLUG_CONTRACT.md`](product/kitchen-skills-challenge/GAMEBUS_SLUG_CONTRACT.md) | Product MD |
+| Routes (SPA hash registry) | **Canonical application source:** [`../src/app/routes.ts`](../src/app/routes.ts) (`APP_ROUTES` / hash constants). Human catalogue: [`../README.md`](../README.md) product table + [`architecture/README.md`](architecture/README.md). **GameBus left-menu / embed route contracts** (stable hashes for Custom Embed URLs): product-specific files under [`contracts/`](contracts/) — Kitchen Skills: [`contracts/KITCHEN_SKILLS_CHALLENGE_ROUTES.md`](contracts/KITCHEN_SKILLS_CHALLENGE_ROUTES.md) (does **not** own lunch / forecast / closeout / results hashes). | Product MD |
 | Official iframe protocol | **External** GameBus docs via [`contracts/GAMEBUS.md`](contracts/GAMEBUS.md) | RAISE conventions section in that file only |
 | Architecture / dependency rules | [`architecture/`](architecture/) | README snippets |
 | What code does on `main` | **Source** + [`current-state/IMPLEMENTATION_STATUS.md`](current-state/IMPLEMENTATION_STATUS.md) | Roadmap |
@@ -96,7 +97,8 @@ Goal-oriented recipes for a concrete job:
 
 | Path | Notes |
 |------|--------|
-| [`how-to/diagnose-chef-results.md`](how-to/diagnose-chef-results.md) | Diagnose `#/chef-results` empty / wrong Progress (product vs code vs live feed) |
+| [`../README.md`](../README.md#local-development) | Local development (`npm install`, `npm run dev`) — canonical instructions in the repository README |
+| [`how-to/diagnose-chef-results.md`](how-to/diagnose-chef-results.md) | Diagnose `#/chef-results` status chips, Progress, and **No forecast for this service** |
 | [`how-to/verify-input-collections.md`](how-to/verify-input-collections.md) | Verify which GameBus Input Collections the embed received |
 | [`contracts/KITCHEN_FORECAST_ADMIN_SETUP.md`](contracts/KITCHEN_FORECAST_ADMIN_SETUP.md) | Configure / verify Kitchen Forecast on GameBus |
 | [`../reference/README.md`](../reference/README.md) | Menu / recipe workbook and regenerate pipelines |
@@ -118,7 +120,7 @@ Correct facts for lookup: schemas, slugs, hashes, coverage, UI tokens, external 
 |------|--------|
 | [`contracts/GAMEBUS.md`](contracts/GAMEBUS.md) | **Single in-repo index** to official GameBus docs; separates official contract, RAISE conventions, and empirically verified live behaviour |
 | [`contracts/KITCHEN_SKILLS_CHALLENGE_TASK.md`](contracts/KITCHEN_SKILLS_CHALLENGE_TASK.md) | One student TASK; student `SILENT_ACTIVITY` + `EXIT`; trainer review `SILENT_ACTIVITY` + `actors` |
-| [`contracts/KITCHEN_SKILLS_CHALLENGE_ROUTES.md`](contracts/KITCHEN_SKILLS_CHALLENGE_ROUTES.md) | Left-menu hashes `#/kitchen-day*` |
+| [`contracts/KITCHEN_SKILLS_CHALLENGE_ROUTES.md`](contracts/KITCHEN_SKILLS_CHALLENGE_ROUTES.md) | Kitchen Skills GameBus left-menu hashes `#/kitchen-day*` (not the whole SPA registry — see SoT Routes row) |
 | [`product/kitchen-skills-challenge/GAMEBUS_SLUG_CONTRACT.md`](product/kitchen-skills-challenge/GAMEBUS_SLUG_CONTRACT.md) | Locked Kitchen Skills activity / property slugs |
 | [`product/kitchen-skills-challenge/TRIM_SMART_DATA_MODEL.md`](product/kitchen-skills-challenge/TRIM_SMART_DATA_MODEL.md) | Trim field / join reference |
 | [`contracts/STUDENT_LUNCH_GAMEBUS.md`](contracts/STUDENT_LUNCH_GAMEBUS.md) | `studentLunchCheckin` |
