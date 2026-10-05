@@ -67,6 +67,56 @@ export function modulesAwaitingAssessmentCount(session: KitchenSkillsTrainerSess
   return count;
 }
 
+export function modulesWithEvidenceCount(session: KitchenSkillsTrainerSession): number {
+  return KITCHEN_SKILLS_REVIEWED_MODULES.filter((module) => moduleHasEvidence(session, module)).length;
+}
+
+export function modulesReviewedCount(session: KitchenSkillsTrainerSession): number {
+  return KITCHEN_SKILLS_REVIEWED_MODULES.filter(
+    (module) => moduleHasEvidence(session, module) && findModuleReview(session, module) !== null,
+  ).length;
+}
+
+/** Assessment state from evidence + persisted module reviews only (not date). */
+export type KitchenSkillsSessionAssessmentStatus =
+  | 'needs_assessment'
+  | 'partially_reviewed'
+  | 'reviewed';
+
+export function sessionAssessmentStatus(
+  session: KitchenSkillsTrainerSession,
+): KitchenSkillsSessionAssessmentStatus {
+  const awaiting = modulesAwaitingAssessmentCount(session);
+  if (awaiting === 0) return 'reviewed';
+  if (modulesReviewedCount(session) > 0) return 'partially_reviewed';
+  return 'needs_assessment';
+}
+
+export function isSessionAwaitingAssessment(session: KitchenSkillsTrainerSession): boolean {
+  return modulesAwaitingAssessmentCount(session) > 0;
+}
+
+export function partitionTrainerSessionsByAssessment(
+  sessions: readonly KitchenSkillsTrainerSession[],
+): {
+  needsAssessment: KitchenSkillsTrainerSession[];
+  reviewed: KitchenSkillsTrainerSession[];
+} {
+  const needsAssessment: KitchenSkillsTrainerSession[] = [];
+  const reviewed: KitchenSkillsTrainerSession[] = [];
+  for (const session of sessions) {
+    if (isSessionAwaitingAssessment(session)) needsAssessment.push(session);
+    else reviewed.push(session);
+  }
+  return { needsAssessment, reviewed };
+}
+
+export const KITCHEN_SKILLS_MODULE_SHORT_LABELS: Record<KitchenSkillsReviewedModule, string> = {
+  trimSmart: 'Trim',
+  rescueAndReuse: 'Rescue',
+  portionPrecision: 'Portion',
+};
+
 export function attachModuleReviewToMatchingSessions(
   sessions: Iterable<KitchenSkillsTrainerSession>,
   activity: unknown,

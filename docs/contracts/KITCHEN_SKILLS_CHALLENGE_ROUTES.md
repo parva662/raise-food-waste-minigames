@@ -23,5 +23,5 @@ Notes:
   - `https://parva662.github.io/raise-food-waste-minigames/#/kitchen-day`
   - `https://parva662.github.io/raise-food-waste-minigames/#/kitchen-day-progress`
   - `https://parva662.github.io/raise-food-waste-minigames/#/kitchen-day-tutor`
-- Tutor UX is staff → sessions → module tabs. Each completed module gets its own `wastePracticeReview` (`reviewedGame`) with an independent form state (no cross-tab draft leakage). Score inputs are 0–5 only. No `studentId` property. The tutor iframe stays open after submit. **Close** posts `EXIT` (confirm if draft dirty). Trainer listing does not use a group-members collection in this phase.
+- Tutor UX is staff → **Needs assessment** / **Reviewed** session tabs → module tabs. Each completed module gets its own `wastePracticeReview` (`reviewedGame`) with an independent form state (no cross-tab draft leakage). Score inputs are 0–5 only. No `studentId` property. The tutor iframe stays open after submit. Sticky **Close** posts `EXIT` (confirm if draft dirty). Trainer listing does not use a group-members collection in this phase.
 - `#/waste/trim-smart` remains Trim Smart v1 and is unchanged.

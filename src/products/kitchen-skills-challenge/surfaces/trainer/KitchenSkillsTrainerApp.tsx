@@ -7,8 +7,20 @@ import { formatSessionDate } from '@/products/kitchen-skills-challenge/format';
 import {
   buildKitchenSkillsTrainerStaffSummaries,
   findKitchenSkillsTrainerSession,
+  findModuleReview,
+  KITCHEN_SKILLS_MODULE_SHORT_LABELS,
+  moduleHasEvidence,
+  partitionTrainerSessionsByAssessment,
+  sessionAssessmentStatus,
 } from '@/products/kitchen-skills-challenge/read/trainerSessions';
-import type { KitchenSkillsTrainerSession } from '@/products/kitchen-skills-challenge/domain/types';
+import type {
+  KitchenSkillsReviewedModule,
+  KitchenSkillsTrainerSession,
+} from '@/products/kitchen-skills-challenge/domain/types';
+import {
+  KITCHEN_SKILLS_MODULE_TITLES,
+  KITCHEN_SKILLS_REVIEWED_MODULES,
+} from '@/products/kitchen-skills-challenge/domain/types';
 import { KitchenSkillsTrainerSessionDetail } from '@/products/kitchen-skills-challenge/surfaces/trainer/KitchenSkillsTrainerSessionDetail';
 import { postKitchenSkillsChallengeExit } from '@/products/kitchen-skills-challenge/gamebus/postExit';
 import {
@@ -16,7 +28,9 @@ import {
   parseKitchenDaySelectedActorId,
   parseKitchenDaySelectedSessionId,
 } from '@/app/routes';
-import { addDaysToIsoDate, formatOperationalTime, getOperationalDateIso } from '@/shared/time/dates';
+import { formatOperationalTime } from '@/shared/time/dates';
+
+type StaffSessionTab = 'needs' | 'reviewed';
 
 function earliestSubmittedAt(session: KitchenSkillsTrainerSession): string | null {
   const stamps = [
@@ -38,6 +52,59 @@ function sortSessionsNewestFirst(sessions: readonly KitchenSkillsTrainerSession[
   });
 }
 
+function assessmentStatusLabel(status: ReturnType<typeof sessionAssessmentStatus>): string {
+  switch (status) {
+    case 'reviewed':
+      return 'Reviewed';
+    case 'partially_reviewed':
+      return 'Partially reviewed';
+    case 'needs_assessment':
+      return 'Needs assessment';
+  }
+}
+
+function moduleStatusPhrase(
+  session: KitchenSkillsTrainerSession,
+  module: KitchenSkillsReviewedModule,
+): string | null {
+  if (!moduleHasEvidence(session, module)) return null;
+  const label = KITCHEN_SKILLS_MODULE_SHORT_LABELS[module];
+  const review = findModuleReview(session, module);
+  if (review) return `${label} ✓`;
+  return `${label} needs review`;
+}
+
+function pendingSessionSummary(session: KitchenSkillsTrainerSession): string {
+  const parts = KITCHEN_SKILLS_REVIEWED_MODULES.map((module) => moduleStatusPhrase(session, module)).filter(
+    (part): part is string => part !== null,
+  );
+  const earliest = earliestSubmittedAt(session);
+  const dateLabel = formatSessionDate(session.sessionDate);
+  const timeLabel = earliest ? ` · ${formatOperationalTime(earliest)}` : '';
+  return [dateLabel + timeLabel, ...parts].join(' · ');
+}
+
+function reviewedModuleSummary(
+  session: KitchenSkillsTrainerSession,
+  module: KitchenSkillsReviewedModule,
+): string | null {
+  if (!moduleHasEvidence(session, module)) return null;
+  const review = findModuleReview(session, module);
+  const title = KITCHEN_SKILLS_MODULE_TITLES[module];
+  if (!review) return `${title}: missing review`;
+  return `${KITCHEN_SKILLS_MODULE_SHORT_LABELS[module]} ${review.timeEfficiencyScore}/${review.preparationQualityScore}`;
+}
+
+function feedbackPreview(session: KitchenSkillsTrainerSession): string | null {
+  for (const module of KITCHEN_SKILLS_REVIEWED_MODULES) {
+    const feedback = findModuleReview(session, module)?.chefFeedback?.trim();
+    if (feedback) {
+      return feedback.length > 72 ? `${feedback.slice(0, 72).trimEnd()}…` : feedback;
+    }
+  }
+  return null;
+}
+
 function KitchenSkillsTrainerBody() {
   const { session, groupSessions } = useKitchenSkillsSession();
   const sessions = groupSessions;
@@ -45,12 +112,14 @@ function KitchenSkillsTrainerBody() {
   const [selectedActorId, setSelectedActorId] = useState(() => parseKitchenDaySelectedActorId());
   const [staffQuery, setStaffQuery] = useState('');
   const [reviewDraftDirty, setReviewDraftDirty] = useState(false);
+  const [staffSessionTab, setStaffSessionTab] = useState<StaffSessionTab>('needs');
 
   useEffect(() => {
     const sync = () => {
       setSelectedSessionId(parseKitchenDaySelectedSessionId());
       setSelectedActorId(parseKitchenDaySelectedActorId());
       setReviewDraftDirty(false);
+      setStaffSessionTab('needs');
     };
     window.addEventListener('hashchange', sync);
     return () => window.removeEventListener('hashchange', sync);
@@ -83,28 +152,30 @@ function KitchenSkillsTrainerBody() {
 
   if (!session) {
     return (
-      <div className="kitchen-mgmt-page" data-testid="kitchen-day-tutor-initializing">
-        <h1 className="kitchen-mgmt-header__title">Kitchen Skills Challenge Trainer</h1>
-        <p className="kitchen-mgmt-header__lead">Getting the tutor workspace ready.</p>
+      <div className="chef-results-page kitchen-mgmt-page kitchen-day-tutor-page" data-testid="kitchen-day-tutor-initializing">
+        <header className="kitchen-day-tutor-header kitchen-day-tutor-header--sticky">
+          <div className="kitchen-day-tutor-header__main">
+            <h1 className="kitchen-day-tutor-header__title">Kitchen Skills Trainer</h1>
+            <p className="kitchen-day-tutor-header__lead">Getting the tutor workspace ready.</p>
+          </div>
+        </header>
       </div>
     );
   }
 
-  const recentCutoff = addDaysToIsoDate(getOperationalDateIso(), -6);
-
   return (
-    <div className="chef-results-page kitchen-mgmt-page" data-testid="kitchen-day-tutor-page">
-      <header className="kitchen-mgmt-header">
-        <div className="kitchen-mgmt-header__main">
-          <h1 className="kitchen-mgmt-header__title">Kitchen Skills Challenge Trainer</h1>
-          <p className="kitchen-mgmt-header__lead">
-            Review student Kitchen Skills Challenge evidence by module, then add a qualitative assessment.
+    <div className="chef-results-page kitchen-mgmt-page kitchen-day-tutor-page" data-testid="kitchen-day-tutor-page">
+      <header className="kitchen-day-tutor-header kitchen-day-tutor-header--sticky" data-testid="kitchen-day-tutor-header">
+        <div className="kitchen-day-tutor-header__main">
+          <h1 className="kitchen-day-tutor-header__title">Kitchen Skills Trainer</h1>
+          <p className="kitchen-day-tutor-header__lead">
+            Review student evidence by module, then add a tutor assessment.
           </p>
         </div>
-        <div className="kitchen-mgmt-header__actions">
+        <div className="kitchen-day-tutor-header__actions">
           <button
             type="button"
-            className="kitchen-day-button kitchen-day-button--secondary"
+            className="kitchen-day-button kitchen-day-button--ghost"
             data-testid="kitchen-day-tutor-close"
             onClick={closeTrainer}
           >
@@ -138,16 +209,19 @@ function KitchenSkillsTrainerBody() {
               ← Back to staff
             </a>
           </p>
-          <h2 className="kitchen-mgmt-module-title">{selectedStaff.actorName}</h2>
-          <p className="chef-results-empty" data-testid="kitchen-day-tutor-staff-session-count">
-            {selectedStaff.sessionCount} session{selectedStaff.sessionCount === 1 ? '' : 's'}
-            {selectedStaff.modulesAwaitingAssessment > 0
-              ? ` · ${selectedStaff.modulesAwaitingAssessment} awaiting assessment`
-              : ''}
-          </p>
-          <StaffSessionGroups
+          <div className="kitchen-day-tutor-staff-heading">
+            <h2 className="kitchen-day-tutor-staff-heading__title">{selectedStaff.actorName}</h2>
+            <p className="kitchen-day-tutor-staff-heading__meta" data-testid="kitchen-day-tutor-staff-session-count">
+              {selectedStaff.sessionCount} session{selectedStaff.sessionCount === 1 ? '' : 's'}
+              {selectedStaff.modulesAwaitingAssessment > 0
+                ? ` · ${selectedStaff.modulesAwaitingAssessment} awaiting assessment`
+                : ''}
+            </p>
+          </div>
+          <StaffSessionWorkspace
             sessions={sortSessionsNewestFirst(selectedStaff.sessions)}
-            recentCutoff={recentCutoff}
+            activeTab={staffSessionTab}
+            onTabChange={setStaffSessionTab}
           />
         </>
       ) : selectedActorId ? (
@@ -169,22 +243,36 @@ function KitchenSkillsTrainerBody() {
             />
           </label>
           <ul className="kitchen-day-staff-list">
-            {filteredStaff.map((staff) => (
-              <li key={staff.actorId}>
-                <a
-                  href={kitchenDayTutorHashFor({ actorId: staff.actorId })}
-                  data-testid={`kitchen-day-tutor-staff-${staff.actorId}`}
-                >
-                  <span className="kitchen-day-staff-list__name">{staff.actorName}</span>
-                  <span className="kitchen-day-staff-list__meta">
-                    {staff.sessionCount} session{staff.sessionCount === 1 ? '' : 's'}
-                    {staff.modulesAwaitingAssessment > 0
-                      ? ` · ${staff.modulesAwaitingAssessment} awaiting`
-                      : ''}
-                  </span>
-                </a>
-              </li>
-            ))}
+            {filteredStaff.map((staff) => {
+              const awaiting = staff.modulesAwaitingAssessment;
+              return (
+                <li key={staff.actorId}>
+                  <a
+                    href={kitchenDayTutorHashFor({ actorId: staff.actorId })}
+                    data-testid={`kitchen-day-tutor-staff-${staff.actorId}`}
+                    className={
+                      awaiting > 0
+                        ? 'kitchen-day-staff-list__link kitchen-day-staff-list__link--needs'
+                        : 'kitchen-day-staff-list__link'
+                    }
+                  >
+                    <span className="kitchen-day-staff-list__name">{staff.actorName}</span>
+                    <span className="kitchen-day-staff-list__meta">
+                      {staff.sessionCount} session{staff.sessionCount === 1 ? '' : 's'}
+                      {awaiting > 0 ? (
+                        <span className="kitchen-day-tutor-status kitchen-day-tutor-status--needs">
+                          {awaiting} awaiting
+                        </span>
+                      ) : (
+                        <span className="kitchen-day-tutor-status kitchen-day-tutor-status--reviewed">
+                          Reviewed
+                        </span>
+                      )}
+                    </span>
+                  </a>
+                </li>
+              );
+            })}
           </ul>
         </div>
       )}
@@ -192,54 +280,147 @@ function KitchenSkillsTrainerBody() {
   );
 }
 
-function StaffSessionGroups({
+function StaffSessionWorkspace({
   sessions,
-  recentCutoff,
+  activeTab,
+  onTabChange,
 }: {
   sessions: readonly KitchenSkillsTrainerSession[];
-  recentCutoff: string;
+  activeTab: StaffSessionTab;
+  onTabChange: (tab: StaffSessionTab) => void;
 }) {
-  const recent = sessions.filter((session) => session.sessionDate >= recentCutoff);
-  const earlier = sessions.filter((session) => session.sessionDate < recentCutoff);
-  const dateCounts = sessions.reduce<Record<string, number>>((counts, session) => {
-    counts[session.sessionDate] = (counts[session.sessionDate] ?? 0) + 1;
-    return counts;
-  }, {});
-
-  const renderSession = (item: KitchenSkillsTrainerSession) => {
-    const earliest = earliestSubmittedAt(item);
-    const showTime = (dateCounts[item.sessionDate] ?? 0) > 1 && earliest;
-    return (
-      <li key={`${item.actorId}:${item.sessionId}`}>
-        <a
-          href={kitchenDayTutorHashFor({ actorId: item.actorId, sessionId: item.sessionId })}
-          data-testid={`kitchen-day-chef-session-${item.sessionId}`}
-        >
-          {formatSessionDate(item.sessionDate)}
-          {showTime ? ` · ${formatOperationalTime(earliest)}` : ''}
-        </a>
-      </li>
-    );
-  };
+  const { needsAssessment, reviewed } = partitionTrainerSessionsByAssessment(sessions);
+  const visible = activeTab === 'needs' ? needsAssessment : reviewed;
 
   return (
     <div data-testid="kitchen-day-tutor-staff-sessions">
-      {recent.length > 0 ? (
-        <section data-testid="kitchen-day-tutor-sessions-recent">
-          <h3 className="kitchen-day-tutor-session-group__title">Recent</h3>
-          <ul className="kitchen-day-session-list">{recent.map(renderSession)}</ul>
-        </section>
-      ) : null}
-      {earlier.length > 0 ? (
-        <section data-testid="kitchen-day-tutor-sessions-earlier">
-          <h3 className="kitchen-day-tutor-session-group__title">Earlier</h3>
-          <ul className="kitchen-day-session-list">{earlier.map(renderSession)}</ul>
-        </section>
-      ) : null}
-      {recent.length === 0 && earlier.length === 0 ? (
-        <p className="chef-results-empty">No sessions for this staff member.</p>
-      ) : null}
+      <div
+        className="kitchen-day-tutor-session-tabs"
+        role="tablist"
+        aria-label="Session assessment status"
+        data-testid="kitchen-day-tutor-session-tabs"
+      >
+        <button
+          type="button"
+          role="tab"
+          className={
+            activeTab === 'needs'
+              ? 'kitchen-day-tutor-session-tabs__tab kitchen-day-tutor-session-tabs__tab--active'
+              : 'kitchen-day-tutor-session-tabs__tab'
+          }
+          aria-selected={activeTab === 'needs'}
+          data-testid="kitchen-day-tutor-session-tab-needs"
+          onClick={() => onTabChange('needs')}
+        >
+          Needs assessment ({needsAssessment.length})
+        </button>
+        <button
+          type="button"
+          role="tab"
+          className={
+            activeTab === 'reviewed'
+              ? 'kitchen-day-tutor-session-tabs__tab kitchen-day-tutor-session-tabs__tab--active'
+              : 'kitchen-day-tutor-session-tabs__tab'
+          }
+          aria-selected={activeTab === 'reviewed'}
+          data-testid="kitchen-day-tutor-session-tab-reviewed"
+          onClick={() => onTabChange('reviewed')}
+        >
+          Reviewed ({reviewed.length})
+        </button>
+      </div>
+
+      <div
+        role="tabpanel"
+        data-testid={
+          activeTab === 'needs'
+            ? 'kitchen-day-tutor-sessions-needs'
+            : 'kitchen-day-tutor-sessions-reviewed'
+        }
+      >
+        {visible.length === 0 ? (
+          <p className="chef-results-empty">
+            {activeTab === 'needs'
+              ? 'No sessions need assessment.'
+              : 'No fully reviewed sessions yet.'}
+          </p>
+        ) : (
+          <ul className="kitchen-day-session-list">
+            {visible.map((item) => (
+              <li key={`${item.actorId}:${item.sessionId}`}>
+                {activeTab === 'needs' ? (
+                  <PendingSessionCard session={item} />
+                ) : (
+                  <ReviewedSessionCard session={item} />
+                )}
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
     </div>
+  );
+}
+
+function PendingSessionCard({ session }: { session: KitchenSkillsTrainerSession }) {
+  const status = sessionAssessmentStatus(session);
+  return (
+    <a
+      href={kitchenDayTutorHashFor({ actorId: session.actorId, sessionId: session.sessionId })}
+      data-testid={`kitchen-day-chef-session-${session.sessionId}`}
+      className="kitchen-day-tutor-session-card"
+    >
+      <span className="kitchen-day-tutor-session-card__row">
+        <span className="kitchen-day-tutor-session-card__summary">{pendingSessionSummary(session)}</span>
+        <span
+          className={
+            status === 'partially_reviewed'
+              ? 'kitchen-day-tutor-status kitchen-day-tutor-status--partial'
+              : 'kitchen-day-tutor-status kitchen-day-tutor-status--needs'
+          }
+          data-testid={`kitchen-day-tutor-session-status-${session.sessionId}`}
+        >
+          {assessmentStatusLabel(status)}
+        </span>
+      </span>
+    </a>
+  );
+}
+
+function ReviewedSessionCard({ session }: { session: KitchenSkillsTrainerSession }) {
+  const moduleLines = KITCHEN_SKILLS_REVIEWED_MODULES.map((module) =>
+    reviewedModuleSummary(session, module),
+  ).filter((line): line is string => line !== null);
+  const feedback = feedbackPreview(session);
+  const earliest = earliestSubmittedAt(session);
+
+  return (
+    <a
+      href={kitchenDayTutorHashFor({ actorId: session.actorId, sessionId: session.sessionId })}
+      data-testid={`kitchen-day-chef-session-${session.sessionId}`}
+      className="kitchen-day-tutor-session-card kitchen-day-tutor-session-card--reviewed"
+    >
+      <span className="kitchen-day-tutor-session-card__row">
+        <span className="kitchen-day-tutor-session-card__date">
+          {formatSessionDate(session.sessionDate)}
+          {earliest ? ` · ${formatOperationalTime(earliest)}` : ''}
+        </span>
+        <span
+          className="kitchen-day-tutor-status kitchen-day-tutor-status--reviewed"
+          data-testid={`kitchen-day-tutor-session-status-${session.sessionId}`}
+        >
+          Reviewed
+        </span>
+      </span>
+      <span className="kitchen-day-tutor-session-card__scores" data-testid={`kitchen-day-tutor-session-scores-${session.sessionId}`}>
+        {moduleLines.join(' · ')}
+      </span>
+      {feedback ? (
+        <span className="kitchen-day-tutor-session-card__feedback" data-testid={`kitchen-day-tutor-session-feedback-${session.sessionId}`}>
+          {feedback}
+        </span>
+      ) : null}
+    </a>
   );
 }
 

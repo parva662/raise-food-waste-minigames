@@ -33,11 +33,11 @@ export function KitchenSkillsTrainerSessionDetail({
   const moduleTitle = KITCHEN_SKILLS_MODULE_TITLES[activeModule];
 
   return (
-    <div data-testid="kitchen-day-chef-selected">
-      <h2 className="kitchen-mgmt-module-title">
+    <div data-testid="kitchen-day-chef-selected" className="kitchen-day-tutor-session-detail">
+      <h2 className="kitchen-day-tutor-session-detail__title">
         {selected.actorName} · {formatSessionDate(selected.sessionDate)}
       </h2>
-      <p className="chef-results-empty" data-testid="kitchen-day-chef-readonly">
+      <p className="kitchen-day-tutor-session-detail__lead" data-testid="kitchen-day-chef-readonly">
         Student measurements are read-only.
       </p>
 

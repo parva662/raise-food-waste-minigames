@@ -5112,6 +5112,28 @@ ul {
   border: 1px solid var(--color-border);
 }
 
+.kitchen-day-button--ghost {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 2.25rem;
+  padding: 0 0.85rem;
+  background: transparent;
+  color: var(--color-text-secondary);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  font-weight: 500;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.kitchen-day-button--ghost:hover,
+.kitchen-day-button--ghost:focus-visible {
+  color: var(--color-primary);
+  border-color: var(--color-primary-muted);
+  background: var(--color-primary-light);
+}
+
 .kitchen-day-button--primary:disabled {
   background: var(--color-disabled-bg);
   color: var(--color-disabled-text);
@@ -5299,7 +5321,7 @@ ul {
   margin: 0 0 var(--spacing-md);
 }
 
-.kitchen-day-session-list a {
+.kitchen-day-session-list > li > a:not(.kitchen-day-tutor-session-card) {
   display: block;
   padding: var(--spacing-md);
   background: var(--color-surface);
@@ -5318,28 +5340,92 @@ ul {
   margin: 0 0 var(--spacing-md);
 }
 
-.kitchen-day-staff-list a {
+.kitchen-day-staff-list a,
+.kitchen-day-staff-list__link {
   display: flex;
   flex-wrap: wrap;
   align-items: baseline;
   justify-content: space-between;
   gap: var(--spacing-sm);
-  padding: var(--spacing-md);
+  padding: 0.85rem 1rem;
   background: var(--color-surface);
-  border: 1px solid var(--color-border);
+  border: 1px solid var(--color-border-light);
   border-radius: var(--radius-md);
   text-decoration: none;
   color: var(--color-text);
-  box-shadow: var(--shadow-sm);
+  box-shadow: none;
+}
+
+.kitchen-day-staff-list__link--needs {
+  border-color: color-mix(in srgb, var(--color-soup) 28%, var(--color-border));
+  background: color-mix(in srgb, var(--color-soup) 6%, var(--color-surface));
 }
 
 .kitchen-day-staff-list__name {
   font-weight: 600;
+  color: var(--color-text);
 }
 
 .kitchen-day-staff-list__meta {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--spacing-sm);
   color: var(--color-text-secondary);
-  font-size: 0.9375rem;
+  font-size: var(--font-size-sm);
+}
+
+.kitchen-day-tutor-page {
+  padding-top: 0;
+}
+
+.kitchen-day-tutor-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-sm) var(--spacing-md);
+  margin: 0 0 var(--spacing-md);
+  padding: var(--spacing-sm) 0;
+}
+
+.kitchen-day-tutor-header--sticky {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  margin-left: calc(-1 * var(--spacing-md));
+  margin-right: calc(-1 * var(--spacing-md));
+  padding: 0.55rem var(--spacing-md);
+  background: color-mix(in srgb, var(--color-bg) 88%, transparent);
+  border-bottom: 1px solid var(--color-border-light);
+  backdrop-filter: blur(10px);
+}
+
+.kitchen-day-tutor-header__main {
+  flex: 1 1 12rem;
+  min-width: 0;
+}
+
+.kitchen-day-tutor-header__title {
+  margin: 0;
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--color-primary);
+  letter-spacing: -0.01em;
+}
+
+.kitchen-day-tutor-header__lead {
+  margin: 0.15rem 0 0;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
+  max-width: 36rem;
+  line-height: 1.35;
+}
+
+.kitchen-day-tutor-header__actions {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
 }
 
 .kitchen-day-tutor-staff-search {
@@ -5351,40 +5437,194 @@ ul {
 }
 
 .kitchen-day-tutor-back a {
-  color: var(--color-primary);
+  color: var(--color-primary-muted);
   text-decoration: none;
-  font-weight: 600;
+  font-weight: 500;
+  font-size: var(--font-size-sm);
 }
 
-.kitchen-day-tutor-session-group__title {
-  margin: 0 0 var(--spacing-sm);
-  font-size: 1rem;
+.kitchen-day-tutor-back a:hover,
+.kitchen-day-tutor-back a:focus-visible {
+  color: var(--color-primary);
+  text-decoration: underline;
+}
+
+.kitchen-day-tutor-staff-heading {
+  margin: 0 0 var(--spacing-md);
+}
+
+.kitchen-day-tutor-staff-heading__title {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.kitchen-day-tutor-staff-heading__meta {
+  margin: 0.25rem 0 0;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
+}
+
+.kitchen-day-tutor-session-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-xs);
+  margin: 0 0 var(--spacing-md);
+  padding: 0.2rem;
+  border: 1px solid var(--color-border-light);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+}
+
+.kitchen-day-tutor-session-tabs__tab {
+  min-height: 2.25rem;
+  padding: 0.35rem 0.85rem;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+}
+
+.kitchen-day-tutor-session-tabs__tab--active {
+  background: var(--color-primary-light);
+  color: var(--color-primary-dark);
+}
+
+.kitchen-day-tutor-session-card {
+  display: grid;
+  gap: 0.35rem;
+  padding: 0.85rem 1rem;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border-light);
+  border-radius: var(--radius-md);
+  text-decoration: none;
+  color: var(--color-text);
+  box-shadow: none;
+}
+
+.kitchen-day-tutor-session-card:hover,
+.kitchen-day-tutor-session-card:focus-visible {
+  border-color: color-mix(in srgb, var(--color-primary) 35%, var(--color-border));
+  background: color-mix(in srgb, var(--color-primary-light) 55%, var(--color-surface));
+}
+
+.kitchen-day-tutor-session-card--reviewed {
+  background: color-mix(in srgb, var(--color-success-bg) 45%, var(--color-surface));
+}
+
+.kitchen-day-tutor-session-card__row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--spacing-sm);
+}
+
+.kitchen-day-tutor-session-card__summary,
+.kitchen-day-tutor-session-card__date {
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+  color: var(--color-text);
+  line-height: 1.4;
+}
+
+.kitchen-day-tutor-session-card__scores {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+  line-height: 1.4;
+}
+
+.kitchen-day-tutor-session-card__feedback {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+  line-height: 1.35;
+}
+
+.kitchen-day-tutor-status {
+  display: inline-flex;
+  align-items: center;
+  min-height: 1.4rem;
+  padding: 0.1rem 0.5rem;
+  border-radius: var(--radius-full);
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.kitchen-day-tutor-status--needs {
+  background: color-mix(in srgb, var(--color-soup) 16%, var(--color-surface));
+  color: #8a5a08;
+}
+
+.kitchen-day-tutor-status--partial {
+  background: color-mix(in srgb, var(--color-primary-muted) 14%, var(--color-surface));
+  color: var(--color-primary-dark);
+}
+
+.kitchen-day-tutor-status--reviewed {
+  background: var(--color-success-bg);
+  color: var(--color-success-text);
+}
+
+.kitchen-day-tutor-session-detail__title {
+  margin: 0 0 var(--spacing-xs);
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.kitchen-day-tutor-session-detail__lead {
+  margin: 0 0 var(--spacing-md);
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
 }
 
 .kitchen-day-module-tabs {
   display: flex;
   flex-wrap: wrap;
   gap: var(--spacing-xs);
-  border-bottom: 1px solid var(--color-border);
+  border-bottom: 1px solid var(--color-border-light);
   padding-bottom: var(--spacing-xs);
   margin-bottom: var(--spacing-md);
 }
 
 .kitchen-day-module-tabs__tab {
-  min-height: 2.5rem;
+  min-height: 2.35rem;
   padding: var(--spacing-xs) var(--spacing-md);
   border: 0;
   border-radius: var(--radius-sm) var(--radius-sm) 0 0;
   background: transparent;
-  font-size: 0.9375rem;
+  font-size: var(--font-size-sm);
+  font-weight: 500;
   color: var(--color-text-secondary);
   cursor: pointer;
 }
 
 .kitchen-day-module-tabs__tab--active {
-  color: var(--color-text);
+  color: var(--color-primary-dark);
   font-weight: 600;
-  box-shadow: inset 0 -2px 0 var(--color-accent, #2563eb);
+  box-shadow: inset 0 -2px 0 var(--color-primary);
+}
+
+@media (max-width: 40rem) {
+  .kitchen-day-tutor-header--sticky {
+    align-items: flex-start;
+  }
+
+  .kitchen-day-tutor-header__lead {
+    display: none;
+  }
+
+  .kitchen-day-tutor-session-tabs__tab {
+    flex: 1 1 auto;
+    justify-content: center;
+  }
 }
 
 .kitchen-day-week-chart {

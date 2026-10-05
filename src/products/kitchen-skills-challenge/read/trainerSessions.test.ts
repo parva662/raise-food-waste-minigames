@@ -4,6 +4,9 @@ import {
   buildKitchenSkillsTrainerSessions,
   buildKitchenSkillsTrainerStaffSummaries,
   classifyKitchenSkillsTrainerFeed,
+  modulesAwaitingAssessmentCount,
+  partitionTrainerSessionsByAssessment,
+  sessionAssessmentStatus,
 } from '@/products/kitchen-skills-challenge/read/trainerSessions';
 import type { KitchenSkillsReviewedModule } from '@/products/kitchen-skills-challenge/domain/types';
 
@@ -85,19 +88,24 @@ function reviewActivity(
   sessionId: string,
   reviewedGame: KitchenSkillsReviewedModule,
   sessionDate = '2026-09-23',
+  scores: { time?: number; quality?: number; feedback?: string } = {},
 ) {
+  const properties = [
+    { template: { slug: 'sessionId' }, value: { value: sessionId } },
+    { template: { slug: 'sessionDate' }, value: { value: sessionDate } },
+    { template: { slug: 'submittedAt' }, value: { value: `${sessionDate}T15:00:00.000Z` } },
+    { template: { slug: 'reviewedGame' }, value: { value: reviewedGame } },
+    { template: { slug: 'timeEfficiencyScore' }, value: { value: scores.time ?? 4 } },
+    { template: { slug: 'preparationQualityScore' }, value: { value: scores.quality ?? 3 } },
+  ];
+  if (scores.feedback) {
+    properties.push({ template: { slug: 'chefFeedback' }, value: { value: scores.feedback } });
+  }
   return {
     id: `review-${actorId}-${reviewedGame}-${sessionId}`,
     actor: { id: actorId, name: actorId === 'user-1' ? 'Student One' : 'Student Two' },
     template: { slug: 'wastePracticeReview' },
-    properties: [
-      { template: { slug: 'sessionId' }, value: { value: sessionId } },
-      { template: { slug: 'sessionDate' }, value: { value: sessionDate } },
-      { template: { slug: 'submittedAt' }, value: { value: `${sessionDate}T15:00:00.000Z` } },
-      { template: { slug: 'reviewedGame' }, value: { value: reviewedGame } },
-      { template: { slug: 'timeEfficiencyScore' }, value: { value: 4 } },
-      { template: { slug: 'preparationQualityScore' }, value: { value: 3 } },
-    ],
+    properties,
   };
 }
 
@@ -244,5 +252,39 @@ describe('Kitchen Day chef session grouping', () => {
       '2026-09-23',
       '2026-09-20',
     ]);
+  });
+
+  it('partitions pending, partial, and fully reviewed sessions from evidence + reviews', () => {
+    const pendingOnly = 'kitchen-day:task-1:user-1:pending';
+    const partial = 'kitchen-day:task-1:user-1:partial';
+    const complete = 'kitchen-day:task-1:user-1:complete';
+    const trimOnlyReviewed = 'kitchen-day:task-1:user-1:trim-only';
+    const sessions = buildKitchenSkillsTrainerSessions([
+      trimActivity('user-1', pendingOnly, 'carrot', '2026-09-25'),
+      trimActivity('user-1', partial, 'onion', '2026-09-24'),
+      rescueActivity('user-1', partial, 'onion', '2026-09-24'),
+      reviewActivity('user-1', partial, 'trimSmart', '2026-09-24'),
+      trimActivity('user-1', complete, 'potato', '2026-09-23'),
+      rescueActivity('user-1', complete, 'potato', '2026-09-23'),
+      portionActivity('user-1', complete, 'mayonnaise', '2026-09-23'),
+      reviewActivity('user-1', complete, 'trimSmart', '2026-09-23', { time: 4, quality: 5, feedback: 'Clean knife work.' }),
+      reviewActivity('user-1', complete, 'rescueAndReuse', '2026-09-23', { time: 3, quality: 4 }),
+      reviewActivity('user-1', complete, 'portionPrecision', '2026-09-23', { time: 5, quality: 5 }),
+      trimActivity('user-1', trimOnlyReviewed, 'celery', '2026-09-22'),
+      reviewActivity('user-1', trimOnlyReviewed, 'trimSmart', '2026-09-22'),
+    ]);
+
+    expect(sessionAssessmentStatus(sessions.find((s) => s.sessionId === pendingOnly)!)).toBe('needs_assessment');
+    expect(sessionAssessmentStatus(sessions.find((s) => s.sessionId === partial)!)).toBe('partially_reviewed');
+    expect(sessionAssessmentStatus(sessions.find((s) => s.sessionId === complete)!)).toBe('reviewed');
+    expect(sessionAssessmentStatus(sessions.find((s) => s.sessionId === trimOnlyReviewed)!)).toBe('reviewed');
+
+    const partitioned = partitionTrainerSessionsByAssessment(sessions);
+    expect(partitioned.needsAssessment.map((s) => s.sessionId).sort()).toEqual([partial, pendingOnly].sort());
+    expect(partitioned.reviewed.map((s) => s.sessionId).sort()).toEqual([complete, trimOnlyReviewed].sort());
+    expect(modulesAwaitingAssessmentCount(sessions.find((s) => s.sessionId === trimOnlyReviewed)!)).toBe(0);
+    expect(sessions.find((s) => s.sessionId === complete)?.moduleReviews.trimSmart?.chefFeedback).toBe(
+      'Clean knife work.',
+    );
   });
 });

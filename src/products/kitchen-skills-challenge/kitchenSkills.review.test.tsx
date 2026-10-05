@@ -224,6 +224,9 @@ describe('Kitchen Day module chef review', () => {
     await waitFor(() => {
       expect(screen.getByTestId('kitchen-day-tutor-close')).toBeInTheDocument();
     });
+    const header = screen.getByTestId('kitchen-day-tutor-header');
+    expect(header).toHaveClass('kitchen-day-tutor-header--sticky');
+    expect(header.contains(screen.getByTestId('kitchen-day-tutor-close'))).toBe(true);
     await user.click(screen.getByTestId('kitchen-day-tutor-close'));
     expect(confirmSpy).not.toHaveBeenCalled();
     expect(
@@ -231,6 +234,139 @@ describe('Kitchen Day module chef review', () => {
         (call) => Boolean(call[0] && typeof call[0] === 'object' && 'type' in call[0] && call[0].type === 'EXIT'),
       ),
     ).toBe(true);
+  });
+
+  it('keeps pending and reviewed sessions in separate staff tabs', async () => {
+    const user = userEvent.setup();
+    const pendingSession = 'kitchen-day:kitchen-day-task-1:user-1:2026-09-25';
+    const partialSession = 'kitchen-day:kitchen-day-task-1:user-1:2026-09-24';
+    const reviewedSession = 'kitchen-day:kitchen-day-task-1:user-1:2026-09-22';
+    setHash('#/kitchen-day-tutor?actorId=user-1');
+    render(<AppRouter />);
+    ingestInputCollectionsForTests({
+      kitchenSkillsTrainerInput: {
+        activities: [
+          {
+            ...baseActivities[0],
+            id: 'act-trim-pending',
+            properties: baseActivities[0]!.properties.map((property) =>
+              property.template.slug === 'sessionId'
+                ? { ...property, value: { value: pendingSession } }
+                : property.template.slug === 'sessionDate'
+                  ? { ...property, value: { value: '2026-09-25' } }
+                  : property.template.slug === 'submittedAt'
+                    ? { ...property, value: { value: '2026-09-25T10:03:00.000Z' } }
+                    : property,
+            ),
+          },
+          {
+            id: 'act-trim-partial',
+            actor: { id: 'user-1', name: 'Student One' },
+            template: { slug: 'trimSmart' },
+            properties: [
+              { template: { slug: 'sessionId' }, value: { value: partialSession } },
+              { template: { slug: 'sessionDate' }, value: { value: '2026-09-24' } },
+              { template: { slug: 'submittedAt' }, value: { value: '2026-09-24T10:03:00.000Z' } },
+              { template: { slug: 'ingredientId' }, value: { value: 'onion' } },
+              { template: { slug: 'ingredientName' }, value: { value: 'Onion' } },
+              { template: { slug: 'ingredientCategory' }, value: { value: 'root' } },
+              { template: { slug: 'ingredientWeightGrams' }, value: { value: 1000 } },
+              { template: { slug: 'trimTechniques' }, value: { value: 'dice' } },
+              { template: { slug: 'estimatedWasteGrams' }, value: { value: 100 } },
+              { template: { slug: 'actualWasteGrams' }, value: { value: 80 } },
+              { template: { slug: 'duration' }, obj: { value: 2, unit: 'minutes' } },
+            ],
+          },
+          {
+            id: 'act-rescue-partial',
+            actor: { id: 'user-1', name: 'Student One' },
+            template: { slug: 'rescueAndReuse' },
+            properties: [
+              { template: { slug: 'sessionId' }, value: { value: partialSession } },
+              { template: { slug: 'sessionDate' }, value: { value: '2026-09-24' } },
+              { template: { slug: 'ingredientId' }, value: { value: 'onion' } },
+              { template: { slug: 'reusableWasteGrams' }, value: { value: 40 } },
+              { template: { slug: 'reuseDestination' }, value: { value: 'Stock' } },
+              { template: { slug: 'submittedAt' }, value: { value: '2026-09-24T10:10:00.000Z' } },
+            ],
+          },
+          {
+            id: 'act-review-partial-trim',
+            actor: { id: 'user-1', name: 'Student One' },
+            template: { slug: 'wastePracticeReview' },
+            properties: [
+              { template: { slug: 'sessionId' }, value: { value: partialSession } },
+              { template: { slug: 'sessionDate' }, value: { value: '2026-09-24' } },
+              { template: { slug: 'submittedAt' }, value: { value: '2026-09-24T15:00:00.000Z' } },
+              { template: { slug: 'reviewedGame' }, value: { value: 'trimSmart' } },
+              { template: { slug: 'timeEfficiencyScore' }, value: { value: 4 } },
+              { template: { slug: 'preparationQualityScore' }, value: { value: 5 } },
+            ],
+          },
+          {
+            id: 'act-trim-reviewed',
+            actor: { id: 'user-1', name: 'Student One' },
+            template: { slug: 'trimSmart' },
+            properties: [
+              { template: { slug: 'sessionId' }, value: { value: reviewedSession } },
+              { template: { slug: 'sessionDate' }, value: { value: '2026-09-22' } },
+              { template: { slug: 'submittedAt' }, value: { value: '2026-09-22T10:03:00.000Z' } },
+              { template: { slug: 'ingredientId' }, value: { value: 'celery' } },
+              { template: { slug: 'ingredientName' }, value: { value: 'Celery' } },
+              { template: { slug: 'ingredientCategory' }, value: { value: 'root' } },
+              { template: { slug: 'ingredientWeightGrams' }, value: { value: 1000 } },
+              { template: { slug: 'trimTechniques' }, value: { value: 'dice' } },
+              { template: { slug: 'estimatedWasteGrams' }, value: { value: 100 } },
+              { template: { slug: 'actualWasteGrams' }, value: { value: 80 } },
+              { template: { slug: 'duration' }, obj: { value: 2, unit: 'minutes' } },
+            ],
+          },
+          {
+            id: 'act-review-complete',
+            actor: { id: 'user-1', name: 'Student One' },
+            template: { slug: 'wastePracticeReview' },
+            properties: [
+              { template: { slug: 'sessionId' }, value: { value: reviewedSession } },
+              { template: { slug: 'sessionDate' }, value: { value: '2026-09-22' } },
+              { template: { slug: 'submittedAt' }, value: { value: '2026-09-22T15:00:00.000Z' } },
+              { template: { slug: 'reviewedGame' }, value: { value: 'trimSmart' } },
+              { template: { slug: 'timeEfficiencyScore' }, value: { value: 2 } },
+              { template: { slug: 'preparationQualityScore' }, value: { value: 4 } },
+              { template: { slug: 'chefFeedback' }, value: { value: 'Steady pacing on celery.' } },
+            ],
+          },
+        ],
+      },
+      inputCollectionPari: { me: { id: 'chef-1', firstName: 'Chef', lastName: 'One' } },
+    });
+
+    await waitFor(() => {
+      expect(screen.getByTestId('kitchen-day-tutor-session-tab-needs')).toHaveTextContent('Needs assessment (2)');
+    });
+    expect(screen.getByTestId('kitchen-day-tutor-session-tab-reviewed')).toHaveTextContent('Reviewed (1)');
+    expect(screen.getByTestId(`kitchen-day-chef-session-${pendingSession}`)).toBeInTheDocument();
+    expect(screen.getByTestId(`kitchen-day-chef-session-${partialSession}`)).toBeInTheDocument();
+    expect(screen.queryByTestId(`kitchen-day-chef-session-${reviewedSession}`)).not.toBeInTheDocument();
+    expect(screen.getByTestId(`kitchen-day-tutor-session-status-${partialSession}`)).toHaveTextContent(
+      'Partially reviewed',
+    );
+
+    const needsLinks = screen.getAllByTestId(/kitchen-day-chef-session-/);
+    expect(needsLinks[0]).toHaveAttribute(
+      'data-testid',
+      `kitchen-day-chef-session-${pendingSession}`,
+    );
+
+    await user.click(screen.getByTestId('kitchen-day-tutor-session-tab-reviewed'));
+    await waitFor(() => {
+      expect(screen.getByTestId(`kitchen-day-chef-session-${reviewedSession}`)).toBeInTheDocument();
+    });
+    expect(screen.queryByTestId(`kitchen-day-chef-session-${pendingSession}`)).not.toBeInTheDocument();
+    expect(screen.getByTestId(`kitchen-day-tutor-session-scores-${reviewedSession}`)).toHaveTextContent('Trim 2/4');
+    expect(screen.getByTestId(`kitchen-day-tutor-session-feedback-${reviewedSession}`)).toHaveTextContent(
+      'Steady pacing on celery.',
+    );
+    expect(screen.getByTestId('kitchen-day-tutor-close')).toBeInTheDocument();
   });
 
   it('shows an existing review read-only instead of creating another', async () => {

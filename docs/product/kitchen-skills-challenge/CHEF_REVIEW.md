@@ -26,13 +26,15 @@ Neither posts measurement activities. Progress does not invent ranking or an ove
 
 ## 3. Tutor dashboard — one assessment per module
 
-The trainer opens `#/kitchen-day-tutor` in three levels: **staff list** (name search, modules awaiting assessment) → **staff sessions** (Recent = last 7 Helsinki operational days vs Earlier) → **session detail** with module tabs (Trim Smart / Rescue & Reuse / Portion Precision).
+The trainer opens `#/kitchen-day-tutor` in three levels: **staff list** (name search, modules awaiting assessment) → **staff sessions** split into **Needs assessment** / **Reviewed** tabs (evidence modules without a matching `wastePracticeReview` keep a session in Needs assessment, including partial reviews; modules without evidence do not block Reviewed) → **session detail** with module tabs (Trim Smart / Rescue & Reuse / Portion Precision). Session cards show module-level status or compact score summaries; ordering is newest first.
+
+A compact sticky header keeps a secondary **Close** control visible while scrolling.
 
 Each module tab has an **independent** assessment form. Switching modules remounts / clears draft inputs so Trim scores do not leak into Rescue or Portion. Score fields accept only empty or a single digit **0–5**; Submit stays disabled until both scores parse (`parseKitchenSkillsReviewScore`).
 
 For each module that has evidence, the tutor inspects that module’s evidence and submits one `wastePracticeReview` as `SILENT_ACTIVITY` with `actors: [selectedStudentActorId]` and `reviewedGame` set to the module slug (`trimSmart`, `rescueAndReuse`, or `portionPrecision`). Modules without evidence show a message and no form. The tutor iframe stays open so the chef can review another student or module.
 
-A secondary **Close** control is visible on all tutor levels. Close posts `{ type: 'EXIT' }` via `postKitchenSkillsChallengeExit` and **does not** post a review. If the active module form has a dirty draft (time, quality, or feedback non-empty and not yet submitted), Close asks for confirmation first.
+A secondary **Close** control posts `{ type: 'EXIT' }` via `postKitchenSkillsChallengeExit` and **does not** post a review. If the active module form has a dirty draft (time, quality, or feedback non-empty and not yet submitted), Close asks for confirmation first.
 
 Not one score per ingredient. Duplicate posts for the same `sessionId` + `reviewedGame` are rejected.
 
