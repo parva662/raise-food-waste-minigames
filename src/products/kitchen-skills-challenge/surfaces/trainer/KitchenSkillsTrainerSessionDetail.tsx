@@ -21,8 +21,10 @@ function defaultModuleTab(session: KitchenSkillsTrainerSession): KitchenSkillsRe
 
 export function KitchenSkillsTrainerSessionDetail({
   selected,
+  onDraftChange,
 }: {
   selected: KitchenSkillsTrainerSession;
+  onDraftChange?: (dirty: boolean) => void;
 }) {
   const [activeModule, setActiveModule] = useState<KitchenSkillsReviewedModule>(() =>
     defaultModuleTab(selected),
@@ -80,9 +82,11 @@ export function KitchenSkillsTrainerSessionDetail({
               testIdPrefix="kitchen-day-chef"
             />
             <KitchenSkillsTrainerModuleReviewForm
+              key={activeModule}
               selected={selected}
               reviewedGame={activeModule}
               moduleTitle={moduleTitle}
+              onDraftChange={onDraftChange}
             />
           </>
         ) : (

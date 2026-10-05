@@ -3683,6 +3683,13 @@ ul {
   min-width: 0;
 }
 
+.kitchen-mgmt-header__actions {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
 .kitchen-mgmt-date-picker--compact {
   flex: 0 1 auto;
   align-self: center;

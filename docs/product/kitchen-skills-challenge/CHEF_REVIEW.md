@@ -28,7 +28,11 @@ Neither posts measurement activities. Progress does not invent ranking or an ove
 
 The trainer opens `#/kitchen-day-tutor` in three levels: **staff list** (name search, modules awaiting assessment) → **staff sessions** (Recent = last 7 Helsinki operational days vs Earlier) → **session detail** with module tabs (Trim Smart / Rescue & Reuse / Portion Precision).
 
+Each module tab has an **independent** assessment form. Switching modules remounts / clears draft inputs so Trim scores do not leak into Rescue or Portion. Score fields accept only empty or a single digit **0–5**; Submit stays disabled until both scores parse (`parseKitchenSkillsReviewScore`).
+
 For each module that has evidence, the tutor inspects that module’s evidence and submits one `wastePracticeReview` as `SILENT_ACTIVITY` with `actors: [selectedStudentActorId]` and `reviewedGame` set to the module slug (`trimSmart`, `rescueAndReuse`, or `portionPrecision`). Modules without evidence show a message and no form. The tutor iframe stays open so the chef can review another student or module.
+
+A secondary **Close** control is visible on all tutor levels. Close posts `{ type: 'EXIT' }` via `postKitchenSkillsChallengeExit` and **does not** post a review. If the active module form has a dirty draft (time, quality, or feedback non-empty and not yet submitted), Close asks for confirmation first.
 
 Not one score per ingredient. Duplicate posts for the same `sessionId` + `reviewedGame` are rejected.
 
@@ -40,8 +44,9 @@ Stored properties: `sessionId`, `sessionDate`, `submittedAt`, `reviewedGame`, `t
 
 ## 4. Retrieval
 
-- Student Session Review / challenge / Student Progress: `kitchenGroupInputSelf.activities` → `GET /api/me/activities`. Progress shows Trim / Reuse / Portion before tutor review exists.
-- Tutor dashboard: `kitchenSkillsTrainerInput.activities` → `GET /api/groups/activities` filtered to Kitchen Skills templates (`src/platform/gamebus/groupActivities.ts` `getRawKitchenSkillsTrainerActivitiesInput`), grouped by actor. Do not reuse `kitchenGroupInput`.
+- Student Session Review / challenge / Student Progress: `kitchenGroupInputSelf.activities` → `GET /api/me/activities`. Progress shows Trim / Reuse / Portion before tutor review exists. When attaching `wastePracticeReview` onto Progress sessions, match by `sessionId` + `reviewedGame` (do not require `activity.actor.id` equality — self evidence may use a fallback actor id while the review carries the real actor, or vice versa).
+- Tutor dashboard: `kitchenSkillsTrainerInput.activities` → `GET /api/groups/activities` filtered to Kitchen Skills templates (`src/platform/gamebus/groupActivities.ts` `getRawKitchenSkillsTrainerActivitiesInput`), grouped by actor (actor match required when attaching reviews). Do not reuse `kitchenGroupInput`.
+- Session Review in the student embed hydrates reviews from **both** self and trainer input collections (deduped by `persistId` or `sessionId` + `reviewedGame`).
 
 This phase does **not** use a group-members Input Collection. Students with zero Kitchen Skills activity are not listed.
 

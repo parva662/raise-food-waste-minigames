@@ -160,4 +160,52 @@ describe('Kitchen Day page split', () => {
     });
     expect(screen.getByText('No tutor assessment yet.')).toBeInTheDocument();
   });
+
+  it('hydrates tutor assessments onto Progress even when review actor differs from evidence', async () => {
+    setHash('#/kitchen-day-progress');
+    render(<AppRouter />);
+    ingestInputCollectionsForTests({
+      kitchenGroupInputSelf: {
+        activities: [
+          {
+            id: 'own-trim',
+            template: { slug: 'trimSmart' },
+            start: '2026-09-23T10:00:00.000Z',
+            end: '2026-09-23T10:03:00.000Z',
+            properties: [
+              { template: { slug: 'sessionId' }, value: { value: 'kitchen-day:t:user-1:2026-09-23' } },
+              { template: { slug: 'sessionDate' }, value: { value: '2026-09-23' } },
+              { template: { slug: 'submittedAt' }, value: { value: '2026-09-23T10:03:00.000Z' } },
+              { template: { slug: 'ingredientId' }, value: { value: 'carrot' } },
+              { template: { slug: 'ingredientName' }, value: { value: 'Carrot' } },
+              { template: { slug: 'ingredientWeightGrams' }, value: { value: 5000 } },
+              { template: { slug: 'trimTechniques' }, value: { value: 'trimming' } },
+              { template: { slug: 'estimatedWasteGrams' }, value: { value: 600 } },
+              { template: { slug: 'actualWasteGrams' }, value: { value: 450 } },
+              { template: { slug: 'duration' }, obj: { value: 3, unit: 'minutes' } },
+            ],
+          },
+          {
+            id: 'own-review',
+            actor: { id: 'user-1', name: 'Student One' },
+            template: { slug: 'wastePracticeReview' },
+            properties: [
+              { template: { slug: 'sessionId' }, value: { value: 'kitchen-day:t:user-1:2026-09-23' } },
+              { template: { slug: 'sessionDate' }, value: { value: '2026-09-23' } },
+              { template: { slug: 'submittedAt' }, value: { value: '2026-09-23T15:00:00.000Z' } },
+              { template: { slug: 'reviewedGame' }, value: { value: 'trimSmart' } },
+              { template: { slug: 'timeEfficiencyScore' }, value: { value: 4 } },
+              { template: { slug: 'preparationQualityScore' }, value: { value: 5 } },
+            ],
+          },
+        ],
+      },
+      inputCollectionPari: { me: { id: 'user-1', firstName: 'Student', lastName: 'One' } },
+    });
+    await waitFor(() => {
+      expect(screen.getByTestId('kitchen-day-progress-tutor-trimSmart')).toBeInTheDocument();
+    });
+    expect(screen.getByText('Time efficiency 4')).toBeInTheDocument();
+    expect(screen.getByText('Preparation quality 5')).toBeInTheDocument();
+  });
 });

@@ -10,6 +10,7 @@ import {
 } from '@/products/kitchen-skills-challenge/read/trainerSessions';
 import type { KitchenSkillsTrainerSession } from '@/products/kitchen-skills-challenge/domain/types';
 import { KitchenSkillsTrainerSessionDetail } from '@/products/kitchen-skills-challenge/surfaces/trainer/KitchenSkillsTrainerSessionDetail';
+import { postKitchenSkillsChallengeExit } from '@/products/kitchen-skills-challenge/gamebus/postExit';
 import {
   kitchenDayTutorHashFor,
   parseKitchenDaySelectedActorId,
@@ -43,11 +44,13 @@ function KitchenSkillsTrainerBody() {
   const [selectedSessionId, setSelectedSessionId] = useState(() => parseKitchenDaySelectedSessionId());
   const [selectedActorId, setSelectedActorId] = useState(() => parseKitchenDaySelectedActorId());
   const [staffQuery, setStaffQuery] = useState('');
+  const [reviewDraftDirty, setReviewDraftDirty] = useState(false);
 
   useEffect(() => {
     const sync = () => {
       setSelectedSessionId(parseKitchenDaySelectedSessionId());
       setSelectedActorId(parseKitchenDaySelectedActorId());
+      setReviewDraftDirty(false);
     };
     window.addEventListener('hashchange', sync);
     return () => window.removeEventListener('hashchange', sync);
@@ -67,6 +70,16 @@ function KitchenSkillsTrainerBody() {
     ? staffSummaries.find((staff) => staff.actorId === selectedActorId)
     : undefined;
   const selected = findKitchenSkillsTrainerSession(sessions, selectedSessionId, selectedActorId);
+
+  const closeTrainer = () => {
+    if (reviewDraftDirty) {
+      const leave = window.confirm(
+        'You have an unsaved tutor assessment draft. Close without submitting?',
+      );
+      if (!leave) return;
+    }
+    postKitchenSkillsChallengeExit();
+  };
 
   if (!session) {
     return (
@@ -88,6 +101,16 @@ function KitchenSkillsTrainerBody() {
             Review student Kitchen Skills Challenge evidence by module, then add a qualitative assessment.
           </p>
         </div>
+        <div className="kitchen-mgmt-header__actions">
+          <button
+            type="button"
+            className="kitchen-day-button kitchen-day-button--secondary"
+            data-testid="kitchen-day-tutor-close"
+            onClick={closeTrainer}
+          >
+            Close
+          </button>
+        </div>
       </header>
 
       {selectedSessionId && selected ? (
@@ -103,6 +126,7 @@ function KitchenSkillsTrainerBody() {
           <KitchenSkillsTrainerSessionDetail
             key={`${selected.actorId}:${selected.sessionId}`}
             selected={selected}
+            onDraftChange={setReviewDraftDirty}
           />
         </>
       ) : selectedSessionId ? (

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useReadyKitchenSkillsSession } from '@/products/kitchen-skills-challenge/domain/session/KitchenSkillsSessionContext';
 import { parseKitchenSkillsReviewScore } from '@/products/kitchen-skills-challenge/domain/assessment/scores';
 import type {
@@ -18,6 +18,13 @@ function reviewTestId(reviewedGame: KitchenSkillsReviewedModule, suffix: string)
 /** Legacy unscoped testids for trimSmart — older tests still use these. */
 function legacyTrimTestId(reviewedGame: KitchenSkillsReviewedModule, suffix: string): string | undefined {
   return reviewedGame === 'trimSmart' ? `kitchen-day-review-${suffix}` : undefined;
+}
+
+/** Allow empty or a single digit 0–5; reject other keystrokes/paste. */
+function acceptKitchenSkillsScoreInput(raw: string): string | null {
+  if (raw === '') return '';
+  if (/^[0-5]$/.test(raw)) return raw;
+  return null;
 }
 
 function ReviewReadback({
@@ -80,10 +87,12 @@ export function KitchenSkillsTrainerModuleReviewForm({
   selected,
   reviewedGame,
   moduleTitle,
+  onDraftChange,
 }: {
   selected: KitchenSkillsTrainerSession;
   reviewedGame: KitchenSkillsReviewedModule;
   moduleTitle: string;
+  onDraftChange?: (dirty: boolean) => void;
 }) {
   const { commitReview, findReviewBySessionAndModule } = useReadyKitchenSkillsSession();
   const existing =
@@ -93,6 +102,24 @@ export function KitchenSkillsTrainerModuleReviewForm({
   const [qualityScore, setQualityScore] = useState('');
   const [feedback, setFeedback] = useState('');
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    setTimeScore('');
+    setQualityScore('');
+    setFeedback('');
+    setError(null);
+  }, [reviewedGame, selected.sessionId]);
+
+  useEffect(() => {
+    if (existing) {
+      onDraftChange?.(false);
+      return;
+    }
+    const dirty =
+      timeScore.trim().length > 0 || qualityScore.trim().length > 0 || feedback.trim().length > 0;
+    onDraftChange?.(dirty);
+    return () => onDraftChange?.(false);
+  }, [existing, timeScore, qualityScore, feedback, onDraftChange]);
 
   if (!moduleHasEvidence(selected, reviewedGame)) {
     return null;
@@ -104,6 +131,9 @@ export function KitchenSkillsTrainerModuleReviewForm({
 
   const parsedTime = parseKitchenSkillsReviewScore(timeScore);
   const parsedQuality = parseKitchenSkillsReviewScore(qualityScore);
+  const canSubmit = parsedTime.ok && parsedQuality.ok;
+  const timeInvalid = timeScore.trim().length > 0 && !parsedTime.ok;
+  const qualityInvalid = qualityScore.trim().length > 0 && !parsedQuality.ok;
   const legacyForm = legacyTrimTestId(reviewedGame, 'form');
   const legacyTime = legacyTrimTestId(reviewedGame, 'time');
   const legacyQuality = legacyTrimTestId(reviewedGame, 'quality');
@@ -136,9 +166,13 @@ export function KitchenSkillsTrainerModuleReviewForm({
           ? 'Tutor assessment cannot be submitted from this page yet.'
           : result.reason === 'duplicate_review'
             ? `This ${moduleTitle} module already has a tutor assessment.`
-            : 'The review could not be saved.',
+            : result.reason === 'invalid_scores'
+              ? 'Enter integer scores from 0 to 5. Blank is not a score.'
+              : 'The review could not be saved.',
       );
+      return;
     }
+    onDraftChange?.(false);
   };
 
   return (
@@ -160,8 +194,13 @@ export function KitchenSkillsTrainerModuleReviewForm({
           className="kitchen-day-input kitchen-day-input--numeric"
           data-testid={legacyTime ?? reviewTestId(reviewedGame, 'time')}
           inputMode="numeric"
+          maxLength={1}
+          aria-invalid={timeInvalid || undefined}
           value={timeScore}
-          onChange={(event) => setTimeScore(event.target.value)}
+          onChange={(event) => {
+            const next = acceptKitchenSkillsScoreInput(event.target.value);
+            if (next !== null) setTimeScore(next);
+          }}
         />
         {legacyTime ? <span hidden data-testid={reviewTestId(reviewedGame, 'time')} /> : null}
       </label>
@@ -171,8 +210,13 @@ export function KitchenSkillsTrainerModuleReviewForm({
           className="kitchen-day-input kitchen-day-input--numeric"
           data-testid={legacyQuality ?? reviewTestId(reviewedGame, 'quality')}
           inputMode="numeric"
+          maxLength={1}
+          aria-invalid={qualityInvalid || undefined}
           value={qualityScore}
-          onChange={(event) => setQualityScore(event.target.value)}
+          onChange={(event) => {
+            const next = acceptKitchenSkillsScoreInput(event.target.value);
+            if (next !== null) setQualityScore(next);
+          }}
         />
         {legacyQuality ? <span hidden data-testid={reviewTestId(reviewedGame, 'quality')} /> : null}
       </label>
@@ -195,6 +239,7 @@ export function KitchenSkillsTrainerModuleReviewForm({
         type="button"
         className="kitchen-day-button kitchen-day-button--primary"
         data-testid={legacySubmit ?? reviewTestId(reviewedGame, 'submit')}
+        disabled={!canSubmit}
         onClick={submit}
       >
         Submit review

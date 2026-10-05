@@ -20,6 +20,7 @@ import { getAuthenticatedGameBusUser } from '@/platform/gamebus/inputCollections
 import { normalizeIngredientId } from '@/shared/identifiers/ingredientId';
 import { isIngredientAlreadyRecorded } from '@/products/kitchen-skills-challenge/domain/session/ingredientUniqueness';
 import { ensureKitchenSkillsLockedSession } from '@/products/kitchen-skills-challenge/domain/session/lock';
+import { isKitchenSkillsReviewScore } from '@/products/kitchen-skills-challenge/domain/assessment/scores';
 import { buildKitchenSkillsTrainerSessions } from '@/products/kitchen-skills-challenge/read/trainerSessions';
 import {
   buildKitchenSkillsReadModel,
@@ -71,6 +72,21 @@ interface KitchenSkillsSessionValue {
 
 const KitchenSkillsSessionContext = createContext<KitchenSkillsSessionValue | null>(null);
 
+function reviewDedupeKey(review: KitchenSkillsReviewEntry): string {
+  return review.persistId ?? `${review.sessionId}::${review.reviewedGame}`;
+}
+
+function dedupePersistedReviews(
+  reviews: readonly KitchenSkillsReviewEntry[],
+): KitchenSkillsReviewEntry[] {
+  const byKey = new Map<string, KitchenSkillsReviewEntry>();
+  for (const review of reviews) {
+    const key = reviewDedupeKey(review);
+    if (!byKey.has(key)) byKey.set(key, review);
+  }
+  return [...byKey.values()];
+}
+
 function readPersistedForSession(sessionId: string): {
   trimEntries: KitchenSkillsTrimEntry[];
   rescueEntries: KitchenSkillsRescueEntry[];
@@ -81,11 +97,18 @@ function readPersistedForSession(sessionId: string): {
   const payload = getGameBusInputCollections();
   const trainerActivities = extractGroupActivities(getRawKitchenSkillsTrainerActivitiesInput(payload));
   const selfActivities = extractGroupActivities(getRawKitchenSelfActivitiesInput(payload));
+  const reviewsFromActivities = (activities: readonly unknown[]) =>
+    activities
+      .map((activity) => parsePersistedReviewEntry(activity))
+      .filter((entry): entry is KitchenSkillsReviewEntry => entry !== null);
   return {
     ...buildKitchenSkillsReadModel(selfActivities, { sessionId }),
-    reviews: trainerActivities
-      .map((activity) => parsePersistedReviewEntry(activity))
-      .filter((entry): entry is KitchenSkillsReviewEntry => entry !== null),
+    // Session Review in the student embed must see tutor assessments even when they
+    // arrive only via the self feed (or only via the trainer feed).
+    reviews: dedupePersistedReviews([
+      ...reviewsFromActivities(selfActivities),
+      ...reviewsFromActivities(trainerActivities),
+    ]),
     groupSessions: buildKitchenSkillsTrainerSessions(trainerActivities),
   };
 }
@@ -260,6 +283,12 @@ export function KitchenSkillsSessionProvider({
   }, []);
 
   const commitReview = useCallback((entry: KitchenSkillsReviewEntry, studentActorId: string): KitchenSkillsCommitResult => {
+    if (
+      !isKitchenSkillsReviewScore(entry.timeEfficiencyScore) ||
+      !isKitchenSkillsReviewScore(entry.preparationQualityScore)
+    ) {
+      return { ok: false, reason: 'invalid_scores', keepDraft: true };
+    }
     if (
       reviews.some(
         (item) => item.sessionId === entry.sessionId && item.reviewedGame === entry.reviewedGame,

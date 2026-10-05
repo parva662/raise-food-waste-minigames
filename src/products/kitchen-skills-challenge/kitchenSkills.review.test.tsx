@@ -111,18 +111,18 @@ describe('Kitchen Day module chef review', () => {
     expect(screen.queryByText(/module score/i)).not.toBeInTheDocument();
     expect(screen.queryByText(/leaderboard|percentile/i)).not.toBeInTheDocument();
 
-    await user.click(screen.getByTestId('kitchen-day-review-submit'));
-    expect(screen.getByTestId('kitchen-day-review-error')).toBeInTheDocument();
+    expect(screen.getByTestId('kitchen-day-review-submit')).toBeDisabled();
 
     await user.type(screen.getByTestId('kitchen-day-review-time'), '6');
-    await user.type(screen.getByTestId('kitchen-day-review-quality'), '3');
-    await user.click(screen.getByTestId('kitchen-day-review-submit'));
-    expect(screen.getByTestId('kitchen-day-review-error')).toBeInTheDocument();
-
+    expect(screen.getByTestId('kitchen-day-review-time')).toHaveValue('');
+    await user.type(screen.getByTestId('kitchen-day-review-time'), '2.5');
+    expect(screen.getByTestId('kitchen-day-review-time')).toHaveValue('2');
     await user.clear(screen.getByTestId('kitchen-day-review-time'));
+    expect(screen.getByTestId('kitchen-day-review-submit')).toBeDisabled();
+
     await user.type(screen.getByTestId('kitchen-day-review-time'), '0');
-    await user.clear(screen.getByTestId('kitchen-day-review-quality'));
     await user.type(screen.getByTestId('kitchen-day-review-quality'), '5');
+    expect(screen.getByTestId('kitchen-day-review-submit')).toBeEnabled();
     await user.click(screen.getByTestId('kitchen-day-review-submit'));
     await waitFor(() => {
       expect(screen.getByTestId('kitchen-day-review-submitted')).toBeInTheDocument();
@@ -130,6 +130,107 @@ describe('Kitchen Day module chef review', () => {
     expect(screen.getByTestId('kitchen-day-review-time-value')).toHaveTextContent('0');
     expect(screen.getByTestId('kitchen-day-review-quality-value')).toHaveTextContent('5');
     expect(screen.queryByTestId('kitchen-day-review-form')).not.toBeInTheDocument();
+  });
+
+  it('clears assessment inputs when switching module tabs', async () => {
+    const user = userEvent.setup();
+    setHash(`#/kitchen-day-tutor?sessionId=${encodeURIComponent(sessionOne)}`);
+    render(<AppRouter />);
+    ingestInputCollectionsForTests({
+      kitchenGroupInput: {
+        activities: [{ id: 'chef-forecast', template: { slug: 'chefForecast' }, actor: { id: 'chef-1', name: 'Chef' }, properties: [] }],
+      },
+      kitchenSkillsTrainerInput: {
+        activities: [
+          ...baseActivities,
+          {
+            id: 'act-rescue-1',
+            actor: { id: 'user-1', name: 'Student One' },
+            template: { slug: 'rescueAndReuse' },
+            properties: [
+              { template: { slug: 'sessionId' }, value: { value: sessionOne } },
+              { template: { slug: 'sessionDate' }, value: { value: '2026-09-23' } },
+              { template: { slug: 'ingredientId' }, value: { value: 'carrot' } },
+              { template: { slug: 'reusableWasteGrams' }, value: { value: 200 } },
+              { template: { slug: 'reuseDestination' }, value: { value: 'Soup' } },
+              { template: { slug: 'submittedAt' }, value: { value: '2026-09-23T10:10:00.000Z' } },
+            ],
+          },
+        ],
+      },
+      inputCollectionPari: { me: { id: 'chef-1', firstName: 'Chef', lastName: 'One' } },
+    });
+    await waitFor(() => {
+      expect(screen.getByTestId('kitchen-day-review-form')).toBeInTheDocument();
+    });
+    await user.type(screen.getByTestId('kitchen-day-review-time'), '4');
+    await user.type(screen.getByTestId('kitchen-day-review-quality'), '5');
+    expect(screen.getByTestId('kitchen-day-review-time')).toHaveValue('4');
+    expect(screen.getByTestId('kitchen-day-review-quality')).toHaveValue('5');
+
+    await user.click(screen.getByTestId('kitchen-day-tutor-module-tab-rescueAndReuse'));
+    await waitFor(() => {
+      expect(screen.getByTestId('kitchen-day-review-rescueAndReuse-form')).toBeInTheDocument();
+    });
+    expect(screen.getByTestId('kitchen-day-review-rescueAndReuse-time')).toHaveValue('');
+    expect(screen.getByTestId('kitchen-day-review-rescueAndReuse-quality')).toHaveValue('');
+  });
+
+  it('posts EXIT from Close without submitting a review draft', async () => {
+    const user = userEvent.setup();
+    vi.spyOn(detectEmbed, 'isGameBusEmbed').mockReturnValue(true);
+    const postMessage = vi.spyOn(window.parent, 'postMessage').mockImplementation(() => undefined);
+    const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(true);
+    ingestTaskForTests(kitchenSkillsTrainerTaskFixture);
+    setHash(`#/kitchen-day-tutor?actorId=user-1&sessionId=${encodeURIComponent(sessionOne)}`);
+    render(<AppRouter />);
+    ingestInputCollectionsForTests({
+      kitchenGroupInput: {
+        activities: [{ id: 'chef-forecast', template: { slug: 'chefForecast' }, actor: { id: 'chef-1', name: 'Chef' }, properties: [] }],
+      },
+      kitchenSkillsTrainerInput: { activities: baseActivities },
+      inputCollectionPari: { me: { id: 'chef-1', firstName: 'Chef', lastName: 'One' } },
+    });
+    await waitFor(() => {
+      expect(screen.getByTestId('kitchen-day-review-form')).toBeInTheDocument();
+    });
+    await user.type(screen.getByTestId('kitchen-day-review-time'), '4');
+    await user.click(screen.getByTestId('kitchen-day-tutor-close'));
+    expect(confirmSpy).toHaveBeenCalled();
+    const exitCalls = postMessage.mock.calls
+      .map((call) => call[0])
+      .filter((payload): payload is { type: string } =>
+        Boolean(payload && typeof payload === 'object' && 'type' in payload && payload.type === 'EXIT'),
+      );
+    expect(exitCalls).toHaveLength(1);
+    expect(
+      postMessage.mock.calls.some(
+        (call) =>
+          Boolean(call[0] && typeof call[0] === 'object' && 'type' in call[0] && call[0].type === 'SILENT_ACTIVITY'),
+      ),
+    ).toBe(false);
+  });
+
+  it('posts EXIT directly from Close when the draft is clean', async () => {
+    const user = userEvent.setup();
+    const postMessage = vi.spyOn(window.parent, 'postMessage').mockImplementation(() => undefined);
+    const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(true);
+    setHash('#/kitchen-day-tutor');
+    render(<AppRouter />);
+    ingestInputCollectionsForTests({
+      kitchenSkillsTrainerInput: { activities: baseActivities },
+      inputCollectionPari: { me: { id: 'chef-1', firstName: 'Chef', lastName: 'One' } },
+    });
+    await waitFor(() => {
+      expect(screen.getByTestId('kitchen-day-tutor-close')).toBeInTheDocument();
+    });
+    await user.click(screen.getByTestId('kitchen-day-tutor-close'));
+    expect(confirmSpy).not.toHaveBeenCalled();
+    expect(
+      postMessage.mock.calls.some(
+        (call) => Boolean(call[0] && typeof call[0] === 'object' && 'type' in call[0] && call[0].type === 'EXIT'),
+      ),
+    ).toBe(true);
   });
 
   it('shows an existing review read-only instead of creating another', async () => {

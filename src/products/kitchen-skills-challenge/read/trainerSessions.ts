@@ -71,17 +71,20 @@ export function attachModuleReviewToMatchingSessions(
   sessions: Iterable<KitchenSkillsTrainerSession>,
   activity: unknown,
   review: KitchenSkillsReviewEntry,
+  options: { requireActorMatch?: boolean } = {},
 ): void {
+  const requireActorMatch = options.requireActorMatch !== false;
   const reviewActorId = readActivityActorId(activity);
   const candidates = [...sessions].filter((session) => session.sessionId === review.sessionId);
   if (candidates.length === 0) return;
 
-  const targetSessions =
-    reviewActorId != null
+  const targetSessions = requireActorMatch
+    ? reviewActorId != null
       ? candidates.filter((session) => session.actorId === reviewActorId)
       : candidates.length === 1
         ? candidates
-        : [];
+        : []
+    : candidates;
 
   for (const session of targetSessions) {
     if (session.moduleReviews[review.reviewedGame] !== null) continue;
