@@ -2,13 +2,20 @@ import { useMemo, useState } from 'react';
 import { formatSessionDate, formatWastePercent } from '@/products/kitchen-skills-challenge/format';
 import {
   buildKitchenSkillsProgressPoints,
+  filterModuleHistorySessions,
   latestModuleReviewAcrossSessions,
   metricSeriesForModule,
   moduleReviewHistory,
+  paginateSessions,
+  PROGRESS_HISTORY_PAGE_SIZE,
   progressMetricsForModule,
+  recentSessionsLabel,
   sessionsForModule,
   sortKitchenSkillsSessionsNewestFirst,
+  takeRecentSessions,
+  type KitchenSkillsProgressHistoryFilters,
   type KitchenSkillsProgressMetricKey,
+  type KitchenSkillsProgressReviewFilter,
 } from '@/products/kitchen-skills-challenge/read/progressModel';
 import { Sparkline } from '@/products/kitchen-skills-challenge/surfaces/progress/Sparkline';
 import { useKitchenSkillsStudentProgressData } from '@/products/kitchen-skills-challenge/read/useGroupData';
@@ -89,30 +96,58 @@ function TutorAssessmentCard({
   );
 }
 
+function moduleSessionMetrics(
+  session: KitchenSkillsTrainerSession,
+  module: KitchenSkillsReviewedModule,
+  point?: ReturnType<typeof buildKitchenSkillsProgressPoints>[number],
+): string[] {
+  const metrics: string[] = [];
+  if (module === 'trimSmart') {
+    if (point?.wastePercent != null) metrics.push(`Waste ${formatWastePercent(point.wastePercent)}`);
+    if (point?.durationMinutes != null) metrics.push(formatDurationMinutes(point.durationMinutes));
+  } else if (module === 'rescueAndReuse') {
+    metrics.push(
+      `${session.rescueEntries.length} rescue entr${session.rescueEntries.length === 1 ? 'y' : 'ies'}`,
+    );
+  } else {
+    if (point?.ingredientAccuracyPercent != null) {
+      metrics.push(`Accuracy ${formatWastePercent(point.ingredientAccuracyPercent)}`);
+    }
+    if (point?.finalWeightDeviationPercent != null) {
+      metrics.push(`Deviation ${formatWastePercent(point.finalWeightDeviationPercent)}`);
+    }
+  }
+  return metrics;
+}
+
 function ModuleSummaryMetrics({
   module,
   sessions,
   points,
+  totalSessionCount,
 }: {
   module: KitchenSkillsReviewedModule;
   sessions: readonly KitchenSkillsTrainerSession[];
   points: ReturnType<typeof buildKitchenSkillsProgressPoints>;
+  totalSessionCount: number;
 }) {
-  const moduleSessions = sessionsForModule(sessions, module);
   const latestPoint = [...points]
     .reverse()
-    .find((point) => moduleSessions.some((session) => session.sessionId === point.sessionId));
+    .find((point) => sessions.some((session) => session.sessionId === point.sessionId));
   const metrics = progressMetricsForModule(module);
 
-  if (moduleSessions.length === 0) {
+  if (sessions.length === 0) {
     return <p className="kitchen-day-progress-empty">No {KITCHEN_SKILLS_MODULE_TITLES[module]} sessions yet.</p>;
   }
 
   return (
     <dl className="kitchen-day-progress-summary" data-testid={`kitchen-day-progress-summary-${module}`}>
       <div>
-        <dt>Sessions</dt>
-        <dd>{moduleSessions.length}</dd>
+        <dt>Recent sessions</dt>
+        <dd>
+          {sessions.length}
+          {totalSessionCount > sessions.length ? ` of ${totalSessionCount}` : ''}
+        </dd>
       </div>
       {metrics.map((metric) => {
         const value = latestPoint?.[metric.key] ?? null;
@@ -132,146 +167,10 @@ function ModuleSummaryMetrics({
       {module === 'rescueAndReuse' ? (
         <div>
           <dt>Latest rescue entries</dt>
-          <dd>{moduleSessions[0]?.rescueEntries.length ?? 0}</dd>
+          <dd>{sessions[0]?.rescueEntries.length ?? 0}</dd>
         </div>
       ) : null}
     </dl>
-  );
-}
-
-function ModuleProgressPanel({
-  module,
-  sessions,
-  points,
-}: {
-  module: KitchenSkillsReviewedModule;
-  sessions: readonly KitchenSkillsTrainerSession[];
-  points: ReturnType<typeof buildKitchenSkillsProgressPoints>;
-}) {
-  const metrics = progressMetricsForModule(module);
-  const [metricKey, setMetricKey] = useState<KitchenSkillsProgressMetricKey | null>(
-    metrics[0]?.key ?? null,
-  );
-  const activeMetric = metrics.find((metric) => metric.key === metricKey) ?? metrics[0] ?? null;
-  const series = activeMetric ? metricSeriesForModule(points, activeMetric.key) : [];
-  const reviews = moduleReviewHistory(sessions, module);
-  const latestReview = reviews[0] ?? null;
-  const moduleSessions = sessionsForModule(sessions, module);
-
-  if (moduleSessions.length === 0) {
-    return (
-      <div data-testid={`kitchen-day-progress-module-${module}`}>
-        <p className="kitchen-day-progress-empty">No {KITCHEN_SKILLS_MODULE_TITLES[module]} sessions yet.</p>
-        <section className="kitchen-day-progress-section">
-          <h3 className="kitchen-day-progress-section__title">Tutor assessment</h3>
-          <p className="kitchen-day-progress-empty" data-testid={`kitchen-day-progress-tutor-empty-${module}`}>
-            No tutor assessment yet.
-          </p>
-        </section>
-      </div>
-    );
-  }
-
-  return (
-    <div data-testid={`kitchen-day-progress-module-${module}`}>
-      <ModuleSummaryMetrics module={module} sessions={sessions} points={points} />
-
-      {metrics.length > 1 ? (
-        <div
-          className="kitchen-day-progress-metric-tabs"
-          role="tablist"
-          aria-label={`${KITCHEN_SKILLS_MODULE_TITLES[module]} metrics`}
-        >
-          {metrics.map((metric) => {
-            const selected = activeMetric?.key === metric.key;
-            return (
-              <button
-                key={metric.key}
-                type="button"
-                role="tab"
-                className={
-                  selected
-                    ? 'kitchen-day-progress-metric-tabs__tab kitchen-day-progress-metric-tabs__tab--active'
-                    : 'kitchen-day-progress-metric-tabs__tab'
-                }
-                aria-selected={selected}
-                data-testid={`kitchen-day-progress-metric-${module}-${metric.key}`}
-                onClick={() => setMetricKey(metric.key)}
-              >
-                {metric.label}
-              </button>
-            );
-          })}
-        </div>
-      ) : null}
-
-      {activeMetric ? (
-        <Sparkline
-          label={activeMetric.label}
-          testId={`kitchen-day-progress-${module}-${activeMetric.key}-trend`}
-          unit={activeMetric.unit}
-          values={series.map((item) => item.value)}
-          labels={series.map((item) => shortSessionDate(item.sessionDate))}
-        />
-      ) : (
-        <p className="kitchen-day-progress-empty">
-          Performance trends for {KITCHEN_SKILLS_MODULE_TITLES[module]} appear here when measurements are available.
-        </p>
-      )}
-
-      <section className="kitchen-day-progress-section">
-        <h3 className="kitchen-day-progress-section__title">Tutor assessment</h3>
-        {latestReview ? (
-          <>
-            <p className="kitchen-day-progress-section__eyebrow">Latest tutor assessment</p>
-            <TutorAssessmentCard
-              review={latestReview.review}
-              sessionDate={latestReview.session.sessionDate}
-              testIdBase={`kitchen-day-progress-tutor-${module}`}
-            />
-            {reviews.length > 1 ? (
-              <details className="kitchen-day-progress-history-details">
-                <summary>Earlier assessments ({reviews.length - 1})</summary>
-                <ul className="kitchen-day-progress-tutor-history">
-                  {reviews.slice(1).map(({ session, review }) => (
-                    <li key={`${session.sessionId}:${review.reviewedGame}:${review.submittedAt}`}>
-                      <TutorAssessmentCard
-                        review={review}
-                        sessionDate={session.sessionDate}
-                        compact
-                      />
-                    </li>
-                  ))}
-                </ul>
-              </details>
-            ) : null}
-          </>
-        ) : (
-          <p className="kitchen-day-progress-empty" data-testid={`kitchen-day-progress-tutor-empty-${module}`}>
-            No tutor assessment yet.
-          </p>
-        )}
-      </section>
-
-      <section className="kitchen-day-progress-section">
-        <h3 className="kitchen-day-progress-section__title">Session history</h3>
-        {moduleSessions.length === 0 ? (
-          <p className="kitchen-day-progress-empty">No sessions for this module yet.</p>
-        ) : (
-          <ul className="kitchen-day-progress-session-list" data-testid={`kitchen-day-progress-sessions-${module}`}>
-            {moduleSessions.map((session) => (
-              <li key={session.sessionId}>
-                <ModuleSessionCard
-                  session={session}
-                  module={module}
-                  point={points.find((item) => item.sessionId === session.sessionId)}
-                />
-              </li>
-            ))}
-          </ul>
-        )}
-      </section>
-    </div>
   );
 }
 
@@ -285,22 +184,7 @@ function ModuleSessionCard({
   point?: ReturnType<typeof buildKitchenSkillsProgressPoints>[number];
 }) {
   const review = findModuleReview(session, module);
-  const metrics: string[] = [];
-  if (module === 'trimSmart') {
-    if (point?.wastePercent != null) metrics.push(`Waste ${formatWastePercent(point.wastePercent)}`);
-    if (point?.durationMinutes != null) metrics.push(formatDurationMinutes(point.durationMinutes));
-  } else if (module === 'rescueAndReuse') {
-    metrics.push(
-      `${session.rescueEntries.length} rescue entr${session.rescueEntries.length === 1 ? 'y' : 'ies'}`,
-    );
-  } else {
-    if (point?.ingredientAccuracyPercent != null) {
-      metrics.push(`Accuracy ${formatWastePercent(point.ingredientAccuracyPercent)}`);
-    }
-    if (point?.finalWeightDeviationPercent != null) {
-      metrics.push(`Deviation ${formatWastePercent(point.finalWeightDeviationPercent)}`);
-    }
-  }
+  const metrics = moduleSessionMetrics(session, module, point);
 
   return (
     <details className="kitchen-day-progress-session-card" data-testid={`kitchen-day-progress-session-${module}-${session.sessionId}`}>
@@ -336,6 +220,303 @@ function ModuleSessionCard({
         )}
       </div>
     </details>
+  );
+}
+
+function ModuleHistoryRow({
+  session,
+  module,
+  point,
+}: {
+  session: KitchenSkillsTrainerSession;
+  module: KitchenSkillsReviewedModule;
+  point?: ReturnType<typeof buildKitchenSkillsProgressPoints>[number];
+}) {
+  const review = findModuleReview(session, module);
+  const metrics = moduleSessionMetrics(session, module, point);
+
+  return (
+    <details
+      className="kitchen-day-progress-history-row"
+      data-testid={`kitchen-day-progress-history-row-${module}-${session.sessionId}`}
+    >
+      <summary>
+        <span className="kitchen-day-progress-history-row__date">{formatSessionDate(session.sessionDate)}</span>
+        <span className="kitchen-day-progress-history-row__metrics">
+          {metrics.length > 0 ? metrics.join(' · ') : 'Evidence recorded'}
+        </span>
+        <span
+          className={
+            review
+              ? 'kitchen-day-tutor-status kitchen-day-tutor-status--reviewed'
+              : 'kitchen-day-tutor-status kitchen-day-tutor-status--needs'
+          }
+        >
+          {review ? `${review.timeEfficiencyScore}/${review.preparationQualityScore}` : 'Awaiting'}
+        </span>
+      </summary>
+      <div className="kitchen-day-progress-history-row__body">
+        {review ? (
+          <TutorAssessmentCard review={review} sessionDate={session.sessionDate} compact />
+        ) : (
+          <p className="kitchen-day-progress-empty">No tutor assessment for this session.</p>
+        )}
+      </div>
+    </details>
+  );
+}
+
+function ModuleHistoryPanel({
+  module,
+  sessions,
+  points,
+}: {
+  module: KitchenSkillsReviewedModule;
+  sessions: readonly KitchenSkillsTrainerSession[];
+  points: ReturnType<typeof buildKitchenSkillsProgressPoints>;
+}) {
+  const [fromDate, setFromDate] = useState('');
+  const [toDate, setToDate] = useState('');
+  const [reviewStatus, setReviewStatus] = useState<KitchenSkillsProgressReviewFilter>('all');
+  const [page, setPage] = useState(1);
+
+  const filters: KitchenSkillsProgressHistoryFilters = {
+    fromDate: fromDate || null,
+    toDate: toDate || null,
+    reviewStatus,
+  };
+  const filtered = filterModuleHistorySessions(sessions, module, filters);
+  const { pageItems, page: safePage, totalPages, totalItems } = paginateSessions(
+    filtered,
+    page,
+    PROGRESS_HISTORY_PAGE_SIZE,
+  );
+
+  return (
+    <section className="kitchen-day-progress-section" data-testid={`kitchen-day-progress-archive-${module}`}>
+      <h3 className="kitchen-day-progress-section__title">History</h3>
+      <p className="kitchen-day-progress-section__eyebrow">
+        Search and browse earlier sessions. Charts stay on Recent only.
+      </p>
+
+      <div className="kitchen-day-progress-history-filters">
+        <label className="kitchen-day-progress-history-filters__field">
+          <span>From</span>
+          <input
+            type="date"
+            value={fromDate}
+            data-testid={`kitchen-day-progress-history-from-${module}`}
+            onChange={(event) => {
+              setFromDate(event.target.value);
+              setPage(1);
+            }}
+          />
+        </label>
+        <label className="kitchen-day-progress-history-filters__field">
+          <span>To</span>
+          <input
+            type="date"
+            value={toDate}
+            data-testid={`kitchen-day-progress-history-to-${module}`}
+            onChange={(event) => {
+              setToDate(event.target.value);
+              setPage(1);
+            }}
+          />
+        </label>
+        <label className="kitchen-day-progress-history-filters__field">
+          <span>Review status</span>
+          <select
+            value={reviewStatus}
+            data-testid={`kitchen-day-progress-history-status-${module}`}
+            onChange={(event) => {
+              setReviewStatus(event.target.value as KitchenSkillsProgressReviewFilter);
+              setPage(1);
+            }}
+          >
+            <option value="all">All</option>
+            <option value="reviewed">Reviewed only</option>
+            <option value="awaiting">Awaiting review</option>
+          </select>
+        </label>
+      </div>
+
+      {totalItems === 0 ? (
+        <p className="kitchen-day-progress-empty" data-testid={`kitchen-day-progress-history-empty-${module}`}>
+          No sessions match these filters.
+        </p>
+      ) : (
+        <>
+          <ul className="kitchen-day-progress-history-list" data-testid={`kitchen-day-progress-history-list-${module}`}>
+            {pageItems.map((session) => (
+              <li key={session.sessionId}>
+                <ModuleHistoryRow
+                  session={session}
+                  module={module}
+                  point={points.find((item) => item.sessionId === session.sessionId)}
+                />
+              </li>
+            ))}
+          </ul>
+          <div className="kitchen-day-progress-history-pager">
+            <p className="kitchen-day-progress-history-pager__meta">
+              {totalItems} session{totalItems === 1 ? '' : 's'} · page {safePage} of {totalPages}
+            </p>
+            <div className="kitchen-day-progress-history-pager__actions">
+              <button
+                type="button"
+                className="kitchen-day-button kitchen-day-button--ghost"
+                disabled={safePage <= 1}
+                data-testid={`kitchen-day-progress-history-prev-${module}`}
+                onClick={() => setPage((current) => Math.max(1, current - 1))}
+              >
+                Previous
+              </button>
+              <button
+                type="button"
+                className="kitchen-day-button kitchen-day-button--ghost"
+                disabled={safePage >= totalPages}
+                data-testid={`kitchen-day-progress-history-next-${module}`}
+                onClick={() => setPage((current) => current + 1)}
+              >
+                Next
+              </button>
+            </div>
+          </div>
+        </>
+      )}
+    </section>
+  );
+}
+
+function ModuleProgressPanel({
+  module,
+  sessions,
+  points,
+}: {
+  module: KitchenSkillsReviewedModule;
+  sessions: readonly KitchenSkillsTrainerSession[];
+  points: ReturnType<typeof buildKitchenSkillsProgressPoints>;
+}) {
+  const metrics = progressMetricsForModule(module);
+  const [metricKey, setMetricKey] = useState<KitchenSkillsProgressMetricKey | null>(
+    metrics[0]?.key ?? null,
+  );
+  const activeMetric = metrics.find((metric) => metric.key === metricKey) ?? metrics[0] ?? null;
+  const moduleSessions = sessionsForModule(sessions, module);
+  const recentSessions = takeRecentSessions(moduleSessions);
+  const recentIds = new Set(recentSessions.map((session) => session.sessionId));
+  const recentPoints = points.filter((point) => recentIds.has(point.sessionId));
+  const series = activeMetric ? metricSeriesForModule(recentPoints, activeMetric.key) : [];
+  const latestReview = moduleReviewHistory(moduleSessions, module)[0] ?? null;
+
+  if (moduleSessions.length === 0) {
+    return (
+      <div data-testid={`kitchen-day-progress-module-${module}`}>
+        <p className="kitchen-day-progress-empty">No {KITCHEN_SKILLS_MODULE_TITLES[module]} sessions yet.</p>
+        <section className="kitchen-day-progress-section">
+          <h3 className="kitchen-day-progress-section__title">Tutor assessment</h3>
+          <p className="kitchen-day-progress-empty" data-testid={`kitchen-day-progress-tutor-empty-${module}`}>
+            No tutor assessment yet.
+          </p>
+        </section>
+      </div>
+    );
+  }
+
+  return (
+    <div data-testid={`kitchen-day-progress-module-${module}`}>
+      <section className="kitchen-day-progress-section" data-testid={`kitchen-day-progress-recent-${module}`}>
+        <h3 className="kitchen-day-progress-section__title">Recent</h3>
+        <p
+          className="kitchen-day-progress-section__eyebrow"
+          data-testid={`kitchen-day-progress-recent-label-${module}`}
+        >
+          {recentSessionsLabel(recentSessions)}
+        </p>
+
+        <ModuleSummaryMetrics
+          module={module}
+          sessions={recentSessions}
+          points={recentPoints}
+          totalSessionCount={moduleSessions.length}
+        />
+
+        {metrics.length > 1 ? (
+          <div
+            className="kitchen-day-progress-metric-tabs"
+            role="tablist"
+            aria-label={`${KITCHEN_SKILLS_MODULE_TITLES[module]} metrics`}
+          >
+            {metrics.map((metric) => {
+              const selected = activeMetric?.key === metric.key;
+              return (
+                <button
+                  key={metric.key}
+                  type="button"
+                  role="tab"
+                  className={
+                    selected
+                      ? 'kitchen-day-progress-metric-tabs__tab kitchen-day-progress-metric-tabs__tab--active'
+                      : 'kitchen-day-progress-metric-tabs__tab'
+                  }
+                  aria-selected={selected}
+                  data-testid={`kitchen-day-progress-metric-${module}-${metric.key}`}
+                  onClick={() => setMetricKey(metric.key)}
+                >
+                  {metric.label}
+                </button>
+              );
+            })}
+          </div>
+        ) : null}
+
+        {activeMetric ? (
+          <Sparkline
+            label={activeMetric.label}
+            testId={`kitchen-day-progress-${module}-${activeMetric.key}-trend`}
+            unit={activeMetric.unit}
+            values={series.map((item) => item.value)}
+            labels={series.map((item) => shortSessionDate(item.sessionDate))}
+          />
+        ) : (
+          <p className="kitchen-day-progress-empty">
+            Performance trends for {KITCHEN_SKILLS_MODULE_TITLES[module]} appear here when measurements are available.
+          </p>
+        )}
+
+        <h4 className="kitchen-day-progress-section__subtitle">Tutor assessment</h4>
+        {latestReview ? (
+          <>
+            <p className="kitchen-day-progress-section__eyebrow">Latest tutor assessment</p>
+            <TutorAssessmentCard
+              review={latestReview.review}
+              sessionDate={latestReview.session.sessionDate}
+              testIdBase={`kitchen-day-progress-tutor-${module}`}
+            />
+          </>
+        ) : (
+          <p className="kitchen-day-progress-empty" data-testid={`kitchen-day-progress-tutor-empty-${module}`}>
+            No tutor assessment yet.
+          </p>
+        )}
+
+        <h4 className="kitchen-day-progress-section__subtitle">Recent sessions</h4>
+        <ul className="kitchen-day-progress-session-list" data-testid={`kitchen-day-progress-sessions-${module}`}>
+          {recentSessions.map((session) => (
+            <li key={session.sessionId}>
+              <ModuleSessionCard
+                session={session}
+                module={module}
+                point={points.find((item) => item.sessionId === session.sessionId)}
+              />
+            </li>
+          ))}
+        </ul>
+      </section>
+
+      <ModuleHistoryPanel module={module} sessions={moduleSessions} points={points} />
+    </div>
   );
 }
 

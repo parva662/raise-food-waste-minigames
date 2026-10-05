@@ -379,11 +379,17 @@ describe('Kitchen Day page split', () => {
     expect(screen.getByTestId('kitchen-day-progress-tutor-trimSmart-feedback')).toHaveTextContent(
       'Later trim feedback',
     );
+    expect(screen.getByTestId('kitchen-day-progress-recent-trimSmart')).toBeInTheDocument();
+    expect(screen.getByTestId('kitchen-day-progress-recent-label-trimSmart').textContent).toMatch(
+      /^Last 2 sessions · 23 Sept? 2026 – 24 Sept? 2026$/,
+    );
     expect(screen.getByTestId('kitchen-day-progress-trimSmart-wastePercent-trend')).toBeInTheDocument();
     expect(screen.queryByTestId('kitchen-day-progress-portionPrecision-ingredientAccuracyPercent-trend')).not.toBeInTheDocument();
+    expect(screen.getByTestId('kitchen-day-progress-archive-trimSmart')).toBeInTheDocument();
 
     const trimSessions = screen.getByTestId('kitchen-day-progress-sessions-trimSmart');
     const trimSessionCards = trimSessions.querySelectorAll('[data-testid^="kitchen-day-progress-session-trimSmart-"]');
+    expect(trimSessionCards).toHaveLength(2);
     expect(trimSessionCards[0]).toHaveAttribute(
       'data-testid',
       `kitchen-day-progress-session-trimSmart-${sessionB}`,

@@ -140,7 +140,7 @@ Gherkin: [`../../features/kitchen-skills-challenge/`](../../features/kitchen-ski
 | Trim Smart | `#/kitchen-day` | Estimate → timed prep → actual; unique `ingredientId` per session |
 | Rescue & Reuse | `#/kitchen-day/reuse` | Join `sessionId` + `ingredientId` |
 | Portion Precision | `#/kitchen-day/portion` | Generated recipe reference; derived accuracy |
-| Session Review / Progress / trainer | `#/kitchen-day/review`, `#/kitchen-day-progress`, `#/kitchen-day-tutor` | Review is read-only; trainer staff → sessions → modules; one `wastePracticeReview` per module via `reviewedGame` (`SILENT_ACTIVITY` + `actors`) |
+| Session Review / Progress / trainer | `#/kitchen-day/review`, `#/kitchen-day-progress`, `#/kitchen-day-tutor` | Review is read-only; Progress Overview + module Recent (last 8 sessions, Recent-only charts) + History archive; trainer staff → sessions → modules; one `wastePracticeReview` per module via `reviewedGame` (`SILENT_ACTIVITY` + `actors`) |
 | Legacy Trim Smart v1 | `#/waste/trim-smart` | Deprecated; old payload |
 
 ---

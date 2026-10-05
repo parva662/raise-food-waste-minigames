@@ -143,6 +143,95 @@ export function latestModuleReviewAcrossSessions(
   return moduleReviewHistory(sessions, module)[0] ?? null;
 }
 
+/** Primary Progress chart/list window: last N module sessions (not calendar days). */
+export const PROGRESS_RECENT_SESSION_LIMIT = 8;
+
+/** History archive page size for compact session rows. */
+export const PROGRESS_HISTORY_PAGE_SIZE = 10;
+
+export type KitchenSkillsProgressReviewFilter = 'all' | 'reviewed' | 'awaiting';
+
+export type KitchenSkillsProgressHistoryFilters = {
+  fromDate?: string | null;
+  toDate?: string | null;
+  reviewStatus?: KitchenSkillsProgressReviewFilter;
+};
+
+/**
+ * Newest-first slice used for Recent charts and short session lists.
+ * Always returns at most `limit` sessions; fewer when history is shorter.
+ */
+export function takeRecentSessions(
+  sessions: readonly KitchenSkillsTrainerSession[],
+  limit: number = PROGRESS_RECENT_SESSION_LIMIT,
+): KitchenSkillsTrainerSession[] {
+  return sortKitchenSkillsSessionsNewestFirst(sessions).slice(0, Math.max(0, limit));
+}
+
+/** Calendar span of a newest-first session window for Recent labels. */
+export function sessionDateSpanLabel(sessions: readonly KitchenSkillsTrainerSession[]): string | null {
+  if (sessions.length === 0) return null;
+  const newest = sessions[0]!.sessionDate;
+  const oldest = sessions[sessions.length - 1]!.sessionDate;
+  if (newest === oldest) return formatProgressDate(newest);
+  return `${formatProgressDate(oldest)} – ${formatProgressDate(newest)}`;
+}
+
+export function recentSessionsLabel(sessions: readonly KitchenSkillsTrainerSession[]): string {
+  if (sessions.length === 0) return 'No recent sessions';
+  const span = sessionDateSpanLabel(sessions);
+  const countLabel =
+    sessions.length === 1 ? 'Last 1 session' : `Last ${sessions.length} sessions`;
+  return span ? `${countLabel} · ${span}` : countLabel;
+}
+
+export function filterModuleHistorySessions(
+  sessions: readonly KitchenSkillsTrainerSession[],
+  module: KitchenSkillsReviewedModule,
+  filters: KitchenSkillsProgressHistoryFilters = {},
+): KitchenSkillsTrainerSession[] {
+  const fromDate = filters.fromDate?.trim() || null;
+  const toDate = filters.toDate?.trim() || null;
+  const reviewStatus = filters.reviewStatus ?? 'all';
+
+  return sortKitchenSkillsSessionsNewestFirst(sessions).filter((session) => {
+    if (fromDate && session.sessionDate < fromDate) return false;
+    if (toDate && session.sessionDate > toDate) return false;
+    if (reviewStatus === 'all') return true;
+    const reviewed = session.moduleReviews[module] !== null;
+    return reviewStatus === 'reviewed' ? reviewed : !reviewed;
+  });
+}
+
+export function paginateSessions<T>(
+  items: readonly T[],
+  page: number,
+  pageSize: number = PROGRESS_HISTORY_PAGE_SIZE,
+): { pageItems: T[]; page: number; totalPages: number; totalItems: number } {
+  const safePageSize = Math.max(1, pageSize);
+  const totalItems = items.length;
+  const totalPages = Math.max(1, Math.ceil(totalItems / safePageSize));
+  const safePage = Math.min(Math.max(1, page), totalPages);
+  const start = (safePage - 1) * safePageSize;
+  return {
+    pageItems: items.slice(start, start + safePageSize) as T[],
+    page: safePage,
+    totalPages,
+    totalItems,
+  };
+}
+
+function formatProgressDate(isoDate: string): string {
+  const [year, month, day] = isoDate.split('-').map(Number);
+  if (!year || !month || !day) return isoDate;
+  return new Intl.DateTimeFormat('en-GB', {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+    timeZone: 'UTC',
+  }).format(new Date(Date.UTC(year, month - 1, day, 12, 0, 0)));
+}
+
 function average(values: readonly number[]): number | null {
   if (values.length === 0) return null;
   return values.reduce((sum, value) => sum + value, 0) / values.length;
