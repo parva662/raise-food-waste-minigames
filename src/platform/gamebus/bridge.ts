@@ -1,9 +1,11 @@
 import { peekExpectedActivityRef } from '@/platform/gamebus/expectedActivityRef';
 import { isGameBusEmbed } from '@/platform/gamebus/detectEmbed';
 import { gamebusDevLog } from '@/platform/gamebus/devLog';
+import { summarizeKitchenSkillsTrainerInput } from '@/platform/gamebus/groupActivities';
 import {
   getInputCollectionKeys,
   getRawKitchenGroupActivitiesInput,
+  getRawKitchenSkillsTrainerActivitiesInput,
 } from '@/platform/gamebus/inputCollections';
 import { logTaskStructureSanitized } from '@/platform/gamebus/logTaskStructure';
 import { selectActivityTemplate } from '@/platform/gamebus/selectActivityTemplate';
@@ -112,6 +114,8 @@ function acceptInputCollectionsFromParent(data: GameBusInputCollectionsPayload):
   const keys = [...getInputCollectionKeys(data)];
   gamebusDevLog('INPUT_COLLECTIONS received', {
     collectionKeys: keys,
+    kitchenSkillsTrainerInput: summarizeKitchenSkillsTrainerInput(data),
+    kitchenSkillsTrainerActivities: getRawKitchenSkillsTrainerActivitiesInput(data),
     kitchenGroupActivities: getRawKitchenGroupActivitiesInput(data),
   });
   inputCollectionsListener?.(inputCollectionsData);

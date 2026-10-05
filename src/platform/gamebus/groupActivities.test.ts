@@ -6,6 +6,7 @@ import {
   getRawKitchenGroupActivitiesInput,
   getRawKitchenSelfActivitiesInput,
   getRawKitchenSkillsTrainerActivitiesInput,
+  summarizeKitchenSkillsTrainerInput,
   KITCHEN_GROUP_ACTIVITIES_REQUEST_KEY,
   KITCHEN_GROUP_INPUT_COLLECTION_KEY,
   KITCHEN_SKILLS_TRAINER_INPUT_COLLECTION_KEY,
@@ -73,5 +74,39 @@ describe('groupActivities input adapter', () => {
     ];
     expect(filterActivitiesByTemplateReference(activities, 'chefForecast')).toHaveLength(1);
     expect(getActivityTemplateReference(activities[2])).toBe('studentLunchCheckin');
+  });
+
+  it('summarizes kitchenSkillsTrainerInput without falling back to kitchenGroupInput', () => {
+    expect(
+      summarizeKitchenSkillsTrainerInput({
+        [KITCHEN_SKILLS_TRAINER_INPUT_COLLECTION_KEY]: {
+          [KITCHEN_GROUP_ACTIVITIES_REQUEST_KEY]: [
+            { template: { slug: 'trimSmart' } },
+            { template: { slug: 'portionPrecision' } },
+            { template: { slug: 'trimSmart' } },
+          ],
+        },
+        [KITCHEN_GROUP_INPUT_COLLECTION_KEY]: {
+          [KITCHEN_GROUP_ACTIVITIES_REQUEST_KEY]: [{ template: { slug: 'chefForecast' } }],
+        },
+      }),
+    ).toEqual({
+      collectionPresent: true,
+      activitiesDefined: true,
+      activityCount: 3,
+      templateCounts: { trimSmart: 2, portionPrecision: 1 },
+    });
+    expect(
+      summarizeKitchenSkillsTrainerInput({
+        [KITCHEN_GROUP_INPUT_COLLECTION_KEY]: {
+          [KITCHEN_GROUP_ACTIVITIES_REQUEST_KEY]: [{ template: { slug: 'chefForecast' } }],
+        },
+      }),
+    ).toEqual({
+      collectionPresent: false,
+      activitiesDefined: false,
+      activityCount: 0,
+      templateCounts: {},
+    });
   });
 });

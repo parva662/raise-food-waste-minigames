@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { KitchenSkillsTrainerInputDebug } from '@/products/kitchen-skills-challenge/surfaces/trainer/KitchenSkillsTrainerInputDebug';
 import { KitchenSkillsTrainerReviewForm } from '@/products/kitchen-skills-challenge/surfaces/trainer/KitchenSkillsTrainerReviewForm';
 import { KitchenSkillsSessionProvider, useKitchenSkillsSession } from '@/products/kitchen-skills-challenge/domain/session/KitchenSkillsSessionContext';
 import { SessionEvidence } from '@/products/kitchen-skills-challenge/surfaces/shared/SessionEvidence';
@@ -97,6 +98,7 @@ function KitchenSkillsTrainerBody() {
 export function KitchenSkillsTrainerApp() {
   return (
     <KitchenSkillsSessionProvider>
+      <KitchenSkillsTrainerInputDebug />
       <KitchenSkillsTrainerBody />
     </KitchenSkillsSessionProvider>
   );

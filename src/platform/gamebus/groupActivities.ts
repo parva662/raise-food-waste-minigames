@@ -89,6 +89,37 @@ export function getActivityTemplateReference(activity: unknown): string | null {
   return readGameBusSlug(template) ?? null;
 }
 
+export function countActivityTemplateReferences(activities: readonly unknown[]): Record<string, number> {
+  const counts: Record<string, number> = {};
+  for (const activity of activities) {
+    const ref = getActivityTemplateReference(activity) ?? '(missing)';
+    counts[ref] = (counts[ref] ?? 0) + 1;
+  }
+  return counts;
+}
+
+export type KitchenSkillsTrainerInputSummary = {
+  collectionPresent: boolean;
+  activitiesDefined: boolean;
+  activityCount: number;
+  templateCounts: Record<string, number>;
+};
+
+/** Compact `kitchenSkillsTrainerInput.activities` summary for `gamebusDebug=1` logs. */
+export function summarizeKitchenSkillsTrainerInput(
+  payload: GameBusInputCollectionsPayload | null,
+): KitchenSkillsTrainerInputSummary {
+  const keys = payload ? Object.keys(payload) : [];
+  const raw = getRawKitchenSkillsTrainerActivitiesInput(payload);
+  const activities = extractGroupActivities(raw);
+  return {
+    collectionPresent: keys.includes(KITCHEN_SKILLS_TRAINER_INPUT_COLLECTION_KEY),
+    activitiesDefined: raw !== undefined,
+    activityCount: activities.length,
+    templateCounts: countActivityTemplateReferences(activities),
+  };
+}
+
 export function filterActivitiesByTemplateReference(
   activities: readonly unknown[],
   templateReference: string,

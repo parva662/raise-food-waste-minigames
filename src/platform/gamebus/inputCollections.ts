@@ -9,6 +9,7 @@ export {
   getRawKitchenGroupActivitiesInput,
   getRawKitchenSelfActivitiesInput,
   getRawKitchenSkillsTrainerActivitiesInput,
+  summarizeKitchenSkillsTrainerInput,
 } from '@/platform/gamebus/groupActivities';
 
 /** Canonical GameBus Input Collection key (admin configuration). */

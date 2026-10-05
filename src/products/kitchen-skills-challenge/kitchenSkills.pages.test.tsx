@@ -44,6 +44,7 @@ describe('Kitchen Day page split', () => {
     await waitFor(() => {
       expect(screen.getByTestId('kitchen-day-tutor-page')).toBeInTheDocument();
     });
+    expect(screen.queryByTestId('kitchen-day-tutor-debug')).not.toBeInTheDocument();
   });
 
   it('excludes other actors from student progress', async () => {
@@ -158,5 +159,34 @@ describe('Kitchen Day page split', () => {
       expect(screen.getByTestId('kitchen-day-progress-trim-carrot')).toBeInTheDocument();
     });
     expect(screen.getByText('No tutor assessment yet.')).toBeInTheDocument();
+  });
+
+  it('reports kitchenSkillsTrainerInput feed counts on #/kitchen-day-tutor?gamebusDebug=1', async () => {
+    setHash('#/kitchen-day-tutor?gamebusDebug=1');
+    ingestInputCollectionsForTests({
+      inputCollectionPari: { me: { id: 'user-1', firstName: 'Student', lastName: 'One' } },
+      kitchenSkillsTrainerInput: { activities: [] },
+    });
+    render(<AppRouter />);
+    await waitFor(() => {
+      expect(screen.getByTestId('kitchen-day-tutor-debug-collection-keys')).toHaveTextContent(
+        'inputCollectionPari, kitchenSkillsTrainerInput',
+      );
+    });
+    expect(screen.getByTestId('kitchen-day-tutor-debug-collection-object-keys')).toHaveTextContent('activities');
+    expect(screen.getByTestId('kitchen-day-tutor-debug-collection-shape')).toHaveTextContent('object');
+    expect(screen.getByTestId('kitchen-day-tutor-debug-activities-shape')).toHaveTextContent('array');
+    expect(screen.getByTestId('kitchen-day-tutor-debug-collection-raw')).toHaveTextContent('_keys');
+    expect(screen.getByTestId('kitchen-day-tutor-debug-activities-raw')).toHaveTextContent('"length": 0');
+    expect(screen.getByTestId('kitchen-day-tutor-debug-activity-count')).toHaveTextContent('0');
+    expect(screen.getByTestId('kitchen-day-tutor-debug-template-counts')).toHaveTextContent('(none)');
+    expect(screen.getByTestId('kitchen-day-tutor-debug-actors')).toHaveTextContent('(none)');
+    expect(screen.getByTestId('kitchen-day-tutor-debug-parsed-trim')).toHaveTextContent('0');
+    expect(screen.getByTestId('kitchen-day-tutor-debug-parsed-rescue')).toHaveTextContent('0');
+    expect(screen.getByTestId('kitchen-day-tutor-debug-parsed-portion')).toHaveTextContent('0');
+    expect(screen.getByTestId('kitchen-day-tutor-debug-parsed-review')).toHaveTextContent('0');
+    expect(screen.getByTestId('kitchen-day-tutor-debug-missing-actor')).toHaveTextContent('0');
+    expect(screen.getByTestId('kitchen-day-tutor-debug-unparseable')).toHaveTextContent('0');
+    expect(screen.getByTestId('kitchen-day-tutor-debug-session-count')).toHaveTextContent('0');
   });
 });

@@ -2304,6 +2304,10 @@ ul {
   word-break: break-word;
 }
 
+.kitchen-day-tutor-debug__raw {
+  max-height: 20rem;
+}
+
 /* Chef results (read-only simulation dashboard) */
 .chef-results-page {
   max-width: 1100px;
