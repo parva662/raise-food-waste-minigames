@@ -74,6 +74,9 @@ export function buildKitchenSkillsStudentProgressSessions(
   for (const activity of activities) {
     const review = parsePersistedReviewEntry(activity);
     if (!review) continue;
+    // Ensure a session shell exists so a persisted review still surfaces when
+    // evidence for that sessionId is missing/unparseable in the same self feed.
+    ensure(activity, review.sessionId, review.sessionDate);
     // Self Progress is one student; sessions are keyed by sessionId. Actor ids on
     // evidence vs review can disagree (fallback "self" vs real actor), so match by session only.
     attachModuleReviewToMatchingSessions(sessions.values(), activity, review, {

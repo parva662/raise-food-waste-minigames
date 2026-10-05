@@ -5645,6 +5645,280 @@ ul {
   height: auto;
 }
 
+.kitchen-day-progress-page {
+  max-width: 52rem;
+}
+
+.kitchen-day-progress-header {
+  margin: 0 0 var(--spacing-md);
+}
+
+.kitchen-day-progress-header__title {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--color-primary);
+}
+
+.kitchen-day-progress-header__lead {
+  margin: 0.2rem 0 0;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
+}
+
+.kitchen-day-progress-primary-tabs,
+.kitchen-day-progress-metric-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-xs);
+  margin: 0 0 var(--spacing-md);
+  padding: 0.2rem;
+  border: 1px solid var(--color-border-light);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+}
+
+.kitchen-day-progress-primary-tabs__tab,
+.kitchen-day-progress-metric-tabs__tab {
+  min-height: 2.25rem;
+  padding: 0.35rem 0.85rem;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+}
+
+.kitchen-day-progress-primary-tabs__tab--active,
+.kitchen-day-progress-metric-tabs__tab--active {
+  background: var(--color-primary-light);
+  color: var(--color-primary-dark);
+}
+
+.kitchen-day-progress-empty {
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
+}
+
+.kitchen-day-progress-overview-grid {
+  display: grid;
+  gap: var(--spacing-sm);
+}
+
+.kitchen-day-progress-overview-card,
+.kitchen-day-progress-tutor-card,
+.kitchen-day-progress-chart {
+  margin: 0 0 var(--spacing-md);
+  padding: 0.85rem 1rem;
+  border: 1px solid var(--color-border-light);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+}
+
+.kitchen-day-progress-overview-card__header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-sm);
+  margin-bottom: var(--spacing-sm);
+}
+
+.kitchen-day-progress-overview-card__header h3 {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.kitchen-day-progress-overview-card__feedback,
+.kitchen-day-progress-tutor-card__feedback {
+  margin: 0.5rem 0;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
+  line-height: 1.4;
+}
+
+.kitchen-day-progress-summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(7.5rem, 1fr));
+  gap: var(--spacing-sm);
+  margin: 0 0 var(--spacing-md);
+}
+
+.kitchen-day-progress-summary--compact {
+  margin-bottom: var(--spacing-sm);
+}
+
+.kitchen-day-progress-summary dt,
+.kitchen-day-progress-tutor-card__scores dt {
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+}
+
+.kitchen-day-progress-summary dd,
+.kitchen-day-progress-tutor-card__scores dd {
+  margin: 0.15rem 0 0;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.kitchen-day-progress-chart {
+  max-width: 36rem;
+}
+
+.kitchen-day-progress-chart__caption {
+  margin: 0 0 0.35rem;
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.kitchen-day-progress-chart__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-bottom: 0.35rem;
+  font-size: 0.75rem;
+  color: var(--color-text-secondary);
+}
+
+.kitchen-day-progress-chart svg {
+  display: block;
+  width: 100%;
+  max-height: 14rem;
+  height: auto;
+}
+
+.kitchen-day-progress-chart__axis {
+  stroke: var(--color-border);
+  stroke-width: 1;
+}
+
+.kitchen-day-progress-chart__line {
+  stroke: var(--color-primary);
+  stroke-width: 2.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.kitchen-day-progress-chart__dot {
+  fill: var(--color-surface);
+  stroke: var(--color-primary);
+  stroke-width: 2;
+}
+
+.kitchen-day-progress-chart__tick {
+  fill: var(--color-text-muted);
+  font-size: 10px;
+}
+
+.kitchen-day-progress-section {
+  margin: 0 0 var(--spacing-lg);
+}
+
+.kitchen-day-progress-section__title {
+  margin: 0 0 var(--spacing-sm);
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.kitchen-day-progress-section__eyebrow {
+  margin: 0 0 var(--spacing-xs);
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+}
+
+.kitchen-day-progress-tutor-card__scores {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--spacing-sm);
+  margin: 0;
+}
+
+.kitchen-day-progress-tutor-card__session {
+  margin: 0.35rem 0 0;
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+}
+
+.kitchen-day-progress-tutor-card--compact {
+  margin: 0;
+  padding: 0.7rem 0.85rem;
+  background: color-mix(in srgb, var(--color-success-bg) 40%, var(--color-surface));
+}
+
+.kitchen-day-progress-history-details {
+  margin-top: var(--spacing-sm);
+}
+
+.kitchen-day-progress-history-details summary {
+  cursor: pointer;
+  color: var(--color-primary-muted);
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+}
+
+.kitchen-day-progress-tutor-history,
+.kitchen-day-progress-session-list {
+  display: grid;
+  gap: var(--spacing-sm);
+  list-style: none;
+  margin: var(--spacing-sm) 0 0;
+  padding: 0;
+}
+
+.kitchen-day-progress-session-card {
+  border: 1px solid var(--color-border-light);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  padding: 0.7rem 0.85rem;
+}
+
+.kitchen-day-progress-session-card summary {
+  display: grid;
+  gap: 0.35rem;
+  cursor: pointer;
+  list-style: none;
+}
+
+.kitchen-day-progress-session-card summary::-webkit-details-marker {
+  display: none;
+}
+
+.kitchen-day-progress-session-card__date {
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.kitchen-day-progress-session-card__metrics,
+.kitchen-day-progress-session-card__note {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+}
+
+.kitchen-day-progress-session-card__body {
+  margin-top: var(--spacing-sm);
+  padding-top: var(--spacing-sm);
+  border-top: 1px solid var(--color-border-light);
+}
+
+@media (max-width: 40rem) {
+  .kitchen-day-progress-primary-tabs__tab,
+  .kitchen-day-progress-metric-tabs__tab {
+    flex: 1 1 auto;
+  }
+}
+
 .kitchen-day-review-header {
   display: flex;
   flex-direction: column;

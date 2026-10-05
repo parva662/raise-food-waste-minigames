@@ -20,7 +20,7 @@ System comparison never pre-fills tutor scores. Analytics are never stored as ac
 | Surface | Route | Scope |
 |---------|-------|-------|
 | Session Review | `#/kitchen-day/review` | Current locked Kitchen Day only; read-only; per-module tutor readbacks |
-| Student Progress | `#/kitchen-day-progress` | Own history; Overview / Progress; module reviews shown separately; no leaderboard |
+| Student Progress | `#/kitchen-day-progress` | Own history; Overview / Progress; Progress uses module tabs (Trim / Rescue / Portion) with compact trends, session history, and per-module tutor assessment history; no leaderboard |
 
 Neither posts measurement activities. Progress does not invent ranking or an overall tutor score.
 
@@ -46,7 +46,7 @@ Stored properties: `sessionId`, `sessionDate`, `submittedAt`, `reviewedGame`, `t
 
 ## 4. Retrieval
 
-- Student Session Review / challenge / Student Progress: `kitchenGroupInputSelf.activities` → `GET /api/me/activities`. Progress shows Trim / Reuse / Portion before tutor review exists. When attaching `wastePracticeReview` onto Progress sessions, match by `sessionId` + `reviewedGame` (do not require `activity.actor.id` equality — self evidence may use a fallback actor id while the review carries the real actor, or vice versa).
+- Student Session Review / challenge / Student Progress: `kitchenGroupInputSelf.activities` → `GET /api/me/activities`. Progress shows Trim / Reuse / Portion before tutor review exists. When attaching `wastePracticeReview` onto Progress sessions, match by `sessionId` + `reviewedGame` (do not require `activity.actor.id` equality — self evidence may use a fallback actor id while the review carries the real actor, or vice versa). A review may create a session shell when evidence for that `sessionId` is absent. With `?gamebusDebug=1` (or DEV), Progress logs a compact self-feed review summary (`kitchen-skills-progress.self-feed-reviews`) so missing tutor assessments can be diagnosed without changing data sources.
 - Tutor dashboard: `kitchenSkillsTrainerInput.activities` → `GET /api/groups/activities` filtered to Kitchen Skills templates (`src/platform/gamebus/groupActivities.ts` `getRawKitchenSkillsTrainerActivitiesInput`), grouped by actor (actor match required when attaching reviews). Do not reuse `kitchenGroupInput`.
 - Session Review in the student embed hydrates reviews from **both** self and trainer input collections (deduped by `persistId` or `sessionId` + `reviewedGame`).
 

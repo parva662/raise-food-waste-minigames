@@ -96,6 +96,29 @@ describe('Student Progress sessions from kitchenGroupInputSelf', () => {
     ).toEqual([]);
   });
 
+  it('surfaces a tutor review even when no evidence activity exists for that sessionId', () => {
+    const sessions = buildKitchenSkillsStudentProgressSessions([
+      {
+        id: 'act-review-only',
+        actor: { id: 'user-1', name: 'Student One' },
+        template: { slug: 'wastePracticeReview' },
+        properties: [
+          { template: { slug: 'sessionId' }, value: { value: sessionId } },
+          { template: { slug: 'sessionDate' }, value: { value: '2026-09-23' } },
+          { template: { slug: 'submittedAt' }, value: { value: '2026-09-23T15:00:00.000Z' } },
+          { template: { slug: 'reviewedGame' }, value: { value: 'trimSmart' } },
+          { template: { slug: 'timeEfficiencyScore' }, value: { value: 0 } },
+          { template: { slug: 'preparationQualityScore' }, value: { value: 5 } },
+          { template: { slug: 'chefFeedback' }, value: { value: 'Keep the tip down.' } },
+        ],
+      },
+    ]);
+    expect(sessions).toHaveLength(1);
+    expect(sessions[0]?.moduleReviews.trimSmart?.timeEfficiencyScore).toBe(0);
+    expect(sessions[0]?.moduleReviews.trimSmart?.chefFeedback).toBe('Keep the tip down.');
+    expect(sessions[0]?.trimEntries).toEqual([]);
+  });
+
   it('attaches a tutor review even when actor ids disagree with self evidence', () => {
     const sessions = buildKitchenSkillsStudentProgressSessions(
       [
