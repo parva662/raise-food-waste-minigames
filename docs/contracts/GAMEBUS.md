@@ -1,10 +1,17 @@
 # GameBus documentation index
 
-**Status:** EXTERNAL / GAMEBUS CONTRACT — this page is an index plus RAISE conventions. It is not a copy of GameBus docs.
+**Documentation role:** Reference — **single in-repo index** to official GameBus documentation.
+**Status:** EXTERNAL / GAMEBUS CONTRACT — index plus clearly separated RAISE conventions and live notes. It is not a copy of GameBus docs.
 
 Official docs: [docs.next.gamebus.eu](https://docs.next.gamebus.eu)
 
-This SPA is loaded as a GameBus iframe. Read the official pages before changing `postMessage` behaviour. Do not invent protocol fields that those pages do not describe.
+This SPA is loaded as a GameBus iframe. Read the official pages before changing `postMessage` behaviour. Do not invent protocol fields that those pages do not describe. Do not mirror Core API manuals or full GameBus docs into this repository.
+
+Keep these three layers distinct when reading or editing this file:
+
+1. **Official GameBus contract** — what [docs.next.gamebus.eu](https://docs.next.gamebus.eu) documents.
+2. **RAISE conventions** — this repo’s agreed usage that is not claimed as official sample-JSON fields.
+3. **Empirically verified live behaviour** — observed on foodtracker / deployments; may differ from docs until confirmed upstream.
 
 ## Official pages
 

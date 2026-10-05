@@ -1,5 +1,7 @@
 # Archive
 
+**Documentation role:** Repository lifecycle / governance (not a Diátaxis type).
+
 Superseded documentation retained for history. Content here is **HISTORICAL** unless otherwise labeled.
 
 | Document | Notes |

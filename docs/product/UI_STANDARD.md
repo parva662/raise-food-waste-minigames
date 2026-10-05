@@ -1,6 +1,8 @@
 # Application UI and UX standard
 
-**Source:** existing production screens in this repository (`src/app/styles.css` tokens, chef results dashboards, chef forecast, service closeout, Kitchen Skills Challenge). Kitchen Day must reuse this language. Do not invent a second design system.
+**Documentation role:** Reference (shared visual / UX rules).
+
+**Source:** existing production screens in this repository (`src/app/styles.css` tokens, chef results dashboards, chef forecast, service closeout, Kitchen Skills Challenge). Kitchen Skills Challenge must reuse this language (public hashes remain `#/kitchen-day*`). Do not invent a second design system.
 
 **Practice references (behaviour, not brand):**
 

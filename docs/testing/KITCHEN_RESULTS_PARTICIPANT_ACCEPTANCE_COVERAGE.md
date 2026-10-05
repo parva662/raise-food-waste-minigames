@@ -11,7 +11,7 @@ Route: `#/chef-results`. Timezone: `Europe/Helsinki`.
 1. Participant dashboard date = current Europe/Helsinki calendar day; rolls at midnight (not Kitchen Forecast 08:30).
 2. Weekend / explicit closure → "No service today"; Progress remains available.
 3. Historical Progress is independent of the current waiting / no-forecast / no-service state.
-4. Progress chart: 0 → empty; 1 → show data point (no trend claim); 2+ → chart + trend.
+4. Progress IA: Recent (last 8) / Trends (Week/Month/Year) / History; chart 0 → empty; 1 → show data point (no trend claim); 2+ → chart + trend.
 5. Other-staff comparison from **1** peer; label "Other staff" (1) / "Other staff median" (2+).
 6. Missing forecast ≠ zero performance; omit from aggregation.
 7. Closeout without personal forecast still shows actual kitchen outcome.
@@ -56,7 +56,7 @@ dates with both eligible forecast (actor match) and finalized closeout, filtered
    in the delivered `INPUT_COLLECTIONS` (payload/platform slice) — **most likely for live embed**.
 2. Authenticated `user.id` does not match forecast `actorId` (identity mismatch).
 3. Parser / eligibility rejection of historical forecasts.
-4. Current calendar **Month** empty while **Year** has history is period filtering, not waiting.
+4. Current Trends **Month** empty while **Year** has history is period filtering, not waiting.
 
 Distinguish: product logic (fixed here) vs repository bugs (peer threshold, chart, dessert) vs
 live GameBus payload instability.

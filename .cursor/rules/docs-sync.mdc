@@ -1,7 +1,17 @@
 ---
-description: Update canonical docs in the same change when documented behaviour changes
+description: Update canonical docs in the same change when documented behaviour changes; follow Diátaxis
 alwaysApply: true
 ---
+
+Documentation in this repository follows the official Diátaxis method:
+
+https://diataxis.fr/start-here/
+
+Diátaxis has exactly four documentation types: Tutorials, How-to guides, Reference, and Explanation.
+Repository areas such as `docs/current-state/`, `docs/decisions/`, and `docs/archive/` are lifecycle/governance folders, not additional Diátaxis types.
+
+When unsure how to classify or structure a documentation change, consult the official Diátaxis site (start-here and compass) before inventing a new category or mixing types unnecessarily.
+Use `docs/README.md` as the authoritative in-repo documentation map and authority model.
 
 If an implementation change alters approved behavior, architecture, API usage, routes, schemas, or UX, update the affected canonical documentation in the same change.
 

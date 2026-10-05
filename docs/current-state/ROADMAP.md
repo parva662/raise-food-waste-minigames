@@ -1,5 +1,7 @@
 # Roadmap — GameBus integration
 
+**Documentation role:** Repository lifecycle / current-state (not a Diátaxis type). Integration follow-ups; not product acceptance SoT.
+
 > Formerly root `NEXT_STEPS.md`. Content preserved; paths updated for the documentation layout.
 
 - **Student workflow:** activity template **`studentLunchCheckin`** (seven always-required quantity-aware properties + up to four conditional item IDs — mapper implemented in repo).
@@ -159,7 +161,7 @@ Full JSON Schemas and examples: `docs/contracts/STUDENT_LUNCH_GAMEBUS.md`.
 | Fixture current user | Default `fixture-user-c`; dev selector + `sessionStorage` for calculation testing only |
 | **GameBus authenticated identity** | **Confirmed** — `inputCollectionPari.me` (`/api/me`); parses `id`, `firstName`, `lastName`; debug panel with `?gamebusDebug=1` only |
 
-**Participant (`#/chef-results`):** summary cards, category diverging visual, other-staff comparison, Week/Month/Year Progress (history independent of current waiting state), lightweight “Kitchen progress”. No coworker names/IDs.
+**Participant (`#/chef-results`):** summary cards, category diverging visual, other-staff comparison, Progress as Recent (last 8 completed services) / Trends (Week/Month/Year) / History (paged archive; history independent of current waiting state), lightweight “Kitchen progress”. No coworker names/IDs.
 
 **Admin (`#/chef-results-admin`):** all-staff research table with real actor names when embedded; full calculation detail, weekly raw aggregation.
 

@@ -1,5 +1,7 @@
 # GameBus and integration contracts
 
+**Documentation role:** Reference index (RAISE product schemas and the official GameBus doc index). Admin setup checklists linked from here may be How-to guides.
+
 | Contract | Path |
 |----------|------|
 | GameBus official docs index | [`GAMEBUS.md`](GAMEBUS.md) |

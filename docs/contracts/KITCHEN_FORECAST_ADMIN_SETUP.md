@@ -1,5 +1,7 @@
 # GameBus admin setup — `chefForecast`
 
+**Documentation role:** How-to guide (GameBus admin checklist). Property tables inside are reference facts for that recipe.
+
 **Purpose:** Manual checklist to configure the existing **`chefForecast`** activity in GameBus admin.  
 **Do not** create `chefForecastV2`, delete global property templates, or edit live config from this repository.  
 **Chef app URL (after setup):** `https://parva662.github.io/raise-food-waste-minigames/#/chef`

@@ -1,14 +1,17 @@
-# Kitchen Day — GameBus slug contract
+# Kitchen Skills Challenge — GameBus slug contract
 
+**Documentation role:** Reference (locked activity / property vocabulary).
 **Status:** Locked property vocabulary — **APPROVED PRODUCT TARGET**
 **Live environment:** `https://foodtracker.gamebus.eu`
+
+Product name: **Kitchen Skills Challenge**. Public hashes and the session id prefix remain legacy-stable technical identifiers (`#/kitchen-day*`, `kitchen-day:…`) — do not rename those URLs or prefixes to match the product name.
 
 Exact activity + property **slugs** for client mappers. Not a product brief.
 Payload shape: each property posts `{ "value": … }` (plus `unit` where the schema requires it, e.g. `duration`).
 
-`sessionId` is an opaque application identity. In embedded Kitchen Day it is generated deterministically as `kitchen-day:<taskId>:<actorId>:<sessionDate>` from the TASK, authenticated `inputCollectionPari.me`, and the locked Helsinki session date. It uniquely identifies one student Kitchen Day. Do **not** add `studentId` / `participantId` / actor id as Kitchen Day activity properties.
+`sessionId` is an opaque application identity. In the embedded Kitchen Skills Challenge task it is generated deterministically as `kitchen-day:<taskId>:<actorId>:<sessionDate>` from the TASK, authenticated `inputCollectionPari.me`, and the locked Helsinki session date. It uniquely identifies one student Kitchen Skills session. Do **not** add `studentId` / `participantId` / actor id as Kitchen Skills activity properties.
 
-**Rule:** no Kitchen Day code, spec, or Gherkin may use a property name that is not listed here as a locked slug.
+**Rule:** no Kitchen Skills Challenge code, spec, or Gherkin may use a property name that is not listed here as a locked slug.
 
 ---
 
@@ -25,11 +28,11 @@ Payload shape: each property posts `{ "value": … }` (plus `unit` where the sch
 
 ## `trimSmart` — one ingredient preparation entry
 
-Within one Kitchen Day session, a student does **not** create more than one Trim Smart entry for the same `ingredientId`. Multiple **different** ingredients are expected.
+Within one Kitchen Skills session, a student does **not** create more than one Trim Smart entry for the same `ingredientId`. Multiple **different** ingredients are expected.
 
 | Slug | Required | Notes |
 |------|----------|-------|
-| `sessionId` | yes | Kitchen Day session |
+| `sessionId` | yes | Kitchen Skills session (`kitchen-day:…` prefix) |
 | `sessionDate` | yes | `format: date`, Europe/Helsinki operational date |
 | `submittedAt` | yes | `format: date-time` |
 | `ingredientId` | yes | non-empty string; keys reuse join and kitchen-reference lookup |
@@ -56,7 +59,7 @@ Join to Trim Smart with **`sessionId` + `ingredientId`** (unique within one stud
 
 | Slug | Required | Notes |
 |------|----------|-------|
-| `sessionId` | yes | same Kitchen Day as the Trim entry |
+| `sessionId` | yes | same Kitchen Skills session as the Trim entry |
 | `sessionDate` | yes | `format: date` |
 | `ingredientId` | yes | same id as the Trim entry |
 | `reusableWasteGrams` | yes | number ≥ 0; ≤ that Trim entry's `actualWasteGrams` (client-side) |
@@ -112,7 +115,7 @@ This activity does **not** use `ingredientCategory`.
 
 The GameBus activity slug remains `wastePracticeReview`. The product UI wording is Tutor assessment.
 
-One review per student Kitchen Day module (`reviewedGame`), not one judgement per activity or ingredient. A session may have up to three reviews (Trim Smart, Rescue & Reuse, Portion Precision) when each has evidence.
+One review per student Kitchen Skills module (`reviewedGame`), not one judgement per activity or ingredient. A session may have up to three reviews (Trim Smart, Rescue & Reuse, Portion Precision) when each has evidence.
 
 | Slug | Required | Notes |
 |------|----------|-------|

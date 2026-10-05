@@ -1,7 +1,7 @@
 # Kitchen Results (staff and management dashboards)
 
-**Documentation role:** Canonical product navigation page for results views.
-**Does not invent new product rules** — organizes existing documentation.
+**Documentation role:** Explanation — canonical product navigation page for results views.
+**Does not invent new product rules** — organizes existing documentation. Acceptance SoT: approved `.feature` files; implementation: `src/products/forecast-results/` + `docs/current-state/`.
 
 ---
 
@@ -21,7 +21,7 @@ Two surfaces exist in the current repository:
 | Role | Path | Status |
 |------|------|--------|
 | **Implementation status** | [`../current-state/IMPLEMENTATION_STATUS.md`](../current-state/IMPLEMENTATION_STATUS.md) | **CURRENT IMPLEMENTATION** |
-| **Study / system plan** | [`RAISE_BARLAUREA_MASTER_PLAN.md`](RAISE_BARLAUREA_MASTER_PLAN.md) | Mixed study + product |
+| **Study / system explanation** | [`RAISE_BARLAUREA_MASTER_PLAN.md`](RAISE_BARLAUREA_MASTER_PLAN.md) | Explanation only — not product SoT |
 | **Legacy mixed spec** | [`../archive/SPEC_LEGACY.md`](../archive/SPEC_LEGACY.md) §11 | **HISTORICAL** |
 | **Forecast contract (upstream data)** | [`../contracts/KITCHEN_FORECAST_GAMEBUS.md`](../contracts/KITCHEN_FORECAST_GAMEBUS.md) | **EXTERNAL / GAMEBUS CONTRACT** |
 | **Roadmap** | [`../current-state/ROADMAP.md`](../current-state/ROADMAP.md) | Integration / follow-ups |
@@ -37,6 +37,7 @@ Two surfaces exist in the current repository:
 - Weekend / explicitly closed weekday → header shows that calendar date with status **No service today**; Progress remains available.
 - Missing menu does not make an operational weekday a non-service day.
 - Historical Progress is independent of the current service waiting / no-forecast / no-service state.
+- Participant Progress (`#/chef-results`): primary tabs **Recent** (last 8 completed services, Recent-only chart), **Trends** (Week / Month / Year calendar views), and **History** (filtered / paged archive). Kitchen-context scope label stays on the kitchen progress block.
 - Progress chart: 0 observations → empty; 1 → show data (no trend claim); 2+ → chart + trend.
 - Other-staff comparison from **one** peer onward; label "Other staff" (1) / "Other staff median" (2+).
 - Missing forecast is omitted from aggregation (not zero performance).

@@ -128,6 +128,8 @@ For new games or product changes:
 
 Documentation is part of implementation, not an optional follow-up.
 
+Documentation structure and classification follow the official Diátaxis method ([diataxis.fr/start-here](https://diataxis.fr/start-here/)). Use [`docs/README.md`](./docs/README.md) as the authoritative documentation map. Cursor agents must also follow [`.cursor/rules/docs-sync.mdc`](./.cursor/rules/docs-sync.mdc).
+
 Whenever an approved product, technical, integration, route, data-model, configuration, testing, or architecture change is implemented:
 
 1. Inspect all repository documentation that may describe the changed behaviour.

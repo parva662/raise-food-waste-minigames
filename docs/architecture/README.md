@@ -1,5 +1,7 @@
 # Architecture
 
+**Documentation role:** Explanation (one-SPA layout and GameBus boundary) with architecture facts used as reference.
+
 This repository is **one React 19 + Vite 6 + TypeScript SPA**, **one npm package**, and **one GitHub Pages deployment**. It exposes **multiple GameBus Custom Embed hash routes**. Product areas are source folders, not Git branches. Roles are not source-tree architecture.
 
 ## One-SPA layout

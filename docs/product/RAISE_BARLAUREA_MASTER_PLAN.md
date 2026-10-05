@@ -1,10 +1,11 @@
-# RAISE BarLaurea — study and system master plan
+# RAISE BarLaurea — study and system explanation
 
 > Location: `docs/product/RAISE_BARLAUREA_MASTER_PLAN.md` (moved from repository root).
-> Prefer product navigation pages under `docs/product/` and approved `.feature` files for acceptance rules. Mixed historical statements in this plan do not override approved contracts or current source.
+> **Diátaxis:** Explanation only (study / system narrative). **Not** an authoritative product, contract, or implementation source of truth.
+> Prefer product navigation pages under `docs/product/`, approved `.feature` files for acceptance rules, `docs/contracts/` for GameBus schemas, and current `src/` + `docs/current-state/` for what ships on `main`. Mixed or aging statements in this plan do not override those sources.
 
-**Repository:** `gamebus-lunch-dnd-v2` (GitHub Pages: `raise-food-waste-minigames`)
-**Status:** Living document — authoritative for study purpose and product boundaries.
+**Repository:** `parva662/raise-food-waste-minigames` (GitHub Pages deploy of this SPA)
+**Status:** Study / system **explanation** — demoted from authoritative product status.
 
 ---
 

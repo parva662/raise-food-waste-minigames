@@ -1,5 +1,7 @@
 # Implementation status (initial)
 
+**Documentation role:** Repository lifecycle / current-state (not a Diátaxis type). Living status of approved targets vs code vs live GameBus on `main`.
+
 **Baseline commit (pre-implementation docs):** `87748b36c3e02208c3cc33766a4003d33ef81819` (`main`)
 
 **Purpose:** Distinguish **approved product targets**, **current code**, and **pending** decisions.
@@ -101,7 +103,7 @@ Cannot be closed from this repo’s Vitest stack (no browser E2E):
 
 | | |
 |--|--|
-| **Status** | **Implemented** on `main` (`#/chef-results`; Helsinki midnight dashboard date; shared calculation engine; GameBus group INPUT_COLLECTIONS when embedded; fixtures in standalone) |
+| **Status** | **Implemented** on `main` (`#/chef-results`; Helsinki midnight dashboard date; shared calculation engine; Progress Recent / Trends / History; GameBus group INPUT_COLLECTIONS when embedded; fixtures in standalone) |
 | **Gherkin** | [`../../features/kitchen/kitchen-results-participant.feature`](../../features/kitchen/kitchen-results-participant.feature) |
 | **Coverage** | [`../testing/KITCHEN_RESULTS_PARTICIPANT_ACCEPTANCE_COVERAGE.md`](../testing/KITCHEN_RESULTS_PARTICIPANT_ACCEPTANCE_COVERAGE.md) |
 | **Migration / doc review** | Legacy §11 is historical only; canonical product rules are in Gherkin + [`../product/KITCHEN_RESULTS.md`](../product/KITCHEN_RESULTS.md) |

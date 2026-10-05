@@ -1,5 +1,7 @@
 # Product documentation
 
+**Documentation role:** Explanation hubs (product intent / navigation). Acceptance behaviour lives in [`../../features/`](../../features/); schemas in [`../contracts/`](../contracts/).
+
 Canonical human-readable product pages live here. Start from [`../README.md`](../README.md).
 
 | Page | Topic |
@@ -9,7 +11,7 @@ Canonical human-readable product pages live here. Start from [`../README.md`](..
 | [`SERVICE_CLOSEOUT.md`](SERVICE_CLOSEOUT.md) | Service Closeout |
 | [`KITCHEN_RESULTS.md`](KITCHEN_RESULTS.md) | Staff + management results |
 | [`WASTE_CHALLENGES.md`](WASTE_CHALLENGES.md) | Practical kitchen family |
-| [`RAISE_BARLAUREA_MASTER_PLAN.md`](RAISE_BARLAUREA_MASTER_PLAN.md) | Study / system master plan |
+| [`RAISE_BARLAUREA_MASTER_PLAN.md`](RAISE_BARLAUREA_MASTER_PLAN.md) | Study / system explanation (not product SoT) |
 | [`UI_STANDARD.md`](UI_STANDARD.md) | Shared visual tokens plus UX density, form efficiency, and layout rules |
 | [`kitchen-skills-challenge/`](kitchen-skills-challenge/) | Kitchen Skills Challenge (slug contract, Trim, Reuse, Portion, dashboards, UX, blueprint). Public hashes remain `#/kitchen-day*`. Student GameBus: `SILENT_ACTIVITY` + `kitchenGroupInputSelf` (challenge, Session Review, Progress) + EXIT on Finish. Trainer: dedicated `kitchenSkillsTrainerInput` + `SILENT_ACTIVITY` review with `actors`. |
 
