@@ -77,7 +77,7 @@ Feature: Reuse suggestions connected to ingredient preparation
       And nobody is asked later whether the reuse actually happened
       And no reuse tutor score is awarded
       And the challenge complete summary is shown
-      And Finish challenge and Add more ingredients are both available
+      And Finish challenge is available
 
   Rule: Each ingredient may have its own suggestion
 

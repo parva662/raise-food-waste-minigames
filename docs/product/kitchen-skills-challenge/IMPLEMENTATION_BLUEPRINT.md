@@ -13,7 +13,7 @@
 |--------|----------|-------------|
 | Trim Smart | `trimSmart` | 1..n **different** recipe ingredients per session |
 | Rescue & Reuse | `rescueAndReuse` | 0..1 per `sessionId` + `ingredientId` |
-| Portion Precision | `portionPrecision` | 1 recipe per session |
+| Portion Precision | `portionPrecision` | 0..n recipes/components |
 | Tutor assessment | `wastePracticeReview` | 0..1 per `sessionId` + `reviewedGame` (module) |
 | Session Review / Student Progress / Tutor dashboard | — | read-only |
 

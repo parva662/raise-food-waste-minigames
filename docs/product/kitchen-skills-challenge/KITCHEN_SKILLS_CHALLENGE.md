@@ -25,7 +25,7 @@ Students record practical kitchen work on one operational day (Europe/Helsinki).
 
 ```text
 Kitchen Skills session (student actor + sessionId + sessionDate)
-  ├── Portion Precision entry (1 recipe per session)             → portionPrecision
+  ├── Portion Precision entry (0..n recipes/components)          → portionPrecision
   ├── Ingredient preparation entry (1..n different recipe ingredients)  → trimSmart
   │     └── Reuse suggestion (0..1 per ingredient)               → rescueAndReuse
   ├── Session Review (current session only, read-only)

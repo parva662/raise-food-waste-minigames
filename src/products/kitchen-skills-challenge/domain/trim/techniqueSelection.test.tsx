@@ -17,7 +17,7 @@ function setHash(hash: string) {
 
 async function openTechniqueStep(user: ReturnType<typeof userEvent.setup>) {
   await recordAnkanrintaPortion(user);
-  await selectTrimIngredient(user, 'ankka-rintafilee');
+  await selectTrimIngredient(user, 'ANKKA', 'ANKKA, RINTAFILEE');
   await user.click(screen.getByRole('button', { name: 'Continue' }));
   await user.type(screen.getByTestId('kitchen-day-starting-weight'), '5000');
   await user.click(screen.getByTestId('kitchen-day-weight-continue'));
@@ -77,8 +77,10 @@ describe('Trim Smart technique selection', () => {
     await user.click(screen.getByTestId('kitchen-day-timer-continue'));
     await user.type(screen.getByTestId('kitchen-day-actual-waste'), '450');
     await user.click(screen.getByTestId('kitchen-day-submit-trim'));
-    await user.click(screen.getByTestId('kitchen-day-nav-review'));
-    expect(screen.getByTestId('kitchen-day-trim-ankka-rintafilee')).toHaveTextContent('Julienne');
-    expect(screen.queryByRole('combobox')).not.toBeInTheDocument();
+    await user.click(screen.getByTestId('kitchen-day-continue-reuse'));
+    await user.type(screen.getByTestId('kitchen-day-reusable-waste'), '200');
+    await user.type(screen.getByTestId('kitchen-day-reuse-destination'), 'Stock');
+    await user.click(screen.getByTestId('kitchen-day-save-rescue'));
+    expect(screen.getByTestId('kitchen-day-finish-trim-ankka-rintafilee')).toHaveTextContent('Julienne');
   });
 });

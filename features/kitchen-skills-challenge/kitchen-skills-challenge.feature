@@ -55,32 +55,42 @@ Feature: Kitchen Skills Challenge connected session
     Scenario: Kitchen Day opens on Portion Precision
       When the student opens Kitchen Day
       Then Portion Precision is shown first
+      And the recipe is chosen with the searchable recipe combobox
       And every recipe ingredient actual and the final recipe weight are recorded before Save
 
-    Scenario: Trim uses the saved recipe ingredients
+    Scenario: Task tabs stay locked until the current task is complete
+      Given the student has started Portion Precision and has not saved the recipe
+      When the student tries to open Trim Smart, Reuse, or Session Review
+      Then the student stays on Portion Precision
+
+    Scenario: After the recipe is saved, Trim uses that recipe's ingredients
       Given the student recorded a Portion Precision recipe
-      When the student opens ingredient preparation
-      Then the ingredient is chosen from that recipe
+      Then Trim Smart is shown
+      And the ingredient is chosen from that recipe with a searchable list
       And unused recipe ingredients remain available
       And already recorded recipe ingredients are not offered again
 
-    Scenario: Save ingredient continues to Reuse
-      Given the student recorded a Portion Precision recipe
-      When the student saves an ingredient preparation entry
-      Then Reuse is shown for that ingredient
-      And the kitchen day stays open
+    Scenario: A started Trim ingredient must be finished before another choice
+      Given the student has started an ingredient preparation entry
+      When the ingredient has not been saved
+      Then Add another ingredient is not shown
+      And the student cannot open Portion Precision, Reuse, or Session Review
 
-    Scenario: Add more ingredients stays on Trim
-      Given the student recorded a Portion Precision recipe
-      When the student saves an ingredient preparation entry with Add more ingredients
-      Then another unused recipe ingredient can be prepared
-      And the kitchen day stays open
+    Scenario: After a Trim ingredient is saved the student chooses the next step
+      Given the student saved an ingredient preparation entry
+      Then the student can record another unused recipe ingredient
+      And the student can continue to Reuse
 
-    Scenario: Finish challenge is the only close
-      Given the challenge complete summary is shown
-      When the student chooses Add more ingredients
-      Then the kitchen day stays open
-      And Trim is shown
+    Scenario: A started Reuse task must be saved before leaving
+      Given the student has opened Reuse for a saved Trim ingredient
+      When the reuse suggestion has not been saved
+      Then the student cannot open Portion Precision, Trim Smart, or Session Review
+
+    Scenario: Finish challenge is only after a completed challenge
+      Given the student saved Portion Precision, at least one Trim ingredient, and Reuse
+      Then the challenge complete summary is shown
+      And Finish challenge is available
+      And Finish challenge was not available during Portion or Trim
       When the student chooses Finish challenge
       Then the kitchen day closes
 

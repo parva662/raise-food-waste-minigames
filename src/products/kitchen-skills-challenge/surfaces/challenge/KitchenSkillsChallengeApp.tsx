@@ -3,13 +3,10 @@ import { KitchenSkillsNav } from '@/products/kitchen-skills-challenge/surfaces/c
 import { KitchenSkillsSessionProvider, useKitchenSkillsSession } from '@/products/kitchen-skills-challenge/domain/session/KitchenSkillsSessionContext';
 import { KitchenSkillsPortionView } from '@/products/kitchen-skills-challenge/surfaces/challenge/PortionView';
 import { KitchenSkillsReuseView } from '@/products/kitchen-skills-challenge/surfaces/challenge/ReuseView';
-import { parseKitchenDaySection } from '@/app/routes';
+import { goToKitchenDaySection, parseKitchenDaySection } from '@/app/routes';
 import { SessionReviewView } from '@/products/kitchen-skills-challenge/surfaces/challenge/SessionReviewView';
 import { KitchenSkillsTrimView } from '@/products/kitchen-skills-challenge/surfaces/challenge/TrimView';
-import {
-  KitchenSkillsFinishActions,
-  KitchenSkillsFinishSummary,
-} from '@/products/kitchen-skills-challenge/surfaces/challenge/KitchenSkillsFinishSummary';
+import { KitchenSkillsFinishSummary } from '@/products/kitchen-skills-challenge/surfaces/challenge/KitchenSkillsFinishSummary';
 import { formatSessionDate } from '@/products/kitchen-skills-challenge/format';
 
 function KitchenSkillsInitializing() {
@@ -26,7 +23,8 @@ function KitchenSkillsInitializing() {
 }
 
 function KitchenSkillsBody() {
-  const { session, showFinishSummary, rescueEntries } = useKitchenSkillsSession();
+  const { session, showFinishSummary, taskProgress, requiredSection, reviewAllowed } =
+    useKitchenSkillsSession();
   const [section, setSection] = useState(() => parseKitchenDaySection());
 
   useEffect(() => {
@@ -35,7 +33,19 @@ function KitchenSkillsBody() {
     return () => window.removeEventListener('hashchange', sync);
   }, []);
 
+  useEffect(() => {
+    if (section === 'review') {
+      if (!reviewAllowed) goToKitchenDaySection(requiredSection);
+      return;
+    }
+    if (section !== requiredSection) {
+      goToKitchenDaySection(requiredSection);
+    }
+  }, [section, requiredSection, reviewAllowed]);
+
   if (!session) return <KitchenSkillsInitializing />;
+
+  const visibleSection = section === 'review' && reviewAllowed ? 'review' : requiredSection;
 
   return (
     <div className="kitchen-mgmt-page kitchen-day-activity" data-testid="kitchen-day-page">
@@ -48,28 +58,17 @@ function KitchenSkillsBody() {
           </p>
         </div>
       </header>
-      <KitchenSkillsNav section={section} />
-      {section === 'trim' ? <KitchenSkillsTrimView /> : null}
-      {section === 'reuse' ? <KitchenSkillsReuseView /> : null}
-      {section === 'portion' ? <KitchenSkillsPortionView /> : null}
-      {section === 'review' ? <SessionReviewView /> : null}
-      {section !== 'review' ? (
+      <KitchenSkillsNav section={visibleSection} progress={taskProgress} />
+      {visibleSection === 'trim' ? <KitchenSkillsTrimView /> : null}
+      {visibleSection === 'reuse' ? <KitchenSkillsReuseView /> : null}
+      {visibleSection === 'portion' ? <KitchenSkillsPortionView /> : null}
+      {visibleSection === 'review' ? <SessionReviewView /> : null}
+      {reviewAllowed && visibleSection !== 'review' ? (
         <a className="kitchen-day-review-link" href="#/kitchen-day/review" data-testid="kitchen-day-nav-review">
           Session review
         </a>
       ) : null}
       {showFinishSummary ? <KitchenSkillsFinishSummary /> : null}
-      {!showFinishSummary && rescueEntries.length > 0 && section !== 'review' ? (
-        <div
-          className="kitchen-day-form-actions kitchen-day-form-actions--sticky"
-          data-testid="kitchen-day-finish-bar"
-        >
-          <KitchenSkillsFinishActions
-            finishTestId="kitchen-day-finish-challenge"
-            addMoreTestId="kitchen-day-finish-add-more-ingredients"
-          />
-        </div>
-      ) : null}
     </div>
   );
 }

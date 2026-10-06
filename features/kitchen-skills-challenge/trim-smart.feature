@@ -1,7 +1,7 @@
 # APPROVED PRODUCT TARGET
 # Product: docs/product/kitchen-skills-challenge/TRIM_SMART.md
 # Slugs: docs/product/kitchen-skills-challenge/GAMEBUS_SLUG_CONTRACT.md
-# CURRENT IMPLEMENTATION: Kitchen Skills Trim at #/kitchen-day/trim uses the session recipe dropdown.
+# CURRENT IMPLEMENTATION: Kitchen Skills Trim at #/kitchen-day/trim uses remaining ingredients from the saved Portion recipe.
 # Public hash #/kitchen-day remains the Kitchen Day landing (Portion Precision).
 #
 @trim-smart @waste-challenges @kitchen-day
@@ -151,8 +151,8 @@ Feature: Ingredient preparation in a kitchen day
       Then a second preparation entry is not created in that session
       And that ingredient is not offered in the recipe ingredient list
 
-    Scenario: Add more ingredients records another unused recipe ingredient
+    Scenario: Add more ingredients stays on Trim
       Given the student has finished measuring actual waste for one recipe ingredient
-      When the student chooses Add more ingredients
-      Then the entry is saved
-      And Trim stays open for another unused recipe ingredient
+      And the student has saved that ingredient
+      When the student chooses Another ingredient
+      Then Trim stays open for another unused recipe ingredient

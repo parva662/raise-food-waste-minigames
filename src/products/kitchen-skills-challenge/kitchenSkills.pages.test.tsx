@@ -22,12 +22,12 @@ describe('Kitchen Day page split', () => {
     setHash('#/kitchen-day');
     render(<AppRouter />);
     expect(getAppMode()).toBe('kitchen-day');
+    expect(screen.getByTestId('kitchen-day-nav-portion')).toBeInTheDocument();
     expect(screen.getByTestId('kitchen-day-nav-trim')).toBeInTheDocument();
     expect(screen.getByTestId('kitchen-day-nav-reuse')).toBeInTheDocument();
-    expect(screen.getByTestId('kitchen-day-nav-portion')).toBeInTheDocument();
     expect(screen.queryByTestId('kitchen-day-nav-chef')).not.toBeInTheDocument();
     expect(screen.queryByRole('link', { name: 'Progress' })).not.toBeInTheDocument();
-    expect(screen.queryByText(/idle/i)).not.toBeInTheDocument();
+    expect(screen.queryByTestId('kitchen-day-nav-review')).not.toBeInTheDocument();
   });
 
   it('opens the separate progress and tutor routes', async () => {

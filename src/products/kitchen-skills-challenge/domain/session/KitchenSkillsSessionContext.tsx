@@ -42,6 +42,12 @@ import type {
   KitchenSkillsReviewedModule,
   KitchenSkillsTrimEntry,
 } from '@/products/kitchen-skills-challenge/domain/types';
+import {
+  canOpenKitchenSkillsReview,
+  requiredKitchenSkillsSection,
+  type KitchenSkillsTaskProgress,
+} from '@/products/kitchen-skills-challenge/domain/session/challengeGate';
+import { goToKitchenDaySection, type KitchenSkillsHashSection } from '@/app/routes';
 
 export type KitchenSkillsCommitResult =
   | { ok: true; mode: 'local' }
@@ -68,7 +74,11 @@ interface KitchenSkillsSessionValue {
     reviewedGame: KitchenSkillsReviewedModule,
   ) => KitchenSkillsReviewEntry | undefined;
   showFinishSummary: boolean;
-  dismissFinishSummary: () => void;
+  taskProgress: KitchenSkillsTaskProgress;
+  requiredSection: Exclude<KitchenSkillsHashSection, 'review'>;
+  reviewAllowed: boolean;
+  setTrimInProgress: (value: boolean) => void;
+  enterReuse: () => void;
 }
 
 const KitchenSkillsSessionContext = createContext<KitchenSkillsSessionValue | null>(null);
@@ -150,6 +160,8 @@ export function KitchenSkillsSessionProvider({
   const [localPortion, setLocalPortion] = useState<KitchenSkillsPortionEntry[]>([]);
   const [localReviews, setLocalReviews] = useState<KitchenSkillsReviewEntry[]>([]);
   const [showFinishSummary, setShowFinishSummary] = useState(false);
+  const [trimInProgress, setTrimInProgress] = useState(false);
+  const [reuseEntered, setReuseEntered] = useState(false);
   const [persisted, setPersisted] = useState(() =>
     session ? readPersistedForSession(session.sessionId) : {
       trimEntries: [] as KitchenSkillsTrimEntry[],
@@ -271,9 +283,6 @@ export function KitchenSkillsSessionProvider({
   }, [rescueEntries, trimEntries]);
 
   const commitPortionEntry = useCallback((entry: KitchenSkillsPortionEntry): KitchenSkillsCommitResult => {
-    if (portionEntries.length > 0) {
-      return { ok: false, reason: 'recipe_already_recorded', keepDraft: true };
-    }
     if (isGameBusEmbed()) {
       const posted = tryPostKitchenSkillsPortion(entry);
       if (!posted.ok) {
@@ -284,10 +293,12 @@ export function KitchenSkillsSessionProvider({
     }
     setLocalPortion((current) => [...current, { ...entry, source: 'local' }]);
     return { ok: true, mode: 'local' };
-  }, [portionEntries.length]);
+  }, []);
 
-  const dismissFinishSummary = useCallback(() => {
-    setShowFinishSummary(false);
+  const enterReuse = useCallback(() => {
+    setReuseEntered(true);
+    setTrimInProgress(false);
+    goToKitchenDaySection('reuse');
   }, []);
 
   const commitReview = useCallback((entry: KitchenSkillsReviewEntry, studentActorId: string): KitchenSkillsCommitResult => {
@@ -344,6 +355,19 @@ export function KitchenSkillsSessionProvider({
     [reviews],
   );
 
+  const taskProgress = useMemo<KitchenSkillsTaskProgress>(
+    () => ({
+      portionComplete: portionEntries.length > 0,
+      trimCount: trimEntries.length,
+      reuseComplete: rescueEntries.length > 0,
+      reuseEntered: reuseEntered || rescueEntries.length > 0,
+      trimInProgress,
+    }),
+    [portionEntries.length, trimEntries.length, rescueEntries.length, reuseEntered, trimInProgress],
+  );
+  const requiredSection = requiredKitchenSkillsSection(taskProgress);
+  const reviewAllowed = canOpenKitchenSkillsReview(taskProgress);
+
   const value = useMemo<KitchenSkillsSessionValue>(
     () => ({
       status: session ? 'ready' : 'initializing',
@@ -362,7 +386,11 @@ export function KitchenSkillsSessionProvider({
       findRescueByIngredientId,
       findReviewBySessionAndModule,
       showFinishSummary,
-      dismissFinishSummary,
+      taskProgress,
+      requiredSection,
+      reviewAllowed,
+      setTrimInProgress,
+      enterReuse,
     }),
     [
       session,
@@ -380,7 +408,10 @@ export function KitchenSkillsSessionProvider({
       findRescueByIngredientId,
       findReviewBySessionAndModule,
       showFinishSummary,
-      dismissFinishSummary,
+      taskProgress,
+      requiredSection,
+      reviewAllowed,
+      enterReuse,
     ],
   );
 

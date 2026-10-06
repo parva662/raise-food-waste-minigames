@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
 import { formatDurationFromMinutes, formatGrams, formatWastePercent } from '@/products/kitchen-skills-challenge/format';
-import { goToKitchenDaySection } from '@/app/routes';
 import { getGameBusInputCollections } from '@/platform/gamebus/bridge';
 import { extractGroupActivities, getRawKitchenSelfActivitiesInput } from '@/platform/gamebus/groupActivities';
 import { useReadyKitchenSkillsSession } from '@/products/kitchen-skills-challenge/domain/session/KitchenSkillsSessionContext';
@@ -21,6 +20,7 @@ import {
   type PreparationTimerState,
 } from '@/products/kitchen-skills-challenge/domain/trim/timer';
 import { KitchenSkillsGramsInput } from '@/products/kitchen-skills-challenge/surfaces/shared/KitchenSkillsGramsInput';
+import { KitchenSkillsRecipeCombobox } from '@/products/kitchen-skills-challenge/surfaces/challenge/KitchenSkillsRecipeCombobox';
 import {
   canContinueToEstimate,
   parseActualWasteGrams,
@@ -62,8 +62,14 @@ function stepLabel(step: TrimStep): string {
 }
 
 export function KitchenSkillsTrimView() {
-  const { session, portionEntries, recordedIngredientIds, commitTrimEntry } =
-    useReadyKitchenSkillsSession();
+  const {
+    session,
+    portionEntries,
+    recordedIngredientIds,
+    commitTrimEntry,
+    setTrimInProgress,
+    enterReuse,
+  } = useReadyKitchenSkillsSession();
   const recipe = sessionRecipeReference(portionEntries);
   const remainingIngredients = recipe
     ? remainingRecipeIngredientsForTrim(recipe, recordedIngredientIds)
@@ -79,7 +85,9 @@ export function KitchenSkillsTrimView() {
   const [submitting, setSubmitting] = useState(false);
 
   const selectedLine =
-    remainingIngredients.find((line) => line.ingredientId === selectedIngredientId) ?? null;
+    remainingIngredients.find((line) => line.ingredientId === selectedIngredientId) ??
+    recipe?.lines.find((line) => line.ingredientId === selectedIngredientId) ??
+    null;
   const ingredientId = selectedLine?.ingredientId ?? null;
   const ingredientName = selectedLine?.ingredientName ?? '';
   const weight = parseStartingWeightGrams(weightRaw);
@@ -94,12 +102,19 @@ export function KitchenSkillsTrimView() {
     startingWeightGrams: weightRaw,
   });
   const duplicate =
-    ingredientId !== null && isIngredientAlreadyRecorded(recordedIngredientIds, ingredientId);
+    ingredientId !== null &&
+    step !== 'result' &&
+    isIngredientAlreadyRecorded(recordedIngredientIds, ingredientId);
 
   const historicalSamples = useMemo(() => {
     const raw = getRawKitchenSelfActivitiesInput(getGameBusInputCollections());
     return historicalTrimSamplesFromGroupActivities(extractGroupActivities(raw));
   }, []);
+
+  useEffect(() => {
+    setTrimInProgress(step !== 'result');
+    return () => setTrimInProgress(false);
+  }, [step, setTrimInProgress]);
 
   function goNext() {
     const index = STEP_ORDER.indexOf(step);
@@ -118,7 +133,7 @@ export function KitchenSkillsTrimView() {
     setSubmitting(false);
   }
 
-  function submitEntry(next: 'reuse' | 'another') {
+  function submitEntry() {
     if (!ingredientId || !weight.ok || !technique || !estimate.ok || !actual.ok) return;
     if (timer.status !== 'finished' || submitting || duplicate) return;
     setSubmitting(true);
@@ -146,12 +161,8 @@ export function KitchenSkillsTrimView() {
       setSubmitting(false);
       return;
     }
-    if (next === 'another') {
-      resetForAnother();
-      return;
-    }
     setSubmitting(false);
-    goToKitchenDaySection('reuse');
+    setStep('result');
   }
 
   const resultPercent =
@@ -168,33 +179,10 @@ export function KitchenSkillsTrimView() {
   const comparisonDelta =
     comparison != null ? resultPercent! - comparison.referenceWastePercent : null;
 
-  if (portionEntries.length === 0) {
-    return (
-      <section className="kitchen-day-card" data-testid="kitchen-day-trim">
-        <h2 className="kitchen-day-card__title">Trim Smart</h2>
-        <p className="kitchen-day-card__copy" data-testid="kitchen-day-trim-needs-recipe">
-          Record a recipe in Portion Precision first.
-        </p>
-        <a className="kitchen-day-button kitchen-day-button--primary" href="#/kitchen-day">
-          Go to Portion Precision
-        </a>
-      </section>
-    );
-  }
-
-  if (remainingIngredients.length === 0) {
-    return (
-      <section className="kitchen-day-card" data-testid="kitchen-day-trim">
-        <h2 className="kitchen-day-card__title">Trim Smart</h2>
-        <p className="kitchen-day-card__copy" data-testid="kitchen-day-trim-no-remaining">
-          All recipe ingredients for this session are already recorded.
-        </p>
-        <a className="kitchen-day-button kitchen-day-button--primary" href="#/kitchen-day/reuse">
-          Record reuse
-        </a>
-      </section>
-    );
-  }
+  const ingredientOptions = remainingIngredients.map((line) => ({
+    id: line.ingredientId,
+    label: line.ingredientName,
+  }));
 
   return (
     <section className="kitchen-day-card" data-testid="kitchen-day-trim">
@@ -205,37 +193,53 @@ export function KitchenSkillsTrimView() {
       {step === 'ingredient' ? (
         <div data-testid="kitchen-day-trim-step-ingredient">
           <h2 className="kitchen-day-card__title">Ingredient</h2>
-          <label className="kitchen-day-field">
-            <span>Name</span>
-            <select
-              className="kitchen-day-input"
-              data-testid="kitchen-day-ingredient-name"
-              value={selectedIngredientId}
-              onChange={(event) => setSelectedIngredientId(event.target.value)}
-            >
-              <option value="">Select an ingredient</option>
-              {remainingIngredients.map((line) => (
-                <option key={line.ingredientId} value={line.ingredientId}>
-                  {line.ingredientName}
-                </option>
-              ))}
-            </select>
-          </label>
-          {duplicate ? (
-            <p className="kitchen-day-error" data-testid="kitchen-day-duplicate-ingredient">
-              This ingredient is already recorded in this session.
-            </p>
-          ) : null}
-          <div className="kitchen-day-form-actions kitchen-day-form-actions--sticky">
-            <button
-              type="button"
-              className="kitchen-day-button kitchen-day-button--primary"
-              disabled={!selectedIngredientId || duplicate}
-              onClick={goNext}
-            >
-              Continue
-            </button>
-          </div>
+          {remainingIngredients.length === 0 ? (
+            <>
+              <p className="kitchen-day-card__copy" data-testid="kitchen-day-trim-no-remaining">
+                All recipe ingredients for this session are already recorded.
+              </p>
+              <div className="kitchen-day-form-actions kitchen-day-form-actions--sticky">
+                <button
+                  type="button"
+                  className="kitchen-day-button kitchen-day-button--primary"
+                  data-testid="kitchen-day-continue-reuse"
+                  onClick={enterReuse}
+                >
+                  Record reuse
+                </button>
+              </div>
+            </>
+          ) : (
+            <>
+              <label className="kitchen-day-field">
+                <span>Name</span>
+                <KitchenSkillsRecipeCombobox
+                  options={ingredientOptions}
+                  value={selectedIngredientId}
+                  onChange={setSelectedIngredientId}
+                  testId="kitchen-day-ingredient-name"
+                  listTestId="kitchen-day-ingredient-list"
+                  placeholder="Type to search ingredients"
+                  noMatchLabel="No matching ingredients"
+                />
+              </label>
+              {duplicate ? (
+                <p className="kitchen-day-error" data-testid="kitchen-day-duplicate-ingredient">
+                  This ingredient is already recorded in this session.
+                </p>
+              ) : null}
+              <div className="kitchen-day-form-actions kitchen-day-form-actions--sticky">
+                <button
+                  type="button"
+                  className="kitchen-day-button kitchen-day-button--primary"
+                  disabled={!selectedIngredientId || duplicate}
+                  onClick={goNext}
+                >
+                  Continue
+                </button>
+              </div>
+            </>
+          )}
         </div>
       ) : null}
 
@@ -424,19 +428,10 @@ export function KitchenSkillsTrimView() {
           <div className="kitchen-day-form-actions kitchen-day-form-actions--sticky">
             <button
               type="button"
-              className="kitchen-day-button kitchen-day-button--secondary"
-              data-testid="kitchen-day-add-more-ingredients"
-              disabled={!actual.ok || submitting}
-              onClick={() => submitEntry('another')}
-            >
-              Add more ingredients
-            </button>
-            <button
-              type="button"
               className="kitchen-day-button kitchen-day-button--primary"
               data-testid="kitchen-day-submit-trim"
               disabled={!actual.ok || submitting}
-              onClick={() => submitEntry('reuse')}
+              onClick={submitEntry}
             >
               Save ingredient
             </button>
@@ -475,17 +470,24 @@ export function KitchenSkillsTrimView() {
             <p data-testid="kitchen-day-reference-comparison">No kitchen reference for this ingredient yet.</p>
           )}
           <div className="kitchen-day-actions">
+            {remainingIngredients.length > 0 ? (
+              <button
+                type="button"
+                className="kitchen-day-button kitchen-day-button--primary"
+                data-testid="kitchen-day-add-another-ingredient"
+                onClick={resetForAnother}
+              >
+                Another ingredient
+              </button>
+            ) : null}
             <button
               type="button"
-              className="kitchen-day-button kitchen-day-button--primary"
-              data-testid="kitchen-day-add-another-ingredient"
-              onClick={resetForAnother}
+              className="kitchen-day-button kitchen-day-button--secondary"
+              data-testid="kitchen-day-continue-reuse"
+              onClick={enterReuse}
             >
-              Add more ingredients
-            </button>
-            <a className="kitchen-day-button kitchen-day-button--secondary" href="#/kitchen-day/reuse">
               Record reuse
-            </a>
+            </button>
           </div>
         </div>
       ) : null}

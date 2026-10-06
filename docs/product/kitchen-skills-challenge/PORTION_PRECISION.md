@@ -41,7 +41,7 @@ These two recipe metrics stay separate. There is **no** automatic combined score
 
 ## 5. Journey
 
-Searchable recipe combobox → compact Ingredient | Target | Actual | Result table → final recipe weight → one `SILENT_ACTIVITY` → Trim Smart. One recipe per session. EXIT only on Finish challenge. Layout: [`../UI_STANDARD.md`](../UI_STANDARD.md).
+Searchable recipe combobox → compact Ingredient | Target | Actual | Result table → final recipe weight → one `SILENT_ACTIVITY` → Trim Smart. EXIT only on Finish challenge. Layout: [`../UI_STANDARD.md`](../UI_STANDARD.md).
 
 ## 6. Tutor assessment
 

@@ -19,11 +19,17 @@ export function KitchenSkillsRecipeCombobox({
   value,
   onChange,
   testId = 'kitchen-day-recipe-select',
+  listTestId = 'kitchen-day-recipe-list',
+  placeholder = 'Type to search recipes',
+  noMatchLabel = 'No matching recipes',
 }: {
   options: readonly KitchenSkillsRecipeOption[];
   value: string;
   onChange: (id: string) => void;
   testId?: string;
+  listTestId?: string;
+  placeholder?: string;
+  noMatchLabel?: string;
 }) {
   const listId = useId();
   const rootRef = useRef<HTMLDivElement>(null);
@@ -80,7 +86,7 @@ export function KitchenSkillsRecipeCombobox({
         aria-activedescendant={open && active ? `${listId}-${active.id}` : undefined}
         autoComplete="off"
         spellCheck={false}
-        placeholder="Type to search recipes"
+        placeholder={placeholder}
         data-testid={testId}
         value={query}
         onFocus={() => setOpen(true)}
@@ -113,10 +119,10 @@ export function KitchenSkillsRecipeCombobox({
         }}
       />
       {open ? (
-        <ul className="kitchen-day-combobox__list" role="listbox" id={listId} data-testid="kitchen-day-recipe-list">
+        <ul className="kitchen-day-combobox__list" role="listbox" id={listId} data-testid={listTestId}>
           {filtered.length === 0 ? (
             <li className="kitchen-day-combobox__empty" role="presentation">
-              {query.trim() ? 'No matching recipes' : 'Type to search recipes'}
+              {query.trim() ? noMatchLabel : placeholder}
             </li>
           ) : (
             filtered.map((option, index) => (

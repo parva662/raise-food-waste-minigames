@@ -28,7 +28,7 @@ describe('Kitchen Skills compact data-entry layout', () => {
     const user = userEvent.setup();
     render(<AppRouter />);
     await recordAnkanrintaPortion(user);
-    await selectTrimIngredient(user, 'ankka-rintafilee');
+    await selectTrimIngredient(user, 'ANKKA', 'ANKKA, RINTAFILEE');
     await user.click(screen.getByRole('button', { name: 'Continue' }));
     const gramRow = screen.getByTestId('kitchen-day-starting-weight').closest('.kitchen-day-input-row');
     expect(gramRow).toHaveClass('kitchen-day-input-row--grams');
@@ -40,6 +40,7 @@ describe('Kitchen Skills compact data-entry layout', () => {
     render(<AppRouter />);
     await recordAnkanrintaPortion(user);
     await recordDuckBreastTrim(user);
+    await user.click(screen.getByTestId('kitchen-day-continue-reuse'));
     expect(screen.getByTestId('kitchen-day-rescue-ingredient').closest('.kitchen-day-reuse-meta')).toBeTruthy();
     expect(screen.getByTestId('kitchen-day-rescue-actual-waste').closest('.kitchen-day-reuse-meta')).toBeTruthy();
     expect(screen.getByTestId('kitchen-day-reusable-waste').closest('.kitchen-day-input-row')).toHaveClass(

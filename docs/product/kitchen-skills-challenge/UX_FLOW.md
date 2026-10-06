@@ -31,21 +31,21 @@ Tutor dashboard    #/kitchen-day-tutor      (separate left-menu page)
 
 The student Kitchen Skills TASK stays open until **Finish challenge**.
 
-1. **Portion Precision** — the student records every recipe ingredient actual and the final recipe weight, then **Save recipe**. That posts `SILENT_ACTIVITY` (`portionPrecision`), keeps the entry in local session state, locks that recipe for the session, and navigates to `#/kitchen-day/trim`. Does **not** send `EXIT`.
-2. **Trim Smart** — the ingredient is chosen from that recipe. **Save ingredient** posts `SILENT_ACTIVITY` (`trimSmart`), keeps the entry in local session state, and navigates to `#/kitchen-day/reuse`. **Add more ingredients** saves the same entry and stays on Trim for another unused recipe ingredient.
-3. **Reuse** — save posts `SILENT_ACTIVITY` (`rescueAndReuse`), retains local state, and opens the **Challenge complete** summary. Does **not** send `EXIT`.
+1. **Portion Precision** — searchable recipe combobox, every ingredient actual, final recipe weight, **Save recipe**. Posts `SILENT_ACTIVITY` (`portionPrecision`), keeps local state, navigates to `#/kitchen-day/trim`. Does **not** send `EXIT`. Task tabs stay locked on Portion until that save.
+2. **Trim Smart** — searchable remaining recipe ingredients, then the existing steps (weight → technique → estimate → timed prepare → actual waste → **Save ingredient**). While that ingredient is unsaved, only those Trim controls are shown. After save, **Another ingredient** or **Record reuse**. Does **not** send `EXIT`.
+3. **Reuse** — compact reusable grams + destination; discarded remainder calculated. The student stays on Reuse until **Save reuse**. That opens the **Challenge complete** summary. Does **not** send `EXIT`.
 4. Summary shows compact Trim / Reuse / Portion headlines. Detail sections are collapsed. Portion’s ingredient table is behind **View recipe details**.
-5. **Add more ingredients** (beside Finish) dismisses the summary and returns to Trim. **Finish challenge** posts `{ type: 'EXIT' }` via `postKitchenSkillsChallengeExit`. That is the only EXIT in this flow. After the first reuse, Finish and Add more stay available until Finish is chosen.
+5. **Finish challenge** is only on that summary and posts `{ type: 'EXIT' }` via `postKitchenSkillsChallengeExit`. That is the only EXIT in this flow.
 
 Do not send EXIT after Portion, Trim, Reuse, or Add more ingredients. Tutor review posts one `SILENT_ACTIVITY` per completed module (`reviewedGame`) with RAISE `actors` and keeps the tutor iframe open. Protocol details: [`../../contracts/GAMEBUS.md`](../../contracts/GAMEBUS.md) and TASK contract.
 
 ## 4. Module journeys (UI)
 
-**Trim Smart:** Choose a remaining recipe ingredient → starting weight → technique (ten fixed one-tap choices) → estimate → timed prepare → actual waste → **Save ingredient** (Reuse) or **Add more ingredients** (stay on Trim). No category step and no free-text name. Gram fields content-width; Continue/Save sticky on small screens. Timer copy never shows `idle` / `running` / `finished`.
+**Trim Smart:** Choose a remaining recipe ingredient (searchable) → starting weight → technique (ten fixed one-tap choices) → estimate → timed prepare → actual waste → **Save ingredient** → result with **Another ingredient** or **Record reuse**. No category step. Gram fields content-width; Continue/Save sticky on small screens. Timer copy never shows `idle` / `running` / `finished`.
 
 **Reuse:** Compact reusable grams + destination; discarded remainder calculated; then the challenge complete summary.
 
-**Portion Precision:** Searchable recipe combobox → Ingredient | Target | Actual | Result table → final weight → **Save recipe** → Trim Smart. One recipe per session. Review / Progress / Tutor show ingredient accuracy and final-weight deviation as separate derived figures (not one combined score).
+**Portion Precision:** Searchable recipe combobox → Ingredient | Target | Actual | Result table → final weight → **Save recipe** → Trim Smart. Review / Progress / Tutor show ingredient accuracy and final-weight deviation as separate derived figures (not one combined score).
 
 ## 5. Retrieval (product rules)
 

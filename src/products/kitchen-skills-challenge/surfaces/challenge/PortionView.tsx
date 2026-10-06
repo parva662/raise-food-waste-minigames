@@ -14,13 +14,12 @@ import {
 } from '@/products/kitchen-skills-challenge/domain/portion/validation';
 
 export function KitchenSkillsPortionView() {
-  const { session, portionEntries, commitPortionEntry } = useReadyKitchenSkillsSession();
+  const { session, commitPortionEntry } = useReadyKitchenSkillsSession();
   const recipes = listRecipeReferences();
-  const recorded = portionEntries[0] ?? null;
   const [recipeId, setRecipeId] = useState('');
   const [actuals, setActuals] = useState<Record<string, string>>({});
   const [finalWeightRaw, setFinalWeightRaw] = useState('');
-  const [saving, setSaving] = useState(false);
+  const [savedName, setSavedName] = useState<string | null>(null);
   const [pickerKey, setPickerKey] = useState(0);
   const recipeOptions = useMemo(
     () => recipes.map((item) => ({ id: item.recipeId, label: item.recipeName })),
@@ -32,8 +31,7 @@ export function KitchenSkillsPortionView() {
   const finalWeight = parseFinalRecipeWeightGrams(finalWeightRaw);
 
   function submit() {
-    if (!recipe || !composition || !finalWeight.ok || saving || recorded) return;
-    setSaving(true);
+    if (!recipe || !composition || !finalWeight.ok) return;
     const entry = {
       sessionId: session.sessionId,
       sessionDate: session.sessionDate,
@@ -44,10 +42,11 @@ export function KitchenSkillsPortionView() {
       finalRecipeWeightGrams: finalWeight.value,
     };
     const result = commitPortionEntry({ ...entry, source: 'local' });
-    if (!result.ok) {
-      setSaving(false);
-      return;
-    }
+    if (!result.ok) return;
+    setSavedName(recipe.recipeName);
+    setRecipeId('');
+    setActuals({});
+    setFinalWeightRaw('');
     setPickerKey((current) => current + 1);
     goToKitchenDaySection('trim');
   }
@@ -56,20 +55,7 @@ export function KitchenSkillsPortionView() {
     setRecipeId(nextRecipeId);
     setActuals({});
     setFinalWeightRaw('');
-  }
-
-  if (recorded) {
-    return (
-      <section className="kitchen-day-card" data-testid="kitchen-day-portion">
-        <h2 className="kitchen-day-card__title">Portion Precision</h2>
-        <p className="kitchen-day-success" data-testid="kitchen-day-portion-saved">
-          {recorded.recipeName} recorded for this kitchen day.
-        </p>
-        <a className="kitchen-day-button kitchen-day-button--primary" href="#/kitchen-day/trim">
-          Continue to Trim Smart
-        </a>
-      </section>
-    );
+    setSavedName(null);
   }
 
   return (
@@ -191,7 +177,6 @@ export function KitchenSkillsPortionView() {
                 className="kitchen-day-button kitchen-day-button--primary"
                 data-testid="kitchen-day-submit-portion"
                 disabled={
-                  saving ||
                   !canSubmitPortion({
                     recipe,
                     actualsByIngredientId: actuals,
@@ -205,6 +190,12 @@ export function KitchenSkillsPortionView() {
             </div>
           </div>
         </div>
+      ) : null}
+
+      {savedName ? (
+        <p className="kitchen-day-success" data-testid="kitchen-day-portion-saved">
+          {savedName} recorded for this kitchen day.
+        </p>
       ) : null}
     </section>
   );

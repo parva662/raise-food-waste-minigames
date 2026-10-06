@@ -16,20 +16,18 @@ export async function recordAnkanrintaPortion(user: User) {
   await user.click(screen.getByTestId('kitchen-day-submit-portion'));
 }
 
-export async function selectTrimIngredient(user: User, ingredientId: string) {
-  await user.selectOptions(screen.getByTestId('kitchen-day-ingredient-name'), ingredientId);
+export async function selectTrimIngredient(user: User, query: string, optionName: string) {
+  const input = screen.getByTestId('kitchen-day-ingredient-name');
+  await user.click(input);
+  await user.type(input, query);
+  await user.click(screen.getByRole('option', { name: optionName }));
 }
 
-export async function completeTrimAfterIngredient(
-  user: User,
-  options?: { technique?: string; submit?: 'save' | 'another' },
-) {
-  const technique = options?.technique ?? 'trimming';
-  const submit = options?.submit ?? 'save';
+export async function completeTrimAfterIngredient(user: User) {
   await user.click(screen.getByRole('button', { name: 'Continue' }));
   await user.type(screen.getByTestId('kitchen-day-starting-weight'), '5000');
   await user.click(screen.getByTestId('kitchen-day-weight-continue'));
-  await user.click(screen.getByTestId(`kitchen-day-technique-${technique}`));
+  await user.click(screen.getByTestId('kitchen-day-technique-trimming'));
   await user.click(screen.getByTestId('kitchen-day-technique-continue'));
   await user.type(screen.getByTestId('kitchen-day-estimated-waste'), '600');
   await user.click(screen.getByTestId('kitchen-day-estimate-continue'));
@@ -37,14 +35,10 @@ export async function completeTrimAfterIngredient(
   await user.click(screen.getByTestId('kitchen-day-finish-preparation'));
   await user.click(screen.getByTestId('kitchen-day-timer-continue'));
   await user.type(screen.getByTestId('kitchen-day-actual-waste'), '450');
-  if (submit === 'another') {
-    await user.click(screen.getByTestId('kitchen-day-add-more-ingredients'));
-    return;
-  }
   await user.click(screen.getByTestId('kitchen-day-submit-trim'));
 }
 
-export async function recordDuckBreastTrim(user: User, submit: 'save' | 'another' = 'save') {
-  await selectTrimIngredient(user, 'ankka-rintafilee');
-  await completeTrimAfterIngredient(user, { submit });
+export async function recordDuckBreastTrim(user: User) {
+  await selectTrimIngredient(user, 'ANKKA', 'ANKKA, RINTAFILEE');
+  await completeTrimAfterIngredient(user);
 }

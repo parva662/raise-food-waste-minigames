@@ -9,9 +9,7 @@ export function KitchenSkillsReuseView() {
   const { session, trimEntries, findRescueByIngredientId, commitRescueEntry } =
     useReadyKitchenSkillsSession();
   const completedTrim = trimEntries;
-  const firstPending =
-    completedTrim.find((entry) => !findRescueByIngredientId(entry.ingredientId)) ?? completedTrim[0];
-  const [ingredientId, setIngredientId] = useState(firstPending?.ingredientId ?? '');
+  const [ingredientId, setIngredientId] = useState(completedTrim[0]?.ingredientId ?? '');
   const [reusableRaw, setReusableRaw] = useState('');
   const [destination, setDestination] = useState('');
   const [saved, setSaved] = useState(false);
@@ -51,9 +49,6 @@ export function KitchenSkillsReuseView() {
         <p className="kitchen-day-card__copy" data-testid="kitchen-day-rescue-empty">
           Record an ingredient preparation entry with actual waste first.
         </p>
-        <a className="kitchen-day-button kitchen-day-button--primary" href="#/kitchen-day/trim">
-          Go to Trim Smart
-        </a>
       </section>
     );
   }
@@ -74,6 +69,7 @@ export function KitchenSkillsReuseView() {
               setDestination('');
               setSaved(false);
             }}
+            disabled={complete}
           >
             {completedTrim.map((entry) => (
               <option key={entry.ingredientId} value={entry.ingredientId}>
