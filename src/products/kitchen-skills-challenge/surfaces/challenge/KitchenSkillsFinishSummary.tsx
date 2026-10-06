@@ -1,3 +1,4 @@
+import { goToKitchenDaySection } from '@/app/routes';
 import { SessionEvidence } from '@/products/kitchen-skills-challenge/surfaces/shared/SessionEvidence';
 import { postKitchenSkillsChallengeExit } from '@/products/kitchen-skills-challenge/gamebus/postExit';
 import { useReadyKitchenSkillsSession } from '@/products/kitchen-skills-challenge/domain/session/KitchenSkillsSessionContext';
@@ -46,6 +47,41 @@ function portionHeadline(entries: readonly KitchenSkillsPortionEntry[]): string 
     .join('; ');
 }
 
+function continueWithMoreIngredients(dismissFinishSummary: () => void) {
+  dismissFinishSummary();
+  goToKitchenDaySection('trim');
+}
+
+export function KitchenSkillsFinishActions({
+  finishTestId,
+  addMoreTestId,
+}: {
+  finishTestId: string;
+  addMoreTestId: string;
+}) {
+  const { dismissFinishSummary } = useReadyKitchenSkillsSession();
+  return (
+    <div className="chef-zero-dialog__actions kitchen-day-finish-dialog__actions">
+      <button
+        type="button"
+        className="chef-zero-dialog__btn kitchen-day-button kitchen-day-button--secondary"
+        data-testid={addMoreTestId}
+        onClick={() => continueWithMoreIngredients(dismissFinishSummary)}
+      >
+        Add more ingredients
+      </button>
+      <button
+        type="button"
+        className="chef-zero-dialog__btn chef-zero-dialog__btn--confirm kitchen-day-button kitchen-day-button--primary"
+        data-testid={finishTestId}
+        onClick={() => postKitchenSkillsChallengeExit()}
+      >
+        Finish challenge
+      </button>
+    </div>
+  );
+}
+
 export function KitchenSkillsFinishSummary() {
   const { trimEntries, rescueEntries, portionEntries } = useReadyKitchenSkillsSession();
 
@@ -87,16 +123,10 @@ export function KitchenSkillsFinishSummary() {
             collapsePortionTable
           />
         </div>
-        <div className="chef-zero-dialog__actions kitchen-day-finish-dialog__actions">
-          <button
-            type="button"
-            className="chef-zero-dialog__btn chef-zero-dialog__btn--confirm kitchen-day-button kitchen-day-button--primary"
-            data-testid="kitchen-day-finish-challenge"
-            onClick={() => postKitchenSkillsChallengeExit()}
-          >
-            Finish challenge
-          </button>
-        </div>
+        <KitchenSkillsFinishActions
+          finishTestId="kitchen-day-finish-challenge"
+          addMoreTestId="kitchen-day-finish-add-more-ingredients"
+        />
       </div>
     </div>
   );

@@ -1,7 +1,7 @@
 # Portion Precision
 
 > **Documentation role:** Explanation — module intent, derived metrics, and journey.
-> **APPROVED PRODUCT TARGET**. Implemented on `main` at `#/kitchen-day/portion`.
+> **APPROVED PRODUCT TARGET**. Implemented on `main` at `#/kitchen-day` (and `#/kitchen-day/portion`).
 >
 > Module of [`KITCHEN_SKILLS_CHALLENGE.md`](KITCHEN_SKILLS_CHALLENGE.md). Locked properties: [`GAMEBUS_SLUG_CONTRACT.md`](GAMEBUS_SLUG_CONTRACT.md).
 
@@ -41,7 +41,7 @@ These two recipe metrics stay separate. There is **no** automatic combined score
 
 ## 5. Journey
 
-Searchable recipe combobox → compact Ingredient | Target | Actual | Result table → final recipe weight → one `SILENT_ACTIVITY` → challenge summary (EXIT only on Finish challenge). Layout: [`../UI_STANDARD.md`](../UI_STANDARD.md).
+Searchable recipe combobox → compact Ingredient | Target | Actual | Result table → final recipe weight → one `SILENT_ACTIVITY` → Trim Smart. One recipe per session. EXIT only on Finish challenge. Layout: [`../UI_STANDARD.md`](../UI_STANDARD.md).
 
 ## 6. Tutor assessment
 

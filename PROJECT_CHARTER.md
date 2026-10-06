@@ -54,9 +54,9 @@ Games run in an iframe; GameBus supplies **TASK** data and **INPUT_COLLECTIONS**
 
 Orchestration: [`docs/product/kitchen-skills-challenge/KITCHEN_SKILLS_CHALLENGE.md`](./docs/product/kitchen-skills-challenge/KITCHEN_SKILLS_CHALLENGE.md). Slugs: [`docs/product/kitchen-skills-challenge/GAMEBUS_SLUG_CONTRACT.md`](./docs/product/kitchen-skills-challenge/GAMEBUS_SLUG_CONTRACT.md).
 
-- **Trim Smart (Kitchen Skills Challenge)** — estimate → timed prep → actual waste at `#/kitchen-day`. Legacy v1 remains at `#/waste/trim-smart`.
+- **Trim Smart (Kitchen Skills Challenge)** — estimate → timed prep → actual waste at `#/kitchen-day/trim`. Legacy v1 remains at `#/waste/trim-smart`.
 - **Rescue & Reuse** — `#/kitchen-day/reuse`; join `sessionId` + `ingredientId`.
-- **Portion Precision** — `#/kitchen-day/portion`; professional recipe reference extract.
+- **Portion Precision** — `#/kitchen-day` (`#/kitchen-day/portion`); professional recipe reference extract; one recipe per session.
 - **Session Review / Progress / trainer assessment** — `#/kitchen-day/review`, `#/kitchen-day-progress`, `#/kitchen-day-tutor`. Trainer `wastePracticeReview` posts `SILENT_ACTIVITY` with `actors: [selectedStudentActorId]`.
 
 ### Student missions (broader study)

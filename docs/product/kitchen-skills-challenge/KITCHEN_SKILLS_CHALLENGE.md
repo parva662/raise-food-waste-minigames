@@ -25,9 +25,9 @@ Students record practical kitchen work on one operational day (Europe/Helsinki).
 
 ```text
 Kitchen Skills session (student actor + sessionId + sessionDate)
-  ├── Ingredient preparation entry (1..n different ingredients)  → trimSmart
+  ├── Portion Precision entry (1 recipe per session)             → portionPrecision
+  ├── Ingredient preparation entry (1..n different recipe ingredients)  → trimSmart
   │     └── Reuse suggestion (0..1 per ingredient)               → rescueAndReuse
-  ├── Portion Precision entry (0..n recipes/components)          → portionPrecision
   ├── Session Review (current session only, read-only)
   ├── Student Progress (own history, separate page)
   └── Tutor assessment per completed module (reviewedGame)       → wastePracticeReview
@@ -38,8 +38,8 @@ Kitchen Skills session (student actor + sessionId + sessionDate)
 | GameBus actor | The student |
 | `sessionId` | Opaque key for one student session (`kitchen-day:…` prefix in embed) |
 | `sessionDate` | Europe/Helsinki operational date |
-| `ingredientId` | Unique Trim entry within a session; reuse join; kitchen-reference key |
-| `recipeId` | One Portion Precision recipe |
+| `ingredientId` | Unique Trim entry within a session; reuse join; kitchen-reference key; taken from the session recipe |
+| `recipeId` | The one Portion Precision recipe for the session |
 
 **Same ingredient once:** a student does not create more than one Trim Smart entry for the same `ingredientId` in the same session. Many **different** ingredients are expected.
 

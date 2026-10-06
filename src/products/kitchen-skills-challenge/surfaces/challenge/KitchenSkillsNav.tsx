@@ -1,9 +1,9 @@
 import { kitchenDayHashFor, type KitchenSkillsHashSection } from '@/app/routes';
 
 const ITEMS: { section: Exclude<KitchenSkillsHashSection, 'review'>; label: string; testId: string }[] = [
+  { section: 'portion', label: 'Portion Precision', testId: 'kitchen-day-nav-portion' },
   { section: 'trim', label: 'Trim Smart', testId: 'kitchen-day-nav-trim' },
   { section: 'reuse', label: 'Reuse', testId: 'kitchen-day-nav-reuse' },
-  { section: 'portion', label: 'Portion Precision', testId: 'kitchen-day-nav-portion' },
 ];
 
 export function KitchenSkillsNav({ section }: { section: KitchenSkillsHashSection }) {

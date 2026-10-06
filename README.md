@@ -36,7 +36,7 @@ Roles determine access. They do **not** determine the source-tree layout.
 | Service Closeout | `#/service-closeout` | operational (`wasteMeasurement`) |
 | Forecast Results (participant) | `#/chef-results` | read / analytics |
 | Forecast Results (admin) | `#/chef-results-admin` | read / management |
-| Kitchen Skills Challenge | `#/kitchen-day` (+ `/reuse`, `/portion`, `/review`) | practical session |
+| Kitchen Skills Challenge | `#/kitchen-day` (+ `/trim`, `/reuse`, `/portion`, `/review`) | practical session |
 | Kitchen Skills Challenge progress | `#/kitchen-day-progress` | read |
 | Kitchen Skills Challenge trainer | `#/kitchen-day-tutor` | supervisory |
 | Legacy Trim Smart v1 | `#/waste/trim-smart` | deprecated; keep until live GameBus URLs are confirmed unused |

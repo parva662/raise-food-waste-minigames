@@ -4,26 +4,15 @@ import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { AppRouter } from '@/app/AppRouter';
 import { getAppMode } from '@/app/routes';
+import {
+  recordAnkanrintaPortion,
+  recordDuckBreastTrim,
+  selectTrimIngredient,
+} from '@/products/kitchen-skills-challenge/kitchenSkills.testSupport';
 
 function setHash(hash: string) {
   window.location.hash = hash;
   window.dispatchEvent(new HashChangeEvent('hashchange'));
-}
-
-async function recordCarrot(user: ReturnType<typeof userEvent.setup>) {
-  await user.type(screen.getByTestId('kitchen-day-ingredient-name'), 'Carrot');
-  await user.click(screen.getByRole('button', { name: 'Continue' }));
-  await user.type(screen.getByTestId('kitchen-day-starting-weight'), '5000');
-  await user.click(screen.getByTestId('kitchen-day-weight-continue'));
-  await user.click(screen.getByTestId('kitchen-day-technique-trimming'));
-  await user.click(screen.getByTestId('kitchen-day-technique-continue'));
-  await user.type(screen.getByTestId('kitchen-day-estimated-waste'), '600');
-  await user.click(screen.getByTestId('kitchen-day-estimate-continue'));
-  await user.click(screen.getByTestId('kitchen-day-start-preparation'));
-  await user.click(screen.getByTestId('kitchen-day-finish-preparation'));
-  await user.click(screen.getByTestId('kitchen-day-timer-continue'));
-  await user.type(screen.getByTestId('kitchen-day-actual-waste'), '450');
-  await user.click(screen.getByTestId('kitchen-day-submit-trim'));
 }
 
 describe('Kitchen Day connected flow', () => {
@@ -37,13 +26,10 @@ describe('Kitchen Day connected flow', () => {
     vi.restoreAllMocks();
   });
 
-  it('starts Trim on Ingredient with no category UI', () => {
+  it('starts Portion Precision on Kitchen Day', () => {
     render(<AppRouter />);
-    expect(screen.getByTestId('kitchen-day-trim-progress')).toHaveTextContent('Step 1 of 7: Ingredient');
-    expect(screen.getByTestId('kitchen-day-trim-step-ingredient')).toBeInTheDocument();
-    expect(screen.queryByTestId('kitchen-day-trim-step-category')).not.toBeInTheDocument();
-    expect(screen.queryByTestId('kitchen-day-category-list')).not.toBeInTheDocument();
-    expect(screen.queryByTestId('kitchen-day-category-root')).not.toBeInTheDocument();
+    expect(screen.getByTestId('kitchen-day-portion')).toBeInTheDocument();
+    expect(screen.queryByTestId('kitchen-day-trim')).not.toBeInTheDocument();
   });
 
   it('uses the kitchen-day route without replacing v1 trim-smart', () => {
@@ -56,10 +42,22 @@ describe('Kitchen Day connected flow', () => {
     expect(screen.getByTestId('kitchen-day-nav-review')).toBeInTheDocument();
   });
 
-  it('records Trim, reuse, and Portion on the same session', async () => {
+  it('blocks Trim until a recipe is recorded', async () => {
     const user = userEvent.setup();
     render(<AppRouter />);
-    await recordCarrot(user);
+    await user.click(screen.getByTestId('kitchen-day-nav-trim'));
+    expect(screen.getByTestId('kitchen-day-trim-needs-recipe')).toBeInTheDocument();
+  });
+
+  it('records Portion, Trim from that recipe, Reuse, then Finish', async () => {
+    const user = userEvent.setup();
+    render(<AppRouter />);
+    await recordAnkanrintaPortion(user);
+    expect(screen.getByTestId('kitchen-day-trim-progress')).toHaveTextContent('Step 1 of 7: Ingredient');
+    expect(screen.getByTestId('kitchen-day-trim-step-ingredient')).toBeInTheDocument();
+    expect(screen.queryByTestId('kitchen-day-trim-step-category')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('kitchen-day-category-list')).not.toBeInTheDocument();
+    await recordDuckBreastTrim(user);
     expect(screen.getByTestId('kitchen-day-rescue-actual-waste')).toHaveTextContent('450 g');
     await user.type(screen.getByTestId('kitchen-day-reusable-waste'), '200');
     await user.type(screen.getByTestId('kitchen-day-reuse-destination'), 'Carrot soup tomorrow');
@@ -67,43 +65,47 @@ describe('Kitchen Day connected flow', () => {
     const postMessage = vi.spyOn(window.parent, 'postMessage').mockImplementation(() => undefined);
     await user.click(screen.getByTestId('kitchen-day-save-rescue'));
 
-    expect(screen.getByTestId('kitchen-day-portion')).toBeInTheDocument();
-    const recipeInput = screen.getByTestId('kitchen-day-recipe-select');
-    await user.click(recipeInput);
-    await user.type(recipeInput, 'Ankanrinta FLOW');
-    await user.click(screen.getByRole('option', { name: 'Ankanrinta FLOW' }));
-    await user.type(screen.getByTestId('kitchen-day-actual-ankka-rintafilee'), '11250');
-    await user.type(screen.getByTestId('kitchen-day-actual-rosmariini-tuore-100g'), '450');
-    await user.type(screen.getByTestId('kitchen-day-actual-berner-merisuola-keskikarkea-25'), '900');
-    await user.type(screen.getByTestId('kitchen-day-actual-meira-luomu-mustapippuri'), '900');
-    await user.type(screen.getByTestId('kitchen-day-final-recipe-weight'), '13500');
-    await user.click(screen.getByTestId('kitchen-day-submit-portion'));
-
     expect(screen.getByTestId('kitchen-day-finish-summary')).toBeInTheDocument();
-    expect(screen.getByTestId('kitchen-day-finish-trim-headline')).toHaveTextContent('Carrot');
+    expect(screen.getByTestId('kitchen-day-finish-trim-headline')).toHaveTextContent('ANKKA, RINTAFILEE');
     expect(screen.getByTestId('kitchen-day-finish-reuse-headline')).toHaveTextContent('Carrot soup tomorrow');
     expect(screen.getByTestId('kitchen-day-finish-portion-headline')).toHaveTextContent('Ankanrinta FLOW');
     expect(screen.getByTestId('kitchen-day-finish-trim-section')).not.toHaveAttribute('open');
     expect(screen.getByTestId('kitchen-day-finish-portion-details-1')).not.toHaveAttribute('open');
     expect(screen.getByTestId('kitchen-day-finish-challenge').closest('.kitchen-day-finish-dialog__actions')).toBeTruthy();
-    expect(screen.getByTestId('kitchen-day-finish-trim-carrot')).toBeInTheDocument();
-    expect(screen.getByTestId('kitchen-day-finish-rescue-carrot')).toBeInTheDocument();
+    expect(screen.getByTestId('kitchen-day-finish-add-more-ingredients')).toBeInTheDocument();
+    expect(screen.getByTestId('kitchen-day-finish-trim-ankka-rintafilee')).toBeInTheDocument();
+    expect(screen.getByTestId('kitchen-day-finish-rescue-ankka-rintafilee')).toBeInTheDocument();
     expect(postMessage).not.toHaveBeenCalled();
     await user.click(screen.getByTestId('kitchen-day-finish-challenge'));
     expect(postMessage).toHaveBeenCalledTimes(1);
     expect(postMessage).toHaveBeenCalledWith({ type: 'EXIT' }, '*');
   });
 
-  it('blocks a second carrot and allows potato', async () => {
+  it('keeps unused recipe ingredients available and hides recorded ones', async () => {
     const user = userEvent.setup();
     render(<AppRouter />);
-    await recordCarrot(user);
-    await user.click(screen.getByTestId('kitchen-day-nav-trim'));
-    await user.type(screen.getByTestId('kitchen-day-ingredient-name'), 'Carrot');
-    expect(screen.getByTestId('kitchen-day-duplicate-ingredient')).toBeInTheDocument();
-    await user.clear(screen.getByTestId('kitchen-day-ingredient-name'));
-    await user.type(screen.getByTestId('kitchen-day-ingredient-name'), 'Potato');
-    expect(screen.queryByTestId('kitchen-day-duplicate-ingredient')).not.toBeInTheDocument();
+    await recordAnkanrintaPortion(user);
+    await recordDuckBreastTrim(user, 'another');
+    expect(screen.getByTestId('kitchen-day-trim-step-ingredient')).toBeInTheDocument();
+    const options = screen.getByTestId('kitchen-day-ingredient-name') as HTMLSelectElement;
+    expect([...options.options].map((option) => option.value)).not.toContain('ankka-rintafilee');
+    expect([...options.options].map((option) => option.value)).toContain('rosmariini-tuore-100g');
+  });
+
+  it('returns to Trim from the finish summary without closing the challenge', async () => {
+    const user = userEvent.setup();
+    render(<AppRouter />);
+    await recordAnkanrintaPortion(user);
+    await recordDuckBreastTrim(user);
+    await user.type(screen.getByTestId('kitchen-day-reusable-waste'), '200');
+    await user.type(screen.getByTestId('kitchen-day-reuse-destination'), 'Stock');
+    const postMessage = vi.spyOn(window.parent, 'postMessage').mockImplementation(() => undefined);
+    await user.click(screen.getByTestId('kitchen-day-save-rescue'));
+    await user.click(screen.getByTestId('kitchen-day-finish-add-more-ingredients'));
+    expect(screen.queryByTestId('kitchen-day-finish-summary')).not.toBeInTheDocument();
+    expect(screen.getByTestId('kitchen-day-trim-step-ingredient')).toBeInTheDocument();
+    expect(postMessage).not.toHaveBeenCalled();
+    expect(screen.getByTestId('kitchen-day-finish-challenge')).toBeInTheDocument();
   });
 
   it('does not offer reuse inventory without Trim waste', async () => {
@@ -116,7 +118,8 @@ describe('Kitchen Day connected flow', () => {
   it('rejects letters in gram fields at the input boundary', async () => {
     const user = userEvent.setup();
     render(<AppRouter />);
-    await user.type(screen.getByTestId('kitchen-day-ingredient-name'), 'Carrot');
+    await recordAnkanrintaPortion(user);
+    await selectTrimIngredient(user, 'ankka-rintafilee');
     await user.click(screen.getByRole('button', { name: 'Continue' }));
     await user.type(screen.getByTestId('kitchen-day-starting-weight'), 'erffggv');
     expect(screen.getByTestId('kitchen-day-starting-weight')).toHaveValue('');

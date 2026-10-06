@@ -5,6 +5,10 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { AppRouter } from '@/app/AppRouter';
 import { TRIM_TECHNIQUES } from '@/products/kitchen-skills-challenge/domain/types';
 import { TRIM_TECHNIQUE_LABELS } from '@/products/kitchen-skills-challenge/domain/trim/techniques';
+import {
+  recordAnkanrintaPortion,
+  selectTrimIngredient,
+} from '@/products/kitchen-skills-challenge/kitchenSkills.testSupport';
 
 function setHash(hash: string) {
   window.location.hash = hash;
@@ -12,7 +16,8 @@ function setHash(hash: string) {
 }
 
 async function openTechniqueStep(user: ReturnType<typeof userEvent.setup>) {
-  await user.type(screen.getByTestId('kitchen-day-ingredient-name'), 'Carrot');
+  await recordAnkanrintaPortion(user);
+  await selectTrimIngredient(user, 'ankka-rintafilee');
   await user.click(screen.getByRole('button', { name: 'Continue' }));
   await user.type(screen.getByTestId('kitchen-day-starting-weight'), '5000');
   await user.click(screen.getByTestId('kitchen-day-weight-continue'));
@@ -28,12 +33,13 @@ describe('Trim Smart technique selection', () => {
     setHash('');
   });
 
-  it('does not render a category step', () => {
+  it('does not render a category step', async () => {
+    const user = userEvent.setup();
     render(<AppRouter />);
+    await recordAnkanrintaPortion(user);
     expect(screen.getByTestId('kitchen-day-trim-step-ingredient')).toBeInTheDocument();
     expect(screen.queryByTestId('kitchen-day-category-list')).not.toBeInTheDocument();
     expect(screen.queryByTestId('kitchen-day-category-root')).not.toBeInTheDocument();
-    expect(screen.queryByRole('combobox')).not.toBeInTheDocument();
   });
 
   it('renders all ten techniques as compact buttons and stores the same enum value', async () => {
@@ -72,7 +78,7 @@ describe('Trim Smart technique selection', () => {
     await user.type(screen.getByTestId('kitchen-day-actual-waste'), '450');
     await user.click(screen.getByTestId('kitchen-day-submit-trim'));
     await user.click(screen.getByTestId('kitchen-day-nav-review'));
-    expect(screen.getByTestId('kitchen-day-trim-carrot')).toHaveTextContent('Julienne');
+    expect(screen.getByTestId('kitchen-day-trim-ankka-rintafilee')).toHaveTextContent('Julienne');
     expect(screen.queryByRole('combobox')).not.toBeInTheDocument();
   });
 });

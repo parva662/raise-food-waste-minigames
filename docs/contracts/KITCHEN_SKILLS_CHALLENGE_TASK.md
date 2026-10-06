@@ -15,7 +15,7 @@
 
 The iframe receives **one** `TASK` (later TASK messages are ignored by `src/platform/gamebus/bridge.ts`).
 
-Student Trim / Reuse / Portion each post **`SILENT_ACTIVITY`** with the same activity `data` as before (`template`, `start`, `end`, `properties`). That matches GameBus custom-task behaviour: silent posts store `/api/me/activities` and **do not close** the task dialog. After each successful silent post the SPA keeps the entry in local session state and continues Trim → Reuse → Portion → summary. **Finish challenge** then posts `{ type: 'EXIT' }` (`src/platform/gamebus/exit.ts`). Official protocol: [`GAMEBUS.md`](GAMEBUS.md).
+Student Trim / Reuse / Portion each post **`SILENT_ACTIVITY`** with the same activity `data` as before (`template`, `start`, `end`, `properties`). That matches GameBus custom-task behaviour: silent posts store `/api/me/activities` and **do not close** the task dialog. After each successful silent post the SPA keeps the entry in local session state and continues Portion → Trim → Reuse → summary. **Add more ingredients** keeps the iframe open. **Finish challenge** then posts `{ type: 'EXIT' }` (`src/platform/gamebus/exit.ts`). Official protocol: [`GAMEBUS.md`](GAMEBUS.md).
 
 Tutor `wastePracticeReview` posts **`SILENT_ACTIVITY`** with review properties including required `reviewedGame` plus `actors: [selectedStudentActorId]`. Do **not** add a `studentId` property. One review per `sessionId` + `reviewedGame` (up to three per Kitchen Day when each module has evidence). After submit the tutor iframe stays open so the chef can review another student or module.
 

@@ -34,27 +34,61 @@ Feature: Kitchen Skills Challenge connected session
   Rule: One connected day, not three standalone games
 
     Scenario: Modules share the same session
-      When the student records an ingredient preparation entry
+      When the student records a Portion Precision recipe
+      And records an ingredient preparation entry from that recipe
       And records a reuse suggestion for that ingredient
-      And records a Portion Precision recipe
       Then all three records belong to the same kitchen day
       And they are not treated as separate standalone games
 
     Scenario: Multiple different ingredients are allowed
-      Given the student recorded an ingredient preparation entry for "Carrot"
-      When the student records an ingredient preparation entry for "Potato"
+      Given the student recorded an ingredient preparation entry for a recipe ingredient
+      When the student records an ingredient preparation entry for another unused recipe ingredient
       Then both entries belong to the same kitchen day
 
     Scenario: The same ingredient is not recorded twice
-      Given the student recorded an ingredient preparation entry for "Carrot"
-      When the student tries to start another ingredient preparation entry for "Carrot"
-      Then a second carrot preparation entry is not created in that session
+      Given the student recorded an ingredient preparation entry for a recipe ingredient
+      When the student tries to start another ingredient preparation entry for that same ingredient
+      Then a second preparation entry is not created in that session
+
+  Rule: Recipe first, then Trim from that recipe, then Reuse
+
+    Scenario: Kitchen Day opens on Portion Precision
+      When the student opens Kitchen Day
+      Then Portion Precision is shown first
+      And every recipe ingredient actual and the final recipe weight are recorded before Save
+
+    Scenario: Trim uses the saved recipe ingredients
+      Given the student recorded a Portion Precision recipe
+      When the student opens ingredient preparation
+      Then the ingredient is chosen from that recipe
+      And unused recipe ingredients remain available
+      And already recorded recipe ingredients are not offered again
+
+    Scenario: Save ingredient continues to Reuse
+      Given the student recorded a Portion Precision recipe
+      When the student saves an ingredient preparation entry
+      Then Reuse is shown for that ingredient
+      And the kitchen day stays open
+
+    Scenario: Add more ingredients stays on Trim
+      Given the student recorded a Portion Precision recipe
+      When the student saves an ingredient preparation entry with Add more ingredients
+      Then another unused recipe ingredient can be prepared
+      And the kitchen day stays open
+
+    Scenario: Finish challenge is the only close
+      Given the challenge complete summary is shown
+      When the student chooses Add more ingredients
+      Then the kitchen day stays open
+      And Trim is shown
+      When the student chooses Finish challenge
+      Then the kitchen day closes
 
   Rule: Kitchen Day activity is separate from progress and tutor pages
 
     Scenario: The activity page has practical modules only
       When the student opens Kitchen Day
-      Then Trim Smart, Reuse, and Portion Precision are available
+      Then Portion Precision, Trim Smart, and Reuse are available
       And Progress and tutor dashboards are not part of that navigation
 
     Scenario: Session review is the current Kitchen Day only

@@ -1,7 +1,7 @@
 # APPROVED PRODUCT TARGET
 # Product: docs/product/kitchen-skills-challenge/PORTION_PRECISION.md
 # Slugs: docs/product/kitchen-skills-challenge/GAMEBUS_SLUG_CONTRACT.md
-# Not implemented on main.
+# CURRENT IMPLEMENTATION on main at #/kitchen-day.
 #
 @portion-precision @waste-challenges @kitchen-day
 Feature: Portion Precision recipe measurement
@@ -19,6 +19,13 @@ Feature: Portion Precision recipe measurement
       When the student selects a recipe/component
       Then one portionPrecision activity is created for that recipe
       And every measured ingredient is stored inside recipeComposition of that same activity
+      And that recipe is the only Portion Precision recipe for the kitchen day
+
+    Scenario: Save continues to Trim Smart
+      When the student records every recipe ingredient actual and the final recipe weight
+      And submits the activity
+      Then Trim Smart is shown
+      And the challenge complete summary is not shown yet
 
     Scenario: Ingredient identity is nested, not top-level
       When the student submits the recipe activity

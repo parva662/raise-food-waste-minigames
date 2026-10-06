@@ -18,7 +18,7 @@ Do **not** rewrite this payload.
 
 ## Current product
 
-Kitchen Skills Challenge Trim lives in `src/products/kitchen-skills-challenge/` and is served from `#/kitchen-day`.
+Kitchen Skills Challenge Trim lives in `src/products/kitchen-skills-challenge/` and is served from `#/kitchen-day/trim`.
 
 This legacy module must not be imported by that product.
 

@@ -1,7 +1,7 @@
 # APPROVED PRODUCT TARGET
 # Product: docs/product/kitchen-skills-challenge/RESCUE_AND_REUSE.md
 # Slugs: docs/product/kitchen-skills-challenge/GAMEBUS_SLUG_CONTRACT.md
-# Not implemented on main.
+# CURRENT IMPLEMENTATION on main at #/kitchen-day/reuse.
 #
 @rescue-and-reuse @waste-challenges @kitchen-day
 Feature: Reuse suggestions connected to ingredient preparation
@@ -76,6 +76,8 @@ Feature: Reuse suggestions connected to ingredient preparation
       Then the student is not asked for a reuse status
       And nobody is asked later whether the reuse actually happened
       And no reuse tutor score is awarded
+      And the challenge complete summary is shown
+      And Finish challenge and Add more ingredients are both available
 
   Rule: Each ingredient may have its own suggestion
 

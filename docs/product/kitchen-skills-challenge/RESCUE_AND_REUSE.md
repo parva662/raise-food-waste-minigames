@@ -37,7 +37,7 @@ Exact stored properties: slug contract. Do **not** duplicate `ingredientName` or
 
 ## 4. Journey
 
-Complete Trim through actual waste → compact reuse form → see calculated discarded remainder → save (`SILENT_ACTIVITY`) → continue to Portion in the same iframe. Layout: [`../UI_STANDARD.md`](../UI_STANDARD.md).
+Complete Trim through actual waste → compact reuse form → see calculated discarded remainder → save (`SILENT_ACTIVITY`) → challenge complete summary. **Add more ingredients** returns to Trim. **Finish challenge** closes the kitchen day. Layout: [`../UI_STANDARD.md`](../UI_STANDARD.md).
 
 ## 5. Removed (historical naming)
 

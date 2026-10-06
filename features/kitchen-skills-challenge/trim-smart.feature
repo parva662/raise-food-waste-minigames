@@ -1,7 +1,8 @@
 # APPROVED PRODUCT TARGET
 # Product: docs/product/kitchen-skills-challenge/TRIM_SMART.md
 # Slugs: docs/product/kitchen-skills-challenge/GAMEBUS_SLUG_CONTRACT.md
-# CURRENT IMPLEMENTATION: Kitchen Skills Trim at #/kitchen-day does not use ingredientCategory.
+# CURRENT IMPLEMENTATION: Kitchen Skills Trim at #/kitchen-day/trim uses the session recipe dropdown.
+# Public hash #/kitchen-day remains the Kitchen Day landing (Portion Precision).
 #
 @trim-smart @waste-challenges @kitchen-day
 Feature: Ingredient preparation in a kitchen day
@@ -11,17 +12,19 @@ Feature: Ingredient preparation in a kitchen day
 
   Background:
     Given a kitchen day session is active for the student
+    And the student has recorded a Portion Precision recipe for this session
     And the ingredient preparation module is part of that session
 
   Rule: One entry is one ingredient preparation task
 
     Scenario: Trim starts with the ingredient, not a category
       When the student opens ingredient preparation
-      Then the first step is ingredient name
+      Then the first step is choosing a recipe ingredient
       And no ingredient category is shown or required
+      And free-text ingredient names are not used
 
     Scenario: A valid ingredient setup can continue
-      When the student enters ingredient name "Carrot"
+      When the student selects a recipe ingredient
       And enters a starting weight of 5000 grams
       Then the ingredient setup is valid
       And the student can continue to technique selection
@@ -137,12 +140,19 @@ Feature: Ingredient preparation in a kitchen day
   Rule: Session uniqueness
 
     Scenario: A second different ingredient is allowed
-      Given the student has recorded an ingredient preparation entry for "Carrot"
-      When the student records an ingredient preparation entry for "Onion"
+      Given the student has recorded an ingredient preparation entry for one recipe ingredient
+      When the student records an ingredient preparation entry for another unused recipe ingredient
       Then both entries belong to the same kitchen day
       And each entry keeps its own measurements
 
     Scenario: The same ingredient is not recorded twice
-      Given the student has recorded an ingredient preparation entry for "Carrot"
-      When the student tries to record another ingredient preparation entry for "Carrot"
-      Then a second carrot preparation entry is not created in that session
+      Given the student has recorded an ingredient preparation entry for one recipe ingredient
+      When the student tries to record another ingredient preparation entry for that same ingredient
+      Then a second preparation entry is not created in that session
+      And that ingredient is not offered in the recipe ingredient list
+
+    Scenario: Add more ingredients records another unused recipe ingredient
+      Given the student has finished measuring actual waste for one recipe ingredient
+      When the student chooses Add more ingredients
+      Then the entry is saved
+      And Trim stays open for another unused recipe ingredient

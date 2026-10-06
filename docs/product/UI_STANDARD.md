@@ -168,7 +168,7 @@ Screens to include: Trim (a field step + technique), Reuse, Portion with a multi
 
 | Surface | Layout |
 |---------|--------|
-| Trim Smart | One step at a time. Content-width gram fields. Compact technique grid. Sticky Continue/Save on small screens. |
+| Trim Smart | One step at a time. Recipe-ingredient dropdown. Content-width gram fields. Compact technique grid. Sticky Continue/Save plus Add more ingredients on small screens. |
 | Reuse | Short form. Ingredient + actual waste on one row from tablet up. Compact reusable grams. Two-row destination. |
 | Portion Precision | Searchable recipe combobox. Compact ingredient table/grid. Sticky Save recipe. Final weight is a short gram field, not a full-width block. |
 | Session review / Finish | Status or headlines first; evidence and recipe line tables second (collapsed where they are long). |

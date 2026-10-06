@@ -15,7 +15,7 @@ Layout checks: ~390 / ~768 / ~1200. Practice references for forms and accessibil
 
 ```text
 Student activity   #/kitchen-day
-  [ Trim Smart ]  [ Reuse ]  [ Portion Precision ]
+  [ Portion Precision ]  [ Trim Smart ]  [ Reuse ]
   Session review  (current session only)
 
 Student progress   #/kitchen-day-progress   (separate left-menu page)
@@ -31,21 +31,21 @@ Tutor dashboard    #/kitchen-day-tutor      (separate left-menu page)
 
 The student Kitchen Skills TASK stays open until **Finish challenge**.
 
-1. **Trim Smart** — save posts `SILENT_ACTIVITY` (`trimSmart`), keeps the entry in local session state, navigates to `#/kitchen-day/reuse`.
-2. **Reuse** — save posts `SILENT_ACTIVITY` (`rescueAndReuse`), retains local state, navigates to `#/kitchen-day/portion`.
-3. **Portion Precision** — save posts `SILENT_ACTIVITY` (`portionPrecision`), retains local state, opens the **Challenge complete** summary. Does **not** send `EXIT`.
+1. **Portion Precision** — the student records every recipe ingredient actual and the final recipe weight, then **Save recipe**. That posts `SILENT_ACTIVITY` (`portionPrecision`), keeps the entry in local session state, locks that recipe for the session, and navigates to `#/kitchen-day/trim`. Does **not** send `EXIT`.
+2. **Trim Smart** — the ingredient is chosen from that recipe. **Save ingredient** posts `SILENT_ACTIVITY` (`trimSmart`), keeps the entry in local session state, and navigates to `#/kitchen-day/reuse`. **Add more ingredients** saves the same entry and stays on Trim for another unused recipe ingredient.
+3. **Reuse** — save posts `SILENT_ACTIVITY` (`rescueAndReuse`), retains local state, and opens the **Challenge complete** summary. Does **not** send `EXIT`.
 4. Summary shows compact Trim / Reuse / Portion headlines. Detail sections are collapsed. Portion’s ingredient table is behind **View recipe details**.
-5. **Finish challenge** (always visible at the bottom) posts `{ type: 'EXIT' }` via `postKitchenSkillsChallengeExit`. That is the only EXIT in this flow.
+5. **Add more ingredients** (beside Finish) dismisses the summary and returns to Trim. **Finish challenge** posts `{ type: 'EXIT' }` via `postKitchenSkillsChallengeExit`. That is the only EXIT in this flow. After the first reuse, Finish and Add more stay available until Finish is chosen.
 
-Do not send EXIT after Trim, Reuse, or immediately after Portion. Tutor review posts one `SILENT_ACTIVITY` per completed module (`reviewedGame`) with RAISE `actors` and keeps the tutor iframe open. Protocol details: [`../../contracts/GAMEBUS.md`](../../contracts/GAMEBUS.md) and TASK contract.
+Do not send EXIT after Portion, Trim, Reuse, or Add more ingredients. Tutor review posts one `SILENT_ACTIVITY` per completed module (`reviewedGame`) with RAISE `actors` and keeps the tutor iframe open. Protocol details: [`../../contracts/GAMEBUS.md`](../../contracts/GAMEBUS.md) and TASK contract.
 
 ## 4. Module journeys (UI)
 
-**Trim Smart:** Ingredient → starting weight → technique (ten fixed one-tap choices) → estimate → timed prepare → actual waste → **Save ingredient** → Reuse. No category step. Gram fields content-width; Continue/Save sticky on small screens. Timer copy never shows `idle` / `running` / `finished`.
+**Trim Smart:** Choose a remaining recipe ingredient → starting weight → technique (ten fixed one-tap choices) → estimate → timed prepare → actual waste → **Save ingredient** (Reuse) or **Add more ingredients** (stay on Trim). No category step and no free-text name. Gram fields content-width; Continue/Save sticky on small screens. Timer copy never shows `idle` / `running` / `finished`.
 
-**Reuse:** Compact reusable grams + destination; discarded remainder calculated; then Portion.
+**Reuse:** Compact reusable grams + destination; discarded remainder calculated; then the challenge complete summary.
 
-**Portion Precision:** Searchable recipe combobox → Ingredient | Target | Actual | Result table → final weight → **Save recipe** → challenge summary. Review / Progress / Tutor show ingredient accuracy and final-weight deviation as separate derived figures (not one combined score).
+**Portion Precision:** Searchable recipe combobox → Ingredient | Target | Actual | Result table → final weight → **Save recipe** → Trim Smart. One recipe per session. Review / Progress / Tutor show ingredient accuracy and final-weight deviation as separate derived figures (not one combined score).
 
 ## 5. Retrieval (product rules)
 

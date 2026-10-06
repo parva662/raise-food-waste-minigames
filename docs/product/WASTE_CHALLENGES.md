@@ -14,9 +14,9 @@ Routes: [`../contracts/KITCHEN_SKILLS_CHALLENGE_ROUTES.md`](../contracts/KITCHEN
 | Module | On `main` | Where to read |
 |--------|-----------|---------------|
 | Kitchen Skills Challenge | Connected student workflow at `#/kitchen-day*` | [`kitchen-skills-challenge/KITCHEN_SKILLS_CHALLENGE.md`](kitchen-skills-challenge/KITCHEN_SKILLS_CHALLENGE.md) |
-| Trim Smart (current) | `#/kitchen-day` | [`kitchen-skills-challenge/TRIM_SMART.md`](kitchen-skills-challenge/TRIM_SMART.md) |
+| Trim Smart (current) | `#/kitchen-day/trim` | [`kitchen-skills-challenge/TRIM_SMART.md`](kitchen-skills-challenge/TRIM_SMART.md) |
 | Rescue & Reuse | `#/kitchen-day/reuse` | [`kitchen-skills-challenge/RESCUE_AND_REUSE.md`](kitchen-skills-challenge/RESCUE_AND_REUSE.md) |
-| Portion Precision | `#/kitchen-day/portion` | [`kitchen-skills-challenge/PORTION_PRECISION.md`](kitchen-skills-challenge/PORTION_PRECISION.md) |
+| Portion Precision | `#/kitchen-day` (`#/kitchen-day/portion`) | [`kitchen-skills-challenge/PORTION_PRECISION.md`](kitchen-skills-challenge/PORTION_PRECISION.md) |
 | Session Review / Progress / trainer assessment | `#/kitchen-day/review`, `#/kitchen-day-progress`, `#/kitchen-day-tutor` | [`kitchen-skills-challenge/CHEF_REVIEW.md`](kitchen-skills-challenge/CHEF_REVIEW.md) |
 | Legacy Trim Smart v1 | `#/waste/trim-smart` (deprecated) | `src/legacy/trim-smart-v1/` |
 

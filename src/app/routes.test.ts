@@ -41,8 +41,10 @@ describe('app route registry', () => {
 
   it('maps Kitchen Skills Challenge hashes including aliases', () => {
     expect(getAppMode('#/kitchen-day')).toBe('kitchen-day');
-    expect(parseKitchenDaySection('#/kitchen-day')).toBe('trim');
-    expect(getExpectedActivityRef('#/kitchen-day')).toBe(TRIM_SMART_ACTIVITY_REF);
+    expect(parseKitchenDaySection('#/kitchen-day')).toBe('portion');
+    expect(getExpectedActivityRef('#/kitchen-day')).toBe(PORTION_PRECISION_ACTIVITY_REF);
+    expect(parseKitchenDaySection('#/kitchen-day/trim')).toBe('trim');
+    expect(getExpectedActivityRef('#/kitchen-day/trim')).toBe(TRIM_SMART_ACTIVITY_REF);
     expect(parseKitchenDaySection('#/kitchen-day/reuse')).toBe('reuse');
     expect(parseKitchenDaySection('#/kitchen-day/rescue')).toBe('reuse');
     expect(getExpectedActivityRef('#/kitchen-day/reuse')).toBe(RESCUE_AND_REUSE_ACTIVITY_REF);
@@ -52,6 +54,8 @@ describe('app route registry', () => {
     expect(parseKitchenDaySection('#/kitchen-day/my-day')).toBe('review');
     expect(parseKitchenDaySection('#/kitchen-day/overview')).toBe('review');
     expect(getExpectedActivityRef('#/kitchen-day/review')).toBeNull();
+    expect(kitchenDayHashFor('portion')).toBe('#/kitchen-day');
+    expect(kitchenDayHashFor('trim')).toBe('#/kitchen-day/trim');
     expect(kitchenDayHashFor('reuse')).toBe('#/kitchen-day/reuse');
   });
 

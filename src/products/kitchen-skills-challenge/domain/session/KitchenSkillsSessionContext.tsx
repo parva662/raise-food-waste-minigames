@@ -68,6 +68,7 @@ interface KitchenSkillsSessionValue {
     reviewedGame: KitchenSkillsReviewedModule,
   ) => KitchenSkillsReviewEntry | undefined;
   showFinishSummary: boolean;
+  dismissFinishSummary: () => void;
 }
 
 const KitchenSkillsSessionContext = createContext<KitchenSkillsSessionValue | null>(null);
@@ -261,25 +262,32 @@ export function KitchenSkillsSessionProvider({
         return { ok: false, reason: posted.reason, keepDraft: true };
       }
       setLocalRescue((current) => [...current, { ...entry, source: 'local' }]);
+      setShowFinishSummary(true);
       return { ok: true, mode: 'posted_awaiting_persist' };
     }
     setLocalRescue((current) => [...current, { ...entry, source: 'local' }]);
+    setShowFinishSummary(true);
     return { ok: true, mode: 'local' };
   }, [rescueEntries, trimEntries]);
 
   const commitPortionEntry = useCallback((entry: KitchenSkillsPortionEntry): KitchenSkillsCommitResult => {
+    if (portionEntries.length > 0) {
+      return { ok: false, reason: 'recipe_already_recorded', keepDraft: true };
+    }
     if (isGameBusEmbed()) {
       const posted = tryPostKitchenSkillsPortion(entry);
       if (!posted.ok) {
         return { ok: false, reason: posted.reason, keepDraft: true };
       }
       setLocalPortion((current) => [...current, { ...entry, source: 'local' }]);
-      setShowFinishSummary(true);
       return { ok: true, mode: 'posted_awaiting_persist' };
     }
     setLocalPortion((current) => [...current, { ...entry, source: 'local' }]);
-    setShowFinishSummary(true);
     return { ok: true, mode: 'local' };
+  }, [portionEntries.length]);
+
+  const dismissFinishSummary = useCallback(() => {
+    setShowFinishSummary(false);
   }, []);
 
   const commitReview = useCallback((entry: KitchenSkillsReviewEntry, studentActorId: string): KitchenSkillsCommitResult => {
@@ -354,6 +362,7 @@ export function KitchenSkillsSessionProvider({
       findRescueByIngredientId,
       findReviewBySessionAndModule,
       showFinishSummary,
+      dismissFinishSummary,
     }),
     [
       session,
@@ -371,6 +380,7 @@ export function KitchenSkillsSessionProvider({
       findRescueByIngredientId,
       findReviewBySessionAndModule,
       showFinishSummary,
+      dismissFinishSummary,
     ],
   );
 

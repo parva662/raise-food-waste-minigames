@@ -116,7 +116,7 @@ export const APP_ROUTES: readonly AppRouteDefinition[] = [
     hash: KITCHEN_DAY_HASH_ROUTE,
     title: 'Kitchen Skills Challenge',
     postsActivity: true,
-    expectedActivity: TRIM_SMART_ACTIVITY_REF,
+    expectedActivity: PORTION_PRECISION_ACTIVITY_REF,
   },
   {
     mode: 'kitchen-day-progress',
@@ -152,12 +152,13 @@ export function parseKitchenDaySection(
   hash: string = typeof window === 'undefined' ? '' : window.location.hash,
 ): KitchenSkillsHashSection {
   const path = hashPath(hash);
+  if (path === 'kitchen-day/trim') return 'trim';
   if (path === 'kitchen-day/reuse' || path === 'kitchen-day/rescue') return 'reuse';
   if (path === 'kitchen-day/portion') return 'portion';
   if (path === 'kitchen-day/review' || path === 'kitchen-day/my-day' || path === 'kitchen-day/overview') {
     return 'review';
   }
-  return 'trim';
+  return 'portion';
 }
 
 export function parseKitchenDaySelectedSessionId(
@@ -175,7 +176,7 @@ export function parseKitchenDaySelectedActorId(
 }
 
 export function kitchenDayHashFor(section: KitchenSkillsHashSection): string {
-  if (section === 'trim') return KITCHEN_DAY_HASH_ROUTE;
+  if (section === 'portion') return KITCHEN_DAY_HASH_ROUTE;
   return `${KITCHEN_DAY_HASH_ROUTE}/${section}`;
 }
 

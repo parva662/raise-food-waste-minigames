@@ -11,16 +11,16 @@
 
 | Module | Activity | Cardinality |
 |--------|----------|-------------|
-| Trim Smart | `trimSmart` | 1..n **different** ingredients per session |
+| Trim Smart | `trimSmart` | 1..n **different** recipe ingredients per session |
 | Rescue & Reuse | `rescueAndReuse` | 0..1 per `sessionId` + `ingredientId` |
-| Portion Precision | `portionPrecision` | 0..n recipes/components |
+| Portion Precision | `portionPrecision` | 1 recipe per session |
 | Tutor assessment | `wastePracticeReview` | 0..1 per `sessionId` + `reviewedGame` (module) |
 | Session Review / Student Progress / Tutor dashboard | — | read-only |
 
 ## 2. Architecture constraints (keep)
 
-- One student session per locked Helsinki `sessionDate`; student activity nav is Trim / Reuse / Portion only.
-- Same `ingredientId` once per student session. Reuse joins `sessionId` + `ingredientId` (no `sourceActivityId`).
+- One student session per locked Helsinki `sessionDate`; student activity nav is Portion / Trim / Reuse only.
+- Same `ingredientId` once per student session. Trim ingredients come from the saved Portion recipe. Reuse joins `sessionId` + `ingredientId` (no `sourceActivityId`).
 - Reuse stores only reusable amount + free-text destination.
 - Analytics calculated on read — never stored as activity properties.
 - One Portion activity per recipe; actuals in `recipeComposition`. Recipe targets come from the generated workbook extract, not a hand-maintained stub.

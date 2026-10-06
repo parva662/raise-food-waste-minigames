@@ -6,7 +6,10 @@ import { KitchenSkillsReuseView } from '@/products/kitchen-skills-challenge/surf
 import { parseKitchenDaySection } from '@/app/routes';
 import { SessionReviewView } from '@/products/kitchen-skills-challenge/surfaces/challenge/SessionReviewView';
 import { KitchenSkillsTrimView } from '@/products/kitchen-skills-challenge/surfaces/challenge/TrimView';
-import { KitchenSkillsFinishSummary } from '@/products/kitchen-skills-challenge/surfaces/challenge/KitchenSkillsFinishSummary';
+import {
+  KitchenSkillsFinishActions,
+  KitchenSkillsFinishSummary,
+} from '@/products/kitchen-skills-challenge/surfaces/challenge/KitchenSkillsFinishSummary';
 import { formatSessionDate } from '@/products/kitchen-skills-challenge/format';
 
 function KitchenSkillsInitializing() {
@@ -23,7 +26,7 @@ function KitchenSkillsInitializing() {
 }
 
 function KitchenSkillsBody() {
-  const { session, showFinishSummary } = useKitchenSkillsSession();
+  const { session, showFinishSummary, rescueEntries } = useKitchenSkillsSession();
   const [section, setSection] = useState(() => parseKitchenDaySection());
 
   useEffect(() => {
@@ -56,6 +59,17 @@ function KitchenSkillsBody() {
         </a>
       ) : null}
       {showFinishSummary ? <KitchenSkillsFinishSummary /> : null}
+      {!showFinishSummary && rescueEntries.length > 0 && section !== 'review' ? (
+        <div
+          className="kitchen-day-form-actions kitchen-day-form-actions--sticky"
+          data-testid="kitchen-day-finish-bar"
+        >
+          <KitchenSkillsFinishActions
+            finishTestId="kitchen-day-finish-challenge"
+            addMoreTestId="kitchen-day-finish-add-more-ingredients"
+          />
+        </div>
+      ) : null}
     </div>
   );
 }
