@@ -22,12 +22,15 @@ function Harness({
   const [value, setValue] = useState('');
   return (
     <div>
-      <KitchenSkillsRecipeCombobox
-        options={options}
-        value={value}
-        onChange={setValue}
-        placeholder={placeholder}
-      />
+      <label>
+        Recipe
+        <KitchenSkillsRecipeCombobox
+          options={options}
+          value={value}
+          onChange={setValue}
+          placeholder={placeholder}
+        />
+      </label>
       <p data-testid="selected-id">{value || 'none'}</p>
     </div>
   );
@@ -102,5 +105,58 @@ describe('KitchenSkillsRecipeCombobox', () => {
     expect(screen.getByRole('option', { name: 'Vihreä powersmoothie M,G' })).toBeInTheDocument();
     await user.keyboard('{ArrowDown}{Enter}');
     expect(screen.getByTestId('selected-id')).toHaveTextContent('3');
+  });
+
+  it('closes after a mouse selection and keeps the chosen value visible', async () => {
+    const user = userEvent.setup();
+    render(<Harness />);
+    const input = screen.getByTestId('kitchen-day-recipe-select');
+    await user.click(input);
+    await user.click(screen.getByRole('option', { name: 'Ankanrinta FLOW' }));
+    expect(screen.getByTestId('selected-id')).toHaveTextContent('1');
+    expect(input).toHaveValue('Ankanrinta FLOW');
+    expect(input).toHaveAttribute('aria-expanded', 'false');
+    expect(screen.queryByRole('listbox')).not.toBeInTheDocument();
+  });
+
+  it('closes after Enter selection and keeps the chosen value visible', async () => {
+    const user = userEvent.setup();
+    render(<Harness />);
+    const input = screen.getByTestId('kitchen-day-recipe-select');
+    await user.click(input);
+    await user.keyboard('{Enter}');
+    expect(screen.getByTestId('selected-id')).toHaveTextContent('1');
+    expect(input).toHaveValue('Ankanrinta FLOW');
+    expect(input).toHaveAttribute('aria-expanded', 'false');
+    expect(screen.queryByRole('listbox')).not.toBeInTheDocument();
+  });
+
+  it('shows the available options again when the field is reopened', async () => {
+    const user = userEvent.setup();
+    render(<Harness />);
+    const input = screen.getByTestId('kitchen-day-recipe-select');
+    await user.click(input);
+    await user.click(screen.getByRole('option', { name: 'Uuniperuna L,G' }));
+    expect(screen.queryByRole('listbox')).not.toBeInTheDocument();
+    await user.click(input);
+    expect(input).toHaveAttribute('aria-expanded', 'true');
+    expect(input).toHaveValue('Uuniperuna L,G');
+    expect(optionNames()).toEqual(['Ankanrinta FLOW', 'Uuniperuna L,G', 'Vihreä powersmoothie M,G']);
+  });
+
+  it('closes on Escape without changing the selection', async () => {
+    const user = userEvent.setup();
+    render(<Harness />);
+    const input = screen.getByTestId('kitchen-day-recipe-select');
+    await user.click(input);
+    await user.click(screen.getByRole('option', { name: 'Ankanrinta FLOW' }));
+    await user.click(input);
+    expect(screen.getByRole('listbox')).toBeInTheDocument();
+    await user.keyboard('{ArrowDown}');
+    await user.keyboard('{Escape}');
+    expect(screen.queryByRole('listbox')).not.toBeInTheDocument();
+    expect(input).toHaveAttribute('aria-expanded', 'false');
+    expect(input).toHaveValue('Ankanrinta FLOW');
+    expect(screen.getByTestId('selected-id')).toHaveTextContent('1');
   });
 });

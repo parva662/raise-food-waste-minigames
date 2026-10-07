@@ -33,6 +33,7 @@ export function KitchenSkillsRecipeCombobox({
 }) {
   const listId = useId();
   const rootRef = useRef<HTMLDivElement>(null);
+  const suppressOpenRef = useRef(false);
   const selected = options.find((option) => option.id === value) ?? null;
   const [query, setQuery] = useState(selected?.label ?? '');
   const [open, setOpen] = useState(false);
@@ -56,7 +57,15 @@ export function KitchenSkillsRecipeCombobox({
     return () => document.removeEventListener('pointerdown', onDocPointerDown);
   }, [open, selected]);
 
+  function suppressNextOpen() {
+    suppressOpenRef.current = true;
+    window.setTimeout(() => {
+      suppressOpenRef.current = false;
+    }, 0);
+  }
+
   function openList() {
+    if (suppressOpenRef.current) return;
     setOpen(true);
     setActiveIndex(0);
   }
@@ -65,6 +74,7 @@ export function KitchenSkillsRecipeCombobox({
     onChange(option.id);
     setQuery(option.label);
     setOpen(false);
+    suppressNextOpen();
   }
 
   function updateQuery(next: string) {
@@ -145,8 +155,15 @@ export function KitchenSkillsRecipeCombobox({
                 }
                 data-testid={`kitchen-day-recipe-option-${option.id}`}
                 onMouseEnter={() => setActiveIndex(index)}
-                onPointerDown={(event) => event.preventDefault()}
-                onClick={() => selectOption(option)}
+                onPointerDown={(event) => {
+                  event.preventDefault();
+                  event.stopPropagation();
+                  selectOption(option);
+                }}
+                onClick={(event) => {
+                  event.preventDefault();
+                  event.stopPropagation();
+                }}
               >
                 {option.label}
               </li>
