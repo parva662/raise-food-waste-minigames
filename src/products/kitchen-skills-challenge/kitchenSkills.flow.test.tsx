@@ -229,6 +229,8 @@ describe('Kitchen Day connected flow', () => {
     await user.click(screen.getByTestId('kitchen-day-nav-reuse'));
     expect(screen.getByTestId('kitchen-day-trim')).toBeInTheDocument();
     expect(screen.queryByTestId('kitchen-day-rescue')).not.toBeInTheDocument();
+    await user.click(screen.getByTestId('kitchen-day-open-finish-summary'));
+    expect(screen.getByTestId('kitchen-day-finish-reuse-headline')).toHaveTextContent('No reusable material');
   });
 
   it('opens Reuse from Record reuse after every recipe ingredient is recorded', async () => {
@@ -246,7 +248,7 @@ describe('Kitchen Day connected flow', () => {
     await user.click(screen.getByTestId('kitchen-day-nav-portion'));
     await user.click(screen.getByTestId('kitchen-day-nav-trim'));
     expect(screen.getByTestId('kitchen-day-trim-no-remaining')).toHaveTextContent(
-      'All recipe ingredients for this session are already recorded.',
+      'All Trim Smart ingredients for this recipe are already recorded.',
     );
     await user.click(screen.getByTestId('kitchen-day-continue-reuse'));
     expect(screen.getByTestId('kitchen-day-rescue')).toBeInTheDocument();

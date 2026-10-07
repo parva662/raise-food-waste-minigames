@@ -246,7 +246,7 @@ export function KitchenSkillsTrimView() {
           ) : availability === 'all-recorded' ? (
             <>
               <p className="kitchen-day-card__copy" data-testid="kitchen-day-trim-no-remaining">
-                All recipe ingredients for this session are already recorded.
+                All Trim Smart ingredients for this recipe are already recorded.
               </p>
               {canRecordReuse ? (
                 <TrimStepActions

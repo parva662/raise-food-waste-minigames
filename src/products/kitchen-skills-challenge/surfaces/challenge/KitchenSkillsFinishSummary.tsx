@@ -4,7 +4,11 @@ import { useReadyKitchenSkillsSession } from '@/products/kitchen-skills-challeng
 import { formatMetricPercent } from '@/products/kitchen-skills-challenge/domain/portion/copy';
 import { buildPortionRecipeMetrics } from '@/products/kitchen-skills-challenge/domain/portion/metrics';
 import { getRecipeReference } from '@/products/kitchen-skills-challenge/domain/portion/recipes';
-import { remainingRecipeIngredientsForTrim, sessionRecipeReference } from '@/products/kitchen-skills-challenge/domain/session/sessionRecipe';
+import {
+  hasReusableTrimWaste,
+  remainingRecipeIngredientsForTrim,
+  sessionRecipeReference,
+} from '@/products/kitchen-skills-challenge/domain/session/sessionRecipe';
 import { formatGrams } from '@/products/kitchen-skills-challenge/format';
 import type {
   KitchenSkillsPortionEntry,
@@ -23,7 +27,12 @@ function reuseHeadline(
   entries: readonly KitchenSkillsRescueEntry[],
   trimEntries: readonly KitchenSkillsTrimEntry[],
 ): string {
-  if (entries.length === 0) return 'No reuse recorded';
+  if (entries.length === 0) {
+    if (trimEntries.length > 0 && !hasReusableTrimWaste(trimEntries)) {
+      return 'No reusable material';
+    }
+    return 'No reuse recorded';
+  }
   return entries
     .map((entry) => {
       const trim = trimEntries.find((item) => item.ingredientId === entry.ingredientId);
