@@ -8,7 +8,7 @@ import { canSaveRescueSuggestion, parseReusableWasteGrams, parseReuseDestination
 export function KitchenSkillsReuseView() {
   const { session, trimEntries, findRescueByIngredientId, commitRescueEntry, setReuseInProgress } =
     useReadyKitchenSkillsSession();
-  const completedTrim = trimEntries;
+  const completedTrim = trimEntries.filter((entry) => entry.actualWasteGrams > 0);
   const [ingredientId, setIngredientId] = useState(completedTrim[0]?.ingredientId ?? '');
   const [reusableRaw, setReusableRaw] = useState('');
   const [destination, setDestination] = useState('');

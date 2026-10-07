@@ -139,7 +139,7 @@ Gherkin: [`../../features/kitchen-skills-challenge/`](../../features/kitchen-ski
 
 | Module | On `main` | Notes |
 |--------|-----------|--------|
-| Trim Smart | `#/kitchen-day/trim` | Recipe-ingredient dropdown after Portion save; estimate → timed prep → actual; unique `ingredientId` per session; Add more ingredients stays on Trim |
+| Trim Smart | `#/kitchen-day/trim` | Recipe-ingredient dropdown after Portion save (unused lines with `referenceWastePercent > 0`); estimate → timed prep → actual; unique `ingredientId` per session; Add more ingredients stays on Trim; Record reuse opens Reuse when there is reusable waste |
 | Rescue & Reuse | `#/kitchen-day/reuse` | Join `sessionId` + `ingredientId`; save opens challenge complete summary |
 | Portion Precision | `#/kitchen-day` (`#/kitchen-day/portion`) | Generated recipe reference; one recipe per session; save continues to Trim |
 | Session Review / Progress / trainer | `#/kitchen-day/review`, `#/kitchen-day-progress`, `#/kitchen-day-tutor` | Review is read-only; Progress Overview + module Recent (last 8 sessions, Recent-only charts) + History archive; trainer staff → sessions → modules; one `wastePracticeReview` per module via `reviewedGame` (`SILENT_ACTIVITY` + `actors`) |

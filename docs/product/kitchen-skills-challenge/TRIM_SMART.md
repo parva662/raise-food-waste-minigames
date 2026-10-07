@@ -22,7 +22,7 @@ Standalone route, no estimate step, no timer, no reference comparison. Posts `pr
 
 ## 4. Target flow
 
-1. Choose a remaining recipe ingredient (`ingredientId` + name from the Portion recipe).
+1. Choose a remaining unused recipe ingredient (`ingredientId` + name from the Portion recipe) whose kitchen Hävikki (`referenceWastePercent`) is greater than 0. 0% lines are not offered. If the recipe has none, Trim shows that there are no Trim Smart ingredients and the session can complete without fake Trim/Reuse posts.
 2. Technique → live plural slug `trimTechniques` (ten locked one-tap values). Layout: [`../UI_STANDARD.md`](../UI_STANDARD.md).
 3. Estimate → actual waste after timed preparation (`duration` from the timer — student does not type minutes).
 4. See recorded gram measurements (no waste % or Hävikki comparison on the student result).

@@ -6,6 +6,9 @@ export type KitchenSkillsTaskProgress = {
   reuseComplete: boolean;
   trimInProgress: boolean;
   reuseInProgress: boolean;
+  hasEligibleTrimIngredients: boolean;
+  hasRemainingEligibleTrimIngredients: boolean;
+  hasReusableTrimWaste: boolean;
 };
 
 export function hasKitchenSkillsDraftWork(progress: KitchenSkillsTaskProgress): boolean {
@@ -13,21 +16,23 @@ export function hasKitchenSkillsDraftWork(progress: KitchenSkillsTaskProgress): 
 }
 
 export function canFinishKitchenSkillsChallenge(progress: KitchenSkillsTaskProgress): boolean {
-  return (
-    progress.portionComplete &&
-    progress.trimCount > 0 &&
-    progress.reuseComplete &&
-    !hasKitchenSkillsDraftWork(progress)
-  );
+  if (!progress.portionComplete || hasKitchenSkillsDraftWork(progress)) return false;
+  if (!progress.hasEligibleTrimIngredients) return true;
+  if (progress.trimCount === 0) return false;
+  if (progress.hasReusableTrimWaste) return progress.reuseComplete;
+  return true;
 }
 
 export function requiredKitchenSkillsSection(
   progress: KitchenSkillsTaskProgress,
 ): Exclude<KitchenSkillsHashSection, 'review'> {
   if (!progress.portionComplete) return 'portion';
+  if (!progress.hasEligibleTrimIngredients) return 'trim';
   if (progress.trimCount === 0 || progress.trimInProgress) return 'trim';
-  if (!progress.reuseComplete || progress.reuseInProgress) return 'reuse';
-  return 'reuse';
+  if (progress.hasReusableTrimWaste && (!progress.reuseComplete || progress.reuseInProgress)) {
+    return 'reuse';
+  }
+  return 'trim';
 }
 
 export function canOpenKitchenSkillsReview(progress: KitchenSkillsTaskProgress): boolean {
@@ -41,5 +46,10 @@ export function isKitchenSkillsNavEnabled(
   if (section === 'review') return canOpenKitchenSkillsReview(progress);
   if (section === 'portion') return true;
   if (section === 'trim') return progress.portionComplete;
-  return progress.portionComplete && progress.trimCount > 0 && !progress.trimInProgress;
+  return (
+    progress.portionComplete &&
+    progress.trimCount > 0 &&
+    !progress.trimInProgress &&
+    progress.hasReusableTrimWaste
+  );
 }

@@ -74,16 +74,26 @@ Feature: Kitchen Skills Challenge connected session
       Given the student recorded a Portion Precision recipe
       When the student is on Trim Smart
       Then Portion Precision stays available
-      And Reuse stays locked until a Trim ingredient is saved
+      And Reuse stays locked until a Trim ingredient with reusable waste is saved
 
     Scenario: After the recipe is saved, Trim uses that recipe's ingredients
       Given the student recorded a Portion Precision recipe
       Then Trim Smart is shown
       And the selected recipe name stays visible
-      And opening the ingredient combobox shows that recipe's unused ingredients immediately
+      And opening the ingredient combobox shows that recipe's unused ingredients with Hävikki greater than 0
+      And ingredients with 0 percent Hävikki are not listed
       And ingredients from other recipes are not listed
       And typing filters that list
       And already recorded recipe ingredients are not offered again
+      And Record reuse is not shown until a Trim ingredient with reusable waste is saved
+
+    Scenario: A recipe with no Trim Smart ingredients can still complete
+      Given the student recorded a Portion Precision recipe whose ingredients all have 0 percent Hävikki
+      Then Trim Smart shows that there are no Trim Smart ingredients for this recipe
+      And Record reuse is not shown
+      And no Trim or Reuse activity is created
+      When the student chooses Challenge complete
+      Then Finish challenge is available
 
     Scenario: A started Trim ingredient must be finished before going forward
       Given the student has started an ingredient preparation entry
@@ -93,9 +103,23 @@ Feature: Kitchen Skills Challenge connected session
       And Finish challenge is not available
 
     Scenario: After a Trim ingredient is saved the student chooses the next step
-      Given the student saved an ingredient preparation entry
+      Given the student saved an ingredient preparation entry with reusable waste
       Then the student can record another unused recipe ingredient
       And the student can continue to Reuse
+      When the student chooses Record reuse
+      Then Reuse is shown
+
+    Scenario: Saved Trim with no reusable waste does not open Reuse
+      Given the student saved an ingredient preparation entry with 0 grams actual waste
+      Then Record reuse is not shown
+      And Reuse stays locked
+
+    Scenario: Record reuse still works after every eligible recipe ingredient is recorded
+      Given the student saved a preparation entry for every eligible unused recipe ingredient
+      When the student returns to Trim Smart
+      Then the all-recorded empty state is shown
+      When the student chooses Record reuse
+      Then Reuse is shown
 
     Scenario: From Reuse the student can return to Trim
       Given the student has opened Reuse for a saved Trim ingredient

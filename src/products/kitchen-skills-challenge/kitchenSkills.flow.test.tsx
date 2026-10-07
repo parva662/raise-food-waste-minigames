@@ -5,6 +5,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { AppRouter } from '@/app/AppRouter';
 import { getAppMode } from '@/app/routes';
 import {
+  completeTrimAfterIngredient,
+  recordAnkanrintaPortion,
   recordBanaaniTrim,
   recordHedelmatPortion,
   selectTrimIngredient,
@@ -177,12 +179,77 @@ describe('Kitchen Day connected flow', () => {
     await user.click(screen.getByTestId('kitchen-day-submit-portion'));
     const ingredientInput = screen.getByTestId('kitchen-day-ingredient-name');
     expect(ingredientInput).toHaveAttribute('placeholder', 'Select ingredient…');
+    expect(screen.queryByTestId('kitchen-day-trim-no-eligible')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('kitchen-day-trim-no-remaining')).not.toBeInTheDocument();
     await user.click(ingredientInput);
     expect(screen.getByRole('option', { name: 'Banaani' })).toBeInTheDocument();
     expect(screen.getByRole('option', { name: 'Omena' })).toBeInTheDocument();
     expect(screen.getByRole('option', { name: 'Viinirypäle, tumma, kivetön' })).toBeInTheDocument();
     expect(screen.queryByRole('option', { name: 'Hunaja, juokseva, Hunajainen' })).not.toBeInTheDocument();
     expect(screen.queryByText('Type to search ingredients')).not.toBeInTheDocument();
+  });
+
+  it('shows no eligible Trim ingredients for Ankanrinta and lets the session complete', async () => {
+    const user = userEvent.setup();
+    render(<AppRouter />);
+    await recordAnkanrintaPortion(user);
+    expect(screen.getByTestId('kitchen-day-trim-no-eligible')).toHaveTextContent(
+      'No Trim Smart ingredients for this recipe',
+    );
+    expect(screen.queryByTestId('kitchen-day-trim-no-remaining')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('kitchen-day-ingredient-name')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('kitchen-day-continue-reuse')).not.toBeInTheDocument();
+    expect(screen.getByTestId('kitchen-day-nav-reuse')).toHaveAttribute('aria-disabled', 'true');
+    await user.click(screen.getByTestId('kitchen-day-open-finish-summary'));
+    expect(screen.getByTestId('kitchen-day-finish-summary')).toBeInTheDocument();
+    expect(screen.getByTestId('kitchen-day-finish-trim-headline')).toHaveTextContent('No trim recorded');
+    expect(screen.getByTestId('kitchen-day-finish-reuse-headline')).toHaveTextContent('No reuse recorded');
+    expect(screen.queryByTestId('kitchen-day-finish-add-another-ingredient')).not.toBeInTheDocument();
+    expect(screen.getByTestId('kitchen-day-finish-challenge')).toBeInTheDocument();
+  });
+
+  it('opens Reuse from Record reuse after a saved Trim ingredient with reusable waste', async () => {
+    const user = userEvent.setup();
+    render(<AppRouter />);
+    await recordHedelmatPortion(user);
+    await recordBanaaniTrim(user);
+    await user.click(screen.getByTestId('kitchen-day-continue-reuse'));
+    expect(screen.getByTestId('kitchen-day-rescue')).toBeInTheDocument();
+    expect(screen.getByTestId('kitchen-day-rescue-ingredient')).toHaveDisplayValue('Banaani');
+  });
+
+  it('does not offer Reuse when saved Trim has no reusable waste', async () => {
+    const user = userEvent.setup();
+    render(<AppRouter />);
+    await recordHedelmatPortion(user);
+    await recordBanaaniTrim(user, '0');
+    expect(screen.getByTestId('kitchen-day-add-another-ingredient')).toBeInTheDocument();
+    expect(screen.queryByTestId('kitchen-day-continue-reuse')).not.toBeInTheDocument();
+    expect(screen.getByTestId('kitchen-day-nav-reuse')).toHaveAttribute('aria-disabled', 'true');
+    await user.click(screen.getByTestId('kitchen-day-nav-reuse'));
+    expect(screen.getByTestId('kitchen-day-trim')).toBeInTheDocument();
+    expect(screen.queryByTestId('kitchen-day-rescue')).not.toBeInTheDocument();
+  });
+
+  it('opens Reuse from Record reuse after every recipe ingredient is recorded', async () => {
+    const user = userEvent.setup();
+    render(<AppRouter />);
+    await recordHedelmatPortion(user);
+    await recordBanaaniTrim(user);
+    await user.click(screen.getByTestId('kitchen-day-add-another-ingredient'));
+    await selectTrimIngredient(user, 'Omena', 'Omena');
+    await completeTrimAfterIngredient(user);
+    await user.click(screen.getByTestId('kitchen-day-add-another-ingredient'));
+    await selectTrimIngredient(user, 'Viinirypäle', 'Viinirypäle, tumma, kivetön');
+    await completeTrimAfterIngredient(user);
+    expect(screen.queryByTestId('kitchen-day-add-another-ingredient')).not.toBeInTheDocument();
+    await user.click(screen.getByTestId('kitchen-day-nav-portion'));
+    await user.click(screen.getByTestId('kitchen-day-nav-trim'));
+    expect(screen.getByTestId('kitchen-day-trim-no-remaining')).toHaveTextContent(
+      'All recipe ingredients for this session are already recorded.',
+    );
+    await user.click(screen.getByTestId('kitchen-day-continue-reuse'));
+    expect(screen.getByTestId('kitchen-day-rescue')).toBeInTheDocument();
   });
 
   it('allows backward navigation to Portion and from Reuse back to Trim', async () => {

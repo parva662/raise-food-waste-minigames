@@ -13,6 +13,9 @@ const start: KitchenSkillsTaskProgress = {
   reuseComplete: false,
   trimInProgress: false,
   reuseInProgress: false,
+  hasEligibleTrimIngredients: false,
+  hasRemainingEligibleTrimIngredients: false,
+  hasReusableTrimWaste: false,
 };
 
 describe('Kitchen Skills prerequisite-gated navigation', () => {
@@ -30,6 +33,8 @@ describe('Kitchen Skills prerequisite-gated navigation', () => {
       ...start,
       portionComplete: true,
       trimInProgress: true,
+      hasEligibleTrimIngredients: true,
+      hasRemainingEligibleTrimIngredients: true,
     };
     expect(requiredKitchenSkillsSection(afterPortion)).toBe('trim');
     expect(isKitchenSkillsNavEnabled('portion', afterPortion)).toBe(true);
@@ -37,14 +42,53 @@ describe('Kitchen Skills prerequisite-gated navigation', () => {
     expect(isKitchenSkillsNavEnabled('reuse', afterPortion)).toBe(false);
   });
 
-  it('unlocks Reuse after a Trim ingredient is saved and not in progress', () => {
+  it('lets a recipe with no eligible Trim ingredients complete after Portion', () => {
+    const noEligible: KitchenSkillsTaskProgress = {
+      ...start,
+      portionComplete: true,
+    };
+    expect(canFinishKitchenSkillsChallenge(noEligible)).toBe(true);
+    expect(isKitchenSkillsNavEnabled('reuse', noEligible)).toBe(false);
+    expect(requiredKitchenSkillsSection(noEligible)).toBe('trim');
+  });
+
+  it('unlocks Reuse after a Trim ingredient with reusable waste is saved', () => {
     const afterTrimSaved: KitchenSkillsTaskProgress = {
       ...start,
       portionComplete: true,
       trimCount: 1,
+      hasEligibleTrimIngredients: true,
+      hasRemainingEligibleTrimIngredients: true,
+      hasReusableTrimWaste: true,
     };
     expect(isKitchenSkillsNavEnabled('reuse', afterTrimSaved)).toBe(true);
     expect(canFinishKitchenSkillsChallenge(afterTrimSaved)).toBe(false);
+  });
+
+  it('does not open Reuse when saved Trim has no reusable waste', () => {
+    const zeroWaste: KitchenSkillsTaskProgress = {
+      ...start,
+      portionComplete: true,
+      trimCount: 1,
+      hasEligibleTrimIngredients: true,
+      hasRemainingEligibleTrimIngredients: true,
+      hasReusableTrimWaste: false,
+    };
+    expect(isKitchenSkillsNavEnabled('reuse', zeroWaste)).toBe(false);
+    expect(canFinishKitchenSkillsChallenge(zeroWaste)).toBe(true);
+  });
+
+  it('lets the session finish after every eligible Trim is recorded with no reusable waste', () => {
+    const allRecordedZeroWaste: KitchenSkillsTaskProgress = {
+      ...start,
+      portionComplete: true,
+      trimCount: 2,
+      hasEligibleTrimIngredients: true,
+      hasRemainingEligibleTrimIngredients: false,
+      hasReusableTrimWaste: false,
+    };
+    expect(canFinishKitchenSkillsChallenge(allRecordedZeroWaste)).toBe(true);
+    expect(isKitchenSkillsNavEnabled('reuse', allRecordedZeroWaste)).toBe(false);
   });
 
   it('lets the student return from Reuse to Trim to add another ingredient', () => {
@@ -54,6 +98,9 @@ describe('Kitchen Skills prerequisite-gated navigation', () => {
       reuseComplete: false,
       trimInProgress: false,
       reuseInProgress: true,
+      hasEligibleTrimIngredients: true,
+      hasRemainingEligibleTrimIngredients: true,
+      hasReusableTrimWaste: true,
     };
     expect(isKitchenSkillsNavEnabled('trim', onReuse)).toBe(true);
     expect(isKitchenSkillsNavEnabled('portion', onReuse)).toBe(true);
@@ -68,8 +115,14 @@ describe('Kitchen Skills prerequisite-gated navigation', () => {
       reuseComplete: true,
       trimInProgress: false,
       reuseInProgress: false,
+      hasEligibleTrimIngredients: true,
+      hasRemainingEligibleTrimIngredients: false,
+      hasReusableTrimWaste: true,
     };
     expect(canFinishKitchenSkillsChallenge(complete)).toBe(true);
+    expect(
+      canFinishKitchenSkillsChallenge({ ...complete, hasRemainingEligibleTrimIngredients: true }),
+    ).toBe(true);
     expect(canFinishKitchenSkillsChallenge({ ...complete, trimInProgress: true })).toBe(false);
     expect(canFinishKitchenSkillsChallenge({ ...complete, reuseInProgress: true })).toBe(false);
   });

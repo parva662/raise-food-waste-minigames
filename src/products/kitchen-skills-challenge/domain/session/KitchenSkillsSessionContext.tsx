@@ -49,6 +49,12 @@ import {
   type KitchenSkillsTaskProgress,
 } from '@/products/kitchen-skills-challenge/domain/session/challengeGate';
 import { goToKitchenDaySection, type KitchenSkillsHashSection } from '@/app/routes';
+import {
+  eligibleRecipeIngredientsForTrim,
+  hasReusableTrimWaste,
+  remainingRecipeIngredientsForTrim,
+  sessionRecipeReference,
+} from '@/products/kitchen-skills-challenge/domain/session/sessionRecipe';
 
 export type KitchenSkillsCommitResult =
   | { ok: true; mode: 'local' }
@@ -301,9 +307,10 @@ export function KitchenSkillsSessionProvider({
   }, []);
 
   const enterReuse = useCallback(() => {
+    setTrimInProgress(false);
     setShowFinishSummary(false);
     goToKitchenDaySection('reuse');
-  }, []);
+  }, [setTrimInProgress]);
 
   const addAnotherIngredient = useCallback(() => {
     setShowFinishSummary(false);
@@ -368,16 +375,28 @@ export function KitchenSkillsSessionProvider({
     [reviews],
   );
 
-  const taskProgress = useMemo<KitchenSkillsTaskProgress>(
-    () => ({
+  const taskProgress = useMemo<KitchenSkillsTaskProgress>(() => {
+    const recipe = sessionRecipeReference(portionEntries);
+    return {
       portionComplete: portionEntries.length > 0,
       trimCount: trimEntries.length,
       reuseComplete: rescueEntries.length > 0,
       trimInProgress,
       reuseInProgress,
-    }),
-    [portionEntries.length, trimEntries.length, rescueEntries.length, trimInProgress, reuseInProgress],
-  );
+      hasEligibleTrimIngredients: recipe ? eligibleRecipeIngredientsForTrim(recipe).length > 0 : false,
+      hasRemainingEligibleTrimIngredients: recipe
+        ? remainingRecipeIngredientsForTrim(recipe, recordedIngredientIds).length > 0
+        : false,
+      hasReusableTrimWaste: hasReusableTrimWaste(trimEntries),
+    };
+  }, [
+    portionEntries,
+    trimEntries,
+    rescueEntries.length,
+    trimInProgress,
+    reuseInProgress,
+    recordedIngredientIds,
+  ]);
   const requiredSection = requiredKitchenSkillsSection(taskProgress);
   const reviewAllowed = canOpenKitchenSkillsReview(taskProgress);
   const canFinish = canFinishKitchenSkillsChallenge(taskProgress);

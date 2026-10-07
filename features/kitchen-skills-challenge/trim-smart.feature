@@ -20,8 +20,27 @@ Feature: Ingredient preparation in a kitchen day
     Scenario: Trim starts with the ingredient, not a category
       When the student opens ingredient preparation
       Then the first step is choosing a recipe ingredient
+      And only unused recipe ingredients with Hävikki greater than 0 are offered
       And no ingredient category is shown or required
       And free-text ingredient names are not used
+
+    Scenario: A recipe with no eligible Trim ingredients is not a dead end
+      Given every recipe ingredient has 0 percent Hävikki
+      Then Trim Smart shows that there are no Trim Smart ingredients for this recipe
+      And it does not say ingredients were already recorded
+      And Record reuse is not shown
+      And no Trim or Reuse activity is created
+      And the student can complete the challenge
+
+    Scenario: Remaining eligible ingredients stay available
+      Given unused recipe ingredients have Hävikki greater than 0
+      Then those ingredients are offered in the ingredient picker
+      And ingredients with 0 percent Hävikki are not offered
+
+    Scenario: All eligible ingredients can be genuinely recorded
+      Given every eligible unused recipe ingredient already has a preparation entry
+      Then Trim Smart shows that those ingredients are already recorded
+      And Record reuse is shown only when a recorded entry has reusable waste
 
     Scenario: A valid ingredient setup can continue
       When the student selects a recipe ingredient

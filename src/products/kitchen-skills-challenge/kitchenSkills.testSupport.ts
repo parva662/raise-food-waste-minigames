@@ -35,7 +35,7 @@ export async function selectTrimIngredient(user: User, query: string, optionName
   await user.click(screen.getByRole('option', { name: optionName }));
 }
 
-export async function completeTrimAfterIngredient(user: User) {
+export async function completeTrimAfterIngredient(user: User, actualWaste = '450') {
   await user.click(screen.getByRole('button', { name: 'Continue' }));
   await user.type(screen.getByTestId('kitchen-day-starting-weight'), '5000');
   await user.click(screen.getByTestId('kitchen-day-weight-continue'));
@@ -46,11 +46,11 @@ export async function completeTrimAfterIngredient(user: User) {
   await user.click(screen.getByTestId('kitchen-day-start-preparation'));
   await user.click(screen.getByTestId('kitchen-day-finish-preparation'));
   await user.click(screen.getByTestId('kitchen-day-timer-continue'));
-  await user.type(screen.getByTestId('kitchen-day-actual-waste'), '450');
+  await user.type(screen.getByTestId('kitchen-day-actual-waste'), actualWaste);
   await user.click(screen.getByTestId('kitchen-day-submit-trim'));
 }
 
-export async function recordBanaaniTrim(user: User) {
+export async function recordBanaaniTrim(user: User, actualWaste = '450') {
   await selectTrimIngredient(user, 'Banaani', 'Banaani');
-  await completeTrimAfterIngredient(user);
+  await completeTrimAfterIngredient(user, actualWaste);
 }
