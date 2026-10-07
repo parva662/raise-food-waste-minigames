@@ -1,14 +1,8 @@
 import type { ReactNode } from 'react';
-import {
-  extractGroupActivities,
-  getRawKitchenSelfActivitiesInput,
-  getRawKitchenSkillsTrainerActivitiesInput,
-} from '@/platform/gamebus/groupActivities';
-import { getGameBusInputCollections } from '@/platform/gamebus/bridge';
-import { discardedWasteGrams, wastePercentage } from '@/products/kitchen-skills-challenge/domain/trim/derived';
+import { discardedWasteGrams } from '@/products/kitchen-skills-challenge/domain/trim/derived';
 import { TRIM_TECHNIQUE_LABELS } from '@/products/kitchen-skills-challenge/domain/trim/techniques';
-import { compareToKitchenReference } from '@/products/kitchen-skills-challenge/domain/trim/reference';
-import { historicalTrimSamplesFromGroupActivities } from '@/products/kitchen-skills-challenge/read/selectKitchenSkillsActivities';
+import { compareTrimIngredientToRecipeReference } from '@/products/kitchen-skills-challenge/domain/trim/objectiveComparison';
+import { sessionRecipeReference } from '@/products/kitchen-skills-challenge/domain/session/sessionRecipe';
 import {
   formatFinalWeightDifference,
   formatMetricPercent,
@@ -18,9 +12,9 @@ import {
 import { buildPortionRecipeMetrics } from '@/products/kitchen-skills-challenge/domain/portion/metrics';
 import { getRecipeReference, type RecipeReference } from '@/products/kitchen-skills-challenge/domain/portion/recipes';
 import {
+  formatDeltaPercentagePoints,
   formatDurationFromMinutes,
   formatGrams,
-  formatReferenceDelta,
   formatScore,
   formatWastePercent,
 } from '@/products/kitchen-skills-challenge/format';
@@ -34,9 +28,19 @@ import type {
 } from '@/products/kitchen-skills-challenge/domain/types';
 import { KITCHEN_SKILLS_REVIEWED_MODULES } from '@/products/kitchen-skills-challenge/domain/types';
 
-function Fact({ label, value, testId }: { label: string; value: string; testId?: string }) {
+function Fact({
+  label,
+  value,
+  testId,
+  stacked = false,
+}: {
+  label: string;
+  value: string;
+  testId?: string;
+  stacked?: boolean;
+}) {
   return (
-    <div className="kitchen-day-fact">
+    <div className={stacked ? 'kitchen-day-fact kitchen-day-fact--stacked' : 'kitchen-day-fact'}>
       <dt>{label}</dt>
       <dd data-testid={testId}>{value}</dd>
     </div>
@@ -183,6 +187,7 @@ export function SessionEvidence({
   collapsible = false,
   collapsePortionTable = false,
   showWasteAnalytics = true,
+  sessionPortionEntries,
 }: {
   trimEntries: readonly KitchenSkillsTrimEntry[];
   rescueEntries: readonly KitchenSkillsRescueEntry[];
@@ -196,13 +201,11 @@ export function SessionEvidence({
   collapsible?: boolean;
   collapsePortionTable?: boolean;
   showWasteAnalytics?: boolean;
+  /** Portion records for the same session, used to join Trim ingredients to JAMIX. */
+  sessionPortionEntries?: readonly KitchenSkillsPortionEntry[];
 }) {
-  const payload = getGameBusInputCollections();
-  const historicalSamples = historicalTrimSamplesFromGroupActivities([
-    ...extractGroupActivities(getRawKitchenSelfActivitiesInput(payload)),
-    ...extractGroupActivities(getRawKitchenSkillsTrainerActivitiesInput(payload)),
-  ]);
   const visible = new Set(modules);
+  const recipe = sessionRecipeReference(sessionPortionEntries ?? portionEntries);
   const reviews = resolveModuleReviews(moduleReviews, review);
   const rescueTrimLookup = trimEntriesForRescueLookup ?? trimEntries;
 
@@ -215,14 +218,13 @@ export function SessionEvidence({
           ) : (
             <ul className="kitchen-day-evidence-list" data-testid={`${testIdPrefix}-trim-list`}>
               {trimEntries.map((entry) => {
-                const percent = wastePercentage(entry.actualWasteGrams, entry.ingredientWeightGrams);
                 const comparison = showWasteAnalytics
-                  ? compareToKitchenReference({
-                      ingredientId: entry.ingredientId,
-                      studentWastePercent: percent,
-                      historicalSamples,
-                    })
+                  ? compareTrimIngredientToRecipeReference(entry, recipe)
                   : null;
+                const actualRemoved =
+                  comparison?.actualTrimPercent != null
+                    ? `${formatGrams(entry.actualWasteGrams)} (${formatWastePercent(comparison.actualTrimPercent)})`
+                    : formatGrams(entry.actualWasteGrams);
                 return (
                   <li
                     key={entry.ingredientId}
@@ -234,26 +236,35 @@ export function SessionEvidence({
                       <Fact label="Starting weight" value={formatGrams(entry.ingredientWeightGrams)} />
                       <Fact label="Technique" value={TRIM_TECHNIQUE_LABELS[entry.trimTechniques]} />
                       <Fact label="Estimated waste" value={formatGrams(entry.estimatedWasteGrams)} />
-                      <Fact label="Actual waste" value={formatGrams(entry.actualWasteGrams)} />
                       {showWasteAnalytics ? (
                         <Fact
-                          label="Waste rate"
-                          value={formatWastePercent(percent)}
-                          testId={`${testIdPrefix}-waste-percent-${entry.ingredientId}`}
+                          label="Actual removed"
+                          value={actualRemoved}
+                          testId={`${testIdPrefix}-actual-removed-${entry.ingredientId}`}
                         />
-                      ) : null}
-                      {showWasteAnalytics && comparison ? (
+                      ) : (
+                        <Fact label="Actual waste" value={formatGrams(entry.actualWasteGrams)} />
+                      )}
+                      {showWasteAnalytics ? (
                         <Fact
-                          label="Kitchen reference"
-                          value={formatWastePercent(comparison.referenceWastePercent)}
-                          testId={`${testIdPrefix}-reference-${entry.ingredientId}`}
+                          label="JAMIX reference"
+                          stacked
+                          value={
+                            comparison?.status === 'available'
+                              ? `${formatWastePercent(comparison.referenceWastePercent)} (~${formatGrams(comparison.referenceRemovedGrams)} for this starting amount)`
+                              : 'Reference unavailable'
+                          }
+                          testId={`${testIdPrefix}-jamix-reference-${entry.ingredientId}`}
                         />
                       ) : null}
                       <Fact label="Duration" value={formatDurationFromMinutes(entry.durationMinutes)} />
                     </dl>
-                    {showWasteAnalytics && comparison ? (
-                      <p className="kitchen-day-evidence-note">
-                        {formatReferenceDelta(percent, comparison.referenceWastePercent)}
+                    {showWasteAnalytics && comparison?.status === 'available' ? (
+                      <p
+                        className="kitchen-day-evidence-note"
+                        data-testid={`${testIdPrefix}-reference-delta-${entry.ingredientId}`}
+                      >
+                        {formatDeltaPercentagePoints(comparison.deltaPercentagePoints)}
                       </p>
                     ) : null}
                   </li>

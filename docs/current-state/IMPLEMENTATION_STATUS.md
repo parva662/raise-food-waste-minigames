@@ -127,7 +127,7 @@ Canonical: [`../product/kitchen-skills-challenge/KITCHEN_SKILLS_CHALLENGE.md`](.
 
 **CURRENT IMPLEMENTATION on `main`:** Kitchen Skills Challenge is implemented at `#/kitchen-day*` (legacy-stable hashes). Source: `src/products/kitchen-skills-challenge/`. Legacy Trim Smart v1 remains at `#/waste/trim-smart`.
 
-**Student GameBus flow:** `SILENT_ACTIVITY` for Portion / Trim / Reuse; local retain; `kitchenGroupInputSelf.activities` (`GET /api/me/activities`) without actor-id equality for Session Review **and Student Progress**; compact finish summary after Reuse (Add another ingredient returns to Trim); `{ type: 'EXIT' }` only on Finish challenge when there is no unfinished work. Student Trim/summary do not show waste % or Hävikki. Trainer/chef feedback reads dedicated `kitchenSkillsTrainerInput.activities` (`GET /api/groups/activities` filtered to Kitchen Skills templates). `kitchenGroupInput` stays on forecast/closeout (`chefForecast` / `wasteMeasurement`) and is not a Kitchen Skills feed.
+**Student GameBus flow:** `SILENT_ACTIVITY` for Portion / Trim / Reuse; local retain; `kitchenGroupInputSelf.activities` (`GET /api/me/activities`) without actor-id equality for Session Review **and Student Progress**; compact finish summary after Reuse (Add another ingredient returns to Trim); `{ type: 'EXIT' }` only on Finish challenge when there is no unfinished work. Student Trim/summary/Session Review do not show waste % or Hävikki. Tutor Trim evidence and Student Progress show actual vs recipe-specific JAMIX (`referenceWastePercent`) via a shared objective read-model. Trainer/chef feedback reads dedicated `kitchenSkillsTrainerInput.activities` (`GET /api/groups/activities` filtered to Kitchen Skills templates). Student Progress does **not** consume raw group Kitchen Skills activities; anonymous peer cards stay “Not enough peer data yet” until a privacy-safe aggregate exists. `kitchenGroupInput` stays on forecast/closeout (`chefForecast` / `wasteMeasurement`) and is not a Kitchen Skills feed.
 
 **Live GameBus (foodtracker.gamebus.eu):** Student Kitchen Skills Challenge activity schemas and properties were **manually verified** on `https://foodtracker.gamebus.eu`. Student posting is **enabled** for Trim / Rescue / Portion (`KITCHEN_SKILLS_STUDENT_LIVE_INTEGRATION_READY = true`). Trainer `wastePracticeReview` posting is **enabled** (`KITCHEN_SKILLS_TRAINER_LIVE_INTEGRATION_READY = true`): `SILENT_ACTIVITY` with `actors: [selectedStudentActorId]`, one review per module (`reviewedGame`), iframe stays open.
 
@@ -135,14 +135,14 @@ Canonical: [`../product/kitchen-skills-challenge/KITCHEN_SKILLS_CHALLENGE.md`](.
 
 **v1 product-review baseline:** The current student/trainer UX, including Session Review at `#/kitchen-day/review`, is the approved product-review checkpoint for v1.
 
-Gherkin: [`../../features/kitchen-skills-challenge/`](../../features/kitchen-skills-challenge/) — all **APPROVED PRODUCT TARGET**. Intentional `@pending`: percentile / ranking sufficient-data rule.
+Gherkin: [`../../features/kitchen-skills-challenge/`](../../features/kitchen-skills-challenge/) — all **APPROVED PRODUCT TARGET**. Intentional `@pending`: percentile / ranking sufficient-data rule; anonymous Progress peer medians until a privacy-safe GameBus aggregate exists.
 
 | Module | On `main` | Notes |
 |--------|-----------|--------|
 | Trim Smart | `#/kitchen-day/trim` | Recipe-ingredient dropdown after Portion save (unused lines with `referenceWastePercent > 0`); estimate → timed prep → actual; unique `ingredientId` per session; Add more ingredients stays on Trim; Record reuse opens Reuse when there is reusable waste |
 | Rescue & Reuse | `#/kitchen-day/reuse` | Join `sessionId` + `ingredientId`; save opens challenge complete summary |
 | Portion Precision | `#/kitchen-day` (`#/kitchen-day/portion`) | Generated recipe reference; one recipe per session; save continues to Trim |
-| Session Review / Progress / trainer | `#/kitchen-day/review`, `#/kitchen-day-progress`, `#/kitchen-day-tutor` | Review is read-only; Progress Overview + module Recent (last 8 sessions, Recent-only charts) + History archive; trainer staff → sessions → modules; one `wastePracticeReview` per module via `reviewedGame` (`SILENT_ACTIVITY` + `actors`) |
+| Session Review / Progress / trainer | `#/kitchen-day/review`, `#/kitchen-day-progress`, `#/kitchen-day-tutor` | Review is read-only; Progress Overview + module Recent (last 8 sessions, Recent-only charts) + History archive + Trim vs kitchen reference; peer cards gated pending a privacy-safe aggregate; trainer Trim evidence includes JAMIX comparison; session Reviewed when every **evidenced** module is reviewed (missing Trim/Rescue do not stay awaiting); one `wastePracticeReview` per module via `reviewedGame` (`SILENT_ACTIVITY` + `actors`); scores remain Time efficiency + Preparation quality only |
 | Legacy Trim Smart v1 | `#/waste/trim-smart` | Deprecated; old payload |
 
 ---

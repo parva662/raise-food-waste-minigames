@@ -5,7 +5,10 @@ import {
   subscribeGameBusInputCollections,
 } from '@/platform/gamebus/bridge';
 import { isGameBusEmbed } from '@/platform/gamebus/detectEmbed';
-import { extractGroupActivities, getRawKitchenSelfActivitiesInput } from '@/platform/gamebus/groupActivities';
+import {
+  extractGroupActivities,
+  getRawKitchenSelfActivitiesInput,
+} from '@/platform/gamebus/groupActivities';
 import { getAuthenticatedGameBusUser } from '@/platform/gamebus/inputCollections';
 import { buildKitchenSkillsStudentProgressSessions } from '@/products/kitchen-skills-challenge/read/studentProgressSessions';
 import { logKitchenSkillsProgressSelfFeedDebug } from '@/products/kitchen-skills-challenge/read/progressSelfFeedDebug';
@@ -14,6 +17,7 @@ import type { KitchenSkillsTrainerSession } from '@/products/kitchen-skills-chal
 export function useKitchenSkillsStudentProgressData(): {
   actorId: string | null;
   sessions: KitchenSkillsTrainerSession[];
+  peerSessions: KitchenSkillsTrainerSession[];
 } {
   const [actorId, setActorId] = useState<string | null>(null);
   const [sessions, setSessions] = useState<KitchenSkillsTrainerSession[]>([]);
@@ -40,5 +44,6 @@ export function useKitchenSkillsStudentProgressData(): {
     };
   }, []);
 
-  return { actorId, sessions };
+  // Peer cards stay gated until a privacy-safe anonymous aggregate exists. Never hydrate from raw group activities.
+  return { actorId, sessions, peerSessions: [] };
 }

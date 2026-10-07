@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  formatDeltaPercentagePoints,
   formatDurationFromMinutes,
   formatGrams,
   formatReferenceDelta,
@@ -24,6 +25,9 @@ describe('Kitchen Day numeric formatting', () => {
   it('formats reference comparison as human-readable points', () => {
     expect(formatReferenceDelta(4.5, 15)).toBe('10.5 percentage points below reference');
     expect(formatReferenceDelta(17.6, 12)).toBe('5.6 percentage points above reference');
+    expect(formatReferenceDelta(12, 12)).toBe('at reference');
+    expect(formatDeltaPercentagePoints(-1.9, 'short')).toBe('1.9 pp below reference');
+    expect(formatDeltaPercentagePoints(0.8, 'short')).toBe('0.8 pp above reference');
   });
 
   it('formats weights without raw floating-point output', () => {

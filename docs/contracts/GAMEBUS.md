@@ -61,7 +61,7 @@ All three embed kinds use `window.parent.postMessage`. The child sends `IFRAME_R
 - Trainer dashboard **Close** also posts **`EXIT`** (no review post on Close). Confirm dialog only when an unsaved assessment draft is dirty.
 - Tutor `wastePracticeReview` stays **`SILENT_ACTIVITY`** (+ RAISE `actors`) so the tutor iframe remains open for the next student/module.
 - Lunch, forecast, and closeout still post **`ACTIVITY`** where those products need task completion + dialog close.
-- Input collections in this repo include `inputCollectionPari.me`; `kitchenGroupInput.activities` (`GET /groups/activities` filtered to `chefForecast` / `wasteMeasurement` for forecast/closeout); Kitchen Skills student `kitchenGroupInputSelf.activities` (`GET /api/me/activities`); and Kitchen Skills trainer `kitchenSkillsTrainerInput.activities` (`GET /api/groups/activities` filtered to `trimSmart`, `rescueAndReuse`, `portionPrecision`, `wastePracticeReview`). Do not reuse `kitchenGroupInput` for Kitchen Skills.
+- Input collections in this repo include `inputCollectionPari.me`; `kitchenGroupInput.activities` (`GET /groups/activities` filtered to `chefForecast` / `wasteMeasurement` for forecast/closeout); Kitchen Skills student `kitchenGroupInputSelf.activities` (`GET /api/me/activities`); and Kitchen Skills trainer `kitchenSkillsTrainerInput.activities` (`GET /api/groups/activities` filtered to `trimSmart`, `rescueAndReuse`, `portionPrecision`, `wastePracticeReview`). Do not reuse `kitchenGroupInput` for Kitchen Skills. Do **not** attach a trainer-style group Kitchen Skills feed to student Progress: peer comparison needs a privacy-safe anonymous aggregate, which this repo does not invent.
 
 ## Repo contracts
 

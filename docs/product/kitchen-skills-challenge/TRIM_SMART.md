@@ -32,7 +32,7 @@ Exact property list and types: slug contract. Worked example numbers belong in a
 
 ## 5. Calculated (never stored)
 
-Waste % and comparison to the **recipe-ingredient** Hävikki reference (0% is valid) are internal. They are not shown on the student Trim result or challenge summary. Discarded waste after reuse is calculated for the Reuse form.
+Waste % and comparison to the **recipe-ingredient** Hävikki / JAMIX reference (0% is valid) are derived on read from saved Portion `recipeId` + generated recipe data + recorded grams. They are shown on tutor Trim evidence and Student Progress only. They are not shown on the student Trim result, challenge summary, or Session Review, and are not posted to GameBus. Discarded waste after reuse is calculated for the Reuse form.
 
 Percentile / ranking messaging is **@pending** until a sufficient-data rule is agreed.
 

@@ -11,8 +11,11 @@
 
 | Layer | Content |
 |-------|---------|
-| System performance | Calculated waste % vs the recipe-ingredient Hävikki reference (internal; not shown on the student challenge). Portion ingredient accuracy and final-weight deviation. Percentile / ranking **@pending** a sufficient-data rule. |
-| Tutor assessment | One review per completed module (`reviewedGame`): time / quality scores and optional feedback |
+| Objective Trim vs JAMIX | Recipe-ingredient Hävikki (`referenceWastePercent`) compared with recorded starting weight and removed grams. Not a tutor score. Not shown on the student Trim game. |
+| Tutor assessment | One review per completed module (`reviewedGame`): Time efficiency 0–5, Preparation quality 0–5, optional feedback |
+| Anonymous peer context | Progress-only. Group median of Trim **delta vs each person's own JAMIX**, and like-for-like tutor score medians. Never a new overall score. |
+
+Objective Trim math (shared read-model): actual % = removed / starting × 100; reference grams = starting × JAMIX % / 100; delta pp = actual % − JAMIX %. Session totals weight by starting grams (Σ removed / Σ starting; Σ expected reference grams / Σ starting). Neutral copy: above / below / at reference — not “better”. Missing join → **Reference unavailable** (never guessed). 0% Hävikki is a valid reference.
 
 System comparison never pre-fills tutor scores. Analytics are never stored as activity properties. There is no automatic combined Portion score or overall tutor score.
 
@@ -21,7 +24,7 @@ System comparison never pre-fills tutor scores. Analytics are never stored as ac
 | Surface | Route | Scope |
 |---------|-------|-------|
 | Session Review | `#/kitchen-day/review` | Current locked session only; read-only; per-module tutor readbacks; no student-facing waste % or Hävikki |
-| Student Progress | `#/kitchen-day-progress` | Own history; Overview / Progress; module tabs default to **Recent** (last 8 sessions + span, Recent-only charts) with **History** archive (filters, ~10 rows/page); no leaderboard |
+| Student Progress | `#/kitchen-day-progress` | Own history; Overview / Progress; module tabs default to **Recent** (last 8 sessions + span, Recent-only charts) with **History** archive (filters, ~10 rows/page); weighted Trim vs kitchen reference on results only; peer cards stay “Not enough peer data yet” until a privacy-safe anonymous aggregate exists; no leaderboard |
 
 Neither posts measurement activities. Progress does not invent ranking or an overall tutor score.
 
@@ -29,7 +32,8 @@ Neither posts measurement activities. Progress does not invent ranking or an ove
 
 `#/kitchen-day-tutor`: **staff list** → **Needs assessment** / **Reviewed** session tabs → **session detail** with module tabs (Trim / Rescue / Portion).
 
-- Evidence without a matching review keeps the session in Needs assessment (including partial reviews). Modules without evidence do not block Reviewed.
+- Session status uses **only modules with participant evidence**. Evidence + no review → Needs assessment; every evidenced module reviewed → **Reviewed**; some but not all evidenced modules reviewed → Partially reviewed. Modules with no participant evidence create **no** review requirement, are not “Not applicable”, and do not appear as “Trim needs review” / “Rescue needs review” or inflate awaiting counts. Portion-only + Portion reviewed is Reviewed.
+- Trim evidence (when the session Portion recipe joins) shows starting weight, actual removed g/%, JAMIX % and expected grams, and delta in percentage points. Tutor score controls stay unchanged.
 - Independent draft per module tab; scores **0–5** (empty ≠ `0`).
 - Submit one `wastePracticeReview` per module with evidence as `SILENT_ACTIVITY` + RAISE `actors: [selectedStudentActorId]` and `reviewedGame` set to that module slug. Exact properties: slug contract.
 - **Close** posts `{ type: 'EXIT' }` only (no review). Confirm if the active draft is dirty.
@@ -42,10 +46,11 @@ Neither posts measurement activities. Progress does not invent ranking or an ove
 | Who | Product rule | Feed |
 |-----|--------------|------|
 | Student | Progress shows Trim / Reuse / Portion before tutor review exists; attach reviews by `sessionId` + `reviewedGame` (no actor-id equality required) | `kitchenGroupInputSelf` |
+| Student Progress peers | Anonymous aggregate only. Raw peer activities, identities, reviews, and chef feedback must never reach the participant client. Blocked until a verified privacy-safe GameBus projection exists; UI shows “Not enough peer data yet”. Do not attach trainer-style `GET /api/groups/activities` | none |
 | Tutor | Group by actor; actor match when attaching reviews | `kitchenSkillsTrainerInput` |
 | Session Review | May hydrate reviews from both self and trainer feeds (dedupe) | both |
 
-Do **not** reuse `kitchenGroupInput`. Do **not** invent child REST pagination — UX windowing consumes whatever INPUT_COLLECTIONS delivers. Students with zero Kitchen Skills activity are not listed (no group-members collection in this phase).
+Do **not** reuse `kitchenGroupInput`. Do **not** invent child REST pagination — UX windowing consumes whatever INPUT_COLLECTIONS delivers. Students with zero Kitchen Skills activity are not listed (no group-members collection in this phase). Peer cards never show names, actor ids, or raw peer activities.
 
 Debug: with `?gamebusDebug=1` (or DEV), Progress can log `kitchen-skills-progress.self-feed-reviews`.
 

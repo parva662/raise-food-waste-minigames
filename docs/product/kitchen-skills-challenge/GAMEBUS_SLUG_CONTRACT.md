@@ -141,6 +141,8 @@ One review per student Kitchen Skills module (`reviewedGame`), not one judgement
 
 Accessors: `getRawKitchenSelfActivitiesInput`, `getRawKitchenSkillsTrainerActivitiesInput`, and `getRawKitchenGroupActivitiesInput` in `src/platform/gamebus/groupActivities.ts`. Student hydration and Progress do **not** require `activity.actor.id === inputCollectionPari.me.id`. Do **not** reuse `kitchenGroupInput` for Kitchen Skills trainer or Progress.
 
+**Privacy:** Participant pages may receive own identifiable data (`kitchenGroupInputSelf`). They must **not** receive raw peer activities, actor identities, review records, or chef feedback. Do **not** attach `kitchenSkillsTrainerInput` or any `GET /api/groups/activities` Kitchen Skills feed to the student Progress page. Anonymous peer comparison is **blocked** until a verified privacy-safe GameBus aggregate/projection exists; until then Progress shows “Not enough peer data yet”. This repo does **not** invent that aggregate endpoint.
+
 `kitchenGroupInput` is an operational Chef-group feed. Its live request is `where.activity.template.$in: ["chefForecast","wasteMeasurement"]`, so it can never return Kitchen Skills templates. Trainer listing reads dedicated `kitchenSkillsTrainerInput`. Parsers stay on the observed live shape (`template: { slug, name }`, `properties[].template.slug` + `value.value`, `actor.id`). Student SILENT_ACTIVITY lives on `/api/me/activities` and is read back through `kitchenGroupInputSelf`.
 
 **TASK:** one Custom Embed **task** lists `trimSmart`, `rescueAndReuse`, and `portionPrecision`. Student writes are `SILENT_ACTIVITY`; **Finish challenge** posts `{ type: 'EXIT' }`. Tutor `wastePracticeReview` posts `SILENT_ACTIVITY` with `actors: [selectedStudentActorId]` (no `studentId` property). Protocol index: [`../../contracts/GAMEBUS.md`](../../contracts/GAMEBUS.md). Task rules: [`../../contracts/KITCHEN_SKILLS_CHALLENGE_TASK.md`](../../contracts/KITCHEN_SKILLS_CHALLENGE_TASK.md).
@@ -191,6 +193,12 @@ This is **not** a platform blocker and is **not** a new API invented in the SPA.
 - Post `SILENT_ACTIVITY` with `actors: [selectedStudentActorId]`
 - Do **not** add `studentId`
 - Unlink / stop requiring: `reviewedActivityId`, `reasonCode`, `freeTextNote`, `unusualEvent`, `serviceDate`
+
+### Student Progress — do not attach a raw group Kitchen Skills feed
+
+Do **not** add `GET /api/groups/activities` (trainer-style Kitchen Skills templates) to the student Progress custom page. Even if the UI showed only medians, that payload would expose other participants’ raw activities, identities, reviews, and chef feedback in the participant browser.
+
+Anonymous peer comparison stays data-gated (“Not enough peer data yet”) until a verified privacy-safe GameBus aggregate/projection can deliver anonymous statistics only. Do not invent that endpoint in this SPA.
 
 ---
 

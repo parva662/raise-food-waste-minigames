@@ -1,5 +1,16 @@
 import { useMemo, useState } from 'react';
-import { formatSessionDate, formatWastePercent } from '@/products/kitchen-skills-challenge/format';
+import {
+  formatDeltaPercentagePoints,
+  formatSessionDate,
+  formatWastePercent,
+} from '@/products/kitchen-skills-challenge/format';
+import { compareTrimSessionFromPortion } from '@/products/kitchen-skills-challenge/domain/trim/objectiveComparison';
+import type { TrimSessionObjectiveComparison } from '@/products/kitchen-skills-challenge/domain/trim/objectiveComparison';
+import {
+  peerModuleScoreStatistic,
+  peerTrimDeltaStatistic,
+  type AnonymousPeerStatistic,
+} from '@/products/kitchen-skills-challenge/read/anonymousPeerComparison';
 import {
   buildKitchenSkillsProgressPoints,
   filterModuleHistorySessions,
@@ -96,6 +107,64 @@ function TutorAssessmentCard({
   );
 }
 
+function ObjectiveTrimCard({
+  comparison,
+  testId,
+}: {
+  comparison: TrimSessionObjectiveComparison;
+  testId: string;
+}) {
+  return (
+    <div className="kitchen-day-progress-norm-card" data-testid={testId}>
+      <h4 className="kitchen-day-progress-norm-card__title">Kitchen reference</h4>
+      {comparison.actualTrimPercent != null ? (
+        <p data-testid={`${testId}-actual`}>Actual trim: {formatWastePercent(comparison.actualTrimPercent)}</p>
+      ) : null}
+      {comparison.status === 'available' ? (
+        <>
+          <p data-testid={`${testId}-reference`}>
+            Kitchen reference: {formatWastePercent(comparison.referenceTrimPercent)}
+          </p>
+          <p data-testid={`${testId}-delta`}>
+            {formatDeltaPercentagePoints(comparison.deltaPercentagePoints, 'short')}
+          </p>
+        </>
+      ) : (
+        <p data-testid={`${testId}-unavailable`}>Reference unavailable</p>
+      )}
+    </div>
+  );
+}
+
+function AnonymousPeerCard({
+  title,
+  statistic,
+  formatMedian,
+  ownResult,
+  testId,
+}: {
+  title: string;
+  statistic: AnonymousPeerStatistic;
+  formatMedian: (median: number) => string;
+  ownResult?: string;
+  testId: string;
+}) {
+  return (
+    <div className="kitchen-day-progress-peer-card" data-testid={testId}>
+      <h4 className="kitchen-day-progress-peer-card__title">{title}</h4>
+      {ownResult ? <p data-testid={`${testId}-own`}>Your result: {ownResult}</p> : null}
+      {statistic.status === 'hidden' ? (
+        <p data-testid={`${testId}-empty`}>Not enough peer data yet</p>
+      ) : (
+        <>
+          <p data-testid={`${testId}-median`}>{formatMedian(statistic.median)}</p>
+          <p data-testid={`${testId}-sample`}>Group median · {statistic.peerCount} peers</p>
+        </>
+      )}
+    </div>
+  );
+}
+
 function moduleSessionMetrics(
   session: KitchenSkillsTrainerSession,
   module: KitchenSkillsReviewedModule,
@@ -104,6 +173,9 @@ function moduleSessionMetrics(
   const metrics: string[] = [];
   if (module === 'trimSmart') {
     if (point?.wastePercent != null) metrics.push(`Waste ${formatWastePercent(point.wastePercent)}`);
+    if (point?.deltaPercentagePoints != null) {
+      metrics.push(formatDeltaPercentagePoints(point.deltaPercentagePoints, 'short'));
+    }
     if (point?.durationMinutes != null) metrics.push(formatDurationMinutes(point.durationMinutes));
   } else if (module === 'rescueAndReuse') {
     metrics.push(
@@ -185,6 +257,8 @@ function ModuleSessionCard({
 }) {
   const review = findModuleReview(session, module);
   const metrics = moduleSessionMetrics(session, module, point);
+  const trimComparison =
+    module === 'trimSmart' ? compareTrimSessionFromPortion(session.trimEntries, session.portionEntries) : null;
 
   return (
     <details className="kitchen-day-progress-session-card" data-testid={`kitchen-day-progress-session-${module}-${session.sessionId}`}>
@@ -213,6 +287,12 @@ function ModuleSessionCard({
                 : `${session.portionEntries.length} Portion Precision entr${session.portionEntries.length === 1 ? 'y' : 'ies'}`}
           </p>
         ) : null}
+        {trimComparison ? (
+          <ObjectiveTrimCard
+            comparison={trimComparison}
+            testId={`kitchen-day-progress-session-norm-${session.sessionId}`}
+          />
+        ) : null}
         {review ? (
           <TutorAssessmentCard review={review} sessionDate={session.sessionDate} compact />
         ) : (
@@ -234,6 +314,8 @@ function ModuleHistoryRow({
 }) {
   const review = findModuleReview(session, module);
   const metrics = moduleSessionMetrics(session, module, point);
+  const trimComparison =
+    module === 'trimSmart' ? compareTrimSessionFromPortion(session.trimEntries, session.portionEntries) : null;
 
   return (
     <details
@@ -256,6 +338,12 @@ function ModuleHistoryRow({
         </span>
       </summary>
       <div className="kitchen-day-progress-history-row__body">
+        {trimComparison ? (
+          <ObjectiveTrimCard
+            comparison={trimComparison}
+            testId={`kitchen-day-progress-history-norm-${session.sessionId}`}
+          />
+        ) : null}
         {review ? (
           <TutorAssessmentCard review={review} sessionDate={session.sessionDate} compact />
         ) : (
@@ -393,10 +481,14 @@ function ModuleProgressPanel({
   module,
   sessions,
   points,
+  actorId,
+  peerSessions,
 }: {
   module: KitchenSkillsReviewedModule;
   sessions: readonly KitchenSkillsTrainerSession[];
   points: ReturnType<typeof buildKitchenSkillsProgressPoints>;
+  actorId: string | null;
+  peerSessions: readonly KitchenSkillsTrainerSession[];
 }) {
   const metrics = progressMetricsForModule(module);
   const [metricKey, setMetricKey] = useState<KitchenSkillsProgressMetricKey | null>(
@@ -409,6 +501,18 @@ function ModuleProgressPanel({
   const recentPoints = points.filter((point) => recentIds.has(point.sessionId));
   const series = activeMetric ? metricSeriesForModule(recentPoints, activeMetric.key) : [];
   const latestReview = moduleReviewHistory(moduleSessions, module)[0] ?? null;
+  const latestTrimComparison =
+    module === 'trimSmart' && recentSessions[0]
+      ? compareTrimSessionFromPortion(recentSessions[0].trimEntries, recentSessions[0].portionEntries)
+      : null;
+  const trimPeer = module === 'trimSmart' ? peerTrimDeltaStatistic(actorId, peerSessions) : null;
+  const timePeer = peerModuleScoreStatistic(actorId, peerSessions, module, 'timeEfficiencyScore');
+  const qualityPeer = peerModuleScoreStatistic(
+    actorId,
+    peerSessions,
+    module,
+    'preparationQualityScore',
+  );
 
   if (moduleSessions.length === 0) {
     return (
@@ -441,6 +545,28 @@ function ModuleProgressPanel({
           points={recentPoints}
           totalSessionCount={moduleSessions.length}
         />
+
+        {latestTrimComparison ? (
+          <ObjectiveTrimCard
+            comparison={latestTrimComparison}
+            testId={`kitchen-day-progress-norm-${module}`}
+          />
+        ) : null}
+        {trimPeer ? (
+          <AnonymousPeerCard
+            title="Anonymous peer context"
+            statistic={trimPeer}
+            ownResult={
+              latestTrimComparison?.status === 'available'
+                ? formatDeltaPercentagePoints(latestTrimComparison.deltaPercentagePoints, 'short')
+                : undefined
+            }
+            formatMedian={(median) =>
+              `Anonymous group median: ${formatDeltaPercentagePoints(median, 'short')}`
+            }
+            testId={`kitchen-day-progress-peer-trim-${module}`}
+          />
+        ) : null}
 
         {metrics.length > 1 ? (
           <div
@@ -500,6 +626,18 @@ function ModuleProgressPanel({
             No tutor assessment yet.
           </p>
         )}
+        <AnonymousPeerCard
+          title="Anonymous peer tutor scores"
+          statistic={timePeer}
+          formatMedian={(median) => `Time efficiency median: ${median.toFixed(1)} / 5`}
+          testId={`kitchen-day-progress-peer-time-${module}`}
+        />
+        <AnonymousPeerCard
+          title="Anonymous peer tutor scores"
+          statistic={qualityPeer}
+          formatMedian={(median) => `Preparation quality median: ${median.toFixed(1)} / 5`}
+          testId={`kitchen-day-progress-peer-quality-${module}`}
+        />
 
         <h4 className="kitchen-day-progress-section__subtitle">Recent sessions</h4>
         <ul className="kitchen-day-progress-session-list" data-testid={`kitchen-day-progress-sessions-${module}`}>
@@ -580,6 +718,12 @@ function OverviewModuleCard({
             </dd>
           </div>
         ) : null}
+        {module === 'trimSmart' && latestPoint?.deltaPercentagePoints != null ? (
+          <div>
+            <dt>Vs kitchen reference</dt>
+            <dd>{formatDeltaPercentagePoints(latestPoint.deltaPercentagePoints, 'short')}</dd>
+          </div>
+        ) : null}
       </dl>
       {latestReview?.review.chefFeedback ? (
         <p className="kitchen-day-progress-overview-card__feedback">
@@ -599,7 +743,7 @@ function OverviewModuleCard({
 }
 
 export function KitchenSkillsProgressApp() {
-  const { sessions: ownSessions } = useKitchenSkillsStudentProgressData();
+  const { actorId, sessions: ownSessions, peerSessions } = useKitchenSkillsStudentProgressData();
   const [tab, setTab] = useState<'overview' | 'progress'>('overview');
   const [moduleTab, setModuleTab] = useState<KitchenSkillsReviewedModule>('trimSmart');
   const points = useMemo(() => buildKitchenSkillsProgressPoints(ownSessions), [ownSessions]);
@@ -714,6 +858,8 @@ export function KitchenSkillsProgressApp() {
             module={moduleTab}
             sessions={ownSessions}
             points={points}
+            actorId={actorId}
+            peerSessions={peerSessions}
           />
         </section>
       )}

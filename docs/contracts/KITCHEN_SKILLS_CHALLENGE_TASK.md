@@ -25,7 +25,7 @@ Do **not** split Kitchen Day into three embeds. Embedded `sessionId` is one stud
 
 `/api/groups/activities?where={"activity":{"template":{"$in":["trimSmart","rescueAndReuse","portionPrecision","wastePracticeReview"]}}}`
 
-Do not reuse `kitchenGroupInput` (that collection is `chefForecast` / `wasteMeasurement`). Student Progress uses `kitchenGroupInputSelf.activities` (`GET /api/me/activities`) and does not wait for tutor review.
+Do not reuse `kitchenGroupInput` (that collection is `chefForecast` / `wasteMeasurement`). Student Progress uses `kitchenGroupInputSelf.activities` (`GET /api/me/activities`) and does not wait for tutor review. Do **not** attach `kitchenSkillsTrainerInput` or any raw `GET /api/groups/activities` Kitchen Skills feed to student Progress. Anonymous peer comparison is blocked until a privacy-safe GameBus aggregate exists.
 
 ## Evidence (inspected, not inferred)
 

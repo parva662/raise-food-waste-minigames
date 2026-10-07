@@ -50,6 +50,7 @@ Exact stored properties: slug contract. Module intent: [`TRIM_SMART.md`](TRIM_SM
 | Surface | Product rule | Feed (reference) |
 |---------|--------------|------------------|
 | Student challenge + Session Review + Progress | Show Trim / Reuse / Portion before any tutor review | `kitchenGroupInputSelf` → `GET /api/me/activities` |
+| Student Progress anonymous peers | Anonymous aggregate only; never raw peer activities. Blocked until a verified privacy-safe GameBus projection exists | none (do not attach trainer-style `/api/groups/activities`) |
 | Tutor dashboard | Staff → sessions → modules; one optional assessment per completed module | `kitchenSkillsTrainerInput` (Kitchen Skills templates only) |
 | Forecast / closeout | Out of scope for this product | `kitchenGroupInput` — **do not** reuse for Kitchen Skills |
 
@@ -57,7 +58,7 @@ Session Review is the current locked session only. Progress is own history. Tuto
 
 ## 4. Kitchen reference (analytics)
 
-Each generated recipe ingredient keeps its source `Hävikki` as `referenceWastePercent` on that **recipe ingredient entry** (not a generic ingredient norm). `0` is a valid reference and is not treated as missing. This value is internal for chef feedback and later progress/dashboard benchmarking. It is not shown on the student Trim result, challenge summary, or Session Review. Do not store averages, waste %, or percentiles on GameBus activities. Percentile / ranking stays off until a sufficient-data rule is agreed (**@pending** analytics decision).
+Each generated recipe ingredient keeps its source `Hävikki` as `referenceWastePercent` on that **recipe ingredient entry** (not a generic ingredient norm). `0` is a valid reference and is not treated as missing. Tutor Trim evidence and Student Progress derive actual % vs this recipe-specific JAMIX value from saved Portion `recipeId` + recorded grams. It is not shown on the student Trim result, challenge summary, or Session Review. Do not store averages, waste %, or percentiles on GameBus activities. Percentile / ranking stays off until a sufficient-data rule is agreed (**@pending** analytics decision). Anonymous Progress peer medians are blocked until a verified privacy-safe GameBus aggregate exists; when unblocked they would compare Trim **delta vs each person's own JAMIX**, not raw waste % across ingredients. Do not attach `GET /api/groups/activities` to the participant Progress page.
 
 ## 5. Non-goals
 

@@ -25,7 +25,7 @@
 - Analytics calculated on read — never stored as activity properties.
 - One Portion activity per recipe; actuals in `recipeComposition`. Recipe targets come from the generated workbook extract, not a hand-maintained stub.
 - One tutor assessment per **completed module** (`reviewedGame`), not one score for the whole session.
-- Student challenge / Session Review / Progress: `kitchenGroupInputSelf.activities`. Trainer feedback: `kitchenSkillsTrainerInput.activities`. Keep `kitchenGroupInput` for forecast/closeout only.
+- Student challenge / Session Review / Progress: `kitchenGroupInputSelf.activities`. Trainer feedback: `kitchenSkillsTrainerInput.activities`. Do not attach raw group Kitchen Skills activities to student Progress; peer comparison waits for a privacy-safe aggregate. Keep `kitchenGroupInput` for forecast/closeout only.
 - Property names only from the slug contract.
 - Platform reads: `src/platform/gamebus/groupActivities.ts`. Session identity helpers live in `src/products/kitchen-skills-challenge/`.
 
@@ -51,4 +51,4 @@ Retrieval of activities that already exist is **not** blocked by those admin gap
 
 ## 5. Risks
 
-Invented slugs; posting `ingredientCategory` on Kitchen Skills Trim; per-line Portion activities; `sourceActivityId`; per-ingredient tutor scores; storing calculated analytics; inventing a Kitchen Skills retrieval REST API; inventing tutor-on-behalf fields beyond RAISE `actors` on `wastePracticeReview`.
+Invented slugs; posting `ingredientCategory` on Kitchen Skills Trim; per-line Portion activities; `sourceActivityId`; per-ingredient tutor scores; storing calculated analytics; inventing a Kitchen Skills retrieval REST API; inventing a GameBus anonymous-aggregate endpoint; inventing tutor-on-behalf fields beyond RAISE `actors` on `wastePracticeReview`.

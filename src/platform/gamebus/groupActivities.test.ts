@@ -61,6 +61,26 @@ describe('groupActivities input adapter', () => {
     })).toBeUndefined();
   });
 
+  it('does not treat trainer or forecast collections as the student self feed', () => {
+    const payload = {
+      [KITCHEN_SKILLS_TRAINER_INPUT_COLLECTION_KEY]: {
+        [KITCHEN_GROUP_ACTIVITIES_REQUEST_KEY]: [{ id: 'trainer-1', template: { slug: 'trimSmart' } }],
+      },
+      [KITCHEN_GROUP_INPUT_COLLECTION_KEY]: {
+        [KITCHEN_GROUP_ACTIVITIES_REQUEST_KEY]: [{ id: 'forecast-1', template: { slug: 'chefForecast' } }],
+      },
+      kitchenGroupInputSelf: {
+        activities: [{ id: 'self-1', template: { slug: 'trimSmart' } }],
+      },
+    };
+    expect(getRawKitchenSelfActivitiesInput(payload)).toEqual([
+      { id: 'self-1', template: { slug: 'trimSmart' } },
+    ]);
+    expect(getRawKitchenSkillsTrainerActivitiesInput(payload)).toEqual([
+      { id: 'trainer-1', template: { slug: 'trimSmart' } },
+    ]);
+  });
+
   it('extracts activities from paginated docs envelope', () => {
     const activities = [{ id: 'wm-1', template: { slug: 'wasteMeasurement' } }];
     expect(extractGroupActivities({ docs: activities, totalDocs: 1 })).toEqual(activities);

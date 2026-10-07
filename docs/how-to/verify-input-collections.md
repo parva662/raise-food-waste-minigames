@@ -23,10 +23,11 @@ Official protocol index: [`../contracts/GAMEBUS.md`](../contracts/GAMEBUS.md). F
 | `inputCollectionPari.me` | `GET /api/me` | Authenticated identity for all embeds |
 | `kitchenGroupInput.activities` | Group activities filtered to `chefForecast` / `wasteMeasurement` | Forecast, closeout, Forecast Results |
 | `kitchenGroupInputSelf.activities` | `GET /api/me/activities` | Kitchen Skills student challenge, Session Review, Progress |
-| `kitchenSkillsTrainerInput.activities` | Group activities filtered to Kitchen Skills templates | Kitchen Skills trainer / chef feedback |
+| `kitchenSkillsTrainerInput.activities` | Group activities filtered to Kitchen Skills templates | Kitchen Skills trainer / chef feedback only — **not** student Progress |
 | `serviceCloseoutInput.chefForecasts` (legacy aliases exist) | Closeout forecast lookup | Service Closeout (compatibility path) |
 
 **Do not** reuse `kitchenGroupInput` for Kitchen Skills student or trainer surfaces.
+**Do not** attach `GET /api/groups/activities` Kitchen Skills templates to student Progress. Peer cards stay empty until a privacy-safe aggregate exists.
 
 ---
 
@@ -40,7 +41,7 @@ Application code reads collections through helpers (there is **no** documented `
 | `getAuthenticatedGameBusUser` / `inputCollectionPari.me` | Authenticated identity |
 | `getRawKitchenGroupActivitiesInput` | `kitchenGroupInput.activities` |
 | `getRawKitchenSelfActivitiesInput` | `kitchenGroupInputSelf.activities` |
-| `getRawKitchenSkillsTrainerActivitiesInput` | `kitchenSkillsTrainerInput.activities` |
+| `getRawKitchenSkillsTrainerActivitiesInput` | `kitchenSkillsTrainerInput.activities` (trainer only) |
 | `src/platform/gamebus/bridge.ts` | Stores parent `INPUT_COLLECTIONS`; logs on receive when investigation logging is on |
 | `src/platform/gamebus/inputCollections.ts` | Pari + service-closeout forecast lookup |
 | `src/platform/gamebus/groupActivities.ts` | Group / self / trainer kitchen feeds |

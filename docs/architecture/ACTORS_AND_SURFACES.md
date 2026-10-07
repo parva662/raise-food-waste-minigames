@@ -17,7 +17,7 @@ People working in the kitchen (in this pilot they are often students of the kitc
 - Kitchen Forecast (`#/chef`)
 - Service Closeout (`#/service-closeout`)
 - Forecast Results participant (`#/chef-results`)
-- Kitchen Skills Challenge (`#/kitchen-day*`; Progress reads `kitchenGroupInputSelf`)
+- Kitchen Skills Challenge (`#/kitchen-day*`; Progress reads `kitchenGroupInputSelf` only)
 
 ### 3. Chef / trainer
 

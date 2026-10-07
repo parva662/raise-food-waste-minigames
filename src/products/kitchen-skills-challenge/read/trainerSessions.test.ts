@@ -7,6 +7,8 @@ import {
   modulesAwaitingAssessmentCount,
   partitionTrainerSessionsByAssessment,
   sessionAssessmentStatus,
+  sessionPendingStatusPhrases,
+  sessionReviewedScorePhrases,
 } from '@/products/kitchen-skills-challenge/read/trainerSessions';
 import type { KitchenSkillsReviewedModule } from '@/products/kitchen-skills-challenge/domain/types';
 
@@ -285,6 +287,61 @@ describe('Kitchen Day chef session grouping', () => {
     expect(modulesAwaitingAssessmentCount(sessions.find((s) => s.sessionId === trimOnlyReviewed)!)).toBe(0);
     expect(sessions.find((s) => s.sessionId === complete)?.moduleReviews.trimSmart?.chefFeedback).toBe(
       'Clean knife work.',
+    );
+  });
+
+  it('treats session status as Reviewed when every recorded module is reviewed', () => {
+    const portionOnly = 'kitchen-day:task-1:user-1:portion-only';
+    const portionTrim = 'kitchen-day:task-1:user-1:portion-trim';
+    const allThreePartial = 'kitchen-day:task-1:user-1:all-three-partial';
+    const portionUnreviewed = 'kitchen-day:task-1:user-1:portion-unreviewed';
+    const sessions = buildKitchenSkillsTrainerSessions([
+      portionActivity('user-1', portionOnly, 'mayonnaise', '2026-09-25'),
+      reviewActivity('user-1', portionOnly, 'portionPrecision', '2026-09-25'),
+      portionActivity('user-1', portionTrim, 'mayonnaise', '2026-09-24'),
+      trimActivity('user-1', portionTrim, 'carrot', '2026-09-24'),
+      reviewActivity('user-1', portionTrim, 'portionPrecision', '2026-09-24'),
+      reviewActivity('user-1', portionTrim, 'trimSmart', '2026-09-24'),
+      portionActivity('user-1', allThreePartial, 'mayonnaise', '2026-09-23'),
+      trimActivity('user-1', allThreePartial, 'carrot', '2026-09-23'),
+      rescueActivity('user-1', allThreePartial, 'carrot', '2026-09-23'),
+      reviewActivity('user-1', allThreePartial, 'portionPrecision', '2026-09-23'),
+      reviewActivity('user-1', allThreePartial, 'trimSmart', '2026-09-23'),
+      portionActivity('user-1', portionUnreviewed, 'mayonnaise', '2026-09-22'),
+    ]);
+
+    const reviewedPortionOnly = sessions.find((session) => session.sessionId === portionOnly)!;
+    expect(sessionAssessmentStatus(reviewedPortionOnly)).toBe('reviewed');
+    expect(modulesAwaitingAssessmentCount(reviewedPortionOnly)).toBe(0);
+    expect(sessionPendingStatusPhrases(reviewedPortionOnly).join(' ')).not.toMatch(/Trim needs review|Rescue needs review/);
+    expect(sessionReviewedScorePhrases(reviewedPortionOnly)).toEqual(['Portion 4/3']);
+
+    const reviewedPortionTrim = sessions.find((session) => session.sessionId === portionTrim)!;
+    expect(sessionAssessmentStatus(reviewedPortionTrim)).toBe('reviewed');
+    expect(modulesAwaitingAssessmentCount(reviewedPortionTrim)).toBe(0);
+    expect(sessionPendingStatusPhrases(reviewedPortionTrim).join(' ')).not.toMatch(/Rescue needs review/);
+
+    const partial = sessions.find((session) => session.sessionId === allThreePartial)!;
+    expect(sessionAssessmentStatus(partial)).toBe('partially_reviewed');
+    expect(modulesAwaitingAssessmentCount(partial)).toBe(1);
+    expect(sessionPendingStatusPhrases(partial)).toContain('Rescue needs review');
+    expect(sessionPendingStatusPhrases(partial)).not.toContain('Trim needs review');
+
+    const unreviewed = sessions.find((session) => session.sessionId === portionUnreviewed)!;
+    expect(sessionAssessmentStatus(unreviewed)).toBe('needs_assessment');
+    expect(modulesAwaitingAssessmentCount(unreviewed)).toBe(1);
+    expect(sessionPendingStatusPhrases(unreviewed)).toEqual(['Portion needs review']);
+    expect(sessionPendingStatusPhrases(unreviewed)).not.toContain('Trim needs review');
+    expect(sessionPendingStatusPhrases(unreviewed)).not.toContain('Rescue needs review');
+
+    const staff = buildKitchenSkillsTrainerStaffSummaries(sessions);
+    expect(staff[0]?.modulesAwaitingAssessment).toBe(2);
+    const partitioned = partitionTrainerSessionsByAssessment(sessions);
+    expect(partitioned.reviewed.map((session) => session.sessionId).sort()).toEqual(
+      [portionOnly, portionTrim].sort(),
+    );
+    expect(partitioned.needsAssessment.map((session) => session.sessionId).sort()).toEqual(
+      [allThreePartial, portionUnreviewed].sort(),
     );
   });
 });

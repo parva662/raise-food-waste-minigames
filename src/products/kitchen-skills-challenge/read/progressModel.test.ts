@@ -76,6 +76,86 @@ describe('Kitchen Day progress derived metrics', () => {
     expect(points[0]?.ingredientAccuracyPercent).toBe(100);
     expect(points[0]?.finalWeightDeviationPercent).toBe(0);
   });
+
+  it('weights Trim session percents by starting grams instead of averaging equally', () => {
+    const points = buildKitchenSkillsProgressPoints([
+      {
+        actorId: 'user-1',
+        actorName: 'Student',
+        sessionId: 's-trim',
+        sessionDate: '2026-09-23',
+        rescueEntries: [],
+        moduleReviews: {
+          trimSmart: {
+            sessionId: 's-trim',
+            sessionDate: '2026-09-23',
+            submittedAt: '2026-09-23T15:00:00.000Z',
+            reviewedGame: 'trimSmart',
+            timeEfficiencyScore: 1,
+            preparationQualityScore: 5,
+            source: 'persisted',
+          },
+          rescueAndReuse: null,
+          portionPrecision: null,
+        },
+        trimEntries: [
+          {
+            sessionId: 's-trim',
+            sessionDate: '2026-09-23',
+            submittedAt: '2026-09-23T10:03:00.000Z',
+            ingredientId: 'banaani',
+            ingredientName: 'Banaani',
+            ingredientWeightGrams: 5000,
+            trimTechniques: 'trimming',
+            estimatedWasteGrams: 450,
+            actualWasteGrams: 450,
+            durationMinutes: 3,
+            preparationStartedAt: '2026-09-23T10:00:00.000Z',
+            preparationEndedAt: '2026-09-23T10:03:00.000Z',
+            source: 'persisted',
+          },
+          {
+            sessionId: 's-trim',
+            sessionDate: '2026-09-23',
+            submittedAt: '2026-09-23T10:08:00.000Z',
+            ingredientId: 'omena',
+            ingredientName: 'Omena',
+            ingredientWeightGrams: 1000,
+            trimTechniques: 'trimming',
+            estimatedWasteGrams: 50,
+            actualWasteGrams: 50,
+            durationMinutes: 2,
+            preparationStartedAt: '2026-09-23T10:05:00.000Z',
+            preparationEndedAt: '2026-09-23T10:07:00.000Z',
+            source: 'persisted',
+          },
+        ],
+        portionEntries: [
+          {
+            sessionId: 's-trim',
+            sessionDate: '2026-09-23',
+            submittedAt: '2026-09-23T09:00:00.000Z',
+            recipeId: '42',
+            recipeName: 'Hedelmät M,G',
+            finalRecipeWeightGrams: 3700,
+            source: 'persisted',
+            recipeComposition: [
+              { ingredientId: 'banaani', ingredientName: 'Banaani', actualAmount: 1500, unit: 'g' },
+              { ingredientId: 'omena', ingredientName: 'Omena', actualAmount: 1200, unit: 'g' },
+            ],
+          },
+        ],
+      },
+    ]);
+    expect(points[0]?.wastePercent).toBeCloseTo((500 / 6000) * 100);
+    expect(points[0]?.referenceTrimPercent).toBeCloseTo((2050 / 6000) * 100);
+    expect(points[0]?.deltaPercentagePoints).toBeCloseTo(
+      (points[0]?.wastePercent ?? 0) - (points[0]?.referenceTrimPercent ?? 0),
+    );
+    expect(points[0]?.wastePercent).not.toBeCloseTo((9 + 5) / 2);
+    expect(points[0]?.trimTimeEfficiencyScore).toBe(1);
+    expect(points[0]?.trimPreparationQualityScore).toBe(5);
+  });
 });
 
 describe('Kitchen Skills Progress windowing', () => {

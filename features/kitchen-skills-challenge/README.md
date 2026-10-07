@@ -12,4 +12,4 @@ All files below are **APPROVED PRODUCT TARGET**. Public hashes remain `#/kitchen
 
 Slug contract: [`../../docs/product/kitchen-skills-challenge/GAMEBUS_SLUG_CONTRACT.md`](../../docs/product/kitchen-skills-challenge/GAMEBUS_SLUG_CONTRACT.md). GameBus protocol index: [`../../docs/contracts/GAMEBUS.md`](../../docs/contracts/GAMEBUS.md).
 
-Intentional `@pending`: percentile / ranking sufficient-data rule (analytics).
+Intentional `@pending`: percentile / ranking sufficient-data rule (analytics); anonymous Progress peer comparison until a privacy-safe GameBus aggregate exists.

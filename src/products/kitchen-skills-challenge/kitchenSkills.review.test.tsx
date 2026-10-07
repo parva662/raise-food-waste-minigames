@@ -106,7 +106,10 @@ describe('Kitchen Day module chef review', () => {
       expect(screen.getByTestId('kitchen-day-review-form')).toBeInTheDocument();
     });
     expect(screen.getByTestId('kitchen-day-review-unscored')).toBeInTheDocument();
-    expect(screen.getByTestId('kitchen-day-chef-reference-carrot')).toBeInTheDocument();
+    expect(screen.getByTestId('kitchen-day-chef-jamix-reference-carrot')).toHaveTextContent(
+      'Reference unavailable',
+    );
+    expect(screen.queryByText(/better than|worse than/i)).not.toBeInTheDocument();
     expect(screen.queryByTestId('kitchen-day-review-time-value')).not.toBeInTheDocument();
     expect(screen.queryByText(/module score/i)).not.toBeInTheDocument();
     expect(screen.queryByText(/leaderboard|percentile/i)).not.toBeInTheDocument();
@@ -369,6 +372,98 @@ describe('Kitchen Day module chef review', () => {
     expect(screen.getByTestId('kitchen-day-tutor-close')).toBeInTheDocument();
   });
 
+  it('marks a Portion-only session Reviewed without requiring Trim or Rescue', async () => {
+    const user = userEvent.setup();
+    const portionOnlyReviewed = 'kitchen-day:kitchen-day-task-1:user-1:2026-09-25';
+    const portionOnlyPending = 'kitchen-day:kitchen-day-task-1:user-1:2026-09-24';
+    setHash('#/kitchen-day-tutor');
+    render(<AppRouter />);
+    ingestInputCollectionsForTests({
+      kitchenSkillsTrainerInput: {
+        activities: [
+          {
+            id: 'act-portion-reviewed',
+            actor: { id: 'user-1', name: 'Student One' },
+            template: { slug: 'portionPrecision' },
+            properties: [
+              { template: { slug: 'sessionId' }, value: { value: portionOnlyReviewed } },
+              { template: { slug: 'sessionDate' }, value: { value: '2026-09-25' } },
+              { template: { slug: 'submittedAt' }, value: { value: '2026-09-25T11:00:00.000Z' } },
+              { template: { slug: 'recipeId' }, value: { value: '42' } },
+              { template: { slug: 'recipeName' }, value: { value: 'Hedelmät M,G' } },
+              { template: { slug: 'finalRecipeWeightGrams' }, value: { value: 3700 } },
+              {
+                template: { slug: 'recipeComposition' },
+                value: {
+                  value: [{ ingredientId: 'banaani', ingredientName: 'Banaani', actualAmount: 1500, unit: 'g' }],
+                },
+              },
+            ],
+          },
+          {
+            id: 'act-review-portion-only',
+            actor: { id: 'user-1', name: 'Student One' },
+            template: { slug: 'wastePracticeReview' },
+            properties: [
+              { template: { slug: 'sessionId' }, value: { value: portionOnlyReviewed } },
+              { template: { slug: 'sessionDate' }, value: { value: '2026-09-25' } },
+              { template: { slug: 'submittedAt' }, value: { value: '2026-09-25T15:00:00.000Z' } },
+              { template: { slug: 'reviewedGame' }, value: { value: 'portionPrecision' } },
+              { template: { slug: 'timeEfficiencyScore' }, value: { value: 4 } },
+              { template: { slug: 'preparationQualityScore' }, value: { value: 5 } },
+            ],
+          },
+          {
+            id: 'act-portion-pending',
+            actor: { id: 'user-1', name: 'Student One' },
+            template: { slug: 'portionPrecision' },
+            properties: [
+              { template: { slug: 'sessionId' }, value: { value: portionOnlyPending } },
+              { template: { slug: 'sessionDate' }, value: { value: '2026-09-24' } },
+              { template: { slug: 'submittedAt' }, value: { value: '2026-09-24T11:00:00.000Z' } },
+              { template: { slug: 'recipeId' }, value: { value: '42' } },
+              { template: { slug: 'recipeName' }, value: { value: 'Hedelmät M,G' } },
+              { template: { slug: 'finalRecipeWeightGrams' }, value: { value: 3700 } },
+              {
+                template: { slug: 'recipeComposition' },
+                value: {
+                  value: [{ ingredientId: 'banaani', ingredientName: 'Banaani', actualAmount: 1500, unit: 'g' }],
+                },
+              },
+            ],
+          },
+        ],
+      },
+      inputCollectionPari: { me: { id: 'chef-1', firstName: 'Chef', lastName: 'One' } },
+    });
+
+    await waitFor(() => {
+      expect(screen.getByTestId('kitchen-day-tutor-staff-user-1')).toHaveTextContent('1 awaiting');
+    });
+    expect(screen.getByTestId('kitchen-day-tutor-staff-user-1')).not.toHaveTextContent('3 awaiting');
+    await user.click(screen.getByTestId('kitchen-day-tutor-staff-user-1'));
+    await waitFor(() => {
+      expect(screen.getByTestId('kitchen-day-tutor-session-tab-needs')).toHaveTextContent('Needs assessment (1)');
+    });
+    expect(screen.getByTestId('kitchen-day-tutor-staff-session-count')).toHaveTextContent('1 awaiting assessment');
+    expect(screen.getByTestId('kitchen-day-tutor-staff-session-count')).not.toHaveTextContent('3 awaiting');
+    expect(screen.getByTestId(`kitchen-day-chef-session-${portionOnlyPending}`)).toHaveTextContent('Portion needs review');
+    expect(screen.queryByText(/Trim needs review|Rescue needs review/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/not applicable/i)).not.toBeInTheDocument();
+
+    await user.click(screen.getByTestId('kitchen-day-tutor-session-tab-reviewed'));
+    await waitFor(() => {
+      expect(screen.getByTestId(`kitchen-day-chef-session-${portionOnlyReviewed}`)).toBeInTheDocument();
+    });
+    expect(screen.getByTestId(`kitchen-day-tutor-session-status-${portionOnlyReviewed}`)).toHaveTextContent(
+      'Reviewed',
+    );
+    expect(screen.getByTestId(`kitchen-day-tutor-session-scores-${portionOnlyReviewed}`)).toHaveTextContent(
+      'Portion 4/5',
+    );
+    expect(screen.queryByText(/Trim needs review|Rescue needs review/i)).not.toBeInTheDocument();
+  });
+
   it('shows an existing review read-only instead of creating another', async () => {
     setHash(`#/kitchen-day-tutor?sessionId=${encodeURIComponent(sessionOne)}`);
     render(<AppRouter />);
@@ -562,5 +657,80 @@ describe('Kitchen Day module chef review', () => {
     await waitFor(() => {
       expect(screen.getByTestId('kitchen-day-review-form')).toBeInTheDocument();
     });
+  });
+
+  it('shows Trim actual vs JAMIX without filling tutor scores', async () => {
+    const user = userEvent.setup();
+    const hedelmatSession = 'kitchen-day:kitchen-day-task-1:user-1:2026-09-23';
+    setHash(`#/kitchen-day-tutor?sessionId=${encodeURIComponent(hedelmatSession)}`);
+    render(<AppRouter />);
+    ingestInputCollectionsForTests({
+      kitchenSkillsTrainerInput: {
+        activities: [
+          {
+            id: 'act-portion-hedelmat',
+            actor: { id: 'user-1', name: 'Student One' },
+            template: { slug: 'portionPrecision' },
+            properties: [
+              { template: { slug: 'sessionId' }, value: { value: hedelmatSession } },
+              { template: { slug: 'sessionDate' }, value: { value: '2026-09-23' } },
+              { template: { slug: 'submittedAt' }, value: { value: '2026-09-23T09:00:00.000Z' } },
+              { template: { slug: 'recipeId' }, value: { value: '42' } },
+              { template: { slug: 'recipeName' }, value: { value: 'Hedelmät M,G' } },
+              { template: { slug: 'finalRecipeWeightGrams' }, value: { value: 3700 } },
+              {
+                template: { slug: 'recipeComposition' },
+                value: {
+                  value: [
+                    { ingredientId: 'banaani', ingredientName: 'Banaani', actualAmount: 1500, unit: 'g' },
+                    { ingredientId: 'omena', ingredientName: 'Omena', actualAmount: 1200, unit: 'g' },
+                  ],
+                },
+              },
+            ],
+          },
+          {
+            id: 'act-trim-banaani',
+            actor: { id: 'user-1', name: 'Student One' },
+            template: { slug: 'trimSmart' },
+            start: '2026-09-23T10:00:00.000Z',
+            end: '2026-09-23T10:03:00.000Z',
+            properties: [
+              { template: { slug: 'sessionId' }, value: { value: hedelmatSession } },
+              { template: { slug: 'sessionDate' }, value: { value: '2026-09-23' } },
+              { template: { slug: 'submittedAt' }, value: { value: '2026-09-23T10:03:00.000Z' } },
+              { template: { slug: 'ingredientId' }, value: { value: 'banaani' } },
+              { template: { slug: 'ingredientName' }, value: { value: 'Banaani' } },
+              { template: { slug: 'ingredientWeightGrams' }, value: { value: 5000 } },
+              { template: { slug: 'trimTechniques' }, value: { value: 'trimming' } },
+              { template: { slug: 'estimatedWasteGrams' }, value: { value: 600 } },
+              { template: { slug: 'actualWasteGrams' }, value: { value: 450 } },
+              { template: { slug: 'duration' }, obj: { value: 3, unit: 'minutes' } },
+            ],
+          },
+        ],
+      },
+      inputCollectionPari: { me: { id: 'chef-1', firstName: 'Chef', lastName: 'One' } },
+    });
+    await waitFor(() => {
+      expect(screen.getByTestId('kitchen-day-chef-trim-banaani')).toBeInTheDocument();
+    });
+    expect(screen.getByTestId('kitchen-day-chef-actual-removed-banaani')).toHaveTextContent('450 g (9.0%)');
+    expect(screen.getByTestId('kitchen-day-chef-jamix-reference-banaani')).toHaveTextContent(
+      '37.0% (~1850 g for this starting amount)',
+    );
+    expect(screen.getByTestId('kitchen-day-chef-reference-delta-banaani')).toHaveTextContent(
+      '28.0 percentage points below reference',
+    );
+    expect(screen.queryByText(/better than|worse than/i)).not.toBeInTheDocument();
+    expect(screen.getByTestId('kitchen-day-review-unscored')).toBeInTheDocument();
+    expect(screen.getByTestId('kitchen-day-review-time')).toHaveValue('');
+    expect(screen.getByTestId('kitchen-day-review-quality')).toHaveValue('');
+    await user.type(screen.getByTestId('kitchen-day-review-time'), '2');
+    await user.type(screen.getByTestId('kitchen-day-review-quality'), '4');
+    expect(screen.getByTestId('kitchen-day-chef-reference-delta-banaani')).toHaveTextContent(
+      '28.0 percentage points below reference',
+    );
+    expect(screen.getByTestId('kitchen-day-review-time')).toHaveValue('2');
   });
 });

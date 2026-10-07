@@ -1,4 +1,4 @@
-import { wastePercentage } from '@/products/kitchen-skills-challenge/domain/trim/derived';
+import { compareTrimSessionFromPortion } from '@/products/kitchen-skills-challenge/domain/trim/objectiveComparison';
 import { buildPortionRecipeMetrics } from '@/products/kitchen-skills-challenge/domain/portion/metrics';
 import { getRecipeReference } from '@/products/kitchen-skills-challenge/domain/portion/recipes';
 import type {
@@ -12,6 +12,9 @@ export interface KitchenSkillsProgressPoint {
   sessionId: string;
   sessionDate: string;
   wastePercent: number | null;
+  actualTrimPercent: number | null;
+  referenceTrimPercent: number | null;
+  deltaPercentagePoints: number | null;
   durationMinutes: number | null;
   ingredientAccuracyPercent: number | null;
   finalWeightDeviationPercent: number | null;
@@ -41,9 +44,7 @@ export function buildKitchenSkillsProgressPoints(
   return [...sessions]
     .sort((left, right) => left.sessionDate.localeCompare(right.sessionDate))
     .map((session) => {
-      const wasteValues = session.trimEntries.map((entry) =>
-        wastePercentage(entry.actualWasteGrams, entry.ingredientWeightGrams),
-      );
+      const trimComparison = compareTrimSessionFromPortion(session.trimEntries, session.portionEntries);
       const durations = session.trimEntries.map((entry) => entry.durationMinutes);
       const portionMetrics = session.portionEntries.map((entry) =>
         buildPortionRecipeMetrics(entry, getRecipeReference(entry.recipeId)),
@@ -52,7 +53,12 @@ export function buildKitchenSkillsProgressPoints(
       return {
         sessionId: session.sessionId,
         sessionDate: session.sessionDate,
-        wastePercent: average(wasteValues),
+        wastePercent: trimComparison.actualTrimPercent,
+        actualTrimPercent: trimComparison.actualTrimPercent,
+        referenceTrimPercent:
+          trimComparison.status === 'available' ? trimComparison.referenceTrimPercent : null,
+        deltaPercentagePoints:
+          trimComparison.status === 'available' ? trimComparison.deltaPercentagePoints : null,
         durationMinutes: average(durations),
         ingredientAccuracyPercent: average(
           portionMetrics.flatMap((item) =>

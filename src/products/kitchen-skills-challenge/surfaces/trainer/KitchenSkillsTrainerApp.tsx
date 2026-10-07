@@ -8,19 +8,13 @@ import {
   buildKitchenSkillsTrainerStaffSummaries,
   findKitchenSkillsTrainerSession,
   findModuleReview,
-  KITCHEN_SKILLS_MODULE_SHORT_LABELS,
-  moduleHasEvidence,
   partitionTrainerSessionsByAssessment,
   sessionAssessmentStatus,
+  sessionPendingStatusPhrases,
+  sessionReviewedScorePhrases,
 } from '@/products/kitchen-skills-challenge/read/trainerSessions';
-import type {
-  KitchenSkillsReviewedModule,
-  KitchenSkillsTrainerSession,
-} from '@/products/kitchen-skills-challenge/domain/types';
-import {
-  KITCHEN_SKILLS_MODULE_TITLES,
-  KITCHEN_SKILLS_REVIEWED_MODULES,
-} from '@/products/kitchen-skills-challenge/domain/types';
+import type { KitchenSkillsTrainerSession } from '@/products/kitchen-skills-challenge/domain/types';
+import { KITCHEN_SKILLS_REVIEWED_MODULES } from '@/products/kitchen-skills-challenge/domain/types';
 import { KitchenSkillsTrainerSessionDetail } from '@/products/kitchen-skills-challenge/surfaces/trainer/KitchenSkillsTrainerSessionDetail';
 import { postKitchenSkillsChallengeExit } from '@/products/kitchen-skills-challenge/gamebus/postExit';
 import {
@@ -63,36 +57,11 @@ function assessmentStatusLabel(status: ReturnType<typeof sessionAssessmentStatus
   }
 }
 
-function moduleStatusPhrase(
-  session: KitchenSkillsTrainerSession,
-  module: KitchenSkillsReviewedModule,
-): string | null {
-  if (!moduleHasEvidence(session, module)) return null;
-  const label = KITCHEN_SKILLS_MODULE_SHORT_LABELS[module];
-  const review = findModuleReview(session, module);
-  if (review) return `${label} ✓`;
-  return `${label} needs review`;
-}
-
 function pendingSessionSummary(session: KitchenSkillsTrainerSession): string {
-  const parts = KITCHEN_SKILLS_REVIEWED_MODULES.map((module) => moduleStatusPhrase(session, module)).filter(
-    (part): part is string => part !== null,
-  );
   const earliest = earliestSubmittedAt(session);
   const dateLabel = formatSessionDate(session.sessionDate);
   const timeLabel = earliest ? ` · ${formatOperationalTime(earliest)}` : '';
-  return [dateLabel + timeLabel, ...parts].join(' · ');
-}
-
-function reviewedModuleSummary(
-  session: KitchenSkillsTrainerSession,
-  module: KitchenSkillsReviewedModule,
-): string | null {
-  if (!moduleHasEvidence(session, module)) return null;
-  const review = findModuleReview(session, module);
-  const title = KITCHEN_SKILLS_MODULE_TITLES[module];
-  if (!review) return `${title}: missing review`;
-  return `${KITCHEN_SKILLS_MODULE_SHORT_LABELS[module]} ${review.timeEfficiencyScore}/${review.preparationQualityScore}`;
+  return [dateLabel + timeLabel, ...sessionPendingStatusPhrases(session)].join(' · ');
 }
 
 function feedbackPreview(session: KitchenSkillsTrainerSession): string | null {
@@ -388,9 +357,7 @@ function PendingSessionCard({ session }: { session: KitchenSkillsTrainerSession 
 }
 
 function ReviewedSessionCard({ session }: { session: KitchenSkillsTrainerSession }) {
-  const moduleLines = KITCHEN_SKILLS_REVIEWED_MODULES.map((module) =>
-    reviewedModuleSummary(session, module),
-  ).filter((line): line is string => line !== null);
+  const moduleLines = sessionReviewedScorePhrases(session);
   const feedback = feedbackPreview(session);
   const earliest = earliestSubmittedAt(session);
 

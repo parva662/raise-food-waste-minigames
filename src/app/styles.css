@@ -5810,6 +5810,36 @@ ul {
   gap: var(--spacing-sm);
 }
 
+.kitchen-day-progress-norm-card,
+.kitchen-day-progress-peer-card {
+  margin: 0 0 var(--spacing-md);
+  padding: 0.85rem 1rem;
+  border: 1px solid var(--color-border-light);
+  border-radius: var(--radius-md);
+  background: var(--color-surface-muted, var(--color-surface));
+}
+
+.kitchen-day-progress-norm-card {
+  border-left: 3px solid var(--color-primary);
+}
+
+.kitchen-day-progress-peer-card {
+  border-left: 3px solid var(--color-border);
+}
+
+.kitchen-day-progress-norm-card__title,
+.kitchen-day-progress-peer-card__title {
+  margin: 0 0 0.4rem;
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+.kitchen-day-progress-norm-card p,
+.kitchen-day-progress-peer-card p {
+  margin: 0.2rem 0;
+  font-size: var(--font-size-sm);
+}
+
 .kitchen-day-progress-overview-card,
 .kitchen-day-progress-tutor-card,
 .kitchen-day-progress-chart {
@@ -6213,6 +6243,15 @@ ul {
   margin: 0;
   font-weight: 600;
   text-align: right;
+}
+
+.kitchen-day-fact--stacked {
+  grid-column: 1 / -1;
+  grid-template-columns: 1fr;
+}
+
+.kitchen-day-fact--stacked dd {
+  text-align: left;
 }
 
 .kitchen-day-evidence-note,

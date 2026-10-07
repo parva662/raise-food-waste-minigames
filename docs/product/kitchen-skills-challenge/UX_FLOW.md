@@ -24,7 +24,7 @@ Tutor dashboard    #/kitchen-day-tutor      (separate left-menu page)
 
 - Activity page: practical work only. No Progress tab. No tutor functions.
 - Session review: current locked session, read-only summaries, per-module tutor readbacks if already submitted.
-- Progress: own history, Overview / Progress tabs, approved comparisons only. No leaderboard or percentile copy.
+- Progress: own history, Overview / Progress tabs, weighted Trim vs kitchen reference (results only). Peer cards stay “Not enough peer data yet” until a privacy-safe aggregate exists. No leaderboard or percentile copy.
 - Tutor: staff list → sessions → module tabs; evidence per module, then qualitative scores (0–5) for that module. System metrics support judgement; they do not set the scores.
 
 ## 3. Continuous student challenge (same iframe)
@@ -50,5 +50,6 @@ Do not send EXIT after Portion, Trim, Reuse, or Add more ingredients. Tutor revi
 ## 5. Retrieval (product rules)
 
 - **Student challenge / Progress:** `kitchenGroupInputSelf` — self-scoped; do not require `activity.actor.id === me.id`. Progress does not wait for tutor review.
+- **Student Progress peers:** blocked until a privacy-safe anonymous aggregate exists. Do not attach trainer-style `GET /api/groups/activities`. Until then: “Not enough peer data yet”.
 - **Trainer feedback:** `kitchenSkillsTrainerInput` — do not reuse `kitchenGroupInput`.
 - After a silent post, local session state is enough for the next step; later self activities merge and dedupe with local records.

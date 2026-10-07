@@ -411,4 +411,202 @@ describe('Kitchen Day page split', () => {
     expect(screen.getByTestId('kitchen-day-progress-tutor-portionPrecision-quality')).toHaveTextContent('2 / 5');
     expect(screen.queryByText('Rescue feedback')).not.toBeInTheDocument();
   });
+
+  it('shows a weighted Trim vs kitchen reference on Progress and keeps it off the student game', async () => {
+    const user = userEvent.setup();
+    const sessionId = 'kitchen-day:t:user-1:2026-09-23';
+    setHash('#/kitchen-day-progress');
+    render(<AppRouter />);
+    ingestInputCollectionsForTests({
+      kitchenGroupInputSelf: {
+        activities: [
+          hedelmatPortionActivity('user-1', 'Student One', sessionId, '2026-09-23'),
+          trimActivity('user-1', 'Student One', sessionId, '2026-09-23', 'banaani', 'Banaani', 5000, 450),
+          trimActivity('user-1', 'Student One', sessionId, '2026-09-23', 'omena', 'Omena', 1000, 50, '10:08:00'),
+        ],
+      },
+      inputCollectionPari: { me: { id: 'user-1', firstName: 'Student', lastName: 'One' } },
+    });
+    await waitFor(() => {
+      expect(screen.getByTestId('kitchen-day-progress-overview-trimSmart')).toHaveTextContent(
+        '25.8 pp below reference',
+      );
+    });
+    await user.click(screen.getByTestId('kitchen-day-progress-tab-progress'));
+    await waitFor(() => {
+      expect(screen.getByTestId('kitchen-day-progress-norm-trimSmart-actual')).toHaveTextContent(
+        'Actual trim: 8.3%',
+      );
+    });
+    expect(screen.getByTestId('kitchen-day-progress-norm-trimSmart-reference')).toHaveTextContent(
+      'Kitchen reference: 34.2%',
+    );
+    expect(screen.getByTestId('kitchen-day-progress-norm-trimSmart-delta')).toHaveTextContent(
+      '25.8 pp below reference',
+    );
+    expect(screen.getByTestId('kitchen-day-progress-peer-trim-trimSmart-empty')).toHaveTextContent(
+      'Not enough peer data yet',
+    );
+    expect(screen.queryByText(/leaderboard|percentile|better than/i)).not.toBeInTheDocument();
+
+    setHash('#/kitchen-day');
+    await waitFor(() => {
+      expect(screen.getByTestId('kitchen-day-nav-trim')).toBeInTheDocument();
+    });
+    expect(screen.queryByTestId('kitchen-day-progress-norm-trimSmart')).not.toBeInTheDocument();
+    expect(screen.queryByText('Kitchen reference: 34.2%')).not.toBeInTheDocument();
+  });
+
+  it('ignores raw group Kitchen Skills activities on Progress and keeps own JAMIX comparison', async () => {
+    const user = userEvent.setup();
+    setHash('#/kitchen-day-progress');
+    render(<AppRouter />);
+    ingestInputCollectionsForTests({
+      kitchenGroupInputSelf: {
+        activities: [
+          hedelmatPortionActivity('user-1', 'Student One', 'kitchen-day:t:user-1:2026-09-23', '2026-09-23'),
+          trimActivity(
+            'user-1',
+            'Student One',
+            'kitchen-day:t:user-1:2026-09-23',
+            '2026-09-23',
+            'banaani',
+            'Banaani',
+            1000,
+            100,
+          ),
+        ],
+      },
+      kitchenSkillsPeerInput: {
+        activities: [
+          ...peerTrimBundle('p1', 'Student Alpha', '2026-09-20', 370),
+          ...peerTrimBundle('p2', 'Student Beta', '2026-09-22', 370),
+          ...peerTrimBundle('p3', 'Student Gamma', '2026-09-22', 370),
+          reviewActivity('p1', 'Student Alpha', '2026-09-22', 5, 4),
+          reviewActivity('p2', 'Student Beta', '2026-09-22', 3, 4),
+          reviewActivity('p3', 'Student Gamma', '2026-09-22', 4, 5),
+        ],
+      },
+      kitchenSkillsTrainerInput: {
+        activities: [
+          ...peerTrimBundle('p1', 'Student Alpha', '2026-09-22', 100),
+          reviewActivity('p1', 'Student Alpha', '2026-09-22', 5, 4),
+        ],
+      },
+      kitchenGroupInput: {
+        activities: [{ id: 'forecast-1', template: { slug: 'chefForecast' }, properties: [] }],
+      },
+      inputCollectionPari: { me: { id: 'user-1', firstName: 'Student', lastName: 'One' } },
+    });
+    await user.click(screen.getByTestId('kitchen-day-progress-tab-progress'));
+    await waitFor(() => {
+      expect(screen.getByTestId('kitchen-day-progress-norm-trimSmart-delta')).toHaveTextContent(
+        '27.0 pp below reference',
+      );
+    });
+    expect(screen.getByTestId('kitchen-day-progress-peer-trim-trimSmart-own')).toHaveTextContent(
+      'Your result: 27.0 pp below reference',
+    );
+    expect(screen.getByTestId('kitchen-day-progress-peer-trim-trimSmart-empty')).toHaveTextContent(
+      'Not enough peer data yet',
+    );
+    expect(screen.queryByTestId('kitchen-day-progress-peer-trim-trimSmart-median')).not.toBeInTheDocument();
+    expect(screen.getByTestId('kitchen-day-progress-peer-time-trimSmart-empty')).toHaveTextContent(
+      'Not enough peer data yet',
+    );
+    expect(screen.queryByText(/Student Alpha|Student Beta|Student Gamma|Clean knife|p1|p2|p3/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/leaderboard/i)).not.toBeInTheDocument();
+  });
 });
+
+function prop(slug: string, value: string | number) {
+  return { template: { slug }, value: { value } };
+}
+
+function hedelmatPortionActivity(actorId: string, actorName: string, sessionId: string, sessionDate: string) {
+  return {
+    id: `portion-${actorId}-${sessionDate}`,
+    actor: { id: actorId, name: actorName },
+    template: { slug: 'portionPrecision' },
+    properties: [
+      prop('sessionId', sessionId),
+      prop('sessionDate', sessionDate),
+      prop('submittedAt', `${sessionDate}T09:00:00.000Z`),
+      prop('recipeId', '42'),
+      prop('recipeName', 'Hedelmät M,G'),
+      prop('finalRecipeWeightGrams', 3700),
+      {
+        template: { slug: 'recipeComposition' },
+        value: {
+          value: [
+            { ingredientId: 'banaani', ingredientName: 'Banaani', actualAmount: 1500, unit: 'g' },
+            { ingredientId: 'omena', ingredientName: 'Omena', actualAmount: 1200, unit: 'g' },
+          ],
+        },
+      },
+    ],
+  };
+}
+
+function trimActivity(
+  actorId: string,
+  actorName: string,
+  sessionId: string,
+  sessionDate: string,
+  ingredientId: string,
+  ingredientName: string,
+  starting: number,
+  removed: number,
+  time = '10:03:00',
+) {
+  return {
+    id: `trim-${actorId}-${sessionDate}-${ingredientId}`,
+    actor: { id: actorId, name: actorName },
+    template: { slug: 'trimSmart' },
+    start: `${sessionDate}T${time}.000Z`,
+    end: `${sessionDate}T${time}.000Z`,
+    properties: [
+      prop('sessionId', sessionId),
+      prop('sessionDate', sessionDate),
+      prop('submittedAt', `${sessionDate}T${time}.000Z`),
+      prop('ingredientId', ingredientId),
+      prop('ingredientName', ingredientName),
+      prop('ingredientWeightGrams', starting),
+      prop('trimTechniques', 'trimming'),
+      prop('estimatedWasteGrams', removed),
+      prop('actualWasteGrams', removed),
+      { template: { slug: 'duration' }, obj: { value: 3, unit: 'minutes' } },
+    ],
+  };
+}
+
+function reviewActivity(
+  actorId: string,
+  actorName: string,
+  sessionDate: string,
+  time: number,
+  quality: number,
+) {
+  const sessionId = `kitchen-day:t:${actorId}:${sessionDate}`;
+  return {
+    id: `review-${actorId}-${sessionDate}`,
+    actor: { id: actorId, name: actorName },
+    template: { slug: 'wastePracticeReview' },
+    properties: [
+      prop('sessionId', sessionId),
+      prop('sessionDate', sessionDate),
+      prop('submittedAt', `${sessionDate}T15:00:00.000Z`),
+      prop('reviewedGame', 'trimSmart'),
+      prop('timeEfficiencyScore', time),
+      prop('preparationQualityScore', quality),
+    ],
+  };
+}
+
+function peerTrimBundle(actorId: string, actorName: string, sessionDate: string, removed: number) {
+  const sessionId = `kitchen-day:t:${actorId}:${sessionDate}`;
+  return [
+    hedelmatPortionActivity(actorId, actorName, sessionId, sessionDate),
+    trimActivity(actorId, actorName, sessionId, sessionDate, 'banaani', 'Banaani', 1000, removed),
+  ];
+}

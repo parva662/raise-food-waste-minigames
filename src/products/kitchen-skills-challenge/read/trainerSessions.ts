@@ -57,16 +57,6 @@ export function latestModuleReview(
   return [...reviews].sort((left, right) => right.submittedAt.localeCompare(left.submittedAt))[0];
 }
 
-export function modulesAwaitingAssessmentCount(session: KitchenSkillsTrainerSession): number {
-  let count = 0;
-  for (const module of KITCHEN_SKILLS_REVIEWED_MODULES) {
-    if (moduleHasEvidence(session, module) && findModuleReview(session, module) === null) {
-      count += 1;
-    }
-  }
-  return count;
-}
-
 export function modulesWithEvidenceCount(session: KitchenSkillsTrainerSession): number {
   return KITCHEN_SKILLS_REVIEWED_MODULES.filter((module) => moduleHasEvidence(session, module)).length;
 }
@@ -77,7 +67,13 @@ export function modulesReviewedCount(session: KitchenSkillsTrainerSession): numb
   ).length;
 }
 
-/** Assessment state from evidence + persisted module reviews only (not date). */
+export function modulesAwaitingAssessmentCount(session: KitchenSkillsTrainerSession): number {
+  return KITCHEN_SKILLS_REVIEWED_MODULES.filter(
+    (module) => moduleHasEvidence(session, module) && findModuleReview(session, module) === null,
+  ).length;
+}
+
+/** Assessment state from modules that have participant evidence only. Missing modules are not pending. */
 export type KitchenSkillsSessionAssessmentStatus =
   | 'needs_assessment'
   | 'partially_reviewed'
@@ -86,10 +82,38 @@ export type KitchenSkillsSessionAssessmentStatus =
 export function sessionAssessmentStatus(
   session: KitchenSkillsTrainerSession,
 ): KitchenSkillsSessionAssessmentStatus {
+  const evidenceCount = modulesWithEvidenceCount(session);
+  const reviewedCount = modulesReviewedCount(session);
   const awaiting = modulesAwaitingAssessmentCount(session);
-  if (awaiting === 0) return 'reviewed';
-  if (modulesReviewedCount(session) > 0) return 'partially_reviewed';
-  return 'needs_assessment';
+  if (evidenceCount === 0 || awaiting === evidenceCount) return 'needs_assessment';
+  if (awaiting === 0 && reviewedCount === evidenceCount) return 'reviewed';
+  return 'partially_reviewed';
+}
+
+export const KITCHEN_SKILLS_MODULE_SHORT_LABELS: Record<KitchenSkillsReviewedModule, string> = {
+  trimSmart: 'Trim',
+  rescueAndReuse: 'Rescue',
+  portionPrecision: 'Portion',
+};
+
+export function sessionPendingStatusPhrases(session: KitchenSkillsTrainerSession): string[] {
+  return KITCHEN_SKILLS_REVIEWED_MODULES.flatMap((module) => {
+    if (!moduleHasEvidence(session, module)) return [];
+    const label = KITCHEN_SKILLS_MODULE_SHORT_LABELS[module];
+    if (findModuleReview(session, module)) return [`${label} ✓`];
+    return [`${label} needs review`];
+  });
+}
+
+export function sessionReviewedScorePhrases(session: KitchenSkillsTrainerSession): string[] {
+  return KITCHEN_SKILLS_REVIEWED_MODULES.flatMap((module) => {
+    if (!moduleHasEvidence(session, module)) return [];
+    const review = findModuleReview(session, module);
+    if (!review) return [];
+    return [
+      `${KITCHEN_SKILLS_MODULE_SHORT_LABELS[module]} ${review.timeEfficiencyScore}/${review.preparationQualityScore}`,
+    ];
+  });
 }
 
 export function isSessionAwaitingAssessment(session: KitchenSkillsTrainerSession): boolean {
@@ -105,17 +129,11 @@ export function partitionTrainerSessionsByAssessment(
   const needsAssessment: KitchenSkillsTrainerSession[] = [];
   const reviewed: KitchenSkillsTrainerSession[] = [];
   for (const session of sessions) {
-    if (isSessionAwaitingAssessment(session)) needsAssessment.push(session);
-    else reviewed.push(session);
+    if (sessionAssessmentStatus(session) === 'reviewed') reviewed.push(session);
+    else needsAssessment.push(session);
   }
   return { needsAssessment, reviewed };
 }
-
-export const KITCHEN_SKILLS_MODULE_SHORT_LABELS: Record<KitchenSkillsReviewedModule, string> = {
-  trimSmart: 'Trim',
-  rescueAndReuse: 'Rescue',
-  portionPrecision: 'Portion',
-};
 
 export function attachModuleReviewToMatchingSessions(
   sessions: Iterable<KitchenSkillsTrainerSession>,

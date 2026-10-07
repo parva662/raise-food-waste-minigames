@@ -77,6 +77,7 @@ export function KitchenSkillsTrainerSessionDetail({
               trimEntries={activeModule === 'trimSmart' ? selected.trimEntries : []}
               rescueEntries={activeModule === 'rescueAndReuse' ? selected.rescueEntries : []}
               portionEntries={activeModule === 'portionPrecision' ? selected.portionEntries : []}
+              sessionPortionEntries={selected.portionEntries}
               trimEntriesForRescueLookup={selected.trimEntries}
               modules={[activeModule]}
               testIdPrefix="kitchen-day-chef"

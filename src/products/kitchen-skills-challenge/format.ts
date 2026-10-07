@@ -28,12 +28,19 @@ export function formatScore(score: number): string {
   return `${score} / 5`;
 }
 
+export function formatDeltaPercentagePoints(
+  deltaPercentagePoints: number,
+  style: 'long' | 'short' = 'long',
+): string {
+  if (!Number.isFinite(deltaPercentagePoints) || deltaPercentagePoints === 0) return 'at reference';
+  const points = Math.abs(deltaPercentagePoints).toFixed(1);
+  const unit = style === 'short' ? 'pp' : 'percentage points';
+  const direction = deltaPercentagePoints < 0 ? 'below' : 'above';
+  return `${points} ${unit} ${direction} reference`;
+}
+
 export function formatReferenceDelta(studentWastePercent: number, referenceWastePercent: number): string {
-  const delta = studentWastePercent - referenceWastePercent;
-  const points = Math.abs(delta).toFixed(1);
-  if (delta < 0) return `${points} percentage points below reference`;
-  if (delta > 0) return `${points} percentage points above reference`;
-  return 'Same as the kitchen reference';
+  return formatDeltaPercentagePoints(studentWastePercent - referenceWastePercent);
 }
 
 export function formatSessionDate(isoDate: string): string {

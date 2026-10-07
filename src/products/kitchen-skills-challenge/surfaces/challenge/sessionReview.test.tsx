@@ -117,8 +117,8 @@ describe('Session review presentation', () => {
         'Starting weight',
         'Technique',
         'Estimated waste',
-        'Actual waste',
-        'Waste rate',
+        'Actual removed',
+        'JAMIX reference',
         'Duration',
       ]),
     );
@@ -239,6 +239,8 @@ describe('Session review presentation', () => {
     expect(screen.queryByText(/kitchen-day:/)).not.toBeInTheDocument();
     expect(screen.getByTestId('kitchen-day-trim-carrot')).toBeInTheDocument();
     expect(screen.queryByTestId('kitchen-day-trim-onion')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('kitchen-day-jamix-reference-carrot')).not.toBeInTheDocument();
+    expect(screen.queryByText(/JAMIX reference|Kitchen reference/i)).not.toBeInTheDocument();
   });
 
   it('lists remaining required modules without technical wording', () => {
