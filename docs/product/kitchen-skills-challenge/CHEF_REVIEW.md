@@ -11,7 +11,7 @@
 
 | Layer | Content |
 |-------|---------|
-| System performance | Calculated waste % vs kitchen reference; Portion ingredient accuracy and final-weight deviation. Percentile / ranking **@pending** a sufficient-data rule. |
+| System performance | Calculated waste % vs the recipe-ingredient Hävikki reference (internal; not shown on the student challenge). Portion ingredient accuracy and final-weight deviation. Percentile / ranking **@pending** a sufficient-data rule. |
 | Tutor assessment | One review per completed module (`reviewedGame`): time / quality scores and optional feedback |
 
 System comparison never pre-fills tutor scores. Analytics are never stored as activity properties. There is no automatic combined Portion score or overall tutor score.
@@ -20,7 +20,7 @@ System comparison never pre-fills tutor scores. Analytics are never stored as ac
 
 | Surface | Route | Scope |
 |---------|-------|-------|
-| Session Review | `#/kitchen-day/review` | Current locked session only; read-only; per-module tutor readbacks |
+| Session Review | `#/kitchen-day/review` | Current locked session only; read-only; per-module tutor readbacks; no student-facing waste % or Hävikki |
 | Student Progress | `#/kitchen-day-progress` | Own history; Overview / Progress; module tabs default to **Recent** (last 8 sessions + span, Recent-only charts) with **History** archive (filters, ~10 rows/page); no leaderboard |
 
 Neither posts measurement activities. Progress does not invent ranking or an overall tutor score.

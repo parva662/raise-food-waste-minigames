@@ -16,10 +16,22 @@ export async function recordAnkanrintaPortion(user: User) {
   await user.click(screen.getByTestId('kitchen-day-submit-portion'));
 }
 
+export async function recordHedelmatPortion(user: User) {
+  const recipeInput = screen.getByTestId('kitchen-day-recipe-select');
+  await user.click(recipeInput);
+  await user.type(recipeInput, 'Hedelmät M,G');
+  await user.click(screen.getByRole('option', { name: 'Hedelmät M,G' }));
+  await user.type(screen.getByTestId('kitchen-day-actual-banaani'), '1500');
+  await user.type(screen.getByTestId('kitchen-day-actual-omena'), '1200');
+  await user.type(screen.getByTestId('kitchen-day-actual-viinirypale-tumma-kiveton'), '1000');
+  await user.type(screen.getByTestId('kitchen-day-final-recipe-weight'), '3700');
+  await user.click(screen.getByTestId('kitchen-day-submit-portion'));
+}
+
 export async function selectTrimIngredient(user: User, query: string, optionName: string) {
   const input = screen.getByTestId('kitchen-day-ingredient-name');
   await user.click(input);
-  await user.type(input, query);
+  if (query) await user.type(input, query);
   await user.click(screen.getByRole('option', { name: optionName }));
 }
 
@@ -38,7 +50,7 @@ export async function completeTrimAfterIngredient(user: User) {
   await user.click(screen.getByTestId('kitchen-day-submit-trim'));
 }
 
-export async function recordDuckBreastTrim(user: User) {
-  await selectTrimIngredient(user, 'ANKKA', 'ANKKA, RINTAFILEE');
+export async function recordBanaaniTrim(user: User) {
+  await selectTrimIngredient(user, 'Banaani', 'Banaani');
   await completeTrimAfterIngredient(user);
 }

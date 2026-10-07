@@ -182,6 +182,7 @@ export function SessionEvidence({
   testIdPrefix = 'kitchen-day',
   collapsible = false,
   collapsePortionTable = false,
+  showWasteAnalytics = true,
 }: {
   trimEntries: readonly KitchenSkillsTrimEntry[];
   rescueEntries: readonly KitchenSkillsRescueEntry[];
@@ -194,6 +195,7 @@ export function SessionEvidence({
   testIdPrefix?: string;
   collapsible?: boolean;
   collapsePortionTable?: boolean;
+  showWasteAnalytics?: boolean;
 }) {
   const payload = getGameBusInputCollections();
   const historicalSamples = historicalTrimSamplesFromGroupActivities([
@@ -214,11 +216,13 @@ export function SessionEvidence({
             <ul className="kitchen-day-evidence-list" data-testid={`${testIdPrefix}-trim-list`}>
               {trimEntries.map((entry) => {
                 const percent = wastePercentage(entry.actualWasteGrams, entry.ingredientWeightGrams);
-                const comparison = compareToKitchenReference({
-                  ingredientId: entry.ingredientId,
-                  studentWastePercent: percent,
-                  historicalSamples,
-                });
+                const comparison = showWasteAnalytics
+                  ? compareToKitchenReference({
+                      ingredientId: entry.ingredientId,
+                      studentWastePercent: percent,
+                      historicalSamples,
+                    })
+                  : null;
                 return (
                   <li
                     key={entry.ingredientId}
@@ -231,12 +235,14 @@ export function SessionEvidence({
                       <Fact label="Technique" value={TRIM_TECHNIQUE_LABELS[entry.trimTechniques]} />
                       <Fact label="Estimated waste" value={formatGrams(entry.estimatedWasteGrams)} />
                       <Fact label="Actual waste" value={formatGrams(entry.actualWasteGrams)} />
-                      <Fact
-                        label="Waste rate"
-                        value={formatWastePercent(percent)}
-                        testId={`${testIdPrefix}-waste-percent-${entry.ingredientId}`}
-                      />
-                      {comparison ? (
+                      {showWasteAnalytics ? (
+                        <Fact
+                          label="Waste rate"
+                          value={formatWastePercent(percent)}
+                          testId={`${testIdPrefix}-waste-percent-${entry.ingredientId}`}
+                        />
+                      ) : null}
+                      {showWasteAnalytics && comparison ? (
                         <Fact
                           label="Kitchen reference"
                           value={formatWastePercent(comparison.referenceWastePercent)}
@@ -245,7 +251,7 @@ export function SessionEvidence({
                       ) : null}
                       <Fact label="Duration" value={formatDurationFromMinutes(entry.durationMinutes)} />
                     </dl>
-                    {comparison ? (
+                    {showWasteAnalytics && comparison ? (
                       <p className="kitchen-day-evidence-note">
                         {formatReferenceDelta(percent, comparison.referenceWastePercent)}
                       </p>

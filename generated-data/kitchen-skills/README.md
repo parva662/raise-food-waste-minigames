@@ -4,7 +4,7 @@ Produced by `npm run kitchen-skills:recipes` from `reference/kitchen-skills/kitc
 
 **Do not edit these JSON files manually.** Re-run the extract after workbook changes.
 
-- `recipes.json` — compact runtime dataset (recipe id/name, expected final weight, ingredient targets)
+- `recipes.json` — compact runtime dataset (recipe id/name, expected final weight, ingredient targets, recipe-ingredient `referenceWastePercent` from source Hävikki)
 - `extraction-report.json` — import and exclusion counts
 
 The frontend adapter reads `src/data/generated/kitchen-skills-recipes.json` and maps it to `RecipeReference`. The browser never parses the Excel workbooks.

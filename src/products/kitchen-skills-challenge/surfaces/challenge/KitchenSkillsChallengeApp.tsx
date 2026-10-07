@@ -4,6 +4,7 @@ import { KitchenSkillsSessionProvider, useKitchenSkillsSession } from '@/product
 import { KitchenSkillsPortionView } from '@/products/kitchen-skills-challenge/surfaces/challenge/PortionView';
 import { KitchenSkillsReuseView } from '@/products/kitchen-skills-challenge/surfaces/challenge/ReuseView';
 import { goToKitchenDaySection, parseKitchenDaySection } from '@/app/routes';
+import { isKitchenSkillsNavEnabled } from '@/products/kitchen-skills-challenge/domain/session/challengeGate';
 import { SessionReviewView } from '@/products/kitchen-skills-challenge/surfaces/challenge/SessionReviewView';
 import { KitchenSkillsTrimView } from '@/products/kitchen-skills-challenge/surfaces/challenge/TrimView';
 import { KitchenSkillsFinishSummary } from '@/products/kitchen-skills-challenge/surfaces/challenge/KitchenSkillsFinishSummary';
@@ -38,14 +39,21 @@ function KitchenSkillsBody() {
       if (!reviewAllowed) goToKitchenDaySection(requiredSection);
       return;
     }
-    if (section !== requiredSection) {
+    if (!isKitchenSkillsNavEnabled(section, taskProgress)) {
       goToKitchenDaySection(requiredSection);
     }
-  }, [section, requiredSection, reviewAllowed]);
+  }, [section, requiredSection, reviewAllowed, taskProgress]);
 
   if (!session) return <KitchenSkillsInitializing />;
 
-  const visibleSection = section === 'review' && reviewAllowed ? 'review' : requiredSection;
+  const visibleSection =
+    section === 'review'
+      ? reviewAllowed
+        ? 'review'
+        : requiredSection
+      : isKitchenSkillsNavEnabled(section, taskProgress)
+        ? section
+        : requiredSection;
 
   return (
     <div className="kitchen-mgmt-page kitchen-day-activity" data-testid="kitchen-day-page">

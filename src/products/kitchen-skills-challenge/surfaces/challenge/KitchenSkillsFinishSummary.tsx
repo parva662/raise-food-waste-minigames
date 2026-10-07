@@ -4,8 +4,8 @@ import { useReadyKitchenSkillsSession } from '@/products/kitchen-skills-challeng
 import { formatMetricPercent } from '@/products/kitchen-skills-challenge/domain/portion/copy';
 import { buildPortionRecipeMetrics } from '@/products/kitchen-skills-challenge/domain/portion/metrics';
 import { getRecipeReference } from '@/products/kitchen-skills-challenge/domain/portion/recipes';
-import { wastePercentage } from '@/products/kitchen-skills-challenge/domain/trim/derived';
-import { formatGrams, formatWastePercent } from '@/products/kitchen-skills-challenge/format';
+import { remainingRecipeIngredientsForTrim, sessionRecipeReference } from '@/products/kitchen-skills-challenge/domain/session/sessionRecipe';
+import { formatGrams } from '@/products/kitchen-skills-challenge/format';
 import type {
   KitchenSkillsPortionEntry,
   KitchenSkillsRescueEntry,
@@ -15,10 +15,7 @@ import type {
 function trimHeadline(entries: readonly KitchenSkillsTrimEntry[]): string {
   if (entries.length === 0) return 'No trim recorded';
   return entries
-    .map((entry) => {
-      const percent = wastePercentage(entry.actualWasteGrams, entry.ingredientWeightGrams);
-      return `${entry.ingredientName} · ${formatWastePercent(percent)} waste`;
-    })
+    .map((entry) => `${entry.ingredientName} · ${formatGrams(entry.actualWasteGrams)}`)
     .join('; ');
 }
 
@@ -47,7 +44,11 @@ function portionHeadline(entries: readonly KitchenSkillsPortionEntry[]): string 
 }
 
 export function KitchenSkillsFinishSummary() {
-  const { trimEntries, rescueEntries, portionEntries } = useReadyKitchenSkillsSession();
+  const { trimEntries, rescueEntries, portionEntries, recordedIngredientIds, addAnotherIngredient } =
+    useReadyKitchenSkillsSession();
+  const recipe = sessionRecipeReference(portionEntries);
+  const canAddAnother =
+    recipe != null && remainingRecipeIngredientsForTrim(recipe, recordedIngredientIds).length > 0;
 
   return (
     <div className="chef-zero-dialog-backdrop kitchen-day-finish-backdrop" role="presentation">
@@ -85,9 +86,20 @@ export function KitchenSkillsFinishSummary() {
             testIdPrefix="kitchen-day-finish"
             collapsible
             collapsePortionTable
+            showWasteAnalytics={false}
           />
         </div>
         <div className="chef-zero-dialog__actions kitchen-day-finish-dialog__actions">
+          {canAddAnother ? (
+            <button
+              type="button"
+              className="chef-zero-dialog__btn kitchen-day-button kitchen-day-button--secondary"
+              data-testid="kitchen-day-finish-add-another-ingredient"
+              onClick={addAnotherIngredient}
+            >
+              Add another ingredient
+            </button>
+          ) : null}
           <button
             type="button"
             className="chef-zero-dialog__btn chef-zero-dialog__btn--confirm kitchen-day-button kitchen-day-button--primary"

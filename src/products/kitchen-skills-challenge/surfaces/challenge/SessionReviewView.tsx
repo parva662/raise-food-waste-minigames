@@ -46,6 +46,7 @@ export function SessionReviewView() {
         portionEntries={portionEntries}
         moduleReviews={moduleReviews}
         collapsePortionTable
+        showWasteAnalytics={false}
       />
     </section>
   );

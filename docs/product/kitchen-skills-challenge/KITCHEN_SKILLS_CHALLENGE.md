@@ -38,7 +38,7 @@ Kitchen Skills session (student actor + sessionId + sessionDate)
 | GameBus actor | The student |
 | `sessionId` | Opaque key for one student session (`kitchen-day:…` prefix in embed) |
 | `sessionDate` | Europe/Helsinki operational date |
-| `ingredientId` | Unique Trim entry within a session; reuse join; kitchen-reference key; taken from the session recipe |
+| `ingredientId` | Unique Trim entry within a session; reuse join; taken from the session recipe |
 | `recipeId` | The one Portion Precision recipe for the session |
 
 **Same ingredient once:** a student does not create more than one Trim Smart entry for the same `ingredientId` in the same session. Many **different** ingredients are expected.
@@ -57,7 +57,7 @@ Session Review is the current locked session only. Progress is own history. Tuto
 
 ## 4. Kitchen reference (analytics)
 
-Initially seeded kitchen reference data keyed by `ingredientId`. Later accumulated Trim Smart data for that ingredient, falling back to seed when history is inadequate. Do not store averages, waste %, or percentiles. Percentile / ranking stays off until a sufficient-data rule is agreed (**@pending** analytics decision).
+Each generated recipe ingredient keeps its source `Hävikki` as `referenceWastePercent` on that **recipe ingredient entry** (not a generic ingredient norm). `0` is a valid reference and is not treated as missing. This value is internal for chef feedback and later progress/dashboard benchmarking. It is not shown on the student Trim result, challenge summary, or Session Review. Do not store averages, waste %, or percentiles on GameBus activities. Percentile / ranking stays off until a sufficient-data rule is agreed (**@pending** analytics decision).
 
 ## 5. Non-goals
 

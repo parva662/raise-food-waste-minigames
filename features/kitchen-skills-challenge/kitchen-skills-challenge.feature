@@ -56,41 +56,68 @@ Feature: Kitchen Skills Challenge connected session
       When the student opens Kitchen Day
       Then Portion Precision is shown first
       And the recipe is chosen with the searchable recipe combobox
+      And opening the combobox shows the ordered recipes immediately
+      And typing filters that list
       And every recipe ingredient actual and the final recipe weight are recorded before Save
 
-    Scenario: Task tabs stay locked until the current task is complete
+    Scenario: Forward navigation waits for prerequisites
       Given the student has started Portion Precision and has not saved the recipe
       When the student tries to open Trim Smart, Reuse, or Session Review
       Then the student stays on Portion Precision
 
+    Scenario: The student can go back inside an unfinished task
+      Given the student is on a later Trim Smart step and has not saved the ingredient
+      When the student chooses Back
+      Then earlier Trim choices and values are still there to correct
+
+    Scenario: Backward navigation to completed sections is allowed
+      Given the student recorded a Portion Precision recipe
+      When the student is on Trim Smart
+      Then Portion Precision stays available
+      And Reuse stays locked until a Trim ingredient is saved
+
     Scenario: After the recipe is saved, Trim uses that recipe's ingredients
       Given the student recorded a Portion Precision recipe
       Then Trim Smart is shown
-      And the ingredient is chosen from that recipe with a searchable list
-      And unused recipe ingredients remain available
+      And the selected recipe name stays visible
+      And opening the ingredient combobox shows that recipe's unused ingredients immediately
+      And ingredients from other recipes are not listed
+      And typing filters that list
       And already recorded recipe ingredients are not offered again
 
-    Scenario: A started Trim ingredient must be finished before another choice
+    Scenario: A started Trim ingredient must be finished before going forward
       Given the student has started an ingredient preparation entry
       When the ingredient has not been saved
       Then Add another ingredient is not shown
-      And the student cannot open Portion Precision, Reuse, or Session Review
+      And the student cannot open Reuse or Session Review
+      And Finish challenge is not available
 
     Scenario: After a Trim ingredient is saved the student chooses the next step
       Given the student saved an ingredient preparation entry
       Then the student can record another unused recipe ingredient
       And the student can continue to Reuse
 
-    Scenario: A started Reuse task must be saved before leaving
+    Scenario: From Reuse the student can return to Trim
       Given the student has opened Reuse for a saved Trim ingredient
       When the reuse suggestion has not been saved
-      Then the student cannot open Portion Precision, Trim Smart, or Session Review
+      Then Finish challenge is not available
+      And the student can open Trim Smart to add another ingredient
 
-    Scenario: Finish challenge is only after a completed challenge
+    Scenario: From the challenge summary the student can add another ingredient
       Given the student saved Portion Precision, at least one Trim ingredient, and Reuse
       Then the challenge complete summary is shown
       And Finish challenge is available
-      And Finish challenge was not available during Portion or Trim
+      When the student chooses Add another ingredient
+      Then Trim Smart is shown
+      And Finish challenge is not available while that ingredient is unfinished
+
+    Scenario: Finish challenge is only after a completed challenge
+      Given the student saved Portion Precision, at least one Trim ingredient, and Reuse
+      And there is no unfinished Trim or Reuse work
+      Then the challenge complete summary is shown
+      And Finish challenge is available
+      And Finish challenge was not available during unfinished Portion, Trim, or Reuse
+      And the student is not shown a waste percentage or kitchen Hävikki reference
       When the student chooses Finish challenge
       Then the kitchen day closes
 

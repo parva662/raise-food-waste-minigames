@@ -8,7 +8,7 @@
 
 ## 1. Purpose
 
-Estimate waste before preparation, measure actual waste after, and compare to kitchen reference data. System comparison is **not** a tutor assessment.
+Estimate waste before preparation and measure actual waste after. Recipe-ingredient Hävikki is kept as internal kitchen reference for chef feedback and later progress — it is **not** shown to the student. System comparison is **not** a tutor assessment.
 
 ## 2. Place in the session
 
@@ -25,14 +25,14 @@ Standalone route, no estimate step, no timer, no reference comparison. Posts `pr
 1. Choose a remaining recipe ingredient (`ingredientId` + name from the Portion recipe).
 2. Technique → live plural slug `trimTechniques` (ten locked one-tap values). Layout: [`../UI_STANDARD.md`](../UI_STANDARD.md).
 3. Estimate → actual waste after timed preparation (`duration` from the timer — student does not type minutes).
-4. See calculated waste % and reference comparison (not stored).
+4. See recorded gram measurements (no waste % or Hävikki comparison on the student result).
 5. **Save ingredient** posts `SILENT_ACTIVITY` and continues to Reuse in the same iframe. **Add more ingredients** posts the same entry and stays on Trim for another unused recipe ingredient.
 
 Exact property list and types: slug contract. Worked example numbers belong in acceptance examples / tests, not as a second schema.
 
 ## 5. Calculated (never stored)
 
-Waste %; estimate error; comparison to seeded then historical kitchen reference data by `ingredientId`; discarded waste after reuse.
+Waste % and comparison to the **recipe-ingredient** Hävikki reference (0% is valid) are internal. They are not shown on the student Trim result or challenge summary. Discarded waste after reuse is calculated for the Reuse form.
 
 Percentile / ranking messaging is **@pending** until a sufficient-data rule is agreed.
 

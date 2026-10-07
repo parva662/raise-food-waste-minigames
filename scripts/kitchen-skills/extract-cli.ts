@@ -2,17 +2,24 @@ import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import {
   CLEAN_REFERENCE_RELATIVE_PATH,
+  SOURCE_REFERENCE_RELATIVE_PATH,
   extractRecipesFromWorkbook,
+  readSourceReferenceWastePercents,
   repoRootFromHere,
+  writeEnrichedCleanWorkbook,
   writeRecipeExtractionOutputs,
 } from './extractRecipes.ts';
 
 const root = repoRootFromHere(fileURLToPath(import.meta.url));
 const input = process.argv[2] ?? resolve(root, CLEAN_REFERENCE_RELATIVE_PATH);
-const result = extractRecipesFromWorkbook(input, CLEAN_REFERENCE_RELATIVE_PATH);
+const sourcePath = resolve(root, SOURCE_REFERENCE_RELATIVE_PATH);
+const percents = readSourceReferenceWastePercents(sourcePath);
+writeEnrichedCleanWorkbook(input, percents);
+const result = extractRecipesFromWorkbook(input, CLEAN_REFERENCE_RELATIVE_PATH, sourcePath);
 const paths = writeRecipeExtractionOutputs(result, root);
 
-console.log(`Source: ${input}`);
+console.log(`Source: ${sourcePath}`);
+console.log(`Clean workbook: ${input}`);
 console.log(`Recipes imported: ${result.report.recipesImported}`);
 console.log(`Ingredient rows imported: ${result.report.ingredientRowsImported}`);
 console.log(`Excluded recipes: ${result.report.excludedRecipes}`);

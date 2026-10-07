@@ -14,14 +14,27 @@ const options = [
   { id: '3', label: 'Vihreä powersmoothie M,G' },
 ];
 
-function Harness() {
+function Harness({
+  placeholder = 'Select recipe…',
+}: {
+  placeholder?: string;
+} = {}) {
   const [value, setValue] = useState('');
   return (
     <div>
-      <KitchenSkillsRecipeCombobox options={options} value={value} onChange={setValue} />
+      <KitchenSkillsRecipeCombobox
+        options={options}
+        value={value}
+        onChange={setValue}
+        placeholder={placeholder}
+      />
       <p data-testid="selected-id">{value || 'none'}</p>
     </div>
   );
+}
+
+function optionNames() {
+  return screen.getAllByRole('option').map((option) => option.textContent);
 }
 
 describe('KitchenSkillsRecipeCombobox', () => {
@@ -29,17 +42,45 @@ describe('KitchenSkillsRecipeCombobox', () => {
     cleanup();
   });
 
-  it('does not list recipes until the user types a query', async () => {
+  it('lists ordered options immediately when opened with an empty query', async () => {
     const user = userEvent.setup();
     render(<Harness />);
-    await user.click(screen.getByTestId('kitchen-day-recipe-select'));
-    expect(screen.getByTestId('kitchen-day-recipe-list')).toHaveTextContent('Type to search recipes');
-    expect(screen.queryByRole('option')).not.toBeInTheDocument();
+    const input = screen.getByTestId('kitchen-day-recipe-select');
+    expect(input).toHaveAttribute('placeholder', 'Select recipe…');
+    await user.click(input);
+    expect(optionNames()).toEqual(['Ankanrinta FLOW', 'Uuniperuna L,G', 'Vihreä powersmoothie M,G']);
+    expect(screen.getAllByRole('option')[0]).toHaveAttribute('aria-selected', 'false');
+    expect(screen.queryByText('Type to search recipes')).not.toBeInTheDocument();
+    expect(screen.queryByText('Select recipe…', { selector: '[role="presentation"]' })).not.toBeInTheDocument();
+    expect(screen.getByTestId('selected-id')).toHaveTextContent('none');
+  });
+
+  it('uses the ingredient placeholder without rendering it as a dropdown row', async () => {
+    const user = userEvent.setup();
+    render(<Harness placeholder="Select ingredient…" />);
+    const input = screen.getByTestId('kitchen-day-recipe-select');
+    expect(input).toHaveAttribute('placeholder', 'Select ingredient…');
+    await user.click(input);
+    expect(optionNames()).toEqual(['Ankanrinta FLOW', 'Uuniperuna L,G', 'Vihreä powersmoothie M,G']);
+    expect(screen.queryByText('Type to search ingredients')).not.toBeInTheDocument();
+    expect(screen.queryByText('Select ingredient…', { selector: '[role="presentation"]' })).not.toBeInTheDocument();
+  });
+
+  it('filters the already-visible list when typing, then restores it when cleared', async () => {
+    const user = userEvent.setup();
+    render(<Harness />);
+    const input = screen.getByTestId('kitchen-day-recipe-select');
+    await user.click(input);
+    await user.type(input, 'peruna');
+    expect(optionNames()).toEqual(['Uuniperuna L,G']);
+    await user.clear(input);
+    expect(optionNames()).toEqual(['Ankanrinta FLOW', 'Uuniperuna L,G', 'Vihreä powersmoothie M,G']);
   });
 
   it('filters by substring anywhere in the name', () => {
     expect(filterRecipeOptions(options, 'FLOW').map((item) => item.id)).toEqual(['1']);
     expect(filterRecipeOptions(options, 'peruna').map((item) => item.id)).toEqual(['2']);
+    expect(filterRecipeOptions(options, '').map((item) => item.id)).toEqual(['1', '2', '3']);
     expect(filterRecipeOptions(options, 'green')).toEqual([]);
   });
 

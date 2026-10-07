@@ -84,13 +84,14 @@ Feature: Ingredient preparation in a kitchen day
 
   Rule: Actual waste after preparation
 
-    Scenario: Actual waste and calculated percentage
+    Scenario: Actual waste is recorded without showing a waste percentage
       Given the starting weight is 5000 grams
       And the student has finished preparation
       When the student enters an actual waste of 450 grams
       Then the actual waste is accepted
-      And the calculated waste percentage is 9 percent
+      And the calculated waste percentage is 9 percent internally
       And the waste percentage is not stored as a recorded fact
+      And the student is not shown a waste percentage or kitchen Hävikki reference
 
     Scenario: Zero actual waste is allowed
       Given the starting weight is 5000 grams
@@ -108,27 +109,26 @@ Feature: Ingredient preparation in a kitchen day
         | -1     |
         | 5001   |
 
-  Rule: System comparison is not a tutor assessment
+  Rule: System comparison is not student-facing
 
-    Scenario: Initial comparison uses seeded kitchen reference data
-      Given seeded kitchen reference waste for ingredient "carrot" is 12 percent
-      And the student recorded a calculated waste of 9 percent
-      When the comparison is shown
-      Then the system indicates the student performed better than the kitchen reference
-      And the comparison is keyed by ingredient id
+    Scenario: Recipe-ingredient Hävikki is internal chef/progress data
+      Given the recipe ingredient has a kitchen Hävikki reference of 0 percent or more
+      When the student finishes measuring actual waste
+      Then the student is not shown the kitchen reference or a comparison
+      And that reference stays attached to the specific recipe ingredient
       And the comparison is not stored on the entry
       And the comparison is not a tutor assessment
 
     Scenario: Later comparison uses accumulated Trim Smart data when available
-      Given accumulated kitchen-day Trim Smart data exists for ingredient "carrot"
-      When the comparison is shown
-      Then the system compares the student against that historical data
+      Given accumulated kitchen-day Trim Smart data exists for a recipe ingredient
+      When chef feedback or progress is calculated
+      Then the system can compare actual trim against that recipe ingredient's Hävikki reference
       And the comparison is calculated on read and never stored
 
-    Scenario: Missing history falls back to seeded reference data
-      Given accumulated kitchen-day Trim Smart data is unavailable for ingredient "carrot"
-      When the comparison is shown
-      Then the system uses the seeded kitchen reference data for that ingredient
+    Scenario: Missing history still keeps a 0 percent recipe Hävikki
+      Given the recipe ingredient Hävikki reference is 0 percent
+      When chef feedback is calculated
+      Then 0 percent is treated as a valid reference, not as missing
 
     @pending
     Scenario: Percentile messaging waits for an agreed sufficient-data rule
@@ -156,3 +156,9 @@ Feature: Ingredient preparation in a kitchen day
       And the student has saved that ingredient
       When the student chooses Another ingredient
       Then Trim stays open for another unused recipe ingredient
+
+    Scenario: The student can go back before saving
+      Given the student is on the starting weight step
+      When the student chooses Back
+      Then the ingredient choice is still selected
+      And the student can correct it before saving

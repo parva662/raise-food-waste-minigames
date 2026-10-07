@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { discardedWasteGrams } from '@/products/kitchen-skills-challenge/domain/trim/derived';
 import { formatGrams } from '@/products/kitchen-skills-challenge/format';
 import { useReadyKitchenSkillsSession } from '@/products/kitchen-skills-challenge/domain/session/KitchenSkillsSessionContext';
@@ -6,7 +6,7 @@ import { KitchenSkillsGramsInput } from '@/products/kitchen-skills-challenge/sur
 import { canSaveRescueSuggestion, parseReusableWasteGrams, parseReuseDestination } from '@/products/kitchen-skills-challenge/domain/reuse/validation';
 
 export function KitchenSkillsReuseView() {
-  const { session, trimEntries, findRescueByIngredientId, commitRescueEntry } =
+  const { session, trimEntries, findRescueByIngredientId, commitRescueEntry, setReuseInProgress } =
     useReadyKitchenSkillsSession();
   const completedTrim = trimEntries;
   const [ingredientId, setIngredientId] = useState(completedTrim[0]?.ingredientId ?? '');
@@ -26,6 +26,11 @@ export function KitchenSkillsReuseView() {
   const discarded =
     trim && reusable.ok ? discardedWasteGrams(trim.actualWasteGrams, reusable.value) : null;
   const complete = Boolean(saved || existing);
+
+  useEffect(() => {
+    setReuseInProgress(completedTrim.length > 0 && !complete);
+    return () => setReuseInProgress(false);
+  }, [complete, completedTrim.length, setReuseInProgress]);
 
   function save() {
     if (!trim || !reusable.ok || !dest.ok || existing) return;

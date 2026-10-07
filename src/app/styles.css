@@ -4955,6 +4955,10 @@ ul {
   padding: var(--spacing-md) var(--spacing-md) var(--spacing-xl);
 }
 
+.kitchen-day-activity.kitchen-mgmt-page {
+  overflow: visible;
+}
+
 @media (min-width: 768px) {
   .kitchen-day-activity {
     max-width: 64rem;
@@ -5015,6 +5019,7 @@ ul {
   border-radius: var(--radius-lg);
   padding: var(--spacing-md);
   box-shadow: var(--shadow-sm);
+  overflow: visible;
 }
 
 .kitchen-day-card__title {
@@ -5129,15 +5134,17 @@ ul {
 
 .kitchen-day-combobox {
   position: relative;
+  z-index: 8;
+  overflow: visible;
 }
 
 .kitchen-day-combobox__list {
   position: absolute;
-  z-index: 20;
+  z-index: 30;
   top: calc(100% + 0.25rem);
   left: 0;
   right: 0;
-  max-height: 16rem;
+  max-height: min(16rem, 50vh);
   overflow: auto;
   margin: 0;
   padding: var(--spacing-xs) 0;
@@ -5156,6 +5163,9 @@ ul {
 
 .kitchen-day-combobox__option {
   cursor: pointer;
+  display: flex;
+  align-items: center;
+  min-height: 2.75rem;
 }
 
 .kitchen-day-combobox__option--active {

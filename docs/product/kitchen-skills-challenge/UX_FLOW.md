@@ -31,17 +31,17 @@ Tutor dashboard    #/kitchen-day-tutor      (separate left-menu page)
 
 The student Kitchen Skills TASK stays open until **Finish challenge**.
 
-1. **Portion Precision** — searchable recipe combobox, every ingredient actual, final recipe weight, **Save recipe**. Posts `SILENT_ACTIVITY` (`portionPrecision`), keeps local state, navigates to `#/kitchen-day/trim`. Does **not** send `EXIT`. Task tabs stay locked on Portion until that save.
-2. **Trim Smart** — searchable remaining recipe ingredients, then the existing steps (weight → technique → estimate → timed prepare → actual waste → **Save ingredient**). While that ingredient is unsaved, only those Trim controls are shown. After save, **Another ingredient** or **Record reuse**. Does **not** send `EXIT`.
-3. **Reuse** — compact reusable grams + destination; discarded remainder calculated. The student stays on Reuse until **Save reuse**. That opens the **Challenge complete** summary. Does **not** send `EXIT`.
-4. Summary shows compact Trim / Reuse / Portion headlines. Detail sections are collapsed. Portion’s ingredient table is behind **View recipe details**.
-5. **Finish challenge** is only on that summary and posts `{ type: 'EXIT' }` via `postKitchenSkillsChallengeExit`. That is the only EXIT in this flow.
+1. **Portion Precision** — searchable recipe combobox that lists ordered recipes when opened (typing filters), every ingredient actual, final recipe weight, **Save recipe**. Posts `SILENT_ACTIVITY` (`portionPrecision`), keeps local state, navigates to `#/kitchen-day/trim`. Does **not** send `EXIT`. Forward tabs stay locked until that save; the student can still edit the form before saving.
+2. **Trim Smart** — selected recipe stays visible. Searchable remaining recipe ingredients appear when the combobox opens; typing filters. Then the existing steps (weight → technique → estimate → timed prepare → actual waste → **Save ingredient**), with **Back** to correct earlier values before save. After save, **Another ingredient** or **Record reuse**. Grams only on the result — no waste % or Hävikki comparison. Does **not** send `EXIT`.
+3. **Reuse** — compact reusable grams + destination; discarded remainder calculated. The student can return to Trim to add another ingredient. **Save reuse** opens the **Challenge complete** summary. Does **not** send `EXIT`.
+4. Summary shows compact Trim / Reuse / Portion headlines (grams, not waste %). Detail sections are collapsed. Portion’s ingredient table is behind **View recipe details**. **Add another ingredient** returns to Trim and hides Finish until that work is saved.
+5. **Finish challenge** is only on that summary when there is no unfinished Trim/Reuse work, and posts `{ type: 'EXIT' }` via `postKitchenSkillsChallengeExit`. That is the only EXIT in this flow.
 
 Do not send EXIT after Portion, Trim, Reuse, or Add more ingredients. Tutor review posts one `SILENT_ACTIVITY` per completed module (`reviewedGame`) with RAISE `actors` and keeps the tutor iframe open. Protocol details: [`../../contracts/GAMEBUS.md`](../../contracts/GAMEBUS.md) and TASK contract.
 
 ## 4. Module journeys (UI)
 
-**Trim Smart:** Choose a remaining recipe ingredient (searchable) → starting weight → technique (ten fixed one-tap choices) → estimate → timed prepare → actual waste → **Save ingredient** → result with **Another ingredient** or **Record reuse**. No category step. Gram fields content-width; Continue/Save sticky on small screens. Timer copy never shows `idle` / `running` / `finished`.
+**Trim Smart:** Choose a remaining recipe ingredient (searchable list shown on open) → starting weight → technique (ten fixed one-tap choices) → estimate → timed prepare → actual waste → **Save ingredient** → result with grams and **Another ingredient** or **Record reuse**. Back is available before save. No category step. No waste % or kitchen reference on the student result. Gram fields content-width; Continue/Save sticky on small screens. Timer copy never shows `idle` / `running` / `finished`.
 
 **Reuse:** Compact reusable grams + destination; discarded remainder calculated; then the challenge complete summary.
 

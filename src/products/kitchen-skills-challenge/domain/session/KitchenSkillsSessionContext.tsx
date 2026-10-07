@@ -43,6 +43,7 @@ import type {
   KitchenSkillsTrimEntry,
 } from '@/products/kitchen-skills-challenge/domain/types';
 import {
+  canFinishKitchenSkillsChallenge,
   canOpenKitchenSkillsReview,
   requiredKitchenSkillsSection,
   type KitchenSkillsTaskProgress,
@@ -77,8 +78,12 @@ interface KitchenSkillsSessionValue {
   taskProgress: KitchenSkillsTaskProgress;
   requiredSection: Exclude<KitchenSkillsHashSection, 'review'>;
   reviewAllowed: boolean;
+  canFinish: boolean;
   setTrimInProgress: (value: boolean) => void;
+  setReuseInProgress: (value: boolean) => void;
   enterReuse: () => void;
+  addAnotherIngredient: () => void;
+  openFinishSummary: () => void;
 }
 
 const KitchenSkillsSessionContext = createContext<KitchenSkillsSessionValue | null>(null);
@@ -161,7 +166,7 @@ export function KitchenSkillsSessionProvider({
   const [localReviews, setLocalReviews] = useState<KitchenSkillsReviewEntry[]>([]);
   const [showFinishSummary, setShowFinishSummary] = useState(false);
   const [trimInProgress, setTrimInProgress] = useState(false);
-  const [reuseEntered, setReuseEntered] = useState(false);
+  const [reuseInProgress, setReuseInProgress] = useState(false);
   const [persisted, setPersisted] = useState(() =>
     session ? readPersistedForSession(session.sessionId) : {
       trimEntries: [] as KitchenSkillsTrimEntry[],
@@ -296,9 +301,17 @@ export function KitchenSkillsSessionProvider({
   }, []);
 
   const enterReuse = useCallback(() => {
-    setReuseEntered(true);
-    setTrimInProgress(false);
+    setShowFinishSummary(false);
     goToKitchenDaySection('reuse');
+  }, []);
+
+  const addAnotherIngredient = useCallback(() => {
+    setShowFinishSummary(false);
+    goToKitchenDaySection('trim');
+  }, []);
+
+  const openFinishSummary = useCallback(() => {
+    setShowFinishSummary(true);
   }, []);
 
   const commitReview = useCallback((entry: KitchenSkillsReviewEntry, studentActorId: string): KitchenSkillsCommitResult => {
@@ -360,13 +373,14 @@ export function KitchenSkillsSessionProvider({
       portionComplete: portionEntries.length > 0,
       trimCount: trimEntries.length,
       reuseComplete: rescueEntries.length > 0,
-      reuseEntered: reuseEntered || rescueEntries.length > 0,
       trimInProgress,
+      reuseInProgress,
     }),
-    [portionEntries.length, trimEntries.length, rescueEntries.length, reuseEntered, trimInProgress],
+    [portionEntries.length, trimEntries.length, rescueEntries.length, trimInProgress, reuseInProgress],
   );
   const requiredSection = requiredKitchenSkillsSection(taskProgress);
   const reviewAllowed = canOpenKitchenSkillsReview(taskProgress);
+  const canFinish = canFinishKitchenSkillsChallenge(taskProgress);
 
   const value = useMemo<KitchenSkillsSessionValue>(
     () => ({
@@ -385,12 +399,16 @@ export function KitchenSkillsSessionProvider({
       findTrimByIngredientId,
       findRescueByIngredientId,
       findReviewBySessionAndModule,
-      showFinishSummary,
+      showFinishSummary: showFinishSummary && canFinish,
       taskProgress,
       requiredSection,
       reviewAllowed,
+      canFinish,
       setTrimInProgress,
+      setReuseInProgress,
       enterReuse,
+      addAnotherIngredient,
+      openFinishSummary,
     }),
     [
       session,
@@ -408,10 +426,13 @@ export function KitchenSkillsSessionProvider({
       findRescueByIngredientId,
       findReviewBySessionAndModule,
       showFinishSummary,
+      canFinish,
       taskProgress,
       requiredSection,
       reviewAllowed,
       enterReuse,
+      addAnotherIngredient,
+      openFinishSummary,
     ],
   );
 

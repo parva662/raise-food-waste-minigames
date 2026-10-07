@@ -1,4 +1,4 @@
-import { mkdirSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import XLSX from 'xlsx';
 import { slugFromMenuItemName } from '../menu/normalize.ts';
@@ -6,10 +6,14 @@ import { slugFromMenuItemName } from '../menu/normalize.ts';
 export const CLEAN_REFERENCE_RELATIVE_PATH =
   'reference/kitchen-skills/kitchen_day_recipe_reference_clean.xlsx';
 
+export const SOURCE_REFERENCE_RELATIVE_PATH =
+  'reference/kitchen-skills/reseptit_data_v3.xlsx';
+
 export interface ExtractedIngredient {
   ingredientId: string;
   ingredientName: string;
   targetWeightGrams: number;
+  referenceWastePercent?: number;
 }
 
 export interface ExtractedRecipe {
@@ -53,6 +57,7 @@ export interface RecipeIngredientRow {
   ingredient_order?: unknown;
   ingredient_name?: unknown;
   target_weight_g?: unknown;
+  reference_waste_percent?: unknown;
 }
 
 export function readPositiveNumber(value: unknown): number | null {
@@ -60,6 +65,72 @@ export function readPositiveNumber(value: unknown): number | null {
   const number = typeof value === 'number' ? value : Number(String(value).replace(',', '.'));
   if (!Number.isFinite(number) || number <= 0) return null;
   return number;
+}
+
+export function readReferenceWastePercent(value: unknown): number | null {
+  if (value == null || value === '') return null;
+  if (typeof value === 'number') {
+    if (!Number.isFinite(value) || value < 0) return null;
+    return value;
+  }
+  const text = String(value).replace('%', '').replace(/\s+/g, '').replace(',', '.');
+  const number = Number(text);
+  if (!Number.isFinite(number) || number < 0) return null;
+  return number;
+}
+
+export function sourceWastePercentKey(recipeId: string, ingredientOrder: number): string {
+  return `${recipeId}:${ingredientOrder}`;
+}
+
+export function readSourceReferenceWastePercents(workbookPath: string): Map<string, number> {
+  const workbook = XLSX.readFile(workbookPath);
+  const rows = XLSX.utils.sheet_to_json<Record<string, unknown>>(workbook.Sheets.Reseptit ?? {}, {
+    defval: null,
+    raw: true,
+  });
+  const percents = new Map<string, number>();
+  for (const row of rows) {
+    const recipeId = readRecipeId(row.Resepti_ID);
+    if (!recipeId) continue;
+    for (let slot = 1; slot <= 22; slot += 1) {
+      const ingredientName = readRequiredText(row[`Nimi ${slot}`]);
+      if (!ingredientName) continue;
+      const percent = readReferenceWastePercent(row[`Hävikki ${slot}`]);
+      if (percent == null) continue;
+      percents.set(sourceWastePercentKey(recipeId, slot), percent);
+    }
+  }
+  return percents;
+}
+
+export function applyReferenceWastePercents(
+  ingredientRows: readonly RecipeIngredientRow[],
+  percents: ReadonlyMap<string, number>,
+): RecipeIngredientRow[] {
+  return ingredientRows.map((row) => {
+    const recipeId = readRecipeId(row.recipe_id);
+    const order = Number(row.ingredient_order);
+    if (!recipeId || !Number.isFinite(order)) return { ...row };
+    const percent = percents.get(sourceWastePercentKey(recipeId, order));
+    if (percent == null) return { ...row };
+    return { ...row, reference_waste_percent: percent };
+  });
+}
+
+export function writeEnrichedCleanWorkbook(
+  cleanWorkbookPath: string,
+  percents: ReadonlyMap<string, number>,
+): void {
+  const workbook = XLSX.readFile(cleanWorkbookPath);
+  const ingredients = XLSX.utils.sheet_to_json<RecipeIngredientRow>(
+    workbook.Sheets.Recipe_ingredients ?? {},
+    { defval: null, raw: true },
+  );
+  workbook.Sheets.Recipe_ingredients = XLSX.utils.json_to_sheet(
+    applyReferenceWastePercents(ingredients, percents),
+  );
+  XLSX.writeFile(workbook, cleanWorkbookPath);
 }
 
 export function readRequiredText(value: unknown): string | null {
@@ -158,7 +229,8 @@ export function extractRecipesFromRows(
         continue;
       }
       const order = Number(ingredient.ingredient_order);
-      ingredients.push({
+      const referenceWastePercent = readReferenceWastePercent(ingredient.reference_waste_percent);
+      const extracted: ExtractedIngredient = {
         ingredientId: uniqueIngredientId(
           ingredientName,
           usedIds,
@@ -166,7 +238,9 @@ export function extractRecipesFromRows(
         ),
         ingredientName,
         targetWeightGrams,
-      });
+      };
+      if (referenceWastePercent != null) extracted.referenceWastePercent = referenceWastePercent;
+      ingredients.push(extracted);
     }
 
     if (ingredients.length === 0) {
@@ -235,16 +309,21 @@ export function extractRecipesFromRows(
 export function extractRecipesFromWorkbook(
   workbookPath: string,
   sourceWorkbook = CLEAN_REFERENCE_RELATIVE_PATH,
+  sourceHavikkiPath?: string,
 ): RecipeExtractionResult {
   const workbook = XLSX.readFile(workbookPath);
   const summary = XLSX.utils.sheet_to_json<RecipeSummaryRow>(workbook.Sheets.Recipe_summary ?? {}, {
     defval: null,
     raw: true,
   });
-  const ingredients = XLSX.utils.sheet_to_json<RecipeIngredientRow>(
+  let ingredients = XLSX.utils.sheet_to_json<RecipeIngredientRow>(
     workbook.Sheets.Recipe_ingredients ?? {},
     { defval: null, raw: true },
   );
+  const havikkiPath = sourceHavikkiPath ?? resolve(process.cwd(), SOURCE_REFERENCE_RELATIVE_PATH);
+  if (existsSync(havikkiPath)) {
+    ingredients = applyReferenceWastePercents(ingredients, readSourceReferenceWastePercents(havikkiPath));
+  }
   return extractRecipesFromRows(summary, ingredients, sourceWorkbook);
 }
 

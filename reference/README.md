@@ -32,6 +32,7 @@ Field mapping:
 
 - expected final recipe weight = `expected_final_weight_g` from `Kypsä_kokonaispaino`
 - target ingredient weight = `target_weight_g` from `Määrä`
+- recipe-ingredient kitchen reference = `reference_waste_percent` from source `Hävikki N` (0% is valid and is kept)
 - `Saanto` is retained in the source/clean workbooks for reference and is **not** the v1 final-weight target
 
 A recipe is imported only when it has an id, a name, an expected final weight greater than 0, and at least one valid ingredient. An ingredient is imported only when it has a usable name and a target weight greater than 0. Invalid rows are excluded and counted in the extraction report; missing weights are not invented.

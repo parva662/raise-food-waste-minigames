@@ -6,8 +6,11 @@ import * as XLSX from 'xlsx';
 import { resolve } from 'node:path';
 import {
   CLEAN_REFERENCE_RELATIVE_PATH,
+  SOURCE_REFERENCE_RELATIVE_PATH,
   extractRecipesFromRows,
   extractRecipesFromWorkbook,
+  readReferenceWastePercent,
+  readSourceReferenceWastePercents,
   serializeRecipesDataset,
   writeRecipeExtractionOutputs,
 } from './extractRecipes.ts';
@@ -38,12 +41,14 @@ describe('Kitchen Day recipe extraction', () => {
           ingredient_order: 2,
           ingredient_name: 'Salt',
           target_weight_g: 8,
+          reference_waste_percent: 0,
         },
         {
           recipe_id: 10,
           ingredient_order: 1,
           ingredient_name: 'Yogurt',
           target_weight_g: 1000,
+          reference_waste_percent: 37,
         },
       ],
     );
@@ -54,8 +59,8 @@ describe('Kitchen Day recipe extraction', () => {
         recipeName: 'Test sauce',
         expectedFinalWeightGrams: 1850,
         ingredients: [
-          { ingredientId: 'yogurt', ingredientName: 'Yogurt', targetWeightGrams: 1000 },
-          { ingredientId: 'salt', ingredientName: 'Salt', targetWeightGrams: 8 },
+          { ingredientId: 'yogurt', ingredientName: 'Yogurt', targetWeightGrams: 1000, referenceWastePercent: 37 },
+          { ingredientId: 'salt', ingredientName: 'Salt', targetWeightGrams: 8, referenceWastePercent: 0 },
         ],
       },
     ]);
@@ -173,5 +178,32 @@ describe('Kitchen Day recipe extraction', () => {
     expect(result.report.excludedIngredientRows).toBe(13);
     expect(result.recipes.find((recipe) => recipe.recipeId === '54')).toBeUndefined();
     expect(result.recipes.find((recipe) => recipe.recipeId === '1')?.expectedFinalWeightGrams).toBe(13500);
+  });
+
+  it('keeps recipe-ingredient Hävikki 0% and non-zero values from the source workbook', () => {
+    expect(readReferenceWastePercent('0,00 %')).toBe(0);
+    expect(readReferenceWastePercent('37,00 %')).toBe(37);
+    expect(readReferenceWastePercent(0)).toBe(0);
+    expect(readReferenceWastePercent(null)).toBeNull();
+
+    const percents = readSourceReferenceWastePercents(
+      resolve(process.cwd(), SOURCE_REFERENCE_RELATIVE_PATH),
+    );
+    expect(percents.get('5:1')).toBe(37);
+    expect(percents.get('5:2')).toBe(0);
+    expect(percents.get('5:3')).toBe(0);
+
+    const result = extractRecipesFromWorkbook(resolve(process.cwd(), CLEAN_REFERENCE_RELATIVE_PATH));
+    const smoothie = result.recipes.find((recipe) => recipe.recipeId === '5');
+    expect(smoothie?.recipeName).toBe('Banaanismoothie L, G');
+    expect(smoothie?.ingredients.find((line) => line.ingredientId.startsWith('banaani'))).toMatchObject({
+      referenceWastePercent: 37,
+    });
+    expect(smoothie?.ingredients.find((line) => line.ingredientId.startsWith('piima'))).toMatchObject({
+      referenceWastePercent: 0,
+    });
+    expect(smoothie?.ingredients.find((line) => line.ingredientId.startsWith('hunaja'))).toMatchObject({
+      referenceWastePercent: 0,
+    });
   });
 });

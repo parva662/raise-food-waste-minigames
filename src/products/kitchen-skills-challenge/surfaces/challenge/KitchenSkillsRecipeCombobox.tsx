@@ -20,7 +20,7 @@ export function KitchenSkillsRecipeCombobox({
   onChange,
   testId = 'kitchen-day-recipe-select',
   listTestId = 'kitchen-day-recipe-list',
-  placeholder = 'Type to search recipes',
+  placeholder = 'Select recipe…',
   noMatchLabel = 'No matching recipes',
 }: {
   options: readonly KitchenSkillsRecipeOption[];
@@ -37,26 +37,29 @@ export function KitchenSkillsRecipeCombobox({
   const [query, setQuery] = useState(selected?.label ?? '');
   const [open, setOpen] = useState(false);
   const [activeIndex, setActiveIndex] = useState(0);
-  const filtered = useMemo(() => {
-    if (!query.trim()) return [];
-    return filterRecipeOptions(options, query);
-  }, [options, query]);
+  const listQuery = open && selected && query === selected.label ? '' : query;
+  const filtered = useMemo(() => filterRecipeOptions(options, listQuery), [options, listQuery]);
 
   useEffect(() => {
     setActiveIndex(0);
-  }, [query]);
+  }, [listQuery, open]);
 
   useEffect(() => {
     if (!open) return;
-    function onDocMouseDown(event: MouseEvent) {
+    function onDocPointerDown(event: PointerEvent) {
       if (rootRef.current && !rootRef.current.contains(event.target as Node)) {
         setOpen(false);
         setQuery(selected?.label ?? '');
       }
     }
-    document.addEventListener('mousedown', onDocMouseDown);
-    return () => document.removeEventListener('mousedown', onDocMouseDown);
+    document.addEventListener('pointerdown', onDocPointerDown);
+    return () => document.removeEventListener('pointerdown', onDocPointerDown);
   }, [open, selected]);
+
+  function openList() {
+    setOpen(true);
+    setActiveIndex(0);
+  }
 
   function selectOption(option: KitchenSkillsRecipeOption) {
     onChange(option.id);
@@ -89,13 +92,15 @@ export function KitchenSkillsRecipeCombobox({
         placeholder={placeholder}
         data-testid={testId}
         value={query}
-        onFocus={() => setOpen(true)}
+        onPointerDown={openList}
+        onFocus={openList}
+        onClick={openList}
         onChange={(event) => updateQuery(event.target.value)}
         onKeyDown={(event) => {
           if (event.key === 'ArrowDown') {
             event.preventDefault();
             if (!open) {
-              setOpen(true);
+              openList();
               return;
             }
             setActiveIndex((current) => Math.min(current + 1, Math.max(filtered.length - 1, 0)));
@@ -121,9 +126,11 @@ export function KitchenSkillsRecipeCombobox({
       {open ? (
         <ul className="kitchen-day-combobox__list" role="listbox" id={listId} data-testid={listTestId}>
           {filtered.length === 0 ? (
-            <li className="kitchen-day-combobox__empty" role="presentation">
-              {query.trim() ? noMatchLabel : placeholder}
-            </li>
+            query.trim() ? (
+              <li className="kitchen-day-combobox__empty" role="presentation">
+                {noMatchLabel}
+              </li>
+            ) : null
           ) : (
             filtered.map((option, index) => (
               <li
@@ -138,7 +145,7 @@ export function KitchenSkillsRecipeCombobox({
                 }
                 data-testid={`kitchen-day-recipe-option-${option.id}`}
                 onMouseEnter={() => setActiveIndex(index)}
-                onMouseDown={(event) => event.preventDefault()}
+                onPointerDown={(event) => event.preventDefault()}
                 onClick={() => selectOption(option)}
               >
                 {option.label}

@@ -4,8 +4,8 @@ import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { AppRouter } from '@/app/AppRouter';
 import {
-  recordAnkanrintaPortion,
-  recordDuckBreastTrim,
+  recordBanaaniTrim,
+  recordHedelmatPortion,
   selectTrimIngredient,
 } from '@/products/kitchen-skills-challenge/kitchenSkills.testSupport';
 
@@ -27,8 +27,8 @@ describe('Kitchen Skills compact data-entry layout', () => {
   it('keeps Trim gram fields content-width and primary actions in a sticky footer', async () => {
     const user = userEvent.setup();
     render(<AppRouter />);
-    await recordAnkanrintaPortion(user);
-    await selectTrimIngredient(user, 'ANKKA', 'ANKKA, RINTAFILEE');
+    await recordHedelmatPortion(user);
+    await selectTrimIngredient(user, 'Banaani', 'Banaani');
     await user.click(screen.getByRole('button', { name: 'Continue' }));
     const gramRow = screen.getByTestId('kitchen-day-starting-weight').closest('.kitchen-day-input-row');
     expect(gramRow).toHaveClass('kitchen-day-input-row--grams');
@@ -38,8 +38,8 @@ describe('Kitchen Skills compact data-entry layout', () => {
   it('keeps Reuse compact: grams stay short, destination is two rows, meta shares a row', async () => {
     const user = userEvent.setup();
     render(<AppRouter />);
-    await recordAnkanrintaPortion(user);
-    await recordDuckBreastTrim(user);
+    await recordHedelmatPortion(user);
+    await recordBanaaniTrim(user);
     await user.click(screen.getByTestId('kitchen-day-continue-reuse'));
     expect(screen.getByTestId('kitchen-day-rescue-ingredient').closest('.kitchen-day-reuse-meta')).toBeTruthy();
     expect(screen.getByTestId('kitchen-day-rescue-actual-waste').closest('.kitchen-day-reuse-meta')).toBeTruthy();

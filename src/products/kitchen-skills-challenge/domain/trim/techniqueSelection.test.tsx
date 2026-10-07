@@ -6,7 +6,7 @@ import { AppRouter } from '@/app/AppRouter';
 import { TRIM_TECHNIQUES } from '@/products/kitchen-skills-challenge/domain/types';
 import { TRIM_TECHNIQUE_LABELS } from '@/products/kitchen-skills-challenge/domain/trim/techniques';
 import {
-  recordAnkanrintaPortion,
+  recordHedelmatPortion,
   selectTrimIngredient,
 } from '@/products/kitchen-skills-challenge/kitchenSkills.testSupport';
 
@@ -16,8 +16,8 @@ function setHash(hash: string) {
 }
 
 async function openTechniqueStep(user: ReturnType<typeof userEvent.setup>) {
-  await recordAnkanrintaPortion(user);
-  await selectTrimIngredient(user, 'ANKKA', 'ANKKA, RINTAFILEE');
+  await recordHedelmatPortion(user);
+  await selectTrimIngredient(user, 'Banaani', 'Banaani');
   await user.click(screen.getByRole('button', { name: 'Continue' }));
   await user.type(screen.getByTestId('kitchen-day-starting-weight'), '5000');
   await user.click(screen.getByTestId('kitchen-day-weight-continue'));
@@ -36,7 +36,7 @@ describe('Trim Smart technique selection', () => {
   it('does not render a category step', async () => {
     const user = userEvent.setup();
     render(<AppRouter />);
-    await recordAnkanrintaPortion(user);
+    await recordHedelmatPortion(user);
     expect(screen.getByTestId('kitchen-day-trim-step-ingredient')).toBeInTheDocument();
     expect(screen.queryByTestId('kitchen-day-category-list')).not.toBeInTheDocument();
     expect(screen.queryByTestId('kitchen-day-category-root')).not.toBeInTheDocument();
@@ -81,6 +81,6 @@ describe('Trim Smart technique selection', () => {
     await user.type(screen.getByTestId('kitchen-day-reusable-waste'), '200');
     await user.type(screen.getByTestId('kitchen-day-reuse-destination'), 'Stock');
     await user.click(screen.getByTestId('kitchen-day-save-rescue'));
-    expect(screen.getByTestId('kitchen-day-finish-trim-ankka-rintafilee')).toHaveTextContent('Julienne');
+    expect(screen.getByTestId('kitchen-day-finish-trim-banaani')).toHaveTextContent('Julienne');
   });
 });

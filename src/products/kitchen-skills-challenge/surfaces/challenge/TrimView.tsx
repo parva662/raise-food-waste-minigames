@@ -1,17 +1,12 @@
-import { useEffect, useMemo, useState } from 'react';
-import { formatDurationFromMinutes, formatGrams, formatWastePercent } from '@/products/kitchen-skills-challenge/format';
-import { getGameBusInputCollections } from '@/platform/gamebus/bridge';
-import { extractGroupActivities, getRawKitchenSelfActivitiesInput } from '@/platform/gamebus/groupActivities';
+import { useEffect, useState } from 'react';
+import { formatDurationFromMinutes, formatGrams } from '@/products/kitchen-skills-challenge/format';
 import { useReadyKitchenSkillsSession } from '@/products/kitchen-skills-challenge/domain/session/KitchenSkillsSessionContext';
 import { isIngredientAlreadyRecorded } from '@/products/kitchen-skills-challenge/domain/session/ingredientUniqueness';
 import {
   remainingRecipeIngredientsForTrim,
   sessionRecipeReference,
 } from '@/products/kitchen-skills-challenge/domain/session/sessionRecipe';
-import { historicalTrimSamplesFromGroupActivities } from '@/products/kitchen-skills-challenge/read/selectKitchenSkillsActivities';
 import { TRIM_TECHNIQUES, type TrimTechnique } from '@/products/kitchen-skills-challenge/domain/types';
-import { wastePercentage } from '@/products/kitchen-skills-challenge/domain/trim/derived';
-import { compareToKitchenReference } from '@/products/kitchen-skills-challenge/domain/trim/reference';
 import { TRIM_TECHNIQUE_LABELS } from '@/products/kitchen-skills-challenge/domain/trim/techniques';
 import {
   createIdleTimer,
@@ -61,14 +56,57 @@ function stepLabel(step: TrimStep): string {
   return labels[step];
 }
 
+function TrimStepActions({
+  onBack,
+  continueLabel = 'Continue',
+  continueTestId,
+  continueDisabled,
+  onContinue,
+}: {
+  onBack?: () => void;
+  continueLabel?: string;
+  continueTestId?: string;
+  continueDisabled?: boolean;
+  onContinue?: () => void;
+}) {
+  return (
+    <div className="kitchen-day-form-actions kitchen-day-form-actions--sticky">
+      {onBack ? (
+        <button
+          type="button"
+          className="kitchen-day-button kitchen-day-button--secondary"
+          data-testid="kitchen-day-trim-back"
+          onClick={onBack}
+        >
+          Back
+        </button>
+      ) : null}
+      {onContinue ? (
+        <button
+          type="button"
+          className="kitchen-day-button kitchen-day-button--primary"
+          data-testid={continueTestId}
+          disabled={continueDisabled}
+          onClick={onContinue}
+        >
+          {continueLabel}
+        </button>
+      ) : null}
+    </div>
+  );
+}
+
 export function KitchenSkillsTrimView() {
   const {
     session,
     portionEntries,
+    rescueEntries,
     recordedIngredientIds,
     commitTrimEntry,
     setTrimInProgress,
     enterReuse,
+    openFinishSummary,
+    canFinish,
   } = useReadyKitchenSkillsSession();
   const recipe = sessionRecipeReference(portionEntries);
   const remainingIngredients = recipe
@@ -106,11 +144,6 @@ export function KitchenSkillsTrimView() {
     step !== 'result' &&
     isIngredientAlreadyRecorded(recordedIngredientIds, ingredientId);
 
-  const historicalSamples = useMemo(() => {
-    const raw = getRawKitchenSelfActivitiesInput(getGameBusInputCollections());
-    return historicalTrimSamplesFromGroupActivities(extractGroupActivities(raw));
-  }, []);
-
   useEffect(() => {
     setTrimInProgress(step !== 'result');
     return () => setTrimInProgress(false);
@@ -119,6 +152,11 @@ export function KitchenSkillsTrimView() {
   function goNext() {
     const index = STEP_ORDER.indexOf(step);
     setStep(STEP_ORDER[index + 1] ?? step);
+  }
+
+  function goBack() {
+    const index = STEP_ORDER.indexOf(step);
+    setStep(STEP_ORDER[index - 1] ?? step);
   }
 
   function resetForAnother() {
@@ -165,20 +203,6 @@ export function KitchenSkillsTrimView() {
     setStep('result');
   }
 
-  const resultPercent =
-    weight.ok && actual.ok ? wastePercentage(actual.value, weight.value) : null;
-  const comparison =
-    resultPercent != null && ingredientId
-      ? compareToKitchenReference({
-          ingredientId,
-          studentWastePercent: resultPercent,
-          historicalSamples,
-        })
-      : null;
-
-  const comparisonDelta =
-    comparison != null ? resultPercent! - comparison.referenceWastePercent : null;
-
   const ingredientOptions = remainingIngredients.map((line) => ({
     id: line.ingredientId,
     label: line.ingredientName,
@@ -189,6 +213,11 @@ export function KitchenSkillsTrimView() {
       <p className="kitchen-day-progress" data-testid="kitchen-day-trim-progress">
         Step {STEP_ORDER.indexOf(step) + 1} of {STEP_ORDER.length}: {stepLabel(step)}
       </p>
+      {recipe ? (
+        <p className="kitchen-day-card__copy" data-testid="kitchen-day-trim-recipe">
+          Recipe {recipe.recipeName}
+        </p>
+      ) : null}
 
       {step === 'ingredient' ? (
         <div data-testid="kitchen-day-trim-step-ingredient">
@@ -198,16 +227,11 @@ export function KitchenSkillsTrimView() {
               <p className="kitchen-day-card__copy" data-testid="kitchen-day-trim-no-remaining">
                 All recipe ingredients for this session are already recorded.
               </p>
-              <div className="kitchen-day-form-actions kitchen-day-form-actions--sticky">
-                <button
-                  type="button"
-                  className="kitchen-day-button kitchen-day-button--primary"
-                  data-testid="kitchen-day-continue-reuse"
-                  onClick={enterReuse}
-                >
-                  Record reuse
-                </button>
-              </div>
+              <TrimStepActions
+                continueLabel="Record reuse"
+                continueTestId="kitchen-day-continue-reuse"
+                onContinue={enterReuse}
+              />
             </>
           ) : (
             <>
@@ -219,7 +243,7 @@ export function KitchenSkillsTrimView() {
                   onChange={setSelectedIngredientId}
                   testId="kitchen-day-ingredient-name"
                   listTestId="kitchen-day-ingredient-list"
-                  placeholder="Type to search ingredients"
+                  placeholder="Select ingredient…"
                   noMatchLabel="No matching ingredients"
                 />
               </label>
@@ -228,16 +252,10 @@ export function KitchenSkillsTrimView() {
                   This ingredient is already recorded in this session.
                 </p>
               ) : null}
-              <div className="kitchen-day-form-actions kitchen-day-form-actions--sticky">
-                <button
-                  type="button"
-                  className="kitchen-day-button kitchen-day-button--primary"
-                  disabled={!selectedIngredientId || duplicate}
-                  onClick={goNext}
-                >
-                  Continue
-                </button>
-              </div>
+              <TrimStepActions
+                continueDisabled={!selectedIngredientId || duplicate}
+                onContinue={goNext}
+              />
             </>
           )}
         </div>
@@ -262,17 +280,12 @@ export function KitchenSkillsTrimView() {
               Enter a starting weight greater than 0 grams.
             </p>
           ) : null}
-          <div className="kitchen-day-form-actions kitchen-day-form-actions--sticky">
-            <button
-              type="button"
-              className="kitchen-day-button kitchen-day-button--primary"
-              data-testid="kitchen-day-weight-continue"
-              disabled={!weight.ok || setupIssues.length > 0}
-              onClick={goNext}
-            >
-              Continue
-            </button>
-          </div>
+          <TrimStepActions
+            onBack={goBack}
+            continueTestId="kitchen-day-weight-continue"
+            continueDisabled={!weight.ok || setupIssues.length > 0}
+            onContinue={goNext}
+          />
         </div>
       ) : null}
 
@@ -300,17 +313,12 @@ export function KitchenSkillsTrimView() {
               </button>
             ))}
           </div>
-          <div className="kitchen-day-form-actions kitchen-day-form-actions--sticky">
-            <button
-              type="button"
-              className="kitchen-day-button kitchen-day-button--primary"
-              data-testid="kitchen-day-technique-continue"
-              disabled={!canContinueToEstimate(technique)}
-              onClick={goNext}
-            >
-              Continue
-            </button>
-          </div>
+          <TrimStepActions
+            onBack={goBack}
+            continueTestId="kitchen-day-technique-continue"
+            continueDisabled={!canContinueToEstimate(technique)}
+            onContinue={goNext}
+          />
         </div>
       ) : null}
 
@@ -333,17 +341,12 @@ export function KitchenSkillsTrimView() {
               Estimate must be 0 g up to the starting weight.
             </p>
           ) : null}
-          <div className="kitchen-day-form-actions kitchen-day-form-actions--sticky">
-            <button
-              type="button"
-              className="kitchen-day-button kitchen-day-button--primary"
-              data-testid="kitchen-day-estimate-continue"
-              disabled={!estimate.ok}
-              onClick={goNext}
-            >
-              Continue
-            </button>
-          </div>
+          <TrimStepActions
+            onBack={goBack}
+            continueTestId="kitchen-day-estimate-continue"
+            continueDisabled={!estimate.ok}
+            onContinue={goNext}
+          />
         </div>
       ) : null}
 
@@ -355,16 +358,12 @@ export function KitchenSkillsTrimView() {
               <p className="kitchen-day-card__copy" data-testid="kitchen-day-timer-status">
                 Start when you begin physical work.
               </p>
-              <div className="kitchen-day-form-actions kitchen-day-form-actions--sticky">
-                <button
-                  type="button"
-                  className="kitchen-day-button kitchen-day-button--primary"
-                  data-testid="kitchen-day-start-preparation"
-                  onClick={() => setTimer((current) => startPreparationTimer(current, new Date()))}
-                >
-                  Start preparation
-                </button>
-              </div>
+              <TrimStepActions
+                onBack={goBack}
+                continueLabel="Start preparation"
+                continueTestId="kitchen-day-start-preparation"
+                onContinue={() => setTimer((current) => startPreparationTimer(current, new Date()))}
+              />
             </>
           ) : null}
           {timer.status === 'running' ? (
@@ -373,16 +372,12 @@ export function KitchenSkillsTrimView() {
                 Preparation in progress
               </p>
               <ElapsedPreparationTime startedAt={timer.startedAt} />
-              <div className="kitchen-day-form-actions kitchen-day-form-actions--sticky">
-                <button
-                  type="button"
-                  className="kitchen-day-button kitchen-day-button--primary"
-                  data-testid="kitchen-day-finish-preparation"
-                  onClick={() => setTimer((current) => finishPreparationTimer(current, new Date()))}
-                >
-                  Finish preparation
-                </button>
-              </div>
+              <TrimStepActions
+                onBack={goBack}
+                continueLabel="Finish preparation"
+                continueTestId="kitchen-day-finish-preparation"
+                onContinue={() => setTimer((current) => finishPreparationTimer(current, new Date()))}
+              />
             </>
           ) : null}
           {timer.status === 'finished' ? (
@@ -390,16 +385,11 @@ export function KitchenSkillsTrimView() {
               <p className="kitchen-day-card__copy" data-testid="kitchen-day-timer-status">
                 Preparation time {formatDurationFromMinutes(timer.durationMinutes)}
               </p>
-              <div className="kitchen-day-form-actions kitchen-day-form-actions--sticky">
-                <button
-                  type="button"
-                  className="kitchen-day-button kitchen-day-button--primary"
-                  data-testid="kitchen-day-timer-continue"
-                  onClick={goNext}
-                >
-                  Continue
-                </button>
-              </div>
+              <TrimStepActions
+                onBack={goBack}
+                continueTestId="kitchen-day-timer-continue"
+                onContinue={goNext}
+              />
             </>
           ) : null}
         </div>
@@ -425,50 +415,31 @@ export function KitchenSkillsTrimView() {
             </p>
           ) : null}
           {submitError ? <p className="kitchen-day-error">{submitError}</p> : null}
-          <div className="kitchen-day-form-actions kitchen-day-form-actions--sticky">
-            <button
-              type="button"
-              className="kitchen-day-button kitchen-day-button--primary"
-              data-testid="kitchen-day-submit-trim"
-              disabled={!actual.ok || submitting}
-              onClick={submitEntry}
-            >
-              Save ingredient
-            </button>
-          </div>
+          <TrimStepActions
+            onBack={goBack}
+            continueLabel="Save ingredient"
+            continueTestId="kitchen-day-submit-trim"
+            continueDisabled={!actual.ok || submitting}
+            onContinue={submitEntry}
+          />
         </div>
       ) : null}
 
-      {step === 'result' && resultPercent != null ? (
+      {step === 'result' && actual.ok ? (
         <div data-testid="kitchen-day-trim-step-result">
           <h2 className="kitchen-day-card__title">Preparation result</h2>
           <dl className="kitchen-day-metric-grid">
             <div className="kitchen-day-metric">
               <dt>Actual waste</dt>
-              <dd>{formatGrams(actual.ok ? actual.value : 0)}</dd>
+              <dd>{formatGrams(actual.value)}</dd>
             </div>
-            <div className="kitchen-day-metric">
-              <dt>Waste rate</dt>
-              <dd data-testid="kitchen-day-waste-percent">{formatWastePercent(resultPercent)}</dd>
-            </div>
-            {comparison ? (
+            {weight.ok ? (
               <div className="kitchen-day-metric">
-                <dt>Kitchen reference</dt>
-                <dd>{formatWastePercent(comparison.referenceWastePercent)}</dd>
+                <dt>Starting weight</dt>
+                <dd>{formatGrams(weight.value)}</dd>
               </div>
             ) : null}
           </dl>
-          {comparison && comparisonDelta != null ? (
-            <p data-testid="kitchen-day-reference-comparison">
-              {comparisonDelta < 0
-                ? `${formatWastePercent(Math.abs(comparisonDelta)).replace('%', '')} percentage points below reference`
-                : comparisonDelta > 0
-                  ? `${formatWastePercent(comparisonDelta).replace('%', '')} percentage points above reference`
-                  : 'Same as the kitchen reference'}
-            </p>
-          ) : (
-            <p data-testid="kitchen-day-reference-comparison">No kitchen reference for this ingredient yet.</p>
-          )}
           <div className="kitchen-day-actions">
             {remainingIngredients.length > 0 ? (
               <button
@@ -488,6 +459,16 @@ export function KitchenSkillsTrimView() {
             >
               Record reuse
             </button>
+            {canFinish && rescueEntries.length > 0 ? (
+              <button
+                type="button"
+                className="kitchen-day-button kitchen-day-button--secondary"
+                data-testid="kitchen-day-open-finish-summary"
+                onClick={openFinishSummary}
+              >
+                Challenge complete
+              </button>
+            ) : null}
           </div>
         </div>
       ) : null}

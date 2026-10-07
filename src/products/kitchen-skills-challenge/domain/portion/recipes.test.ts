@@ -18,4 +18,12 @@ describe('Kitchen Day recipe reference adapter', () => {
     expect(getRecipeReference('mayonnaise')).toBeNull();
     expect(getRecipeReference('')).toBeNull();
   });
+
+  it('keeps recipe-ingredient Hävikki 0% and non-zero values as internal reference', () => {
+    const smoothie = getRecipeReference('5');
+    expect(smoothie?.recipeName).toBe('Banaanismoothie L, G');
+    expect(smoothie?.lines.find((line) => line.ingredientId.startsWith('banaani'))?.referenceWastePercent).toBe(37);
+    expect(smoothie?.lines.find((line) => line.ingredientId.startsWith('piima'))?.referenceWastePercent).toBe(0);
+    expect(smoothie?.lines.find((line) => line.ingredientId.startsWith('hunaja'))?.referenceWastePercent).toBe(0);
+  });
 });

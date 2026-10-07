@@ -6,6 +6,8 @@ export interface RecipeReferenceLine {
   ingredientName: string;
   requiredAmount: number;
   unit: PortionUnit;
+  /** Recipe-ingredient Hävikki from the kitchen reference. Internal; not student-facing. 0 is valid. */
+  referenceWastePercent?: number;
 }
 
 export interface RecipeReference {
@@ -19,6 +21,7 @@ interface GeneratedIngredient {
   ingredientId: string;
   ingredientName: string;
   targetWeightGrams: number;
+  referenceWastePercent?: number;
 }
 
 interface GeneratedRecipe {
@@ -33,12 +36,18 @@ function toRecipeReference(recipe: GeneratedRecipe): RecipeReference {
     recipeId: recipe.recipeId,
     recipeName: recipe.recipeName,
     expectedFinalWeightGrams: recipe.expectedFinalWeightGrams,
-    lines: recipe.ingredients.map((ingredient) => ({
-      ingredientId: ingredient.ingredientId,
-      ingredientName: ingredient.ingredientName,
-      requiredAmount: ingredient.targetWeightGrams,
-      unit: 'g',
-    })),
+    lines: recipe.ingredients.map((ingredient) => {
+      const line: RecipeReferenceLine = {
+        ingredientId: ingredient.ingredientId,
+        ingredientName: ingredient.ingredientName,
+        requiredAmount: ingredient.targetWeightGrams,
+        unit: 'g',
+      };
+      if (ingredient.referenceWastePercent != null) {
+        line.referenceWastePercent = ingredient.referenceWastePercent;
+      }
+      return line;
+    }),
   };
 }
 

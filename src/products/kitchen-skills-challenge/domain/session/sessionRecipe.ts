@@ -21,5 +21,7 @@ export function remainingRecipeIngredientsForTrim(
   recordedIngredientIds: readonly string[],
 ): RecipeReferenceLine[] {
   const recorded = new Set(recordedIngredientIds);
-  return recipe.lines.filter((line) => !recorded.has(line.ingredientId));
+  return recipe.lines.filter(
+    (line) => !recorded.has(line.ingredientId) && (line.referenceWastePercent ?? 0) > 0,
+  );
 }
