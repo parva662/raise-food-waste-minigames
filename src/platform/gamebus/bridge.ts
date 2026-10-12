@@ -1,3 +1,4 @@
+import { getGameBusEmbedKind, requiresGameBusTaskHandshake } from '@/app/routes';
 import { peekExpectedActivityRef } from '@/platform/gamebus/expectedActivityRef';
 import { isGameBusEmbed } from '@/platform/gamebus/detectEmbed';
 import { gamebusDevLog } from '@/platform/gamebus/devLog';
@@ -13,6 +14,7 @@ import type {
   ActivityMessage,
   GameBusInputCollectionsPayload,
   InputCollectionsMessage,
+  MenuItemMessage,
   TaskData,
   TaskMessage,
 } from '@/platform/gamebus/types';
@@ -24,6 +26,9 @@ type InputCollectionsListener = (data: GameBusInputCollectionsPayload | null) =>
 
 let taskData: TaskData | null = null;
 let inputCollectionsData: GameBusInputCollectionsPayload | null = null;
+let menuItemData: Record<string, unknown> | null = null;
+/** Custom Page init complete (MENU_ITEM and/or INPUT_COLLECTIONS). Survives subscriber cleanup. */
+let pageHandshakeComplete = false;
 let hasPostedActivity = false;
 const postedKeys = new Set<string>();
 let submissionInFlight = false;
@@ -31,6 +36,8 @@ let keyedSubmissionInFlight = false;
 let taskListener: TaskListener | null = null;
 let inputCollectionsListener: InputCollectionsListener | null = null;
 let messageHandlerAttached = false;
+let hashChangeListenerAttached = false;
+let activeHandshakeSubscribers = 0;
 let handshakeRetryTimer: ReturnType<typeof setInterval> | null = null;
 let iframeReadyAttempt = 0;
 
@@ -51,12 +58,40 @@ function isInputCollectionsMessage(data: unknown): data is InputCollectionsMessa
   );
 }
 
+function isMenuItemMessage(data: unknown): data is MenuItemMessage {
+  return (
+    typeof data === 'object' &&
+    data !== null &&
+    (data as MenuItemMessage).type === 'MENU_ITEM'
+  );
+}
+
 function messageType(data: unknown): string | undefined {
   if (typeof data === 'object' && data !== null && 'type' in data) {
     const t = (data as { type: unknown }).type;
     return typeof t === 'string' ? t : undefined;
   }
   return undefined;
+}
+
+function isTaskHandshakeComplete(): boolean {
+  return taskData !== null;
+}
+
+function isCurrentHandshakeComplete(): boolean {
+  return requiresGameBusTaskHandshake()
+    ? isTaskHandshakeComplete()
+    : pageHandshakeComplete;
+}
+
+function completePageHandshake(reason: string): void {
+  if (pageHandshakeComplete) return;
+  pageHandshakeComplete = true;
+  stopHandshakeRetry();
+  gamebusDevLog('custom page handshake complete', {
+    reason,
+    attempts: iframeReadyAttempt,
+  });
 }
 
 function stopHandshakeRetry(): void {
@@ -109,6 +144,17 @@ function acceptTaskFromParent(data: TaskData): void {
   taskListener?.(taskData);
 }
 
+function acceptMenuItemFromParent(data: Record<string, unknown>): void {
+  menuItemData = data;
+  gamebusDevLog('MENU_ITEM received', {
+    keys: Object.keys(data),
+  });
+  // Custom Tasks do not complete on MENU_ITEM; pages do.
+  if (getGameBusEmbedKind() === 'custom-page') {
+    completePageHandshake('menu-item');
+  }
+}
+
 function acceptInputCollectionsFromParent(data: GameBusInputCollectionsPayload): void {
   inputCollectionsData = data;
   const keys = [...getInputCollectionKeys(data)];
@@ -118,6 +164,10 @@ function acceptInputCollectionsFromParent(data: GameBusInputCollectionsPayload):
     kitchenSkillsTrainerActivities: getRawKitchenSkillsTrainerActivitiesInput(data),
     kitchenGroupActivities: getRawKitchenGroupActivitiesInput(data),
   });
+  // Custom Tasks often receive INPUT_COLLECTIONS before TASK — do not stop retries.
+  if (getGameBusEmbedKind() === 'custom-page') {
+    completePageHandshake('input-collections');
+  }
   inputCollectionsListener?.(inputCollectionsData);
 }
 
@@ -138,6 +188,15 @@ function handleParentMessage(event: MessageEvent): void {
       return;
     }
     acceptTaskFromParent(payload.data);
+    return;
+  }
+
+  if (isMenuItemMessage(payload)) {
+    const data =
+      payload.data && typeof payload.data === 'object'
+        ? (payload.data as Record<string, unknown>)
+        : {};
+    acceptMenuItemFromParent(data);
     return;
   }
 
@@ -165,12 +224,24 @@ function detachMessageListener(): void {
   messageHandlerAttached = false;
 }
 
+function attachHashChangeListener(): void {
+  if (typeof window === 'undefined' || hashChangeListenerAttached) return;
+  window.addEventListener('hashchange', syncHandshakeForCurrentRoute);
+  hashChangeListenerAttached = true;
+}
+
+function detachHashChangeListener(): void {
+  if (typeof window === 'undefined' || !hashChangeListenerAttached) return;
+  window.removeEventListener('hashchange', syncHandshakeForCurrentRoute);
+  hashChangeListenerAttached = false;
+}
+
 function beginIframeReadyRetries(): void {
-  if (taskData !== null) return;
-  sendIframeReadyAttempt();
+  if (isCurrentHandshakeComplete()) return;
   if (handshakeRetryTimer !== null) return;
+  sendIframeReadyAttempt();
   handshakeRetryTimer = setInterval(() => {
-    if (taskData !== null) {
+    if (isCurrentHandshakeComplete()) {
       stopHandshakeRetry();
       return;
     }
@@ -179,21 +250,63 @@ function beginIframeReadyRetries(): void {
 }
 
 /**
- * Register the parent message listener, then send IFRAME_READY (with retries until TASK).
+ * Align retry state with the current hash route (Custom Page vs Custom Task).
+ * Page init messages already received complete the page handshake without requiring TASK.
+ */
+function syncHandshakeForCurrentRoute(): void {
+  if (typeof window === 'undefined' || !isGameBusEmbed()) return;
+
+  if (requiresGameBusTaskHandshake()) {
+    if (isTaskHandshakeComplete()) {
+      stopHandshakeRetry();
+      return;
+    }
+    beginIframeReadyRetries();
+    return;
+  }
+
+  if (menuItemData !== null || inputCollectionsData !== null) {
+    completePageHandshake(
+      menuItemData !== null && inputCollectionsData !== null
+        ? 'route-sync-menu-and-collections'
+        : menuItemData !== null
+          ? 'route-sync-menu-item'
+          : 'route-sync-input-collections',
+    );
+    return;
+  }
+
+  beginIframeReadyRetries();
+}
+
+/**
+ * Register the parent message listener, then send IFRAME_READY with surface-aware retries:
+ * Custom Tasks until TASK; Custom Pages until MENU_ITEM and/or INPUT_COLLECTIONS.
  */
 export function startGameBusHandshake(): () => void {
   if (typeof window === 'undefined' || !isGameBusEmbed()) {
     return () => {};
   }
 
-  gamebusDevLog('embed detected');
+  activeHandshakeSubscribers += 1;
+  if (activeHandshakeSubscribers === 1) {
+    gamebusDevLog('embed detected');
+  }
 
   attachMessageListener();
-  beginIframeReadyRetries();
+  attachHashChangeListener();
+  syncHandshakeForCurrentRoute();
 
+  let cleaned = false;
   return () => {
-    stopHandshakeRetry();
-    detachMessageListener();
+    if (cleaned) return;
+    cleaned = true;
+    activeHandshakeSubscribers = Math.max(0, activeHandshakeSubscribers - 1);
+    if (activeHandshakeSubscribers === 0) {
+      stopHandshakeRetry();
+      detachMessageListener();
+      detachHashChangeListener();
+    }
   };
 }
 
@@ -232,6 +345,14 @@ export function getGameBusTask(): TaskData | null {
 
 export function getGameBusInputCollections(): GameBusInputCollectionsPayload | null {
   return inputCollectionsData;
+}
+
+export function getGameBusMenuItem(): Record<string, unknown> | null {
+  return menuItemData;
+}
+
+export function isGameBusPageHandshakeComplete(): boolean {
+  return pageHandshakeComplete;
 }
 
 export function hasGameBusPostedActivity(): boolean {
@@ -346,8 +467,12 @@ export function tryPostBuiltActivity(
 export function resetGameBusBridgeForTests(): void {
   stopHandshakeRetry();
   detachMessageListener();
+  detachHashChangeListener();
+  activeHandshakeSubscribers = 0;
   taskData = null;
   inputCollectionsData = null;
+  menuItemData = null;
+  pageHandshakeComplete = false;
   hasPostedActivity = false;
   postedKeys.clear();
   keyedSubmissionInFlight = false;
@@ -366,4 +491,8 @@ export function ingestInputCollectionsForTests(
   data: GameBusInputCollectionsPayload,
 ): void {
   acceptInputCollectionsFromParent(data);
+}
+
+export function ingestMenuItemForTests(data: Record<string, unknown> = {}): void {
+  acceptMenuItemFromParent(data);
 }

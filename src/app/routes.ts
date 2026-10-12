@@ -52,12 +52,24 @@ export const KITCHEN_SKILLS_CHALLENGE_HASH_ROUTE = KITCHEN_DAY_HASH_ROUTE;
 export const KITCHEN_SKILLS_PROGRESS_HASH_ROUTE = KITCHEN_DAY_PROGRESS_HASH_ROUTE;
 export const KITCHEN_SKILLS_TRAINER_HASH_ROUTE = KITCHEN_DAY_TUTOR_HASH_ROUTE;
 
+/**
+ * GameBus embedding surface for the iframe protocol handshake.
+ * - custom-task: IFRAME_READY until TASK (INPUT_COLLECTIONS alone does not complete)
+ * - custom-page: IFRAME_READY until MENU_ITEM and/or INPUT_COLLECTIONS (TASK not required)
+ *
+ * Do not infer page vs task from `expectedActivity === null` alone — task subroutes
+ * (e.g. Kitchen Skills review) may legitimately return null while still needing TASK.
+ */
+export type GameBusEmbedKind = 'custom-task' | 'custom-page';
+
 export type AppRouteDefinition = {
   mode: AppMode;
   surface: RouteSurface;
   hash: string;
   title: string;
   postsActivity: boolean;
+  /** Authoritative GameBus handshake mode for this surface. */
+  gameBusEmbedKind: GameBusEmbedKind;
   expectedActivity: string | null;
 };
 
@@ -68,6 +80,7 @@ export const APP_ROUTES: readonly AppRouteDefinition[] = [
     hash: '',
     title: 'Student Lunch',
     postsActivity: true,
+    gameBusEmbedKind: 'custom-task',
     expectedActivity: STUDENT_ACTIVITY_REF,
   },
   {
@@ -76,6 +89,7 @@ export const APP_ROUTES: readonly AppRouteDefinition[] = [
     hash: CHEF_HASH_ROUTE,
     title: 'Kitchen Forecast',
     postsActivity: true,
+    gameBusEmbedKind: 'custom-task',
     expectedActivity: CHEF_ACTIVITY_REF,
   },
   {
@@ -84,6 +98,7 @@ export const APP_ROUTES: readonly AppRouteDefinition[] = [
     hash: SERVICE_CLOSEOUT_HASH_ROUTE,
     title: 'Service Closeout',
     postsActivity: true,
+    gameBusEmbedKind: 'custom-task',
     expectedActivity: SERVICE_CLOSEOUT_ACTIVITY_REF,
   },
   {
@@ -92,6 +107,7 @@ export const APP_ROUTES: readonly AppRouteDefinition[] = [
     hash: CHEF_RESULTS_HASH_ROUTE,
     title: 'Forecast Results',
     postsActivity: false,
+    gameBusEmbedKind: 'custom-page',
     expectedActivity: null,
   },
   {
@@ -100,6 +116,7 @@ export const APP_ROUTES: readonly AppRouteDefinition[] = [
     hash: CHEF_RESULTS_ADMIN_HASH_ROUTE,
     title: 'Kitchen Management Dashboard',
     postsActivity: false,
+    gameBusEmbedKind: 'custom-page',
     expectedActivity: null,
   },
   {
@@ -108,6 +125,7 @@ export const APP_ROUTES: readonly AppRouteDefinition[] = [
     hash: TRIM_SMART_HASH_ROUTE,
     title: 'Trim Smart',
     postsActivity: true,
+    gameBusEmbedKind: 'custom-task',
     expectedActivity: TRIM_SMART_ACTIVITY_REF,
   },
   {
@@ -116,6 +134,7 @@ export const APP_ROUTES: readonly AppRouteDefinition[] = [
     hash: KITCHEN_DAY_HASH_ROUTE,
     title: 'Kitchen Skills Challenge',
     postsActivity: true,
+    gameBusEmbedKind: 'custom-task',
     expectedActivity: PORTION_PRECISION_ACTIVITY_REF,
   },
   {
@@ -124,6 +143,7 @@ export const APP_ROUTES: readonly AppRouteDefinition[] = [
     hash: KITCHEN_DAY_PROGRESS_HASH_ROUTE,
     title: 'Kitchen Skills Challenge Progress',
     postsActivity: false,
+    gameBusEmbedKind: 'custom-page',
     expectedActivity: null,
   },
   {
@@ -132,6 +152,7 @@ export const APP_ROUTES: readonly AppRouteDefinition[] = [
     hash: KITCHEN_DAY_TUTOR_HASH_ROUTE,
     title: 'Kitchen Skills Challenge Trainer',
     postsActivity: true,
+    gameBusEmbedKind: 'custom-task',
     expectedActivity: WASTE_PRACTICE_REVIEW_ACTIVITY_REF,
   },
 ] as const;
@@ -255,6 +276,20 @@ export function getRouteDefinition(mode: AppMode = getAppMode()): AppRouteDefini
     throw new Error(`Unknown app mode: ${mode}`);
   }
   return found;
+}
+
+/** GameBus handshake mode for the current (or given) hash route. */
+export function getGameBusEmbedKind(
+  hash: string = typeof window === 'undefined' ? '' : window.location.hash,
+): GameBusEmbedKind {
+  return getRouteDefinition(getAppMode(hash)).gameBusEmbedKind;
+}
+
+/** True when IFRAME_READY must continue until a TASK message arrives. */
+export function requiresGameBusTaskHandshake(
+  hash: string = typeof window === 'undefined' ? '' : window.location.hash,
+): boolean {
+  return getGameBusEmbedKind(hash) === 'custom-task';
 }
 
 /**

@@ -40,6 +40,17 @@ All three embed kinds use `window.parent.postMessage`. The child sends `IFRAME_R
 | **Custom page** (`AppEmbedPage`) | `MENU_ITEM`, `INPUT_COLLECTIONS` | `ACTIVITY`, `SILENT_ACTIVITY`, `NAVIGATE` | Already the main route; activity posts do **not** close it. `NAVIGATE` moves the parent to an internal path. |
 | **Custom menu item** | `INPUT_COLLECTIONS` | `IFRAME_READY` (+ height), `NAVIGATE`, `ACTIVITY`, `SILENT_ACTIVITY` | Side-menu widget; report pixel height so the parent can size the iframe. |
 
+### RAISE handshake completion (`src/platform/gamebus/bridge.ts`)
+
+This SPA classifies each hash route as `gameBusEmbedKind: 'custom-task' | 'custom-page'` in `src/app/routes.ts`. That registry field — not `expectedActivity === null` — drives handshake completion. Task subroutes (for example Kitchen Skills `#/kitchen-day/review`) may return a null expected activity while still requiring a Custom Task handshake.
+
+| Surface | `IFRAME_READY` retries stop when | Must not stop retries when |
+|---------|----------------------------------|----------------------------|
+| **Custom task** | Parent sends **`TASK`** | **`INPUT_COLLECTIONS` alone** (Custom Tasks often deliver collections before `TASK`) |
+| **Custom page** | Parent sends **`MENU_ITEM` and/or `INPUT_COLLECTIONS`** | Waiting for a **`TASK`** that Custom Pages never send |
+
+Resolved implementation defect (2026-10-12): Custom Pages such as `#/chef-results` previously retried `IFRAME_READY` indefinitely because the shared bridge only treated `TASK` as handshake completion. Regression coverage lives in `src/platform/gamebus/handshake.test.ts`. Live fix still requires deploying this build into GameBus and re-checking the embed console.
+
 ## Official contract vs RAISE convention vs live behaviour
 
 ### Official GameBus contract (custom-tasks / custom-pages / custom-menu-items)
