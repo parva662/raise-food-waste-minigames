@@ -103,7 +103,7 @@ Cannot be closed from this repo’s Vitest stack (no browser E2E):
 
 | | |
 |--|--|
-| **Status** | **Checkpointed on `feat/forecast-participant-dashboard` (not merged to main)** (`#/chef-results`; compact Overview and personal-only Progress; Helsinki midnight dashboard date; personal history filtered by `activity.actor.id` = `inputCollectionPari.me.id`; latest completed result plus You vs Team; Progress Recent / Trends / History for that chef only; GameBus group INPUT_COLLECTIONS when embedded; fixtures in standalone). Live GameBus `me.id` identity incident remains unresolved. |
+| **Status** | **Ready for merge on `feat/forecast-participant-dashboard` (not merged to main yet)** (`#/chef-results`; compact Overview and personal-only Progress; Helsinki midnight dashboard date; personal history filtered by `activity.actor.id` = `inputCollectionPari.me.id`; latest completed result plus You vs Team; Progress Recent / Trends / History for that chef only; GameBus group INPUT_COLLECTIONS when embedded; fixtures in standalone). Fresh authenticated Joni Incognito session showed correct empty personal history; earlier cross-account mismatch is consistent with a retained Pari browser session. Full account-switch live verification and post-merge GitHub Pages deploy checks remain open. |
 | **Gherkin** | [`../../features/kitchen/kitchen-results-participant.feature`](../../features/kitchen/kitchen-results-participant.feature) |
 | **Coverage** | [`../testing/KITCHEN_RESULTS_PARTICIPANT_ACCEPTANCE_COVERAGE.md`](../testing/KITCHEN_RESULTS_PARTICIPANT_ACCEPTANCE_COVERAGE.md) |
 | **Migration / doc review** | Legacy §11 is historical only; canonical product rules are in Gherkin + [`../product/KITCHEN_RESULTS.md`](../product/KITCHEN_RESULTS.md) |
