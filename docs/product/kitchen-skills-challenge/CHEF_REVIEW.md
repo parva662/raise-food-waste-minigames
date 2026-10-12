@@ -24,7 +24,7 @@ System comparison never pre-fills tutor scores. Analytics are never stored as ac
 | Surface | Route | Scope |
 |---------|-------|-------|
 | Session Review | `#/kitchen-day/review` | Current locked session only; read-only; per-module tutor readbacks; no student-facing waste % or Hävikki |
-| Student Progress | `#/kitchen-day-progress` | Own history; Overview / Progress; module tabs default to **Recent** (last 8 sessions + span, Recent-only charts) with **History** archive (filters, ~10 rows/page); weighted Trim vs kitchen reference on results only; peer cards stay “Not enough peer data yet” until a privacy-safe anonymous aggregate exists; no leaderboard |
+| Student Progress | `#/kitchen-day-progress` | Own history; Overview / Progress; Overview Trim card always shows Actual trim, Kitchen reference (or Reference unavailable), and Difference; module tabs default to **Recent** (last 8 sessions + span, Recent-only charts) with **History** archive (filters, ~10 rows/page); weighted Trim vs kitchen reference on results only; peer cards stay “Not enough peer data yet” until a privacy-safe anonymous aggregate exists; no leaderboard |
 
 Neither posts measurement activities. Progress does not invent ranking or an overall tutor score.
 

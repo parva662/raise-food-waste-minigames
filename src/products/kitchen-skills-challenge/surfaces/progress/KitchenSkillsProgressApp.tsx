@@ -658,6 +658,44 @@ function ModuleProgressPanel({
   );
 }
 
+function OverviewTrimComparison({
+  point,
+}: {
+  point: ReturnType<typeof buildKitchenSkillsProgressPoints>[number] | undefined;
+}) {
+  const actualTrim = point?.actualTrimPercent ?? null;
+  const referenceTrimPercent = point?.referenceTrimPercent ?? null;
+  const deltaPercentagePoints = point?.deltaPercentagePoints ?? null;
+  const referenceAvailable = referenceTrimPercent != null && deltaPercentagePoints != null;
+
+  return (
+    <dl
+      className="kitchen-day-progress-summary kitchen-day-progress-summary--compact kitchen-day-progress-overview-objective"
+      data-testid="kitchen-day-progress-overview-trimSmart-objective"
+    >
+      <div data-testid="kitchen-day-progress-overview-trimSmart-actual">
+        <dt>Actual trim</dt>
+        <dd>{actualTrim == null ? '—' : formatWastePercent(actualTrim)}</dd>
+      </div>
+      <div data-testid="kitchen-day-progress-overview-trimSmart-reference">
+        <dt>Kitchen reference</dt>
+        <dd>
+          {referenceAvailable ? formatWastePercent(referenceTrimPercent) : 'Reference unavailable'}
+        </dd>
+      </div>
+      {referenceAvailable ? (
+        <div
+          className="kitchen-day-progress-overview-delta"
+          data-testid="kitchen-day-progress-overview-trimSmart-delta"
+        >
+          <dt>Difference</dt>
+          <dd>{formatDeltaPercentagePoints(deltaPercentagePoints, 'short')}</dd>
+        </div>
+      ) : null}
+    </dl>
+  );
+}
+
 function OverviewModuleCard({
   module,
   sessions,
@@ -675,6 +713,7 @@ function OverviewModuleCard({
     .reverse()
     .find((point) => moduleSessions.some((session) => session.sessionId === point.sessionId));
   const metrics = progressMetricsForModule(module);
+  const isTrim = module === 'trimSmart';
 
   return (
     <article className="kitchen-day-progress-overview-card" data-testid={`kitchen-day-progress-overview-${module}`}>
@@ -695,22 +734,24 @@ function OverviewModuleCard({
           <dt>Sessions</dt>
           <dd>{moduleSessions.length}</dd>
         </div>
-        {metrics.slice(0, 1).map((metric) => {
-          const value = latestPoint?.[metric.key] ?? null;
-          return (
-            <div key={metric.key}>
-              <dt>{metric.label}</dt>
-              <dd>
-                {value == null
-                  ? '—'
-                  : metric.unit === 'percent'
-                    ? formatWastePercent(value)
-                    : formatDurationMinutes(value)}
-              </dd>
-            </div>
-          );
-        })}
-        {latestReview ? (
+        {isTrim
+          ? null
+          : metrics.slice(0, 1).map((metric) => {
+              const value = latestPoint?.[metric.key] ?? null;
+              return (
+                <div key={metric.key}>
+                  <dt>{metric.label}</dt>
+                  <dd>
+                    {value == null
+                      ? '—'
+                      : metric.unit === 'percent'
+                        ? formatWastePercent(value)
+                        : formatDurationMinutes(value)}
+                  </dd>
+                </div>
+              );
+            })}
+        {!isTrim && latestReview ? (
           <div>
             <dt>Latest tutor scores</dt>
             <dd>
@@ -718,13 +759,23 @@ function OverviewModuleCard({
             </dd>
           </div>
         ) : null}
-        {module === 'trimSmart' && latestPoint?.deltaPercentagePoints != null ? (
-          <div>
-            <dt>Vs kitchen reference</dt>
-            <dd>{formatDeltaPercentagePoints(latestPoint.deltaPercentagePoints, 'short')}</dd>
-          </div>
-        ) : null}
       </dl>
+      {isTrim ? <OverviewTrimComparison point={latestPoint} /> : null}
+      {isTrim && latestReview ? (
+        <dl
+          className="kitchen-day-progress-summary kitchen-day-progress-summary--compact kitchen-day-progress-overview-tutor"
+          data-testid="kitchen-day-progress-overview-trimSmart-tutor"
+        >
+          <div data-testid="kitchen-day-progress-overview-trimSmart-time">
+            <dt>Time efficiency</dt>
+            <dd>{latestReview.review.timeEfficiencyScore} / 5</dd>
+          </div>
+          <div data-testid="kitchen-day-progress-overview-trimSmart-quality">
+            <dt>Preparation quality</dt>
+            <dd>{latestReview.review.preparationQualityScore} / 5</dd>
+          </div>
+        </dl>
+      ) : null}
       {latestReview?.review.chefFeedback ? (
         <p className="kitchen-day-progress-overview-card__feedback">
           “{latestReview.review.chefFeedback}”

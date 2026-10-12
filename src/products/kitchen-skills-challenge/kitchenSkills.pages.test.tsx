@@ -224,8 +224,14 @@ describe('Kitchen Day page split', () => {
       inputCollectionPari: { me: { id: 'user-1', firstName: 'Student', lastName: 'One' } },
     });
     await waitFor(() => {
-      expect(screen.getByTestId('kitchen-day-progress-overview-trimSmart')).toHaveTextContent('4/5');
+      expect(screen.getByTestId('kitchen-day-progress-overview-trimSmart-time')).toHaveTextContent('4 / 5');
     });
+    expect(screen.getByTestId('kitchen-day-progress-overview-trimSmart-quality')).toHaveTextContent('5 / 5');
+    expect(screen.getByTestId('kitchen-day-progress-overview-trimSmart-reference')).toHaveTextContent(
+      'Reference unavailable',
+    );
+    expect(screen.queryByText('Waste rate')).not.toBeInTheDocument();
+    expect(screen.queryByText('Latest tutor scores')).not.toBeInTheDocument();
     await user.click(screen.getByTestId('kitchen-day-progress-overview-open-trimSmart'));
     await waitFor(() => {
       expect(screen.getByTestId('kitchen-day-progress-tutor-trimSmart')).toBeInTheDocument();
@@ -428,10 +434,13 @@ describe('Kitchen Day page split', () => {
       inputCollectionPari: { me: { id: 'user-1', firstName: 'Student', lastName: 'One' } },
     });
     await waitFor(() => {
-      expect(screen.getByTestId('kitchen-day-progress-overview-trimSmart')).toHaveTextContent(
-        '25.8 pp below reference',
-      );
+      expect(screen.getByTestId('kitchen-day-progress-overview-trimSmart-actual')).toHaveTextContent('8.3%');
     });
+    expect(screen.getByTestId('kitchen-day-progress-overview-trimSmart-reference')).toHaveTextContent('34.2%');
+    expect(screen.getByTestId('kitchen-day-progress-overview-trimSmart-delta')).toHaveTextContent(
+      '25.8 pp below reference',
+    );
+    expect(screen.queryByText('Waste rate')).not.toBeInTheDocument();
     await user.click(screen.getByTestId('kitchen-day-progress-tab-progress'));
     await waitFor(() => {
       expect(screen.getByTestId('kitchen-day-progress-norm-trimSmart-actual')).toHaveTextContent(
@@ -610,3 +619,185 @@ function peerTrimBundle(actorId: string, actorName: string, sessionDate: string,
     trimActivity(actorId, actorName, sessionId, sessionDate, 'banaani', 'Banaani', 1000, removed),
   ];
 }
+
+function ankanrintaPortionActivity(actorId: string, actorName: string, sessionId: string, sessionDate: string) {
+  return {
+    id: `portion-${actorId}-${sessionDate}`,
+    actor: { id: actorId, name: actorName },
+    template: { slug: 'portionPrecision' },
+    properties: [
+      prop('sessionId', sessionId),
+      prop('sessionDate', sessionDate),
+      prop('submittedAt', `${sessionDate}T09:00:00.000Z`),
+      prop('recipeId', '1'),
+      prop('recipeName', 'Ankanrinta FLOW'),
+      prop('finalRecipeWeightGrams', 13500),
+      {
+        template: { slug: 'recipeComposition' },
+        value: {
+          value: [
+            { ingredientId: 'ankka-rintafilee', ingredientName: 'Duck', actualAmount: 11250, unit: 'g' },
+          ],
+        },
+      },
+    ],
+  };
+}
+
+function reviewTrimActivity(
+  actorId: string,
+  sessionDate: string,
+  time: number,
+  quality: number,
+) {
+  return reviewActivity(actorId, 'Student One', sessionDate, time, quality);
+}
+
+function openProgressOverview(
+  activities: unknown[],
+  actorId = 'user-1',
+) {
+  setHash('#/kitchen-day-progress');
+  render(<AppRouter />);
+  ingestInputCollectionsForTests({
+    kitchenGroupInputSelf: { activities },
+    inputCollectionPari: { me: { id: actorId, firstName: 'Student', lastName: 'One' } },
+  });
+}
+
+describe('Kitchen Skills Progress Overview Trim comparison', () => {
+  afterEach(() => {
+    cleanup();
+    resetGameBusBridgeForTests();
+    setHash('');
+  });
+
+  it('shows Actual trim, kitchen reference, and difference when the JAMIX join succeeds', async () => {
+    const sessionId = 'kitchen-day:t:user-1:2026-09-23';
+    openProgressOverview([
+      hedelmatPortionActivity('user-1', 'Student One', sessionId, '2026-09-23'),
+      trimActivity('user-1', 'Student One', sessionId, '2026-09-23', 'banaani', 'Banaani', 1000, 95),
+    ]);
+    await waitFor(() => {
+      expect(screen.getByTestId('kitchen-day-progress-overview-trimSmart-actual')).toHaveTextContent('9.5%');
+    });
+    expect(screen.getByTestId('kitchen-day-progress-overview-trimSmart-actual')).toHaveTextContent('Actual trim');
+    expect(screen.getByTestId('kitchen-day-progress-overview-trimSmart-reference')).toHaveTextContent(
+      'Kitchen reference',
+    );
+    expect(screen.getByTestId('kitchen-day-progress-overview-trimSmart-reference')).toHaveTextContent('37.0%');
+    expect(screen.getByTestId('kitchen-day-progress-overview-trimSmart-delta')).toHaveTextContent('Difference');
+    expect(screen.getByTestId('kitchen-day-progress-overview-trimSmart-delta')).toHaveTextContent(
+      '27.5 pp below reference',
+    );
+    expect(screen.queryByText('Waste rate')).not.toBeInTheDocument();
+    expect(screen.queryByText(/perfect|ideal|target|good|bad/i)).not.toBeInTheDocument();
+  });
+
+  it('shows at reference when actual trim matches JAMIX', async () => {
+    const sessionId = 'kitchen-day:t:user-1:2026-09-23';
+    openProgressOverview([
+      hedelmatPortionActivity('user-1', 'Student One', sessionId, '2026-09-23'),
+      trimActivity('user-1', 'Student One', sessionId, '2026-09-23', 'banaani', 'Banaani', 1000, 370),
+    ]);
+    await waitFor(() => {
+      expect(screen.getByTestId('kitchen-day-progress-overview-trimSmart-actual')).toHaveTextContent('37.0%');
+    });
+    expect(screen.getByTestId('kitchen-day-progress-overview-trimSmart-reference')).toHaveTextContent('37.0%');
+    expect(screen.getByTestId('kitchen-day-progress-overview-trimSmart-delta')).toHaveTextContent('at reference');
+    expect(screen.queryByText(/pp above reference|pp below reference/)).not.toBeInTheDocument();
+  });
+
+  it('shows above reference when actual trim exceeds JAMIX', async () => {
+    const sessionId = 'kitchen-day:t:user-1:2026-09-23';
+    openProgressOverview([
+      hedelmatPortionActivity('user-1', 'Student One', sessionId, '2026-09-23'),
+      trimActivity('user-1', 'Student One', sessionId, '2026-09-23', 'banaani', 'Banaani', 1000, 500),
+    ]);
+    await waitFor(() => {
+      expect(screen.getByTestId('kitchen-day-progress-overview-trimSmart-delta')).toHaveTextContent(
+        '13.0 pp above reference',
+      );
+    });
+    expect(screen.getByTestId('kitchen-day-progress-overview-trimSmart-actual')).toHaveTextContent('50.0%');
+    expect(screen.getByTestId('kitchen-day-progress-overview-trimSmart-reference')).toHaveTextContent('37.0%');
+  });
+
+  it('shows below reference when actual trim is under JAMIX', async () => {
+    const sessionId = 'kitchen-day:t:user-1:2026-09-23';
+    openProgressOverview([
+      hedelmatPortionActivity('user-1', 'Student One', sessionId, '2026-09-23'),
+      trimActivity('user-1', 'Student One', sessionId, '2026-09-23', 'banaani', 'Banaani', 1000, 100),
+    ]);
+    await waitFor(() => {
+      expect(screen.getByTestId('kitchen-day-progress-overview-trimSmart-delta')).toHaveTextContent(
+        '27.0 pp below reference',
+      );
+    });
+    expect(screen.getByTestId('kitchen-day-progress-overview-trimSmart-actual')).toHaveTextContent('10.0%');
+    expect(screen.getByTestId('kitchen-day-progress-overview-trimSmart-reference')).toHaveTextContent('37.0%');
+  });
+
+  it('keeps the kitchen reference row when the recipe join cannot be reconstructed', async () => {
+    const sessionId = 'kitchen-day:t:user-1:2026-09-23';
+    openProgressOverview([
+      trimActivity('user-1', 'Student One', sessionId, '2026-09-23', 'carrot', 'Carrot', 5000, 450),
+    ]);
+    await waitFor(() => {
+      expect(screen.getByTestId('kitchen-day-progress-overview-trimSmart-actual')).toHaveTextContent('9.0%');
+    });
+    expect(screen.getByTestId('kitchen-day-progress-overview-trimSmart-reference')).toHaveTextContent(
+      'Reference unavailable',
+    );
+    expect(screen.queryByTestId('kitchen-day-progress-overview-trimSmart-delta')).not.toBeInTheDocument();
+    expect(screen.queryByText('Waste rate')).not.toBeInTheDocument();
+  });
+
+  it('treats a 0% JAMIX reference as valid on the Overview card', async () => {
+    const sessionId = 'kitchen-day:t:user-1:2026-09-23';
+    openProgressOverview([
+      ankanrintaPortionActivity('user-1', 'Student One', sessionId, '2026-09-23'),
+      trimActivity(
+        'user-1',
+        'Student One',
+        sessionId,
+        '2026-09-23',
+        'ankka-rintafilee',
+        'Duck',
+        1000,
+        50,
+      ),
+    ]);
+    await waitFor(() => {
+      expect(screen.getByTestId('kitchen-day-progress-overview-trimSmart-reference')).toHaveTextContent('0.0%');
+    });
+    expect(screen.getByTestId('kitchen-day-progress-overview-trimSmart-actual')).toHaveTextContent('5.0%');
+    expect(screen.getByTestId('kitchen-day-progress-overview-trimSmart-delta')).toHaveTextContent(
+      '5.0 pp above reference',
+    );
+    expect(screen.queryByText('Reference unavailable')).not.toBeInTheDocument();
+  });
+
+  it('keeps Time efficiency and Preparation quality separate from the Trim comparison', async () => {
+    const sessionId = 'kitchen-day:t:user-1:2026-09-23';
+    openProgressOverview([
+      hedelmatPortionActivity('user-1', 'Student One', sessionId, '2026-09-23'),
+      trimActivity('user-1', 'Student One', sessionId, '2026-09-23', 'banaani', 'Banaani', 1000, 95),
+      reviewTrimActivity('user-1', '2026-09-23', 4, 5),
+    ]);
+    await waitFor(() => {
+      expect(screen.getByTestId('kitchen-day-progress-overview-trimSmart-delta')).toHaveTextContent(
+        '27.5 pp below reference',
+      );
+    });
+    const objective = screen.getByTestId('kitchen-day-progress-overview-trimSmart-objective');
+    const tutor = screen.getByTestId('kitchen-day-progress-overview-trimSmart-tutor');
+    expect(objective).not.toContainElement(screen.getByTestId('kitchen-day-progress-overview-trimSmart-time'));
+    expect(tutor).toHaveTextContent('Time efficiency');
+    expect(tutor).toHaveTextContent('Preparation quality');
+    expect(screen.getByTestId('kitchen-day-progress-overview-trimSmart-time')).toHaveTextContent('4 / 5');
+    expect(screen.getByTestId('kitchen-day-progress-overview-trimSmart-quality')).toHaveTextContent('5 / 5');
+    expect(screen.queryByText('Latest tutor scores')).not.toBeInTheDocument();
+    expect(screen.queryByText(/overall score/i)).not.toBeInTheDocument();
+  });
+});

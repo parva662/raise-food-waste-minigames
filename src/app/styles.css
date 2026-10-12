@@ -5885,6 +5885,15 @@ ul {
   margin-bottom: var(--spacing-sm);
 }
 
+.kitchen-day-progress-overview-tutor {
+  padding-top: var(--spacing-sm);
+  border-top: 1px solid var(--color-border-light);
+}
+
+.kitchen-day-progress-overview-delta {
+  grid-column: 1 / -1;
+}
+
 .kitchen-day-progress-summary dt,
 .kitchen-day-progress-tutor-card__scores dt {
   font-size: 0.7rem;

@@ -159,6 +159,19 @@ Feature: Session Review, Student Progress, and tutor assessment
       And that comparison is visually separate from tutor scores
       And the student Trim game does not show it
 
+    Scenario: Overview Trim card always shows kitchen reference beside actual trim
+      When the student opens Kitchen Skills Progress Overview
+      Then the Trim Smart card shows Actual trim
+      And the Trim Smart card shows Kitchen reference
+      And Waste rate is not shown
+      And Time efficiency and Preparation quality stay separate from the trim comparison
+
+    Scenario: Overview Trim card keeps the reference row when the join fails
+      Given a completed Trim session has no reconstructable recipe JAMIX join
+      When the student opens Kitchen Skills Progress Overview
+      Then the Trim Smart card shows Actual trim
+      And Kitchen reference is shown as Reference unavailable
+
     @pending
     Scenario: Anonymous peer Trim comparison uses deviation from each person's own JAMIX reference
       Given a privacy-safe anonymous aggregate of peer Trim deltas is available
