@@ -124,7 +124,7 @@ describe('GameBus authenticated user on chef results', () => {
     expectNoParticipantDebugUi();
   });
 
-  it('logs authenticated user when gamebusDebug=1', () => {
+  it('logs scalar identity diagnostics when gamebusDebug=1', () => {
     const infoSpy = vi.spyOn(console, 'info').mockImplementation(() => {});
     ingestInputCollectionsForTests({
       [INPUT_COLLECTION_PARI_KEY]: {
@@ -138,10 +138,8 @@ describe('GameBus authenticated user on chef results', () => {
 
     render(<ForecastResultsParticipantApp />);
 
-    expect(infoSpy).toHaveBeenCalledWith('[gamebus] authenticated user', {
-      id: 'logged-user',
-      name: 'Logged User',
-    });
+    expect(infoSpy).toHaveBeenCalledWith('Authenticated user ID: logged-user');
+    expect(infoSpy).toHaveBeenCalledWith('Forecasts matching authenticated user: 0');
     expectNoParticipantDebugUi();
   });
 });
