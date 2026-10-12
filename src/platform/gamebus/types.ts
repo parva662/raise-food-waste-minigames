@@ -99,7 +99,13 @@ export type InputCollectionsMessage = {
   data?: GameBusInputCollectionsPayload;
 };
 
-export type ParentToChildMessage = TaskMessage | InputCollectionsMessage;
+/** Parent context for Custom Pages (`AppEmbedPage`). Structure preserved until inspected live. */
+export type MenuItemMessage = {
+  type: 'MENU_ITEM';
+  data?: Record<string, unknown>;
+};
+
+export type ParentToChildMessage = TaskMessage | InputCollectionsMessage | MenuItemMessage;
 
 export type ChildToParentMessage =
   | IframeReadyMessage

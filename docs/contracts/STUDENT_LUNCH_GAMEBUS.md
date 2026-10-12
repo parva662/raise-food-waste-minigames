@@ -112,7 +112,7 @@ Property order follows `orderedPropertyRefsForDraft`: `targetDate`, `mealType`, 
 
 Embed handshake, as implemented in `src/platform/gamebus/bridge.ts`:
 
-1. Child registers its `message` listener and posts `{ type: 'IFRAME_READY' }`, retrying until a TASK arrives.
+1. Child registers its `message` listener and posts `{ type: 'IFRAME_READY' }`, retrying until a TASK arrives (Custom Task surfaces; see [`GAMEBUS.md`](GAMEBUS.md) for Custom Page completion on `MENU_ITEM` / `INPUT_COLLECTIONS`).
 2. Parent posts `{ type: 'TASK', data: { activityTemplates, … } }`; the first TASK wins and later duplicates are ignored.
 3. Parent optionally posts `{ type: 'INPUT_COLLECTIONS', data: { … } }`, which carries the authenticated user under `inputCollectionPari.me`.
 4. Child posts one `ACTIVITY`.

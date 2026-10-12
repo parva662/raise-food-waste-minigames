@@ -2,10 +2,12 @@ import { describe, expect, it } from 'vitest';
 import {
   getAppMode,
   getExpectedActivityRef,
+  getGameBusEmbedKind,
   getRouteDefinition,
   hashPath,
   kitchenDayHashFor,
   parseKitchenDaySection,
+  requiresGameBusTaskHandshake,
   PORTION_PRECISION_ACTIVITY_REF,
   RESCUE_AND_REUSE_ACTIVITY_REF,
   STUDENT_ACTIVITY_REF,
@@ -63,6 +65,20 @@ describe('app route registry', () => {
     expect(getAppMode('#/kitchen-day-progress')).toBe('kitchen-day-progress');
     expect(getExpectedActivityRef('#/kitchen-day-progress')).toBeNull();
     expect(getRouteDefinition('kitchen-day-progress').postsActivity).toBe(false);
+  });
+
+  it('classifies GameBus Custom Page vs Custom Task handshake by route registry', () => {
+    expect(getGameBusEmbedKind('#/chef-results')).toBe('custom-page');
+    expect(getGameBusEmbedKind('#/chef-results?gamebusDebug=1')).toBe('custom-page');
+    expect(getGameBusEmbedKind('#/chef-results-admin')).toBe('custom-page');
+    expect(getGameBusEmbedKind('#/kitchen-day-progress')).toBe('custom-page');
+    expect(requiresGameBusTaskHandshake('#/chef-results')).toBe(false);
+
+    expect(getGameBusEmbedKind('#/chef')).toBe('custom-task');
+    expect(getGameBusEmbedKind('')).toBe('custom-task');
+    expect(getGameBusEmbedKind('#/kitchen-day/review')).toBe('custom-task');
+    expect(getExpectedActivityRef('#/kitchen-day/review')).toBeNull();
+    expect(requiresGameBusTaskHandshake('#/kitchen-day/review')).toBe(true);
   });
 
   it('maps the trainer surface and keeps the legacy kitchen-day-tutor hash', () => {
