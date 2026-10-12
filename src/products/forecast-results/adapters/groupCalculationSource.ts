@@ -8,6 +8,7 @@ import { parseGameBusChefForecastActivities } from '@/products/service-closeout/
 import { selectForecastsForDate } from '@/products/service-closeout/forecast/selectCloseoutForecast';
 import { aggregateWeeklyResults } from '@/products/forecast-results/calculations/aggregateWeeklyResults';
 import { calculateDailyServiceResults } from '@/products/forecast-results/calculations/calculateDailyResults';
+import { buildAnonymousPeerBenchmark } from '@/products/forecast-results/calculations/teamComparison';
 import type {
   ChefForecastForCalculation,
   DailyServiceResults,
@@ -380,6 +381,13 @@ export type KitchenProgressSummary = {
   scopeLabel: string;
 };
 
+/** Anonymous other-staff context. Personal history is never filled from these dates. */
+export type AnonymousTeamContext = {
+  servicesCompletedCount: number;
+  anonymousTeamAverageSurplusGramsPerCustomer: number | null;
+  scopeLabel: string;
+};
+
 export const EMPTY_KITCHEN_PROGRESS: KitchenProgressSummary = {
   servicesCompletedCount: 0,
   anonymousTeamAverageOverproductionGrams: 0,
@@ -444,6 +452,54 @@ function filterParticipantDatesToCurrentWeek(
   return participantDates.filter(
     (date) => date >= start && date <= end && date <= asOfServiceDate,
   );
+}
+
+/**
+ * Team context for the progress tab. Uses group service dates and other-staff
+ * g/customer surplus only. Does not attribute those dates to the participant.
+ */
+export function buildAnonymousTeamContext(
+  inputCollections: GameBusInputCollectionsPayload | null,
+  userId: string,
+  options?: {
+    asOfServiceDate?: string;
+    cache?: GroupKitchenCalculationCache | null;
+  },
+): AnonymousTeamContext {
+  const scopeLabel = options?.asOfServiceDate ? 'This week' : 'All time';
+  if (!userId) {
+    return {
+      servicesCompletedCount: 0,
+      anonymousTeamAverageSurplusGramsPerCustomer: null,
+      scopeLabel,
+    };
+  }
+
+  const cache = options?.cache ?? null;
+  const allDates = getGroupResultServiceDates(inputCollections, cache);
+  const dates = options?.asOfServiceDate
+    ? filterParticipantDatesToCurrentWeek(allDates, options.asOfServiceDate)
+    : allDates;
+  const rates: number[] = [];
+  let count = 0;
+
+  for (const date of dates) {
+    const daily = buildGroupDailyServiceResults(inputCollections, date, cache);
+    if (!daily) continue;
+    count += 1;
+    const medianRate = buildAnonymousPeerBenchmark(
+      daily.staffResults,
+      userId,
+    ).peerOverproductionMedianGramsPerCustomer;
+    if (medianRate !== null) rates.push(medianRate);
+  }
+
+  return {
+    servicesCompletedCount: count,
+    anonymousTeamAverageSurplusGramsPerCustomer:
+      rates.length === 0 ? null : rates.reduce((sum, value) => sum + value, 0) / rates.length,
+    scopeLabel,
+  };
 }
 
 export function anonymousTeamAverageOverproductionForDay(

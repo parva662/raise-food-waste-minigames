@@ -2883,6 +2883,58 @@ ul {
   color: var(--color-text-secondary);
 }
 
+.chef-results-latest-metrics,
+.chef-results-you-vs-team {
+  display: grid;
+  gap: var(--spacing-md);
+  margin: var(--spacing-sm) 0 0;
+}
+
+.chef-results-latest-metrics div,
+.chef-results-you-vs-team__metric {
+  min-width: 0;
+}
+
+.chef-results-latest-metrics dt,
+.chef-results-you-vs-team__metric h4 {
+  margin: 0;
+  font-size: 0.8125rem;
+  font-weight: 700;
+}
+
+.chef-results-latest-metrics dd,
+.chef-results-you-vs-team__metric p {
+  margin: 0.15rem 0 0;
+  font-size: 0.875rem;
+}
+
+.chef-results-performance-summary {
+  margin-top: var(--spacing-md);
+}
+
+.chef-results-performance-summary p {
+  margin: 0.25rem 0 0;
+}
+
+.chef-results-progress-history-row__line {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0.25rem;
+}
+
+@media (min-width: 768px) {
+  .chef-results-latest-metrics,
+  .chef-results-you-vs-team {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .chef-results-progress-history-row__line {
+    grid-template-columns: minmax(8rem, auto) minmax(0, 1fr) auto;
+    gap: 0.5rem;
+    align-items: center;
+  }
+}
+
 .chef-results-key-insights {
   margin-bottom: var(--spacing-md);
   padding: var(--spacing-md);
@@ -6458,3 +6510,48 @@ ul {
   }
 }
 
+
+/* Forecast participant hierarchy. Keep management and other games unchanged. */
+.chef-results-page--participant { max-width: 1100px; margin-inline: auto; }
+.chef-results-page--participant .chef-results-dashboard-header { padding: 20px 24px; margin-bottom: 16px; border-top: 4px solid var(--color-primary); }
+.chef-results-page--participant .chef-results-dashboard-header__title { font-size: clamp(1.35rem, 3vw, 1.9rem); }
+.chef-results-page--participant .chef-results-dashboard-header__caveat { margin-top: 5px; }
+.chef-results-page--participant .chef-results-dashboard-header__meta { gap: 12px; padding: 0; }
+.chef-results-page--participant .kitchen-mgmt-primary-panel { padding-top: 12px; }
+.forecast-current-service { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 16px; padding: 4px 0 12px; }
+.forecast-current-service h3, .forecast-current-service p { margin: 0; font-size: .8rem; color: var(--color-text-secondary); }
+.chef-results-page--participant .kitchen-mgmt-surface { padding: 18px; margin-bottom: 14px; }
+.chef-results-latest-metrics { gap: 12px; }
+.chef-results-latest-metrics > div { padding: 18px 14px; border-radius: var(--radius-md); background: var(--color-primary-light); border-top: 3px solid var(--color-primary); }
+.chef-results-latest-metrics > div:nth-child(2) { background: #fff4e6; border-color: #bd7024; }
+.chef-results-latest-metrics > div:nth-child(3) { background: #edf3fb; border-color: #507bb5; }
+.chef-results-latest-metrics dd { margin-top: 10px; font-size: clamp(1.1rem, 2vw, 1.5rem); font-weight: 750; letter-spacing: -.03em; }
+.chef-results-you-vs-team__metric { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 12px; padding: 12px 0; border-top: 1px solid var(--color-border); }
+.chef-results-you-vs-team__metric h4, .chef-results-you-vs-team__metric p:last-child { grid-column: 1 / -1; }
+.chef-results-you-vs-team__metric p:nth-child(2) { color: var(--color-primary-dark); font-weight: 700; }
+.chef-results-you-vs-team__metric p:last-child { font-size: .78rem; color: var(--color-text-secondary); }
+.chef-results-performance-summary { background: var(--color-primary-light); border-left: 3px solid var(--color-primary); border-radius: 4px; padding: 12px 16px; }
+.forecast-service-details { margin: 12px 0; font-size: .875rem; }
+.forecast-service-details summary { cursor: pointer; color: var(--color-text-secondary); padding-block: 8px; }
+.chef-results-page--participant .chef-results-progress-chart__svg { max-height: 220px; }
+.chef-results-page--participant .participant-progress-panel__content { gap: 12px; }
+@media (max-width: 600px) {
+ .chef-results-page--participant .chef-results-dashboard-header { padding: 14px; gap: 12px; }
+ .chef-results-page--participant .chef-results-dashboard-header__meta { display: flex; flex-wrap: wrap; gap: 8px 16px; }
+ .chef-results-page--participant .chef-results-dashboard-header__meta-block { gap: 3px; }
+ .chef-results-page--participant .kitchen-mgmt-surface { padding: 14px; }
+ .chef-results-latest-metrics { gap: 8px; }
+ .chef-results-latest-metrics > div { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 14px 12px; border-top: 0; border-left: 3px solid var(--color-primary); }
+ .chef-results-latest-metrics dt { max-width: 45%; }
+ .chef-results-latest-metrics dd { margin: 0; font-size: 1.15rem; text-align: right; }
+ .chef-results-you-vs-team { gap: 0; }
+}
+.chef-results-page--participant.kitchen-mgmt-page { gap: 12px; }
+.chef-results-page--participant .kitchen-mgmt-forecasting,
+.chef-results-page--participant .participant-overview,
+.chef-results-page--participant .participant-progress-tab { gap: 12px; }
+.chef-results-page--participant .chef-results-dashboard-header,
+.chef-results-page--participant .kitchen-mgmt-surface { margin-bottom: 0; }
+.chef-results-page--participant .kitchen-mgmt-primary-panel { padding-top: 0; }
+.chef-results-page--participant .participant-progress-tab > h3,
+.chef-results-page--participant .participant-progress-tab > p { margin: 0; }

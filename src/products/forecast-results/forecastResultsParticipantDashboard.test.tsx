@@ -5,10 +5,7 @@ import { ActualKitchenOutcomeSection } from '@/products/forecast-results/partici
 import { CategoryOutcomeVisual } from '@/products/forecast-results/participant/components/CategoryOutcomeVisual';
 import { ForecastImpactSection } from '@/products/forecast-results/participant/components/ForecastImpactSection';
 import { TeamComparisonSection } from '@/products/forecast-results/participant/components/TeamComparisonSection';
-import {
-  buildAnonymousPeerBenchmark,
-  buildParticipantPeerComparisonInsights,
-} from '@/products/forecast-results/calculations/teamComparison';
+import { buildAnonymousPeerBenchmark } from '@/products/forecast-results/calculations/teamComparison';
 import type {
   ObservedCategoryReality,
   ObservedServiceReality,
@@ -148,15 +145,14 @@ describe('participant dashboard sections', () => {
       },
     ];
     const benchmark = buildAnonymousPeerBenchmark(peers, participant.userId);
-    const insights = buildParticipantPeerComparisonInsights(participant, benchmark);
 
-    render(
-      <TeamComparisonSection participant={participant} benchmark={benchmark} insights={insights} />,
-    );
+    render(<TeamComparisonSection participant={participant} benchmark={benchmark} />);
 
     const section = screen.getByTestId('team-comparison-section');
-    expect(section).toHaveTextContent('Compared with other staff');
-    expect(section).toHaveTextContent('Other staff median');
+    expect(section).toHaveTextContent('You vs Team');
+    expect(section).toHaveTextContent('anonymous median of other staff');
+    expect(screen.getByTestId('peer-surplus-you')).toHaveTextContent('g/customer');
+    expect(screen.getByTestId('peer-surplus-median')).toHaveTextContent('g/customer');
     expect(screen.getByTestId('peer-comparison-table')).toBeInTheDocument();
     expect(screen.queryByTestId('peer-surplus-bar-you')).not.toBeInTheDocument();
     expect(section).not.toHaveTextContent('Simulated overproduction — anonymous team range');
@@ -169,25 +165,20 @@ describe('participant dashboard sections', () => {
       [participant, { ...participant, userId: 'peer-a' }],
       participant.userId,
     );
-    const insights = buildParticipantPeerComparisonInsights(participant, benchmark);
 
-    render(
-      <TeamComparisonSection participant={participant} benchmark={benchmark} insights={insights} />,
-    );
+    render(<TeamComparisonSection participant={participant} benchmark={benchmark} />);
 
     expect(screen.getByTestId('peer-comparison-table')).toBeInTheDocument();
-    expect(screen.getByTestId('peer-comparison-label')).toHaveTextContent('Other staff');
+    expect(screen.getByTestId('peer-comparison-label')).toHaveTextContent('Team');
+    expect(screen.queryByText(/median/i)).not.toBeInTheDocument();
     expect(screen.queryByTestId('peer-comparison-unavailable')).not.toBeInTheDocument();
   });
 
   it('shows insufficient peers message when no other staff exist', () => {
     const participant = staffResult();
     const benchmark = buildAnonymousPeerBenchmark([participant], participant.userId);
-    const insights = buildParticipantPeerComparisonInsights(participant, benchmark);
 
-    render(
-      <TeamComparisonSection participant={participant} benchmark={benchmark} insights={insights} />,
-    );
+    render(<TeamComparisonSection participant={participant} benchmark={benchmark} />);
 
     expect(screen.getByTestId('peer-comparison-unavailable')).toHaveTextContent(
       /Not enough other staff results/,

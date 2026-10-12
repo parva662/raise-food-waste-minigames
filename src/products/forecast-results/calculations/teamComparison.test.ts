@@ -1,7 +1,9 @@
 import { describe, it, expect } from 'vitest';
 import {
   buildAnonymousPeerBenchmark,
+  buildForecastPerformanceSummary,
   buildParticipantPeerComparisonInsights,
+  formatComparedWithTeam,
   MIN_ANONYMOUS_PEER_COUNT,
   shortageRateGramsPerCustomer,
   surplusRateGramsPerCustomer,
@@ -172,5 +174,32 @@ describe('buildParticipantPeerComparisonInsights', () => {
     expect(insights.overproductionMessage).toBeNull();
     expect(insights.shortageMessage).toBeNull();
     expect(insights.customerMessage).toBeNull();
+  });
+
+  it('compares surplus in g/customer, not absolute grams', () => {
+    expect(formatComparedWithTeam(5.4, 8.1, 'g/customer')).toBe('2.7 g/customer lower than team');
+    expect(formatComparedWithTeam(8.1, 5.4, 'g/customer')).toBe('2.7 g/customer higher than team');
+  });
+
+  it('summarizes surplus and shortage without a combined score', () => {
+    const participant = staffResult({
+      userId: 'you',
+      actualCustomers: 100,
+      totalSimulatedOverproductionGrams: 200,
+      totalSimulatedShortageGrams: 0,
+      customerForecastAbsoluteError: 2,
+    });
+    const peer = staffResult({
+      userId: 'peer',
+      actualCustomers: 100,
+      totalSimulatedOverproductionGrams: 800,
+      totalSimulatedShortageGrams: 0,
+      customerForecastAbsoluteError: 9,
+    });
+    const benchmark = buildAnonymousPeerBenchmark([participant, peer], 'you');
+    const summary = buildForecastPerformanceSummary(benchmark).join(' ');
+    expect(summary).toMatch(/Lower simulated surplus than the team, with no simulated shortage/);
+    expect(summary).toMatch(/closer to actual demand than the team result/);
+    expect(summary).not.toMatch(/score|rank|star/i);
   });
 });

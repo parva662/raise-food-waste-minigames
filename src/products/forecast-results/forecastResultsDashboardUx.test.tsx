@@ -13,10 +13,7 @@ import {
   buildPeerCustomerComparisonMessage,
   FORECAST_INPUT_SEPARATION_NOTE,
 } from '@/products/forecast-results/calculations/forecastInterpretation';
-import {
-  buildAnonymousPeerBenchmark,
-  buildParticipantPeerComparisonInsights,
-} from '@/products/forecast-results/calculations/teamComparison';
+import { buildAnonymousPeerBenchmark } from '@/products/forecast-results/calculations/teamComparison';
 import {
   buildParticipantProgressPeriodView,
   buildParticipantProgressServicePoints,
@@ -151,7 +148,7 @@ describe('customer estimate vs production plan UX', () => {
 describe('peer comparison table', () => {
   afterEach(() => cleanup());
 
-  it('renders You and Other staff median rows without bars', () => {
+  it('renders You and Team in the same g/customer unit', () => {
     const participant = staffResult({ actualCustomers: 100, totalSimulatedOverproductionGrams: 220 });
     const peers = [
       participant,
@@ -160,21 +157,19 @@ describe('peer comparison table', () => {
       staffResult({ userId: 'peer-c', totalSimulatedOverproductionGrams: 180, actualCustomers: 100, totalSimulatedShortageGrams: 14030 }),
     ];
     const benchmark = buildAnonymousPeerBenchmark(peers, participant.userId);
-    const insights = buildParticipantPeerComparisonInsights(participant, benchmark);
 
-    render(
-      <TeamComparisonSection participant={participant} benchmark={benchmark} insights={insights} />,
-    );
+    render(<TeamComparisonSection participant={participant} benchmark={benchmark} />);
 
     expect(screen.getByTestId('peer-comparison-table')).toBeInTheDocument();
-    expect(screen.getByText('Other staff median')).toBeInTheDocument();
+    expect(screen.getByTestId('peer-comparison-label')).toHaveTextContent('Team');
+    expect(screen.getByTestId('peer-surplus-you')).toHaveTextContent('g/customer');
+    expect(screen.getByTestId('peer-surplus-median')).toHaveTextContent('g/customer');
+    expect(screen.getByTestId('peer-surplus-difference')).toHaveTextContent('g/customer');
+    expect(screen.getByTestId('peer-shortage-you')).toHaveTextContent('g/customer');
+    expect(screen.getByTestId('peer-customer-error-you')).toHaveTextContent('customers');
+    expect(screen.getByText(/anonymous median of other staff/i)).toBeInTheDocument();
+    expect(screen.queryByText(/ kg/)).not.toBeInTheDocument();
     expect(screen.queryByTestId('peer-surplus-bar-you')).not.toBeInTheDocument();
-    expect(screen.getByTestId('peer-row-surplus')).toBeInTheDocument();
-    expect(screen.getByTestId('peer-row-shortage')).toBeInTheDocument();
-    expect(screen.getByTestId('peer-row-customer-error')).toBeInTheDocument();
-    expect(screen.getByTestId('peer-comparison-aim')).toHaveTextContent(
-      'The aim is to keep both surplus and shortage low.',
-    );
     expect(screen.getByTestId('how-calculated-disclosure')).toBeInTheDocument();
   });
 });
@@ -261,7 +256,7 @@ describe('dashboard headings and progress discoverability', () => {
     const user = userEvent.setup();
     render(<ForecastResultsParticipantApp />);
     expect(screen.getAllByRole('heading', { level: 1 })).toHaveLength(1);
-    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Kitchen Staff Dashboard');
+    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('My forecast performance');
     expect(screen.queryByText('Your result')).not.toBeInTheDocument();
     await user.click(screen.getByTestId('participant-primary-tab-progress'));
     expect(screen.getByTestId('your-progress-section')).toBeInTheDocument();
@@ -272,25 +267,27 @@ describe('dashboard headings and progress discoverability', () => {
   it('shows progress while current service has no personal forecast', async () => {
     const user = userEvent.setup();
     render(<ForecastResultsParticipantApp />);
-    expect(screen.getByTestId('participant-no-forecast-result')).toBeInTheDocument();
+    expect(screen.getByTestId('dashboard-status-chip')).toBeInTheDocument();
+    expect(screen.getByTestId('latest-forecast-result')).toBeInTheDocument();
     expect(screen.queryByTestId('forecast-impact-section')).not.toBeInTheDocument();
     await user.click(screen.getByTestId('participant-primary-tab-progress'));
     expect(screen.getByTestId('your-progress-section')).toBeInTheDocument();
-    expect(screen.getByTestId('progress-recent-chart')).toBeInTheDocument();
+    expect(screen.queryByTestId('progress-recent-chart')).not.toBeInTheDocument();
   });
 });
 
 describe('ParticipantProgressSection period summary', () => {
   afterEach(() => cleanup());
 
-  it('shows period summary metrics and previous comparison dimensions', () => {
+  it('shows period summary metrics and previous comparison dimensions in Trends', async () => {
+    const user = userEvent.setup();
     const points = buildParticipantProgressServicePoints('fixture-user-c', '2026-07-31');
     const period = buildParticipantProgressPeriodView(points, 'week', '2026-07-31');
 
     render(<ParticipantProgressSection servicePoints={points} asOfServiceDate="2026-07-31" />);
 
-    expect(screen.getByTestId('progress-recent-summary')).toBeInTheDocument();
-    expect(screen.getByText('Recent summary')).toBeInTheDocument();
+    await user.click(screen.getByTestId('progress-view-tab-trends'));
+    expect(screen.getByTestId('progress-period-summary')).toBeInTheDocument();
     expect(screen.getByTestId('progress-average-overproduction')).toBeInTheDocument();
     expect(screen.getByTestId('progress-shortage-risk')).toBeInTheDocument();
     expect(screen.getByTestId('progress-average-customer-error')).toBeInTheDocument();

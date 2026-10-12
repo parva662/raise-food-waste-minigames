@@ -154,14 +154,14 @@ Full JSON Schemas and examples: `docs/contracts/STUDENT_LUNCH_GAMEBUS.md`.
 | GameBus exposure | Participant menu already opens `#/chef-results`; no config change required |
 | Data source (this phase) | Embedded: `kitchenGroupInput` + `inputCollectionPari.me` when present; standalone: development fixtures |
 | Calculation model | Shared pure engine; per-staff simulation against shared observed service reality |
-| Participant privacy | Own identifiable results + de-identified other-staff comparison from 1 peer ("Other staff" / "Other staff median") |
+| Participant privacy | Own results only, joined on `activity.actor.id`. You vs Team from 1 other staff member, anonymous, same units, excluding the participant |
 | Composite score / ranking | **Not approved** — no score, leaderboard, or winner language |
 | Admin authorization | **Not implemented** — route-level auth required before production |
-| Multi-user GameBus retrieval | **Not implemented** (next major phase) |
+| Multi-user GameBus retrieval | Existing `kitchenGroupInput.activities` supplies Forecast and closeout records; participant results filter by authenticated actor |
 | Fixture current user | Default `fixture-user-c`; dev selector + `sessionStorage` for calculation testing only |
 | **GameBus authenticated identity** | **Confirmed** — `inputCollectionPari.me` (`/api/me`); parses `id`, `firstName`, `lastName`; debug panel with `?gamebusDebug=1` only |
 
-**Participant (`#/chef-results`):** summary cards, category diverging visual, other-staff comparison, Progress as Recent (last 8 completed services) / Trends (Week/Month/Year) / History (paged archive; history independent of current waiting state), lightweight “Kitchen progress”. No coworker names/IDs.
+**Participant (`#/chef-results`):** current-service status, latest completed personal result, You vs Team for that service, Progress as Recent (last 8 own services) / Trends (Week/Month/Year) / History. You vs Team appears only on Overview; no repeated team footer or Overview summary appears in Progress. No coworker names/IDs.
 
 **Admin (`#/chef-results-admin`):** all-staff research table with real actor names when embedded; full calculation detail, weekly raw aggregation.
 
@@ -172,12 +172,11 @@ Full JSON Schemas and examples: `docs/contracts/STUDENT_LUNCH_GAMEBUS.md`.
 - Real `/api/me` shape uses `id`, `firstName`, `lastName`, `picture`, etc. (no top-level `name`).
 - Current-user identity can be resolved in the app now.
 
-**Blocked / waiting for GameBus (Raoul endpoint in progress):**
+**Participant data path (embedded):**
 
-- Cross-user activity retrieval.
-- Retrieving all kitchen staff `chefForecast` activities.
-- Replacing fixture result users with real GameBus actors.
-- Participant anonymous group comparison using real users.
+- Personal results are filtered from `kitchenGroupInput.activities` (`chefForecast` + `wasteMeasurement`). There is no Forecast self-activity endpoint.
+- Ownership is `activity.actor.id` (string) matched to `inputCollectionPari.me.id`.
+- Standalone `#/chef-results` still uses development fixtures (`fixture-user-c` unless the dev selector changes it). That fixture identity is not used when the page is embedded.
 
 **Student mission architecture (agreed, not implemented here):**
 

@@ -29,18 +29,21 @@ describe('ParticipantProgressSection', () => {
 
     expect(screen.getByTestId('your-progress-section')).toBeInTheDocument();
     expect(screen.getByRole('tab', { name: 'Recent' })).toHaveAttribute('aria-selected', 'true');
-    expect(screen.getByTestId('progress-recent-summary')).toBeInTheDocument();
-    expect(screen.getByTestId('progress-recent-chart')).toBeInTheDocument();
+    expect(screen.queryByTestId('progress-recent-summary')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('progress-recent-chart')).not.toBeInTheDocument();
     expect(screen.getByTestId('progress-recent-list')).toBeInTheDocument();
   });
 
-  it('renders recent summary before the recent chart in document order', () => {
+  it('keeps Recent compact and reserves summaries and charts for Trends', async () => {
+    const user = userEvent.setup();
     const points = buildParticipantProgressServicePoints('fixture-user-c', '2026-07-31');
     render(<ParticipantProgressSection servicePoints={points} asOfServiceDate="2026-07-31" />);
-
-    const summary = screen.getByTestId('progress-recent-summary');
-    const chart = screen.getByTestId('progress-recent-chart');
-    expect(summary.compareDocumentPosition(chart) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(screen.queryByTestId('progress-summary-cards')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('progress-trend-chart-svg')).not.toBeInTheDocument();
+    expect(screen.getByTestId('progress-recent-list').querySelectorAll('li')).toHaveLength(4);
+    await user.click(screen.getByTestId('progress-view-tab-trends'));
+    expect(screen.getByTestId('progress-period-summary')).toBeInTheDocument();
+    expect(screen.getAllByTestId('progress-trend-chart-svg')).toHaveLength(1);
   });
 
   it('switches to Trends and updates Week, Month, and Year panels', async () => {
@@ -61,14 +64,16 @@ describe('ParticipantProgressSection', () => {
     expect(screen.getByTestId('progress-panel-year')).toBeInTheDocument();
   });
 
-  it('shows shortage risk, customer error, and completed services on Recent', () => {
+  it('shows shortage, customer error, and completed services in Trends', async () => {
+    const user = userEvent.setup();
     const points = buildParticipantProgressServicePoints('fixture-user-c', '2026-07-31');
     render(<ParticipantProgressSection servicePoints={points} asOfServiceDate="2026-07-31" />);
 
+    await user.click(screen.getByTestId('progress-view-tab-trends'));
     expect(screen.getByTestId('progress-shortage-risk')).toBeInTheDocument();
     expect(screen.getByTestId('progress-average-customer-error')).toBeInTheDocument();
     expect(screen.getByTestId('progress-completed-services')).toHaveTextContent('4');
-    expect(screen.getByTestId('progress-recent-chart')).toBeInTheDocument();
+    expect(screen.queryByTestId('progress-recent-chart')).not.toBeInTheDocument();
     expect(screen.getAllByTestId('progress-chart-bar-surplus').length).toBeGreaterThan(0);
     expect(screen.getAllByTestId('progress-chart-bar-shortage').length).toBeGreaterThan(0);
   });
@@ -89,7 +94,8 @@ describe('ParticipantProgressSection', () => {
     );
   });
 
-  it('shows not-enough-data message when fewer than two chartable Recent buckets', () => {
+  it('shows one observation without claiming a trend', async () => {
+    const user = userEvent.setup();
     const points = [
       {
         serviceDate: '2026-07-27',
@@ -113,14 +119,25 @@ describe('ParticipantProgressSection', () => {
 
     render(<ParticipantProgressSection servicePoints={points} asOfServiceDate="2026-07-28" />);
 
-    expect(screen.getByTestId('progress-recent-chart')).toBeInTheDocument();
+    expect(screen.queryByTestId('progress-recent-chart')).not.toBeInTheDocument();
+    await user.click(screen.getByTestId('progress-view-tab-trends'));
     expect(screen.getByTestId('progress-trend-chart-svg')).toBeInTheDocument();
     expect(screen.getByTestId('progress-chart-single-point-note')).toHaveTextContent(
-      /One completed service/i,
+      /One data point/i,
     );
-    expect(screen.getByTestId('progress-recent-summary')).toBeInTheDocument();
+    expect(screen.getByTestId('progress-period-summary')).toBeInTheDocument();
   });
 
+  it('counts several services in one monthly chart point without claiming one service', async () => {
+    const user = userEvent.setup();
+    const points = buildParticipantProgressServicePoints('fixture-user-c', '2026-07-31');
+    render(<ParticipantProgressSection servicePoints={points} asOfServiceDate="2026-07-31" />);
+    await user.click(screen.getByTestId('progress-view-tab-trends'));
+    await user.click(screen.getByRole('tab', { name: 'Year' }));
+    expect(screen.getByTestId('progress-completed-services')).toHaveTextContent('4');
+    expect(screen.getByTestId('progress-chart-single-point-note')).toHaveTextContent('One data point');
+    expect(screen.queryByText(/One completed service is shown/)).not.toBeInTheDocument();
+  });
   it('does not render coworker names', () => {
     const points = buildParticipantProgressServicePoints('fixture-user-c', '2026-07-31');
     const { container } = render(
@@ -136,12 +153,13 @@ describe('KitchenProgressSection scope label', () => {
       <KitchenProgressSection
         progress={{
           servicesCompletedCount: 3,
-          anonymousTeamAverageOverproductionGrams: 1200,
+          anonymousTeamAverageSurplusGramsPerCustomer: 8.1,
           scopeLabel: 'All time',
         }}
       />,
     );
     expect(screen.getByTestId('kitchen-progress-scope-label')).toHaveTextContent('All time');
-    expect(screen.getByText(/Services completed all time/i)).toBeInTheDocument();
+    expect(screen.getByText(/Team services all time/i)).toBeInTheDocument();
+    expect(screen.getByTestId('kitchen-progress-team-overproduction')).toHaveTextContent('8.1 g/customer');
   });
 });

@@ -6,13 +6,11 @@ import { ParticipantProgressSection } from '@/products/forecast-results/particip
 import { ParticipantTabNav, type ParticipantPrimaryTab } from '@/products/forecast-results/participant/components/ParticipantTabNav';
 import {
   buildFixtureChefForecastsForCalculation,
-  buildFixtureKitchenProgress,
+  buildFixtureDailyServiceResults,
   hasFixtureCloseoutForDate,
 } from '@/products/forecast-results/adapters/fixtureCalculationSource';
 import {
-  anonymousTeamAverageOverproductionForDay,
   buildGroupCloseoutOnlyResults,
-  buildParticipantKitchenProgress,
   createGroupKitchenCalculationCache,
   getParticipantEligibleForecastForDate,
   hasGroupCloseoutForDate,
@@ -26,10 +24,7 @@ import {
 import { getFixtureCurrentUserId } from '@/products/forecast-results/currentUserContext';
 import { findParticipantDailyResult } from '@/products/forecast-results/calculations/participantWeekData';
 import { buildParticipantProgressServicePoints } from '@/products/forecast-results/calculations/participantProgressData';
-import {
-  buildAnonymousPeerBenchmark,
-  buildParticipantPeerComparisonInsights,
-} from '@/products/forecast-results/calculations/teamComparison';
+import { buildAnonymousPeerBenchmark } from '@/products/forecast-results/calculations/teamComparison';
 import { useGameBusAuthenticatedUser } from '@/products/forecast-results/useGameBusAuthenticatedUser';
 import { useForecastResultsData } from '@/products/forecast-results/useForecastResultsData';
 import { useGameBusEmbed } from '@/platform/gamebus/useGameBusEmbed';
@@ -217,44 +212,36 @@ export function ForecastResultsParticipantApp() {
     resultsServiceDate,
   ]);
 
-  const teamSurplusGramsByDate = useMemo(() => {
-    const map = new Map<string, number>();
-    if (!kitchenCalculationCache || !currentUserId) return map;
-    for (const date of kitchenCalculationCache.getParticipantResultServiceDates(currentUserId)) {
-      const daily = kitchenCalculationCache.getDailyServiceResults(date);
-      if (daily) {
-        map.set(date, anonymousTeamAverageOverproductionForDay(daily));
-      }
-    }
-    return map;
-  }, [currentUserId, kitchenCalculationCache]);
+  const latestPersonalPoint =
+    progressServicePoints.length > 0
+      ? progressServicePoints[progressServicePoints.length - 1]!
+      : null;
 
-  const kitchenProgress = useMemo(() => {
-    if (!canLoadProgress) return null;
+  const latestDailyResults = useMemo(() => {
+    if (!latestPersonalPoint || !canLoadParticipantData) return null;
     if (embedded && inputCollectionsReady) {
-      return buildParticipantKitchenProgress(inputCollections, currentUserId, {
-        asOfServiceDate: resultsServiceDate,
-        cache: kitchenCalculationCache,
-      });
+      return kitchenCalculationCache?.getDailyServiceResults(latestPersonalPoint.serviceDate) ?? null;
     }
-    return buildFixtureKitchenProgress(resultsServiceDate);
+    return buildFixtureDailyServiceResults(latestPersonalPoint.serviceDate);
   }, [
-    canLoadProgress,
-    currentUserId,
+    canLoadParticipantData,
     embedded,
-    inputCollections,
     inputCollectionsReady,
     kitchenCalculationCache,
-    resultsServiceDate,
+    latestPersonalPoint,
   ]);
 
-  const peerBenchmark =
-    completeDailyResults && ownResult
-      ? buildAnonymousPeerBenchmark(completeDailyResults.staffResults, currentUserId)
-      : null;
-  const peerInsights =
-    ownResult && peerBenchmark
-      ? buildParticipantPeerComparisonInsights(ownResult, peerBenchmark)
+  const latestOwnResult = latestPersonalPoint
+    ? findParticipantDailyResult(
+        embedded ? currentUserId : fixtureUserId,
+        latestPersonalPoint.serviceDate,
+        latestDailyResults,
+      )
+    : null;
+
+  const latestPeerBenchmark =
+    latestOwnResult && latestDailyResults
+      ? buildAnonymousPeerBenchmark(latestDailyResults.staffResults, latestOwnResult.userId)
       : null;
 
   const dashboardStatus: DashboardStatus = isEmbeddedLoading
@@ -288,24 +275,24 @@ export function ForecastResultsParticipantApp() {
             if (tab === 'overview') {
               return (
                 <ParticipantOverviewSection
-                  resultsReady={isServiceDay && resultsState.status === 'ready'}
                   hasCloseout={hasCloseout}
                   isServiceDay={isServiceDay}
                   ownResult={ownResult}
+                  latestOwnResult={latestOwnResult}
                   dailyResults={dailyResults}
                   pendingForecast={pendingForecast}
-                  peerBenchmark={peerBenchmark}
-                  peerInsights={peerInsights}
+                  latestPeerBenchmark={latestPeerBenchmark}
                 />
               );
             }
             return (
-              <ParticipantProgressSection
-                servicePoints={progressServicePoints}
-                asOfServiceDate={resultsServiceDate}
-                kitchenProgress={canLoadProgress ? kitchenProgress : null}
-                teamSurplusGramsByDate={teamSurplusGramsByDate}
-              />
+              <>
+                <ParticipantProgressSection
+                  key={currentUserId}
+                  servicePoints={progressServicePoints}
+                  asOfServiceDate={resultsServiceDate}
+                />
+              </>
             );
           }}
         </ParticipantTabNav>

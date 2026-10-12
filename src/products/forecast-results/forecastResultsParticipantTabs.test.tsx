@@ -28,12 +28,12 @@ describe('kitchen staff dashboard primary tabs', () => {
   it('shows one H1 and Overview / Progress tabs with Overview default', () => {
     render(<ForecastResultsParticipantApp />);
     expect(screen.getAllByRole('heading', { level: 1 })).toHaveLength(1);
-    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Kitchen Staff Dashboard');
+    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('My forecast performance');
     expect(screen.getByTestId('participant-primary-tab-overview')).toBeInTheDocument();
     expect(screen.getByTestId('participant-primary-tab-progress')).toBeInTheDocument();
     expect(screen.getByTestId('participant-primary-panel-overview')).not.toHaveAttribute('hidden');
     expect(screen.getByTestId('participant-primary-panel-progress')).toHaveAttribute('hidden');
-    expect(screen.getByTestId('forecast-impact-section')).toBeInTheDocument();
+    expect(screen.getByTestId('latest-forecast-result')).toBeInTheDocument();
     expect(screen.queryByTestId('your-progress-section')).not.toBeInTheDocument();
   });
 
@@ -43,7 +43,7 @@ describe('kitchen staff dashboard primary tabs', () => {
     expect(screen.getByTestId('participant-results-header')).toHaveTextContent(/31 July 2026/);
     await user.click(screen.getByTestId('participant-primary-tab-progress'));
     expect(screen.getByTestId('your-progress-section')).toBeInTheDocument();
-    expect(screen.queryByTestId('forecast-impact-section')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('latest-forecast-result')).not.toBeInTheDocument();
     expect(screen.getByTestId('participant-results-header')).toHaveTextContent(/31 July 2026/);
     expect(screen.getByTestId('dashboard-status-chip')).toBeInTheDocument();
   });

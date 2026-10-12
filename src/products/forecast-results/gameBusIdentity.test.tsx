@@ -120,11 +120,11 @@ describe('GameBus authenticated user on chef results', () => {
 
     expect(getFixtureCurrentUserId()).toBe(DEFAULT_FIXTURE_CURRENT_USER_ID);
     expect(screen.queryByTestId('fixture-current-user-selector')).not.toBeInTheDocument();
-    expect(screen.getByTestId('participant-results-unavailable-closeout')).toBeInTheDocument();
+    expect(screen.getByTestId('dashboard-status-chip')).toBeInTheDocument();
     expectNoParticipantDebugUi();
   });
 
-  it('logs authenticated user when gamebusDebug=1', () => {
+  it('logs scalar identity diagnostics when gamebusDebug=1', () => {
     const infoSpy = vi.spyOn(console, 'info').mockImplementation(() => {});
     ingestInputCollectionsForTests({
       [INPUT_COLLECTION_PARI_KEY]: {
@@ -138,10 +138,8 @@ describe('GameBus authenticated user on chef results', () => {
 
     render(<ForecastResultsParticipantApp />);
 
-    expect(infoSpy).toHaveBeenCalledWith('[gamebus] authenticated user', {
-      id: 'logged-user',
-      name: 'Logged User',
-    });
+    expect(infoSpy).toHaveBeenCalledWith('Authenticated user ID: logged-user');
+    expect(infoSpy).toHaveBeenCalledWith('Forecasts matching authenticated user: 0');
     expectNoParticipantDebugUi();
   });
 });

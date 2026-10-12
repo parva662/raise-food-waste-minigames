@@ -1,109 +1,96 @@
-import type { AnonymousPeerBenchmark, ParticipantPeerComparisonInsight } from '@/products/forecast-results/calculations/teamComparison';
-import { formatPeerRateGramsPerCustomer } from '@/products/forecast-results/calculations/teamComparison';
+import {
+  formatComparedWithTeam,
+  formatPeerRateGramsPerCustomer,
+  type AnonymousPeerBenchmark,
+} from '@/products/forecast-results/calculations/teamComparison';
+import { formatCustomerError } from '@/products/forecast-results/calculations/participantProgressData';
 import type { StaffDailyResult } from '@/products/forecast-results/types';
-import { buildPeerKeyInsights } from '@/products/forecast-results/calculations/participantInsights';
 import { HowCalculatedDisclosure } from '@/products/forecast-results/participant/components/HowCalculatedDisclosure';
 
 interface TeamComparisonSectionProps {
   participant: StaffDailyResult;
   benchmark: AnonymousPeerBenchmark;
-  insights: ParticipantPeerComparisonInsight;
 }
 
-function formatCustomerError(value: number): string {
-  return `${value.toFixed(0)} customers`;
+function customerErrorLabel(value: number): string {
+  return formatCustomerError(value);
 }
 
 export function TeamComparisonSection({
   participant: _participant,
   benchmark,
-  insights,
 }: TeamComparisonSectionProps) {
-  const keyInsights = buildPeerKeyInsights(benchmark, insights);
+  const teamHint =
+    benchmark.peerCount >= 2
+      ? 'Team: anonymous median of other staff for this service · your result is not included.'
+      : 'Team: one other staff result for this service · your result is not included.';
 
   return (
     <section
       className="kitchen-mgmt-surface participant-peer-compare"
       data-testid="team-comparison-section"
     >
-      <h3 className="kitchen-mgmt-surface__title">Compared with other staff</h3>
-      <p className="kitchen-mgmt-snapshot-hint">
-        Compared with other staff who forecast the same service. Individual peer identities are
-        never shown.
-      </p>
+      <h3 className="kitchen-mgmt-surface__title">You vs Team</h3>
+      <p className="kitchen-mgmt-snapshot-hint" data-testid="peer-comparison-label">{teamHint}</p>
 
       {!benchmark.canCompare ? (
         <p className="chef-results-peer-insufficient" data-testid="peer-comparison-unavailable">
           Not enough other staff results for a comparison yet.
         </p>
       ) : (
-        <>
-          <div className="chef-results-table-wrap kitchen-mgmt-table-wrap" data-testid="peer-comparison-table">
-            <table className="chef-results-table kitchen-mgmt-table chef-results-peer-table">
-              <thead>
-                <tr>
-                  <th scope="col">Metric</th>
-                  <th scope="col" className="kitchen-mgmt-table__num">You</th>
-                  <th
-                    scope="col"
-                    className="kitchen-mgmt-table__num"
-                    data-testid="peer-comparison-label"
-                  >
-                    {benchmark.peerLabel}
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr data-testid="peer-row-surplus">
-                  <th scope="row">Estimated surplus</th>
-                  <td className="kitchen-mgmt-table__num" data-testid="peer-surplus-you">
-                    {formatPeerRateGramsPerCustomer(
-                      benchmark.participantOverproductionRateGramsPerCustomer,
-                    )}
-                  </td>
-                  <td className="kitchen-mgmt-table__num" data-testid="peer-surplus-median">
-                    {formatPeerRateGramsPerCustomer(
-                      benchmark.peerOverproductionMedianGramsPerCustomer,
-                    )}
-                  </td>
-                </tr>
-                <tr data-testid="peer-row-shortage">
-                  <th scope="row">Estimated shortage</th>
-                  <td className="kitchen-mgmt-table__num" data-testid="peer-shortage-you">
-                    {formatPeerRateGramsPerCustomer(benchmark.participantShortageRateGramsPerCustomer)}
-                  </td>
-                  <td className="kitchen-mgmt-table__num" data-testid="peer-shortage-median">
-                    {formatPeerRateGramsPerCustomer(benchmark.peerShortageMedianGramsPerCustomer)}
-                  </td>
-                </tr>
-                <tr data-testid="peer-row-customer-error">
-                  <th scope="row">Customer forecast error</th>
-                  <td className="kitchen-mgmt-table__num" data-testid="peer-customer-error-you">
-                    {formatCustomerError(benchmark.participantCustomerError)}
-                  </td>
-                  <td className="kitchen-mgmt-table__num" data-testid="peer-customer-error-median">
-                    {formatCustomerError(benchmark.peerCustomerErrorMedian)}
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-
-          <p className="chef-results-peer-aim" data-testid="peer-comparison-aim">
-            The aim is to keep both surplus and shortage low.
-          </p>
-
-          {keyInsights.length > 0 ? (
-            <div className="chef-results-key-insights" data-testid="peer-key-insights">
-              <h4 className="kitchen-mgmt-surface__subtitle">Key insights</h4>
-              <ul>
-                {keyInsights.map((insight) => (
-                  <li key={insight}>{insight}</li>
-                ))}
-              </ul>
-            </div>
-          ) : null}
-        </>
+        <div className="chef-results-you-vs-team" data-testid="peer-comparison-table">
+          <article className="chef-results-you-vs-team__metric" data-testid="peer-row-surplus">
+            <h4>Simulated surplus</h4>
+            <p data-testid="peer-surplus-you">
+              You: {formatPeerRateGramsPerCustomer(benchmark.participantOverproductionRateGramsPerCustomer)}
+            </p>
+            <p data-testid="peer-surplus-median">
+              Team: {formatPeerRateGramsPerCustomer(benchmark.peerOverproductionMedianGramsPerCustomer)}
+            </p>
+            <p data-testid="peer-surplus-difference">
+              Difference:{' '}
+              {formatComparedWithTeam(
+                benchmark.participantOverproductionRateGramsPerCustomer,
+                benchmark.peerOverproductionMedianGramsPerCustomer,
+                'g/customer',
+              )}
+            </p>
+          </article>
+          <article className="chef-results-you-vs-team__metric" data-testid="peer-row-shortage">
+            <h4>Simulated shortage</h4>
+            <p data-testid="peer-shortage-you">
+              You: {formatPeerRateGramsPerCustomer(benchmark.participantShortageRateGramsPerCustomer)}
+            </p>
+            <p data-testid="peer-shortage-median">
+              Team: {formatPeerRateGramsPerCustomer(benchmark.peerShortageMedianGramsPerCustomer)}
+            </p>
+            <p data-testid="peer-shortage-difference">
+              Difference:{' '}
+              {formatComparedWithTeam(
+                benchmark.participantShortageRateGramsPerCustomer,
+                benchmark.peerShortageMedianGramsPerCustomer,
+                'g/customer',
+              )}
+            </p>
+          </article>
+          <article className="chef-results-you-vs-team__metric" data-testid="peer-row-customer-error">
+            <h4>Customer forecast error</h4>
+            <p data-testid="peer-customer-error-you">
+              You: {customerErrorLabel(benchmark.participantCustomerError)}
+            </p>
+            <p data-testid="peer-customer-error-median">
+              Team: {customerErrorLabel(benchmark.peerCustomerErrorMedian)}
+            </p>
+            <p data-testid="peer-customer-error-difference">
+              Difference:{' '}
+              {formatComparedWithTeam(
+                benchmark.participantCustomerError,
+                benchmark.peerCustomerErrorMedian,
+                'customers',
+              )}
+            </p>
+          </article>
+        </div>
       )}
 
       <HowCalculatedDisclosure />

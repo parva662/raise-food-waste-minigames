@@ -1,5 +1,6 @@
 import { useEffect, useMemo } from 'react';
 import { isForecastResultsGameBusDebugMode } from '@/products/forecast-results/debug/forecastResultsInvestigation';
+import { logForecastIdentityDebug } from '@/products/forecast-results/debug/logForecastIdentityDebug';
 import { getAuthenticatedGameBusUser } from '@/platform/gamebus/inputCollections';
 import { useGameBusEmbed } from '@/platform/gamebus/useGameBusEmbed';
 
@@ -15,9 +16,10 @@ export function useGameBusAuthenticatedUser() {
   );
 
   useEffect(() => {
-    if (!isForecastResultsGameBusDebugMode() || !embedded || !user) return;
-    console.info('[gamebus] authenticated user', { id: user.id, name: user.name });
-  }, [embedded, user]);
+    if (!isForecastResultsGameBusDebugMode() || !embedded || !inputCollectionsReady) return;
+    // Scalar lines only — some GameBus console UIs collapse objects to "Object".
+    logForecastIdentityDebug(inputCollections);
+  }, [embedded, inputCollections, inputCollectionsReady]);
 
   return {
     embedded,

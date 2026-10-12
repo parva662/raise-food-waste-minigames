@@ -141,9 +141,10 @@ describe('embedded chef results UI', () => {
     ingestInputCollectionsForTests(embeddedKitchenPayload());
     render(<ForecastResultsParticipantApp />);
 
-    expect(screen.getByTestId('actual-kitchen-outcome-section')).toBeInTheDocument();
-    expect(screen.getByTestId('forecast-impact-section')).toBeInTheDocument();
-    expect(screen.getByTestId('participant-summary-cards')).toBeInTheDocument();
+    expect(screen.getByTestId('latest-forecast-result')).toBeInTheDocument();
+    expect(screen.getByTestId('team-comparison-section')).toBeInTheDocument();
+    expect(screen.getByTestId('peer-surplus-you')).toHaveTextContent('g/customer');
+    expect(screen.getByTestId('peer-surplus-median')).toHaveTextContent('g/customer');
     expect(screen.queryByText('Coworker Chef')).not.toBeInTheDocument();
     expect(screen.queryByText('coworker-user')).not.toBeInTheDocument();
   });
@@ -156,23 +157,22 @@ describe('embedded chef results UI', () => {
     render(<ForecastResultsParticipantApp />);
 
     expect(screen.queryByTestId('chef-results-date-select')).not.toBeInTheDocument();
-    expect(screen.getByTestId('participant-no-forecast-result')).toHaveTextContent(
+    expect(screen.getByTestId('dashboard-status-chip')).toHaveTextContent(
       'No forecast for this service',
     );
     await user.click(screen.getByTestId('participant-primary-tab-progress'));
     expect(screen.getByTestId('your-progress-section')).toBeInTheDocument();
-    expect(screen.getByTestId('kitchen-progress-section')).toBeInTheDocument();
+    expect(screen.queryByTestId('kitchen-progress-section')).not.toBeInTheDocument();
   });
 
-  it('uses real embedded kitchen progress instead of fixture leakage', async () => {
+  it('uses only real own services instead of fixture leakage', async () => {
     const user = userEvent.setup();
     ingestInputCollectionsForTests(embeddedKitchenPayload());
     render(<ForecastResultsParticipantApp />);
     await user.click(screen.getByTestId('participant-primary-tab-progress'));
-
-    expect(screen.getByTestId('kitchen-progress-services-count')).toHaveTextContent('1');
-    expect(screen.getByTestId('kitchen-progress-team-overproduction').textContent).not.toBe('4.12 kg');
-    expect(screen.getByTestId('kitchen-progress-team-overproduction').textContent).not.toBe('5');
+    expect(screen.getByTestId('progress-recent-list').querySelectorAll('li')).toHaveLength(1);
+    expect(screen.getByTestId('progress-recent-list')).toHaveTextContent('29 July 2026');
+    expect(screen.queryByTestId('kitchen-progress-section')).not.toBeInTheDocument();
   });
 
   it('does not render participant kitchen progress without authenticated user identity', () => {
@@ -192,8 +192,8 @@ describe('embedded chef results UI', () => {
     render(<ForecastResultsParticipantApp />);
     await user.click(screen.getByTestId('participant-primary-tab-progress'));
 
-    expect(screen.getByTestId('kitchen-progress-section')).toBeInTheDocument();
-    expect(screen.getByTestId('kitchen-progress-services-count')).toHaveTextContent('1');
+    expect(screen.getByTestId('progress-recent-list').querySelectorAll('li')).toHaveLength(1);
+    expect(screen.queryByTestId('kitchen-progress-section')).not.toBeInTheDocument();
   });
 
   it('shows real actor names on the admin page', async () => {
@@ -319,12 +319,11 @@ describe('standalone chef results fixtures', () => {
     render(<ForecastResultsParticipantApp />);
 
     expect(screen.queryByTestId('chef-results-pending')).not.toBeInTheDocument();
-    expect(screen.getByTestId('actual-kitchen-outcome-section')).toBeInTheDocument();
-    expect(screen.getByTestId('forecast-impact-section')).toBeInTheDocument();
-    expect(screen.getByTestId('participant-summary-cards')).toBeInTheDocument();
+    expect(screen.getByTestId('latest-forecast-result')).toBeInTheDocument();
+    expect(screen.getByTestId('team-comparison-section')).toBeInTheDocument();
     await user.click(screen.getByTestId('participant-primary-tab-progress'));
     expect(screen.getByTestId('your-progress-section')).toBeInTheDocument();
-    expect(screen.getByTestId('kitchen-progress-section')).toBeInTheDocument();
+    expect(screen.queryByTestId('kitchen-progress-section')).not.toBeInTheDocument();
     expect(screen.queryByTestId('chef-results-date-select')).not.toBeInTheDocument();
     expect(screen.getByTestId('participant-results-header')).toHaveTextContent(/Friday, 31 July 2026/);
   });

@@ -12,8 +12,8 @@ How-to: [`../how-to/diagnose-chef-results.md`](../how-to/diagnose-chef-results.m
 1. Participant dashboard date = current Europe/Helsinki calendar day; rolls at midnight (not Kitchen Forecast 08:30).
 2. Weekend / explicit closure → "No service today"; Progress remains available.
 3. Historical Progress is independent of the current waiting / no-forecast / no-service state.
-4. Progress IA: Recent (last 8) / Trends (Week/Month/Year) / History; chart 0 → empty; 1 → show data point (no trend claim); 2+ → chart + trend.
-5. Other-staff comparison from **1** peer; label "Other staff" (1) / "Other staff median" (2+).
+4. Progress IA: Recent (last 8 compact personal rows, no chart/summary) / Trends (Week/Month/Year) / History; chart 0 → empty; 1 → show data point (no trend claim); 2+ → chart + trend.
+5. You vs Team from **1** other staff member; label "Team"; one peer is not called a median; two or more use an anonymous median that excludes the participant; same units (g/customer or customers).
 6. Missing forecast ≠ zero performance; omit from aggregation.
 7. Closeout without personal forecast still shows actual kitchen outcome.
 8. Forecast without closeout preserves structure + shows submitted forecast; metrics pending.
@@ -22,7 +22,8 @@ How-to: [`../how-to/diagnose-chef-results.md`](../how-to/diagnose-chef-results.m
 
 | Area | Key scenarios | Automated coverage | Status |
 |---|---|---|---|
-| Identity / privacy | Own results only; no peer names/IDs | `chefResultsPrivacy.test.ts`; `chefResultsParticipantDashboard.test.tsx` | COVERED |
+| Identity / privacy | Own results only; no peer names/IDs; mounted account switch and reload, including missing identity and saved fixture selection; two chefs → different histories; zero-own-activity empty personal; group history never fills personal Recent/Trends/History | `forecastResultsParticipantIdentity.test.tsx`; `forecastResultsPrivacy.test.ts`; `forecastResultsParticipantDashboard.test.tsx` | COVERED |
+| Overview hybrid | Current service status; latest own result; You vs Team g/customer; performance summary; waiting does not hide earlier own result | `forecastResultsParticipantIdentity.test.tsx`; `forecastResultsDashboardUx.test.tsx`; `ParticipantOverviewSection` | COVERED |
 | Dashboard date / midnight | Helsinki calendar day; midnight rollover; ignores 08:30 | `chefResultsServiceDate.test.ts`; `chefResultsDashboardMidnight.test.tsx` | COVERED |
 | Weekend / closed day | No service today; Progress remains | `chefResultsServiceDate.test.ts`; `chefResultsDashboardMidnight.test.tsx` | COVERED |
 | Missing menu weekday | Still operational service day | `chefResultsServiceDate.test.ts` | COVERED |
@@ -61,3 +62,9 @@ dates with both eligible forecast (actor match) and finalized closeout, filtered
 
 Distinguish: product logic (fixed here) vs repository bugs (peer threshold, chart, dessert) vs
 live GameBus payload instability.
+
+The 390px jsdom assertion checks content only, not browser layout. Responsive layout is separately inspected in the browser. Live GameBus payload/configuration diagnosis still requires the affected authenticated page.
+
+### Live identity acceptance remains open (12 October 2026)
+
+The automated identity coverage above passes for supplied authenticated IDs, including the exact seven-date/zero-activity-account incident shape and reload. Live browser testing reproduced another account's seven services on a zero-activity account, including after reload. This is not marked fixed or accepted by passing synthetic tests. The deployed bundle's selectors use the expected actor-ID join; runtime input identity/configuration verification is still required. See the evidence and single required admin artifact in [diagnose-chef-results.md](../how-to/diagnose-chef-results.md).
