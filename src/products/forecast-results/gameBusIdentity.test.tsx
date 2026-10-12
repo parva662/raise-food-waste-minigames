@@ -120,7 +120,7 @@ describe('GameBus authenticated user on chef results', () => {
 
     expect(getFixtureCurrentUserId()).toBe(DEFAULT_FIXTURE_CURRENT_USER_ID);
     expect(screen.queryByTestId('fixture-current-user-selector')).not.toBeInTheDocument();
-    expect(screen.getByTestId('participant-results-unavailable-closeout')).toBeInTheDocument();
+    expect(screen.getByTestId('dashboard-status-chip')).toBeInTheDocument();
     expectNoParticipantDebugUi();
   });
 

@@ -16,7 +16,11 @@ import { calculateDailyServiceResults } from '@/products/forecast-results/calcul
 import { addDaysToIsoDate } from '@/shared/time/dates';
 import { parse } from 'date-fns';
 import { closeoutToCalculationInput } from '@/products/forecast-results/adapters/closeoutAdapter';
-import type { KitchenProgressSummary } from '@/products/forecast-results/adapters/groupCalculationSource';
+import { buildAnonymousPeerBenchmark } from '@/products/forecast-results/calculations/teamComparison';
+import type {
+  AnonymousTeamContext,
+  KitchenProgressSummary,
+} from '@/products/forecast-results/adapters/groupCalculationSource';
 import type {
   ChefForecastForCalculation,
   DailyServiceResults,
@@ -137,6 +141,40 @@ export function buildFixtureKitchenProgress(asOfServiceDate?: string): KitchenPr
   return {
     servicesCompletedCount: days.length,
     anonymousTeamAverageOverproductionGrams,
+    scopeLabel: asOfServiceDate ? 'This week' : 'All time',
+  };
+}
+
+/** Standalone team context. Other-staff g/customer only; not the participant's history. */
+export function buildFixtureAnonymousTeamContext(
+  userId: string,
+  asOfServiceDate?: string,
+): AnonymousTeamContext {
+  const allDays = buildAllFixtureDailyServiceResults();
+  const days =
+    asOfServiceDate === undefined
+      ? allDays
+      : allDays.filter((day) => {
+          const { start, end } = getCalendarWeekRangeContaining(asOfServiceDate);
+          return (
+            day.serviceDate >= start &&
+            day.serviceDate <= end &&
+            day.serviceDate <= asOfServiceDate
+          );
+        });
+
+  const rates = days
+    .map(
+      (day) =>
+        buildAnonymousPeerBenchmark(day.staffResults, userId)
+          .peerOverproductionMedianGramsPerCustomer,
+    )
+    .filter((value): value is number => value !== null);
+
+  return {
+    servicesCompletedCount: days.length,
+    anonymousTeamAverageSurplusGramsPerCustomer:
+      rates.length === 0 ? null : rates.reduce((sum, value) => sum + value, 0) / rates.length,
     scopeLabel: asOfServiceDate ? 'This week' : 'All time',
   };
 }

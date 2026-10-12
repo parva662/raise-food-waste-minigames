@@ -79,6 +79,53 @@ Feature: Kitchen staff review their own forecast simulation results
       Then a fixture profile selector may exist for local calculation testing
       And that selector is not production participant behaviour in GameBus embed mode
 
+    @security @privacy @identity
+    Scenario: Personal history never takes another chef or group aggregate as own data
+      Given kitchen-staff member A has completed forecast results
+      And kitchen-staff member B has zero own forecast activities
+      When B opens the Kitchen Staff Dashboard
+      Then B sees "No forecast results yet" on Overview
+      And B's Progress shows "No completed forecast results yet"
+      And A's completed services do not appear in B's Recent, Trends, or History
+      And Progress does not repeat Team context under Recent, Trends, or History
+      And Overview You vs Team stays unavailable until B has an own completed result
+
+    @security @privacy @identity
+    Scenario: Two authenticated chefs receive different personal histories from the same group feed
+      Given A and B each have eligible forecasts on different service dates with matching closeouts
+      And both dashboards receive the same kitchenGroupInput.activities payload
+      When each opens Progress
+      Then each sees only the service dates where they personally have an eligible forecast and closeout
+      And join uses activity.actor.id against inputCollectionPari.me.id
+
+  # ---------------------------------------------------------------------------
+  # OVERVIEW — MY FORECAST PERFORMANCE
+  # ---------------------------------------------------------------------------
+
+  Rule: Overview shows current service status, latest own result, and You vs Team
+
+    Overview must not let "Waiting for service closeout" hide the chef's latest completed historical result.
+    You vs Team compares the same service and the same metric units (g/customer or customers).
+    Performance summary uses only those transparent metrics — no overall score, stars, or ranking.
+
+    @overview @ux
+    Scenario: Overview keeps latest completed result while current service waits
+      Given the authenticated chef has an earlier completed result
+      And the current service date has an eligible forecast but no closeout yet
+      When the participant opens Overview
+      Then Current service shows Waiting for service closeout
+      And Latest forecast result still shows the earlier completed service metrics
+
+    @overview @ux @peers
+    Scenario: You vs Team is shown beside the latest own result in matching units
+      Given the authenticated chef has a latest completed result
+      And at least one other staff member has a result for that same service
+      When Overview shows You vs Team
+      Then Simulated surplus, Simulated shortage, and Customer forecast error each show You and Team
+      And surplus and shortage use g/customer for both You and Team
+      And customer forecast error uses customers for both You and Team
+      And no coworker names or identifiable peer rows are shown
+
   # ---------------------------------------------------------------------------
   # RESULT AVAILABILITY
   # ---------------------------------------------------------------------------
@@ -174,7 +221,7 @@ Feature: Kitchen staff review their own forecast simulation results
       When the participant opens the Kitchen Staff Dashboard
       Then the dashboard header shows that calendar date
       And the status is "No service today"
-      And Overview explains that no kitchen service is scheduled for this date
+      And the compact current-service header says "No service today" without repeating the status in Overview
       And Progress remains available for earlier completed results
       And yesterday is not presented as today
 
@@ -190,7 +237,7 @@ Feature: Kitchen staff review their own forecast simulation results
       When the participant opens the Kitchen Staff Dashboard
       Then the dashboard header shows that Monday
       And the status is "No service today"
-      And Overview explains that no kitchen service is scheduled for this date
+      And the compact current-service header says "No service today" without repeating the status in Overview
       And Progress remains available
 
     @calendar @service-date @menu
@@ -526,8 +573,11 @@ Feature: Kitchen staff review their own forecast simulation results
   Rule: Other-staff comparison is de-identified and available from one peer onward
 
     Comparison is allowed as soon as ONE other staff result exists.
-    With exactly one other staff member, label the comparison "Other staff", not "median".
-    With two or more other staff, use "Other staff median".
+    The visible label is "Team".
+    With exactly one other staff member, do not describe that figure as a median.
+    With two or more other staff, the team figure is the anonymous median of other staff.
+    The team figure never includes the current participant.
+    Compare the same metric in the same unit (g/customer or customers).
     Never expose peer names or user IDs. Do not suppress comparison because the group is small.
 
     @privacy @peers
@@ -543,15 +593,18 @@ Feature: Kitchen staff review their own forecast simulation results
       And the current participant also has a result
       When other-staff comparison is shown
       Then comparison is available
-      And the comparison column is labelled "Other staff"
+      And the comparison is labelled "Team"
       And the label is not "Other staff median"
-      And the comparison is described as compared with other staff
+      And the copy does not call that single other-staff result a median
+      And the comparison is described as other staff, excluding the participant
 
     @privacy @peers @threshold
     Scenario: Comparison uses other-staff median when two or more peers exist
       Given two or more other participating staff have results for the service date
       When other-staff comparison is shown
-      Then the comparison column is labelled "Other staff median"
+      Then the comparison is labelled "Team"
+      And the copy describes an anonymous median of other staff
+      And that median does not include the current participant
 
     @privacy @peers @metrics
     Scenario: Median of an odd number of other participating staff
@@ -602,3 +655,60 @@ Feature: Kitchen staff review their own forecast simulation results
       And there are no points, composite score, score weights, or penalties
       And there is no "you beat X" competitive framing
       And neutral factual comparison with other staff remains allowed
+
+  Rule: Account changes never retain another participant's results
+
+    @regression @identity @multi-account
+    Scenario: An open dashboard switches from a participating chef to a chef with no forecasts
+      Given the same group feed contains completed forecasts for A and none for B
+      And A is viewing personal History in the open dashboard
+      When INPUT_COLLECTIONS replaces inputCollectionPari.me with B without unmounting the page
+      Then no personal dates or metrics from A remain in Recent, Trends, or History
+      And Overview shows "No forecast results yet."
+      And refreshing B's page preserves that empty personal state
+      And a saved standalone fixture selection is never used as B's identity
+
+    @regression @identity @multi-account
+    Scenario: Changing authenticated identity with the same group activities replaces personal history
+      Given A has a completed forecast on Monday and B has one on Tuesday
+      When the open dashboard receives B's authenticated identity instead of A's
+      Then every personal view contains Tuesday only
+      And losing the authenticated identity clears personal results without a default-user fallback
+
+  Rule: Each participant view has one purpose
+
+    @overview @progress @ux
+    Scenario: Overview owns the comparison and Progress owns the personal archive
+      Given the participant has completed personal results and other staff results
+      When Overview opens
+      Then a compact current-service status precedes the latest personal result
+      And three prominent metrics precede You vs Team for the same service
+      And one concise performance summary describes the visible metrics
+      When the participant opens Recent, Trends, or History
+      Then no Team context footer or Overview result cards are repeated
+      And Recent lists the latest eight personal services newest first without summary cards or a chart
+      And Trends contains period summary metrics, one bounded chart, and meaningful previous-period comparison
+      And History offers from/to dates and a paginated newest-first personal archive
+
+    @availability @progress @identity
+    Scenario: Empty personal views do not display zero performance summary cards
+      Given the authenticated chef has no completed own forecast and closeout pair
+      When the chef opens any personal Progress view
+      Then "No completed forecast results yet." is shown
+      And no personal chart or zero-valued performance summary is shown
+      And group history never substitutes for personal participation
+    @progress @chart @regression
+    Scenario: Several services aggregated into one chart point are not called one service
+      Given the participant has two completed services in the same month
+      When Year aggregates those services into one monthly chart point
+      Then the summary counts two completed services
+      And the chart says one data point is available without claiming a trend
+    @regression @identity @live-incident
+    Scenario: A fresh zero-activity account never inherits another chef's seven historical services
+      Given chef A has eligible forecasts paired with closeouts on 2, 8, 9, 15, 16, and 22 September and 6 October 2026
+      And chef B has no activities
+      When B opens the participant dashboard in a fresh authenticated session on 12 October 2026
+      Then Overview shows "No forecast results yet."
+      And Recent, Trends, and History contain no personal service dates or performance metrics
+      And refreshing the page preserves the empty personal state
+      And the live acceptance check must verify inputCollectionPari.me identifies B rather than A

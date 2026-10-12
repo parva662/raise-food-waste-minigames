@@ -30,7 +30,7 @@ describe('chef results routes', () => {
     setHash('#/chef-results');
     render(<AppRouter />);
     expect(screen.getByTestId('chef-results-participant-page')).toBeInTheDocument();
-    expect(screen.getByText('Kitchen Staff Dashboard')).toBeInTheDocument();
+    expect(screen.getByText('My forecast performance')).toBeInTheDocument();
   });
 
   it('renders management dashboard at #/chef-results-admin', () => {
@@ -63,10 +63,10 @@ describe('participant privacy', () => {
 
   it('displays only current fixture user identifiable summary data', () => {
     render(<AppRouter />);
-    expect(screen.getByTestId('actual-kitchen-outcome-section')).toBeInTheDocument();
-    expect(screen.getByTestId('forecast-impact-section')).toBeInTheDocument();
-    expect(screen.getByTestId('participant-summary-cards')).toBeInTheDocument();
-    expect(screen.getByTestId('category-outcome-visual')).toBeInTheDocument();
+    expect(screen.getByTestId('latest-forecast-result')).toBeInTheDocument();
+    expect(screen.getByTestId('team-comparison-section')).toBeInTheDocument();
+    expect(screen.getByTestId('peer-surplus-you')).toHaveTextContent('g/customer');
+    expect(screen.getByTestId('peer-surplus-median')).toHaveTextContent('g/customer');
     expect(screen.queryByTestId('staff-result-fixture-user-a')).not.toBeInTheDocument();
     expect(screen.queryByTestId('staff-result-fixture-user-b')).not.toBeInTheDocument();
   });
@@ -104,16 +104,13 @@ describe('participant privacy', () => {
     expect(screen.getByTestId('your-progress-section')).toBeInTheDocument();
     expect(screen.getByText(/Your progress/i)).toBeInTheDocument();
     expect(screen.getByRole('tab', { name: 'Recent' })).toHaveAttribute('aria-selected', 'true');
-    expect(screen.getByTestId('progress-recent-chart')).toBeInTheDocument();
+    expect(screen.queryByTestId('progress-recent-chart')).not.toBeInTheDocument();
   });
 
   it('uses participant-facing kitchen progress wording', async () => {
     const user = userEvent.setup();
     render(<AppRouter />);
     await user.click(screen.getByTestId('participant-primary-tab-progress'));
-    expect(screen.getByTestId('kitchen-progress-scope-label')).toHaveTextContent('This week');
-    expect(screen.getByText(/Services completed this week/i)).toBeInTheDocument();
-    expect(screen.getByText('Anonymous team average estimated surplus')).toBeInTheDocument();
     expect(screen.queryByText(/Fixture services/i)).not.toBeInTheDocument();
     expect(screen.queryByText(/Reserved for a future/i)).not.toBeInTheDocument();
     expect(screen.queryByText(/Informational only/i)).not.toBeInTheDocument();

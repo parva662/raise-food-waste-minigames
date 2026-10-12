@@ -11,11 +11,10 @@ export function isDevFixtureToolsEnabled(): boolean {
 }
 
 /**
- * FIXTURE CALCULATION USER — development-only profile for exercising calculation UI.
- * Not the authenticated GameBus actor. See useGameBusAuthenticatedUser() for real identity.
- *
- * Real chef-results integration is blocked on Raoul's future cross-user GameBus endpoint.
- * Authenticated user.id must not be mapped to fixture users until that endpoint exists.
+ * FIXTURE CALCULATION USER — development-only profile for the standalone page.
+ * Not the authenticated GameBus actor. Embedded `#/chef-results` joins
+ * `inputCollectionPari.me.id` to `chefForecast` `activity.actor.id` on the group feed.
+ * Never map an authenticated id onto a fixture user.
  */
 export function getFixtureCurrentUserId(): string {
   if (typeof window === 'undefined') {

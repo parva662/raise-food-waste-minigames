@@ -37,11 +37,13 @@ Two surfaces exist in the current repository:
 - Weekend / explicitly closed weekday → header shows that calendar date with status **No service today**; Progress remains available.
 - Missing menu does not make an operational weekday a non-service day.
 - Historical Progress is independent of the current service waiting / no-forecast / no-service state.
-- Participant Progress (`#/chef-results`): primary tabs **Recent** (last 8 completed services, Recent-only chart), **Trends** (Week / Month / Year calendar views), and **History** (filtered / paged archive). Kitchen-context scope label stays on the kitchen progress block.
+- Participant Overview (`#/chef-results`): compact current-service status in the header, the authenticated chef’s latest completed result (simulated surplus and shortage in g/customer, customer forecast error), then You vs Team for that same service in the same units. Waiting for closeout does not hide an earlier completed personal result.
+- Personal history is only a service where that chef has an eligible `chefForecast` and a matching closeout. Join is `activity.actor.id` to `inputCollectionPari.me.id` on `kitchenGroupInput.activities`. A chef with no own forecast has no personal history. Group results never fill Recent, Trends, or History.
+- Participant Progress: **Recent** (last 8 own services), **Trends** (Week / Month / Year), and **History**. Recent is a compact newest-first list without repeated summary cards or charts. Trends owns period KPIs, one bounded chart and previous-period comparison. History is a date-filtered, paginated archive. No team footer appears in Progress.
 - Progress chart: 0 observations → empty; 1 → show data (no trend claim); 2+ → chart + trend.
-- Other-staff comparison from **one** peer onward; label "Other staff" (1) / "Other staff median" (2+).
+- You vs Team from **one** other staff member onward. Label is "Team". One other staff member is not called a median; two or more use an anonymous median that excludes the participant.
 - Missing forecast is omitted from aggregation (not zero performance).
-- Closeout without personal forecast still shows actual kitchen outcome.
+- Closeout without a personal forecast for that service still shows the actual kitchen outcome for that service, and does not invent personal metrics.
 - Forecast without closeout preserves dashboard structure and may show submitted forecast; metrics pending.
 - Admin partial data must not collapse to a single empty paragraph.
 - Admin keeps its historical service-date selector (not a "today dashboard").

@@ -161,3 +161,70 @@ export function buildParticipantPeerComparisonInsights(
 }
 
 export { formatRate as formatPeerRateGramsPerCustomer };
+
+const RATE_DIFFERENCE_TOLERANCE = 0.05;
+const CUSTOMER_DIFFERENCE_TOLERANCE = 0.5;
+
+/** Like-for-like difference against the anonymous other-staff figure. */
+export function formatComparedWithTeam(
+  you: number | null,
+  team: number | null,
+  unit: 'g/customer' | 'customers',
+): string {
+  if (you === null || team === null) return '—';
+  const delta = you - team;
+  const tolerance = unit === 'customers' ? CUSTOMER_DIFFERENCE_TOLERANCE : RATE_DIFFERENCE_TOLERANCE;
+  if (Math.abs(delta) < tolerance) return 'same as team';
+  const amount = Math.abs(delta).toFixed(1);
+  return delta < 0 ? `${amount} ${unit} lower than team` : `${amount} ${unit} higher than team`;
+}
+
+/**
+ * Auditable sentences from the three visible metrics.
+ * No combined score, rank, or good/bad label.
+ */
+export function buildForecastPerformanceSummary(benchmark: AnonymousPeerBenchmark): string[] {
+  if (!benchmark.canCompare) return [];
+
+  const lines: string[] = [];
+  const youSurplus = benchmark.participantOverproductionRateGramsPerCustomer;
+  const teamSurplus = benchmark.peerOverproductionMedianGramsPerCustomer;
+  const youShortage = benchmark.participantShortageRateGramsPerCustomer;
+  const teamShortage = benchmark.peerShortageMedianGramsPerCustomer;
+
+  if (
+    youSurplus !== null &&
+    teamSurplus !== null &&
+    youShortage !== null &&
+    teamShortage !== null
+  ) {
+    const surplusLower = youSurplus < teamSurplus - RATE_DIFFERENCE_TOLERANCE;
+    const surplusHigher = youSurplus > teamSurplus + RATE_DIFFERENCE_TOLERANCE;
+    const noShortage = youShortage <= RATE_DIFFERENCE_TOLERANCE;
+    const shortageHigher = youShortage > teamShortage + 0.1;
+    const shortageLower = youShortage < teamShortage - 0.1;
+
+    if (surplusLower && noShortage) {
+      lines.push('Lower simulated surplus than the team, with no simulated shortage.');
+    } else if (surplusLower && shortageHigher) {
+      lines.push('Lower surplus, but higher shortage than the team.');
+    } else if (surplusLower && shortageLower) {
+      lines.push('Lower simulated surplus and lower simulated shortage than the team.');
+    } else if (surplusLower) {
+      lines.push('Lower simulated surplus than the team.');
+    } else if (surplusHigher && shortageLower) {
+      lines.push('Higher simulated surplus than the team, with lower simulated shortage.');
+    } else if (surplusHigher) {
+      lines.push('Higher simulated surplus than the team.');
+    }
+  }
+
+  const customerDelta = benchmark.participantCustomerError - benchmark.peerCustomerErrorMedian;
+  if (customerDelta < -CUSTOMER_DIFFERENCE_TOLERANCE) {
+    lines.push('Customer estimate was closer to actual demand than the team result.');
+  } else if (customerDelta > CUSTOMER_DIFFERENCE_TOLERANCE) {
+    lines.push('Customer estimate was further from actual demand than the team result.');
+  }
+
+  return lines;
+}

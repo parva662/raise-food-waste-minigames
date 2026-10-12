@@ -82,8 +82,8 @@ describe('participant dashboard midnight and no-service UX', () => {
     expect(screen.getByTestId('dashboard-status-chip')).toHaveTextContent('No service today');
 
     await user.click(screen.getByTestId('participant-primary-tab-overview'));
-    expect(screen.getByTestId('participant-no-service-day')).toHaveTextContent(
-      /No kitchen service is scheduled for this date/,
+    expect(screen.getByTestId('dashboard-status-chip')).toHaveTextContent(
+      /No service today/,
     );
 
     await user.click(screen.getByTestId('participant-primary-tab-progress'));
@@ -105,7 +105,7 @@ describe('participant dashboard midnight and no-service UX', () => {
       /Monday, 17 August 2026/,
     );
     expect(screen.getByTestId('dashboard-status-chip')).not.toHaveTextContent('No service today');
-    expect(screen.queryByTestId('participant-no-service-day')).not.toBeInTheDocument();
+    expect(screen.getByTestId('dashboard-status-chip')).toHaveTextContent('Waiting for service closeout');
   });
 
   it('shows No service today for an explicitly closed weekday', () => {
@@ -117,6 +117,6 @@ describe('participant dashboard midnight and no-service UX', () => {
       /Monday, 7 September 2026/,
     );
     expect(screen.getByTestId('dashboard-status-chip')).toHaveTextContent('No service today');
-    expect(screen.getByTestId('participant-no-service-day')).toBeInTheDocument();
+    expect(screen.getByTestId('dashboard-status-chip')).toBeInTheDocument();
   });
 });

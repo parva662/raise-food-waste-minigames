@@ -37,13 +37,10 @@ export function DashboardHeader({ serviceDate, status }: DashboardHeaderProps) {
     <header className="kitchen-mgmt-header chef-results-dashboard-header" data-testid="dashboard-header">
       <div className="kitchen-mgmt-header__main chef-results-dashboard-header__main">
         <h1 className="kitchen-mgmt-header__title chef-results-dashboard-header__title">
-          Kitchen Staff Dashboard
+          My forecast performance
         </h1>
-        <p className="kitchen-mgmt-header__lead chef-results-dashboard-header__lead">
-          See your latest service result and how your forecasting changes over time.
-        </p>
         <p className="chef-results-dashboard-header__caveat">
-          Forecast feedback is estimated — not waste personally attributed to you.
+          Forecast simulation · surplus, shortage and customer error
         </p>
       </div>
 
@@ -52,7 +49,7 @@ export function DashboardHeader({ serviceDate, status }: DashboardHeaderProps) {
         data-testid="participant-results-header"
       >
         <div className="chef-results-dashboard-header__meta-block">
-          <span className="kitchen-mgmt-date-picker__title">Service date</span>
+          <span className="kitchen-mgmt-date-picker__title">Current service</span>
           <p className="chef-results-dashboard-header__date-value" data-testid="dashboard-calendar-date">
             {formatServiceDateLong(serviceDate)}
           </p>

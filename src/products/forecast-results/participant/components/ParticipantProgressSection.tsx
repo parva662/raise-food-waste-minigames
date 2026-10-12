@@ -1,10 +1,6 @@
 import { useCallback, useMemo, useState, type KeyboardEvent } from 'react';
 import { formatServiceDateLong } from '@/products/forecast-results/displayFormat';
-import type { KitchenProgressSummary } from '@/products/forecast-results/adapters/groupCalculationSource';
-import { formatGrams } from '@/products/forecast-results/useForecastResultsData';
 import {
-  aggregateCustomerWeightedRates,
-  buildDailyServiceChartBuckets,
   buildParticipantProgressPeriodView,
   filterParticipantProgressHistory,
   formatCustomerError,
@@ -20,13 +16,9 @@ import {
   type ProgressPeriodView,
   type ParticipantProgressServicePoint,
 } from '@/products/forecast-results/calculations/participantProgressData';
-import { KitchenProgressSection } from '@/products/forecast-results/participant/components/KitchenProgressSection';
-
 interface ParticipantProgressSectionProps {
   servicePoints: readonly ParticipantProgressServicePoint[];
   asOfServiceDate: string;
-  kitchenProgress?: KitchenProgressSummary | null;
-  teamSurplusGramsByDate?: ReadonlyMap<string, number>;
 }
 
 type ProgressViewTab = 'recent' | 'trends' | 'history';
@@ -79,11 +71,11 @@ function ProgressTrendChart({
   return (
     <figure className="kitchen-mgmt-chart chef-results-progress-chart" data-testid={testId}>
       <figcaption className="kitchen-mgmt-chart__caption">
-        {showTrend ? caption : 'Completed service'}
+        {showTrend ? caption : 'Available data'}
       </figcaption>
       {!showTrend ? (
         <p className="kitchen-mgmt-snapshot-hint" data-testid="progress-chart-single-point-note">
-          One completed service is shown. Trend comparison appears after a second completed service.
+          One data point is available. More periods are needed to show a trend.
         </p>
       ) : null}
       <div className="kitchen-mgmt-chart-legend" data-testid="progress-chart-legend">
@@ -259,16 +251,13 @@ function PreviousPeriodCard({ period }: { period: ProgressPeriodView }) {
   );
 }
 
-function RecentServiceRow({
-  point,
-  teamSurplusGrams,
-}: {
-  point: ParticipantProgressServicePoint;
-  teamSurplusGrams?: number;
-}) {
+function RecentServiceRow({ point }: { point: ParticipantProgressServicePoint }) {
   return (
-    <details className="chef-results-progress-history-row" data-testid={`progress-recent-row-${point.serviceDate}`}>
-      <summary>
+    <div
+      className="chef-results-progress-history-row"
+      data-testid={`progress-recent-row-${point.serviceDate}`}
+    >
+      <div className="chef-results-progress-history-row__line">
         <span className="chef-results-progress-history-row__date">
           {formatServiceDateLong(point.serviceDate)}
         </span>
@@ -279,25 +268,15 @@ function RecentServiceRow({
         <span className="chef-results-progress-history-row__meta">
           Error {formatCustomerError(point.customerForecastAbsoluteError)}
         </span>
-      </summary>
-      <div className="chef-results-progress-history-row__body">
-        <p className="kitchen-mgmt-snapshot-hint">
-          Actual customers: {point.actualCustomers}
-          {teamSurplusGrams != null
-            ? ` · Anonymous team avg surplus ${formatGrams(teamSurplusGrams)}`
-            : ''}
-        </p>
       </div>
-    </details>
+    </div>
   );
 }
 
 function HistoryPanel({
   servicePoints,
-  teamSurplusGramsByDate,
 }: {
   servicePoints: readonly ParticipantProgressServicePoint[];
-  teamSurplusGramsByDate: ReadonlyMap<string, number>;
 }) {
   const [fromDate, setFromDate] = useState('');
   const [toDate, setToDate] = useState('');
@@ -313,9 +292,6 @@ function HistoryPanel({
   return (
     <section className="kitchen-mgmt-surface" data-testid="progress-history-panel">
       <h4 className="kitchen-mgmt-surface__subtitle">History</h4>
-      <p className="kitchen-mgmt-snapshot-hint">
-        Browse earlier completed services. Charts in Recent and Trends stay bounded.
-      </p>
 
       <div className="chef-results-progress-history-filters">
         <label className="chef-results-progress-history-filters__field">
@@ -353,10 +329,7 @@ function HistoryPanel({
           <ul className="chef-results-progress-history-list" data-testid="progress-history-list">
             {pageItems.map((point) => (
               <li key={point.serviceDate}>
-                <RecentServiceRow
-                  point={point}
-                  teamSurplusGrams={teamSurplusGramsByDate.get(point.serviceDate)}
-                />
+                <RecentServiceRow point={point} />
               </li>
             ))}
           </ul>
@@ -394,8 +367,6 @@ function HistoryPanel({
 export function ParticipantProgressSection({
   servicePoints,
   asOfServiceDate,
-  kitchenProgress = null,
-  teamSurplusGramsByDate = new Map(),
 }: ParticipantProgressSectionProps) {
   const [viewTab, setViewTab] = useState<ProgressViewTab>('recent');
   const [trendTab, setTrendTab] = useState<ProgressPeriodTab>('week');
@@ -408,17 +379,6 @@ export function ParticipantProgressSection({
     () => takeRecentParticipantProgressPoints(servicePoints),
     [servicePoints],
   );
-  const recentSummary = useMemo(
-    () => aggregateCustomerWeightedRates(recentPoints),
-    [recentPoints],
-  );
-  const recentChartBuckets = useMemo(() => {
-    const chronological = [...recentPoints].sort((left, right) =>
-      left.serviceDate.localeCompare(right.serviceDate),
-    );
-    return buildDailyServiceChartBuckets(chronological);
-  }, [recentPoints]);
-
   const activeTrendPeriod = useMemo(
     () => buildParticipantProgressPeriodView(servicePoints, trendTab, asOfServiceDate),
     [asOfServiceDate, servicePoints, trendTab],
@@ -469,16 +429,13 @@ export function ParticipantProgressSection({
   return (
     <section className="participant-progress-tab" data-testid="your-progress-section">
       <h3 className="kitchen-mgmt-surface__title">Your progress</h3>
-      <p className="kitchen-mgmt-snapshot-hint">
-        Recent completed services first, calendar trends when you need context, and history on demand.
-      </p>
+      <p className="kitchen-mgmt-snapshot-hint">How is my forecasting changing over time?</p>
 
       {!hasAnyHistory ? (
         <div className="kitchen-mgmt-surface" data-testid="progress-global-empty">
-          <p>Your progress will build over time.</p>
+          <p>No completed forecast results yet.</p>
           <p className="kitchen-mgmt-snapshot-hint">
-            After you submit forecasts and those services are closed, Recent, Trends, and History will
-            appear here.
+            Your results appear after your forecast and its service closeout are recorded.
           </p>
         </div>
       ) : null}
@@ -517,44 +474,17 @@ export function ParticipantProgressSection({
         className="participant-progress-panel"
         data-testid={`progress-view-panel-${viewTab}`}
       >
-        {viewTab === 'recent' ? (
+        {hasAnyHistory && viewTab === 'recent' ? (
           <div data-testid="progress-recent-panel">
             <p className="kitchen-mgmt-snapshot-hint" data-testid="progress-recent-label">
               {recentCompletedServicesLabel(recentPoints)}
             </p>
-            <PeriodSummaryKpis
-              summary={{
-                ...recentSummary,
-                buckets: recentChartBuckets,
-                comparison: {
-                  overproductionMessage: null,
-                  shortageMessage: null,
-                  noPreviousPeriodMessage: null,
-                  surplusComparison: null,
-                  shortageComparison: null,
-                  customerErrorComparison: null,
-                  interpretationMessage: null,
-                },
-              }}
-              rangeLabel={recentCompletedServicesLabel(recentPoints)}
-              title="Recent summary"
-              testId="progress-recent-summary"
-            />
-            <ProgressTrendChart
-              buckets={recentChartBuckets}
-              latestServiceDate={recentPoints[0]?.serviceDate ?? null}
-              testId="progress-recent-chart"
-              caption="Recent daily trend"
-            />
             <section className="kitchen-mgmt-surface">
               <h4 className="kitchen-mgmt-surface__subtitle">Recent services</h4>
               <ul className="chef-results-progress-history-list" data-testid="progress-recent-list">
                 {recentPoints.map((point) => (
                   <li key={point.serviceDate}>
-                    <RecentServiceRow
-                      point={point}
-                      teamSurplusGrams={teamSurplusGramsByDate.get(point.serviceDate)}
-                    />
+                    <RecentServiceRow point={point} />
                   </li>
                 ))}
               </ul>
@@ -562,7 +492,7 @@ export function ParticipantProgressSection({
           </div>
         ) : null}
 
-        {viewTab === 'trends' ? (
+        {hasAnyHistory && viewTab === 'trends' ? (
           <div data-testid="progress-trends-panel">
             <div
               className="kitchen-mgmt-tabs chef-results-progress-tabs"
@@ -621,15 +551,8 @@ export function ParticipantProgressSection({
           </div>
         ) : null}
 
-        {viewTab === 'history' ? (
-          <HistoryPanel
-            servicePoints={servicePoints}
-            teamSurplusGramsByDate={teamSurplusGramsByDate}
-          />
-        ) : null}
+        {hasAnyHistory && viewTab === 'history' ? <HistoryPanel servicePoints={servicePoints} /> : null}
       </div>
-
-      {kitchenProgress ? <KitchenProgressSection progress={kitchenProgress} /> : null}
     </section>
   );
 }

@@ -1,21 +1,23 @@
 import type { DailyServiceResults, StaffDailyResult, ObservedServiceReality } from '@/products/forecast-results/types';
 import type { ChefForecastForCalculation } from '@/products/forecast-results/types';
-import type { AnonymousPeerBenchmark, ParticipantPeerComparisonInsight } from '@/products/forecast-results/calculations/teamComparison';
+import type { AnonymousPeerBenchmark } from '@/products/forecast-results/calculations/teamComparison';
+import { buildForecastPerformanceSummary } from '@/products/forecast-results/calculations/teamComparison';
+import {
+  formatCustomerError,
+  formatGramsPerCustomer,
+} from '@/products/forecast-results/calculations/participantProgressData';
+import { formatServiceDateLong } from '@/products/forecast-results/displayFormat';
 import { ActualKitchenOutcomeSection } from '@/products/forecast-results/participant/components/ActualKitchenOutcomeSection';
-import { CategoryDetailPanel } from '@/products/forecast-results/participant/components/CategoryDetailPanel';
-import { CategoryOutcomeVisual } from '@/products/forecast-results/participant/components/CategoryOutcomeVisual';
-import { ForecastImpactSection } from '@/products/forecast-results/participant/components/ForecastImpactSection';
 import { TeamComparisonSection } from '@/products/forecast-results/participant/components/TeamComparisonSection';
 
 interface ParticipantOverviewSectionProps {
-  resultsReady: boolean;
   hasCloseout: boolean;
   isServiceDay: boolean;
   ownResult: StaffDailyResult | null;
+  latestOwnResult: StaffDailyResult | null;
   dailyResults: DailyServiceResults | null;
   pendingForecast: ChefForecastForCalculation | null;
-  peerBenchmark: AnonymousPeerBenchmark | null;
-  peerInsights: ParticipantPeerComparisonInsight | null;
+  latestPeerBenchmark: AnonymousPeerBenchmark | null;
 }
 
 function PendingForecastSummary({ forecast }: { forecast: ChefForecastForCalculation }) {
@@ -47,76 +49,94 @@ function PendingForecastSummary({ forecast }: { forecast: ChefForecastForCalcula
   );
 }
 
-export function ParticipantOverviewSection({
-  resultsReady,
-  hasCloseout,
-  isServiceDay,
-  ownResult,
-  dailyResults,
-  pendingForecast,
-  peerBenchmark,
-  peerInsights,
-}: ParticipantOverviewSectionProps) {
-  const observed: ObservedServiceReality | null = dailyResults?.observed ?? null;
-
-  if (!isServiceDay) {
+function LatestForecastResult({ result }: { result: StaffDailyResult | null }) {
+  if (!result) {
     return (
-      <div className="participant-overview" data-testid="participant-overview-tab">
-        <div className="kitchen-mgmt-surface" data-testid="participant-no-service-day">
-          <p className="kitchen-mgmt-snapshot-message">No kitchen service is scheduled for this date.</p>
-          <p className="kitchen-mgmt-snapshot-hint">
-            You can still review your previous results in Progress.
-          </p>
-        </div>
-      </div>
+      <section className="kitchen-mgmt-surface" data-testid="latest-forecast-empty">
+        <h3 className="kitchen-mgmt-surface__title">Latest Forecast Result</h3>
+        <p>No forecast results yet.</p>
+      </section>
     );
   }
 
+  const surplus =
+    result.actualCustomers > 0
+      ? result.totalSimulatedOverproductionGrams / result.actualCustomers
+      : null;
+  const shortage =
+    result.actualCustomers > 0
+      ? result.totalSimulatedShortageGrams / result.actualCustomers
+      : null;
+
+  return (
+    <section className="kitchen-mgmt-surface" data-testid="latest-forecast-result">
+      <h3 className="kitchen-mgmt-surface__title">Latest Forecast Result</h3>
+      <p className="kitchen-mgmt-snapshot-hint" data-testid="latest-forecast-date">
+        {formatServiceDateLong(result.serviceDate)}
+      </p>
+      <dl className="chef-results-latest-metrics">
+        <div>
+          <dt>Simulated surplus</dt>
+          <dd data-testid="latest-surplus">{formatGramsPerCustomer(surplus)}</dd>
+        </div>
+        <div>
+          <dt>Simulated shortage</dt>
+          <dd data-testid="latest-shortage">{formatGramsPerCustomer(shortage)}</dd>
+        </div>
+        <div>
+          <dt>Customer forecast error</dt>
+          <dd data-testid="latest-customer-error">
+            {formatCustomerError(result.customerForecastAbsoluteError)}
+          </dd>
+        </div>
+      </dl>
+    </section>
+  );
+}
+
+export function ParticipantOverviewSection({
+  hasCloseout,
+  isServiceDay,
+  ownResult,
+  latestOwnResult,
+  dailyResults,
+  pendingForecast,
+  latestPeerBenchmark,
+}: ParticipantOverviewSectionProps) {
+  const observed: ObservedServiceReality | null = dailyResults?.observed ?? null;
+  const performanceSummary =
+    latestPeerBenchmark !== null ? buildForecastPerformanceSummary(latestPeerBenchmark) : [];
+
   return (
     <div className="participant-overview" data-testid="participant-overview-tab">
-      {resultsReady && !hasCloseout ? (
-        <div className="kitchen-mgmt-surface" data-testid="participant-results-unavailable-closeout">
-          <p className="kitchen-mgmt-snapshot-message">Waiting for service closeout</p>
-          <p className="kitchen-mgmt-snapshot-hint">
-            Result-dependent metrics for this service date will appear after the kitchen closeout is
-            recorded. Your earlier Progress history stays available.
-          </p>
-        </div>
+      <LatestForecastResult result={latestOwnResult} />
+
+      {latestOwnResult && latestPeerBenchmark ? (
+        <TeamComparisonSection participant={latestOwnResult} benchmark={latestPeerBenchmark} />
       ) : null}
 
-      {resultsReady && !hasCloseout && pendingForecast ? (
-        <PendingForecastSummary forecast={pendingForecast} />
+      {latestOwnResult && performanceSummary.length > 0 ? (
+        <section
+          className="kitchen-mgmt-surface chef-results-performance-summary"
+          data-testid="forecast-performance-summary"
+        >
+          <h3 className="kitchen-mgmt-surface__title">Performance Summary</h3>
+          <p data-testid="performance-summary-text">{performanceSummary.join(' ')}</p>
+        </section>
       ) : null}
 
-      {resultsReady && hasCloseout && !ownResult ? (
-        <div className="kitchen-mgmt-surface" data-testid="participant-no-forecast-result">
-          <p className="kitchen-mgmt-snapshot-message">No forecast for this service</p>
-          <p className="kitchen-mgmt-snapshot-hint">
-            You did not submit a valid forecast for this service date, so personal simulated
-            comparison is unavailable. The actual kitchen outcome is still shown below.
-          </p>
-        </div>
+      {isServiceDay && !hasCloseout && pendingForecast ? (
+        <details className="forecast-service-details">
+          <summary>Your submitted forecast</summary>
+          <PendingForecastSummary forecast={pendingForecast} />
+        </details>
       ) : null}
 
-      {ownResult && dailyResults ? (
-        <>
-          <ForecastImpactSection result={ownResult} observed={dailyResults.observed} />
-          <ActualKitchenOutcomeSection observed={dailyResults.observed} />
-          <section className="kitchen-mgmt-surface participant-menu-section">
-            <CategoryOutcomeVisual result={ownResult} />
-            <CategoryDetailPanel result={ownResult} />
-          </section>
-        </>
-      ) : null}
-
-      {!ownResult && observed ? <ActualKitchenOutcomeSection observed={observed} /> : null}
-
-      {ownResult && peerBenchmark && peerInsights ? (
-        <TeamComparisonSection
-          participant={ownResult}
-          benchmark={peerBenchmark}
-          insights={peerInsights}
-        />
+      {isServiceDay && hasCloseout && !ownResult && observed ? (
+        <details className="forecast-service-details">
+          <summary>Current service · actual kitchen outcome</summary>
+          <ActualKitchenOutcomeSection observed={observed} />
+        </details>
       ) : null}
     </div>
   );

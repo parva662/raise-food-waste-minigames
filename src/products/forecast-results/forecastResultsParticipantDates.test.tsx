@@ -139,9 +139,13 @@ describe('canonical participant results in embedded mode', () => {
     render(<ForecastResultsParticipantApp />);
 
     expect(screen.queryByTestId('chef-results-date-select')).not.toBeInTheDocument();
-    expect(screen.getByTestId('participant-no-forecast-result')).toHaveTextContent(
+    expect(screen.getByTestId('dashboard-status-chip')).toHaveTextContent(
       'No forecast for this service',
     );
+    expect(screen.getByTestId('actual-kitchen-outcome-section')).toBeInTheDocument();
+    expect(screen.getByTestId('latest-forecast-result')).toBeInTheDocument();
+    expect(screen.getByTestId('latest-forecast-date')).toHaveTextContent(/2 September 2026/);
+    expect(screen.getByTestId('participant-results-header')).toHaveTextContent(/7 September 2026/);
     expect(screen.queryByText('34.27 kg')).not.toBeInTheDocument();
     expect(screen.queryByTestId('forecast-impact-section')).not.toBeInTheDocument();
   });
@@ -159,11 +163,12 @@ describe('canonical participant results in embedded mode', () => {
     const user = userEvent.setup();
     render(<ForecastResultsParticipantApp />);
 
-    expect(screen.getByTestId('participant-results-unavailable-closeout')).toHaveTextContent(
+    expect(screen.getByTestId('dashboard-status-chip')).toHaveTextContent(
       'Waiting for service closeout',
     );
+    expect(screen.getByTestId('latest-forecast-empty')).toHaveTextContent('No forecast results yet.');
     await user.click(screen.getByTestId('participant-primary-tab-progress'));
-    expect(screen.getByTestId('kitchen-progress-section')).toBeInTheDocument();
+    expect(screen.queryByTestId('kitchen-progress-section')).not.toBeInTheDocument();
     expect(screen.queryByTestId('team-comparison-section')).not.toBeInTheDocument();
   });
 
@@ -180,9 +185,12 @@ describe('canonical participant results in embedded mode', () => {
     );
     render(<ForecastResultsParticipantApp />);
 
-    expect(screen.getByTestId('participant-no-forecast-result')).toHaveTextContent(
+    expect(screen.getByTestId('dashboard-status-chip')).toHaveTextContent(
       'No forecast for this service',
     );
+    expect(screen.getByTestId('latest-forecast-empty')).toHaveTextContent('No forecast results yet.');
+    expect(screen.getByTestId('actual-kitchen-outcome-section')).toBeInTheDocument();
+    expect(screen.queryByText('Coworker Chef')).not.toBeInTheDocument();
     expect(screen.queryByTestId('forecast-impact-section')).not.toBeInTheDocument();
   });
 
@@ -210,11 +218,13 @@ describe('canonical participant results in embedded mode', () => {
       /Monday, 7 September 2026/,
     );
     expect(screen.queryByTestId('chef-results-date-select')).not.toBeInTheDocument();
-    expect(screen.getByTestId('forecast-impact-section')).toBeInTheDocument();
+    expect(screen.getByTestId('latest-forecast-result')).toBeInTheDocument();
     expect(screen.getByTestId('team-comparison-section')).toBeInTheDocument();
+    expect(screen.getByTestId('peer-surplus-you')).toHaveTextContent('g/customer');
+    expect(screen.getByTestId('peer-surplus-median')).toHaveTextContent('g/customer');
     expect(screen.queryByText('Coworker Chef')).not.toBeInTheDocument();
     await user.click(screen.getByTestId('participant-primary-tab-progress'));
-    expect(screen.getByTestId('kitchen-progress-section')).toBeInTheDocument();
+    expect(screen.queryByTestId('kitchen-progress-section')).not.toBeInTheDocument();
   });
 
   it('never pairs a Sep 8 forecast with a Sep 7 closeout', () => {
@@ -230,7 +240,8 @@ describe('canonical participant results in embedded mode', () => {
     );
     render(<ForecastResultsParticipantApp />);
 
-    expect(screen.getByTestId('participant-no-forecast-result')).toBeInTheDocument();
+    expect(screen.getByTestId('dashboard-status-chip')).toBeInTheDocument();
+    expect(screen.getByTestId('latest-forecast-empty')).toHaveTextContent('No forecast results yet.');
     expect(screen.queryByTestId('forecast-impact-section')).not.toBeInTheDocument();
   });
 
@@ -258,8 +269,8 @@ describe('canonical participant results in embedded mode', () => {
     );
     render(<ForecastResultsParticipantApp />);
 
-    expect(screen.getByTestId('customer-estimate-predicted')).toHaveTextContent('142');
-    expect(screen.getByTestId('customer-estimate-predicted')).not.toHaveTextContent('100');
+    expect(screen.getByTestId('latest-customer-error')).toHaveTextContent('2.0 customers');
+    expect(screen.getByTestId('latest-customer-error')).not.toHaveTextContent('40.0');
   });
 
   it('resolves the same canonical date for every authenticated staff account', () => {

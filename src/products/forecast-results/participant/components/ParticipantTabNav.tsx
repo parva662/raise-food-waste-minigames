@@ -35,7 +35,6 @@ export function ParticipantTabNav({ activeTab, onTabChange, children }: Particip
 
   return (
     <div className="kitchen-mgmt-forecasting" data-testid="participant-forecasting">
-      <h2 className="kitchen-mgmt-module-title">Forecasting</h2>
 
       <div
         className="kitchen-mgmt-primary-tabs"
