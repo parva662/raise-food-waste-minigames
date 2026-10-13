@@ -49,7 +49,7 @@ Exact stored properties: slug contract. Module intent: [`TRIM_SMART.md`](TRIM_SM
 
 | Surface | Product rule | Feed (reference) |
 |---------|--------------|------------------|
-| Student challenge + Session Review + Progress | Show Trim / Reuse / Portion before any tutor review | `kitchenGroupInputSelf` → `GET /api/me/activities` |
+| Student challenge + Session Review + Progress | Show Trim / Reuse / Portion before any tutor review; Progress keeps only `actor.id ===` authenticated `me.id` | `kitchenGroupInputSelf` → `GET /api/me/activities` |
 | Student Progress anonymous peers | Anonymous aggregate only; never raw peer activities. Blocked until a verified privacy-safe GameBus projection exists | none (do not attach trainer-style `/api/groups/activities`) |
 | Tutor dashboard | Staff → sessions → modules; one optional assessment per completed module | `kitchenSkillsTrainerInput` (Kitchen Skills templates only) |
 | Forecast / closeout | Out of scope for this product | `kitchenGroupInput` — **do not** reuse for Kitchen Skills |

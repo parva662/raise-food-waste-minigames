@@ -7,6 +7,7 @@ describe('Progress self-feed review diagnostic', () => {
     const activities = [
       {
         id: 'trim-1',
+        actor: { id: 'user-1', name: 'Student One' },
         template: { slug: 'trimSmart' },
         properties: [
           { template: { slug: 'sessionId' }, value: { value: 's1' } },
@@ -23,6 +24,7 @@ describe('Progress self-feed review diagnostic', () => {
       },
       {
         id: 'review-ok',
+        actor: { id: 'user-1', name: 'Student One' },
         template: { slug: 'wastePracticeReview' },
         properties: [
           { template: { slug: 'sessionId' }, value: { value: 's1' } },
@@ -35,6 +37,7 @@ describe('Progress self-feed review diagnostic', () => {
       },
       {
         id: 'review-bad',
+        actor: { id: 'user-1', name: 'Student One' },
         template: { slug: 'wastePracticeReview' },
         properties: [
           { template: { slug: 'sessionId' }, value: { value: 's1' } },
@@ -45,7 +48,10 @@ describe('Progress self-feed review diagnostic', () => {
         ],
       },
     ];
-    const sessions = buildKitchenSkillsStudentProgressSessions(activities);
+    const sessions = buildKitchenSkillsStudentProgressSessions(activities, {
+      actorId: 'user-1',
+      actorName: 'Student One',
+    });
     const summary = summarizeKitchenSkillsSelfFeedReviews(activities, sessions);
     expect(summary.wastePracticeReviewCount).toBe(2);
     expect(summary.parsedReviewCount).toBe(1);

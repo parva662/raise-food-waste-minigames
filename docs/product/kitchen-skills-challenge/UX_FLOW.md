@@ -49,7 +49,7 @@ Do not send EXIT after Portion, Trim, Reuse, or Add more ingredients. Tutor revi
 
 ## 5. Retrieval (product rules)
 
-- **Student challenge / Progress:** `kitchenGroupInputSelf` — self-scoped; do not require `activity.actor.id === me.id`. Progress does not wait for tutor review.
+- **Student challenge / Progress:** `kitchenGroupInputSelf`. Progress requires `activity.actor.id ===` authenticated `me.id` (fail closed if identity is missing or actor is foreign/absent). Progress does not wait for tutor review.
 - **Student Progress peers:** blocked until a privacy-safe anonymous aggregate exists. Do not attach trainer-style `GET /api/groups/activities`. Until then: “Not enough peer data yet”.
 - **Trainer feedback:** `kitchenSkillsTrainerInput` — do not reuse `kitchenGroupInput`.
 - After a silent post, local session state is enough for the next step; later self activities merge and dedupe with local records.

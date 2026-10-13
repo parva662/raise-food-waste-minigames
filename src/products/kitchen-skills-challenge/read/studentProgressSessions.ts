@@ -15,31 +15,43 @@ import {
 /**
  * Group the authenticated student's own Kitchen Skills activities by session.
  * Used by Student Progress from `kitchenGroupInputSelf.activities` (`GET /api/me/activities`).
- * Self-scoped: do not require `activity.actor.id`, and do not wait for `wastePracticeReview`.
+ *
+ * Identity isolation: `/api/me/activities` is not a trust boundary for `activity.actor.id`.
+ * Only activities whose `actor.id` equals the authenticated GameBus user are attributed.
+ * Missing authenticated identity or missing/foreign `actor.id` fail closed (no personal history).
+ *
+ * Tutor `wastePracticeReview` rows are included when `actor.id` is the student being reviewed
+ * (on-behalf posts set actor to the student; `createdBy` may be the tutor).
  */
 export function buildKitchenSkillsStudentProgressSessions(
   activities: readonly unknown[],
   identity: { actorId?: string | null; actorName?: string | null } = {},
 ): KitchenSkillsTrainerSession[] {
-  const fallbackActorId = identity.actorId && identity.actorId.length > 0 ? identity.actorId : 'self';
-  const fallbackActorName =
-    identity.actorName && identity.actorName.length > 0 ? identity.actorName : fallbackActorId;
+  const authenticatedActorId =
+    typeof identity.actorId === 'string' && identity.actorId.trim().length > 0
+      ? identity.actorId.trim()
+      : null;
+  if (!authenticatedActorId) {
+    return [];
+  }
+
+  const authenticatedActorName =
+    typeof identity.actorName === 'string' && identity.actorName.trim().length > 0
+      ? identity.actorName.trim()
+      : authenticatedActorId;
+
+  const ownedActivities = activities.filter(
+    (activity) => readActivityActorId(activity) === authenticatedActorId,
+  );
+
   const sessions = new Map<string, KitchenSkillsTrainerSession>();
 
   const ensure = (activity: unknown, sessionId: string, sessionDate: string) => {
     const existing = sessions.get(sessionId);
-    if (existing) {
-      const actorId = readActivityActorId(activity);
-      if (actorId && existing.actorId === fallbackActorId) {
-        existing.actorId = actorId;
-        existing.actorName = readActivityActorName(activity) ?? existing.actorName;
-      }
-      return existing;
-    }
-    const actorId = readActivityActorId(activity) ?? fallbackActorId;
+    if (existing) return existing;
     const created: KitchenSkillsTrainerSession = {
-      actorId,
-      actorName: readActivityActorName(activity) ?? fallbackActorName,
+      actorId: authenticatedActorId,
+      actorName: readActivityActorName(activity) ?? authenticatedActorName,
       sessionId,
       sessionDate,
       trimEntries: [],
@@ -51,7 +63,7 @@ export function buildKitchenSkillsStudentProgressSessions(
     return created;
   };
 
-  for (const activity of activities) {
+  for (const activity of ownedActivities) {
     const trim = parsePersistedTrimEntry(activity);
     if (trim) {
       const session = ensure(activity, trim.sessionId, trim.sessionDate);
@@ -71,16 +83,13 @@ export function buildKitchenSkillsStudentProgressSessions(
     }
   }
 
-  for (const activity of activities) {
+  for (const activity of ownedActivities) {
     const review = parsePersistedReviewEntry(activity);
     if (!review) continue;
-    // Ensure a session shell exists so a persisted review still surfaces when
-    // evidence for that sessionId is missing/unparseable in the same self feed.
+    // Review-only session shell: still requires actor.id === authenticated student.
     ensure(activity, review.sessionId, review.sessionDate);
-    // Self Progress is one student; sessions are keyed by sessionId. Actor ids on
-    // evidence vs review can disagree (fallback "self" vs real actor), so match by session only.
     attachModuleReviewToMatchingSessions(sessions.values(), activity, review, {
-      requireActorMatch: false,
+      requireActorMatch: true,
     });
   }
 
