@@ -36,7 +36,7 @@ Do not reuse `kitchenGroupInput` (that collection is `chefForecast` / `wasteMeas
 ## Client rules
 
 - Embedded Kitchen Day waits for a valid TASK **and** `inputCollectionPari.me`, then locks `sessionId` / `sessionDate` once. Later TASK or INPUT_COLLECTIONS refreshes cannot replace them.
-- Embedded student hydration and Student Progress use `getRawKitchenSelfActivitiesInput` (no actor-id equality filter).
+- Embedded student hydration uses `getRawKitchenSelfActivitiesInput` scoped by the locked `sessionId`. Student Progress uses the same feed but keeps only activities whose `activity.actor.id` equals authenticated `inputCollectionPari.me.id` (fail closed when identity is missing).
 - Embedded trainer listing and persisted tutor reviews use `getRawKitchenSkillsTrainerActivitiesInput`. Do not read `kitchenGroupInput` on Kitchen Skills trainer.
 - Builders call `selectKitchenSkillsActivityTemplate(task, slug)` and fail if any of the three templates is missing.
 - Review builders call `selectWastePracticeReviewTemplate(task)` and fail if `wastePracticeReview` is missing.

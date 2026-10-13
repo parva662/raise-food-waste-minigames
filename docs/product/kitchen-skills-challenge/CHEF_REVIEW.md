@@ -45,7 +45,7 @@ Neither posts measurement activities. Progress does not invent ranking or an ove
 
 | Who | Product rule | Feed |
 |-----|--------------|------|
-| Student | Progress shows Trim / Reuse / Portion before tutor review exists; attach reviews by `sessionId` + `reviewedGame` (no actor-id equality required) | `kitchenGroupInputSelf` |
+| Student | Progress shows Trim / Reuse / Portion before tutor review exists; keep only activities whose `actor.id` matches the authenticated user; attach reviews by `sessionId` + `reviewedGame` for that same actor | `kitchenGroupInputSelf` |
 | Student Progress peers | Anonymous aggregate only. Raw peer activities, identities, reviews, and chef feedback must never reach the participant client. Blocked until a verified privacy-safe GameBus projection exists; UI shows “Not enough peer data yet”. Do not attach trainer-style `GET /api/groups/activities` | none |
 | Tutor | Group by actor; actor match when attaching reviews | `kitchenSkillsTrainerInput` |
 | Session Review | May hydrate reviews from both self and trainer feeds (dedupe) | both |

@@ -50,7 +50,7 @@ describe('Kitchen Day page split', () => {
     expect(screen.queryByTestId('kitchen-day-tutor-debug')).not.toBeInTheDocument();
   });
 
-  it('excludes other actors from student progress', async () => {
+  it('excludes other actors from student progress even when they appear in the self feed', async () => {
     const user = userEvent.setup();
     setHash('#/kitchen-day-progress');
     render(<AppRouter />);
@@ -77,12 +77,32 @@ describe('Kitchen Day page split', () => {
               { template: { slug: 'duration' }, obj: { value: 3, unit: 'minutes' } },
             ],
           },
+          {
+            id: 'foreign-in-self-feed',
+            actor: { id: 'user-2', name: 'Student Two' },
+            template: { slug: 'trimSmart' },
+            start: '2026-09-23T10:00:00.000Z',
+            end: '2026-09-23T10:03:00.000Z',
+            properties: [
+              { template: { slug: 'sessionId' }, value: { value: 'kitchen-day:t:user-2:2026-09-23' } },
+              { template: { slug: 'sessionDate' }, value: { value: '2026-09-23' } },
+              { template: { slug: 'submittedAt' }, value: { value: '2026-09-23T10:03:00.000Z' } },
+              { template: { slug: 'ingredientId' }, value: { value: 'onion' } },
+              { template: { slug: 'ingredientName' }, value: { value: 'Onion' } },
+              { template: { slug: 'ingredientCategory' }, value: { value: 'root' } },
+              { template: { slug: 'ingredientWeightGrams' }, value: { value: 800 } },
+              { template: { slug: 'trimTechniques' }, value: { value: 'dice' } },
+              { template: { slug: 'estimatedWasteGrams' }, value: { value: 80 } },
+              { template: { slug: 'actualWasteGrams' }, value: { value: 70 } },
+              { template: { slug: 'duration' }, obj: { value: 2, unit: 'minutes' } },
+            ],
+          },
         ],
       },
       kitchenSkillsTrainerInput: {
         activities: [
           {
-            id: 'other',
+            id: 'other-trainer-feed',
             actor: { id: 'user-2', name: 'Student Two' },
             template: { slug: 'trimSmart' },
             start: '2026-09-23T10:00:00.000Z',
@@ -137,6 +157,7 @@ describe('Kitchen Day page split', () => {
         activities: [
           {
             id: 'own-unreviewed',
+            actor: { id: 'user-1', name: 'Student One' },
             template: { slug: 'trimSmart' },
             start: '2026-09-23T10:00:00.000Z',
             end: '2026-09-23T10:03:00.000Z',
@@ -180,7 +201,7 @@ describe('Kitchen Day page split', () => {
     expect(screen.queryByText(/no history yet/i)).not.toBeInTheDocument();
   });
 
-  it('hydrates tutor assessments onto Progress even when review actor differs from evidence', async () => {
+  it('hydrates tutor assessments onto Progress when review actor is the student (on-behalf createdBy may differ)', async () => {
     const user = userEvent.setup();
     setHash('#/kitchen-day-progress');
     render(<AppRouter />);
@@ -189,6 +210,7 @@ describe('Kitchen Day page split', () => {
         activities: [
           {
             id: 'own-trim',
+            actor: { id: 'user-1', name: 'Student One' },
             template: { slug: 'trimSmart' },
             start: '2026-09-23T10:00:00.000Z',
             end: '2026-09-23T10:03:00.000Z',
@@ -208,6 +230,7 @@ describe('Kitchen Day page split', () => {
           {
             id: 'own-review',
             actor: { id: 'user-1', name: 'Student One' },
+            createdBy: { id: 'tutor-1', name: 'Tutor' },
             template: { slug: 'wastePracticeReview' },
             properties: [
               { template: { slug: 'sessionId' }, value: { value: 'kitchen-day:t:user-1:2026-09-23' } },
