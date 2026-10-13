@@ -12,7 +12,7 @@ Read-only (in-app) feedback and research views over kitchen / participant foreca
 Two surfaces exist in the current repository:
 
 1. **Kitchen Staff Dashboard / Chef Results (participant)** — participant-safe forecast feedback.
-2. **Kitchen Management Dashboard (admin / research)** — broader staff/research view; route access and production authorization remain operational concerns.
+2. **Kitchen Management Dashboard (admin / research)** — unified read-only management view at `#/chef-results-admin` with two main areas: **Forecast & Service** (Overview / Staff / Trends / History) and **Kitchen Skills** (Overview / Participants / Sessions / Assessments). Route access and production authorization remain operational concerns.
 
 ---
 
@@ -45,10 +45,13 @@ Two surfaces exist in the current repository:
 - Missing forecast is omitted from aggregation (not zero performance).
 - Closeout without a personal forecast for that service still shows the actual kitchen outcome for that service, and does not invent personal metrics.
 - Forecast without closeout preserves dashboard structure and may show submitted forecast; metrics pending.
-- Admin partial data must not collapse to a single empty paragraph.
+- Admin partial data must not collapse to a single empty paragraph; Forecast & Service secondary tabs remain available.
+- Admin History includes complete, forecast-only, and closeout-only services without converting missing values to zero.
+- Admin Kitchen Skills uses `kitchenSkillsTrainerInput` (group feed), never `kitchenGroupInputSelf`.
 - Admin keeps its historical service-date selector (not a "today dashboard").
 - No composite score, ranking, or winner language.
 - Shared calculation engine for participant and admin for the same actor + targetDate.
+- Management dashboard is read-only (no forecast, closeout, or tutor assessment submission).
 
 Diagnosis: [`../how-to/diagnose-chef-results.md`](../how-to/diagnose-chef-results.md) · Input Collections: [`../how-to/verify-input-collections.md`](../how-to/verify-input-collections.md).
 

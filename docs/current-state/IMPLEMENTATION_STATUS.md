@@ -114,10 +114,12 @@ Cannot be closed from this repo’s Vitest stack (no browser E2E):
 
 | | |
 |--|--|
-| **Status** | **Implemented** on `main` (`#/chef-results-admin`; hidden route; partial closeout/forecast states supported; authorization TBD) |
+| **Status** | **Unified dashboard implemented** on feature branch / pending merge (`#/chef-results-admin`; Forecast & Service + Kitchen Skills; incomplete services keep full navigation; authorization TBD) |
 | **Gherkin** | [`../../features/kitchen/kitchen-results-admin.feature`](../../features/kitchen/kitchen-results-admin.feature) |
 | **Coverage** | [`../testing/KITCHEN_RESULTS_ADMIN_ACCEPTANCE_COVERAGE.md`](../testing/KITCHEN_RESULTS_ADMIN_ACCEPTANCE_COVERAGE.md) |
-| **Migration / doc review** | Authorization remains platform-enforced / `@pending` |
+| **Input Collections** | Forecast: `kitchenGroupInput` + `inputCollectionPari.me`. Kitchen Skills: `kitchenSkillsTrainerInput` (group). Does **not** use `kitchenGroupInputSelf`. |
+| **Live admin config** | Whether `kitchenSkillsTrainerInput` is attached to the Admin Dashboard GameBus page is **not verified** in this phase. Missing collection shows an unavailable-data state; Forecast remains usable. |
+| **Migration / doc review** | Authorization remains platform-enforced / `@pending`. Hiding the React route is not sufficient production security for identifiable Kitchen Skills data. |
 
 ---
 
@@ -127,7 +129,7 @@ Canonical: [`../product/kitchen-skills-challenge/KITCHEN_SKILLS_CHALLENGE.md`](.
 
 **CURRENT IMPLEMENTATION on `main`:** Kitchen Skills Challenge is implemented at `#/kitchen-day*` (legacy-stable hashes). Source: `src/products/kitchen-skills-challenge/`. Legacy Trim Smart v1 remains at `#/waste/trim-smart`.
 
-**Student GameBus flow:** `SILENT_ACTIVITY` for Portion / Trim / Reuse; local retain; `kitchenGroupInputSelf.activities` (`GET /api/me/activities`) without actor-id equality for Session Review **and Student Progress**; compact finish summary after Reuse (Add another ingredient returns to Trim); `{ type: 'EXIT' }` only on Finish challenge when there is no unfinished work. Student Trim/summary/Session Review do not show waste % or Hävikki. Tutor Trim evidence and Student Progress show actual vs recipe-specific JAMIX (`referenceWastePercent`) via a shared objective read-model. Trainer/chef feedback reads dedicated `kitchenSkillsTrainerInput.activities` (`GET /api/groups/activities` filtered to Kitchen Skills templates). Student Progress does **not** consume raw group Kitchen Skills activities; anonymous peer cards stay “Not enough peer data yet” until a privacy-safe aggregate exists. `kitchenGroupInput` stays on forecast/closeout (`chefForecast` / `wasteMeasurement`) and is not a Kitchen Skills feed.
+**Student GameBus flow:** `SILENT_ACTIVITY` for Portion / Trim / Reuse; local retain; `kitchenGroupInputSelf.activities` (`GET /api/me/activities`) for Session Review and Student Progress. Progress attributes personal history only when `activity.actor.id` equals authenticated `inputCollectionPari.me.id` (self feed is not a trust boundary). Compact finish summary after Reuse (Add another ingredient returns to Trim); `{ type: 'EXIT' }` only on Finish challenge when there is no unfinished work. Student Trim/summary/Session Review do not show waste % or Hävikki. Tutor Trim evidence and Student Progress show actual vs recipe-specific JAMIX (`referenceWastePercent`) via a shared objective read-model. Trainer/chef feedback and the management Kitchen Skills area read dedicated `kitchenSkillsTrainerInput.activities` (`GET /api/groups/activities` filtered to Kitchen Skills templates). Student Progress does **not** consume raw group Kitchen Skills activities; anonymous peer cards stay “Not enough peer data yet” until a privacy-safe aggregate exists. `kitchenGroupInput` stays on forecast/closeout (`chefForecast` / `wasteMeasurement`) and is not a Kitchen Skills feed.
 
 **Live GameBus (foodtracker.gamebus.eu):** Student Kitchen Skills Challenge activity schemas and properties were **manually verified** on `https://foodtracker.gamebus.eu`. Student posting is **enabled** for Trim / Rescue / Portion (`KITCHEN_SKILLS_STUDENT_LIVE_INTEGRATION_READY = true`). Trainer `wastePracticeReview` posting is **enabled** (`KITCHEN_SKILLS_TRAINER_LIVE_INTEGRATION_READY = true`): `SILENT_ACTIVITY` with `actors: [selectedStudentActorId]`, one review per module (`reviewedGame`), iframe stays open.
 

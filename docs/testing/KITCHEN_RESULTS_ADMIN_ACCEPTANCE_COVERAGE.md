@@ -10,20 +10,28 @@ Route: `#/chef-results-admin`. Timezone: `Europe/Helsinki`.
 
 1. Admin must not collapse to a single empty paragraph when partial data exists.
 2. Closeout-only → service actuals + explain no eligible staff forecasts.
-3. Forecast-only → available forecast state + explain closeout pending.
+3. Forecast-only → available forecast state + explain closeout pending; full Forecast navigation remains.
 4. Same calculation engine / shared closeout reality as participant for actor + targetDate.
 5. Malformed individual records must not destroy otherwise valid service data.
 6. No composite score / ranking / winner language.
+7. Unified areas: Forecast & Service and Kitchen Skills.
+8. Kitchen Skills uses `kitchenSkillsTrainerInput` only (never self feed).
+9. Management dashboard remains read-only.
 
 | Area | Key scenarios | Automated coverage | Status |
 |---|---|---|---|
-| Complete service results | Shared engine staff table + overview | `chefResultsManagementDashboard.test.tsx`; calculation tests | COVERED |
-| Partial closeout-only | Actuals + explanation | `resolveAdminServicePartialState` + `ForecastResultsAdminApp` | COVERED (path) |
-| Partial forecast-only | Forecast list + pending closeout | Same | COVERED (path) |
+| Unified area navigation | Forecast & Service / Kitchen Skills tabs | `forecastResultsManagementDashboard.test.tsx`; `forecastResultsUnifiedDashboard.test.tsx` | COVERED |
+| Complete service results | Shared engine staff table + overview | `forecastResultsManagementDashboard.test.tsx`; calculation tests | COVERED |
+| Partial closeout-only | Actuals + explanation + tabs remain | `resolveAdminServicePartialState` + OverviewSection | COVERED (path) |
+| Partial forecast-only | Forecast list + pending closeout + Staff/Trends/History | `forecastResultsUnifiedDashboard.test.tsx` (8 Oct fixture) | COVERED |
+| History incomplete services | Forecast-only / complete rows | `forecastResultsUnifiedDashboard.test.tsx` | COVERED |
 | Empty service | Clear empty state | `kitchenResultsProgressIndependence.test.ts` (empty kind) | COVERED |
-| Trends chart 0/1/2+ | Single-point chart allowed | `chefResultsManagementDashboard.test.tsx`; `ManagementTrendsSection` | COVERED |
+| Trends chart 0/1/2+ | Single-point chart allowed; independent of incomplete selected day | `forecastResultsManagementDashboard.test.tsx`; `ManagementTrendsSection` | COVERED |
+| Kitchen Skills summaries | Participants / sessions / assessments attribution | `forecastResultsUnifiedDashboard.test.tsx`; trainer session tests | COVERED |
+| Missing Kitchen Skills collection | Unavailable-data state; Forecast still works | `forecastResultsUnifiedDashboard.test.tsx` | COVERED |
 | Authorization | Platform-enforced admin access | — | `@pending` EXTERNAL |
-| Live GameBus payload | Historical / partial activities in INPUT_COLLECTIONS | — | EXTERNAL / PLATFORM |
+| Live GameBus Admin page Input Collections | Confirm `kitchenSkillsTrainerInput` attached to Admin Dashboard page | — | EXTERNAL / PLATFORM — **NOT VERIFIED** |
 
 Admin authorization remains a GameBus/platform concern until a reliable permission signal exists
-in the INPUT_COLLECTIONS contract.
+in the INPUT_COLLECTIONS contract. Hiding `#/chef-results-admin` is not sufficient authorization
+for identifiable Kitchen Skills data.

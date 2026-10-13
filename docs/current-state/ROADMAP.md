@@ -150,9 +150,9 @@ Full JSON Schemas and examples: `docs/contracts/STUDENT_LUNCH_GAMEBUS.md`.
 | Item | Status |
 |------|--------|
 | Route `#/chef-results` | **Implemented** — participant-safe view (GameBus menu target) |
-| Route `#/chef-results-admin` | **Implemented** — hidden admin/research all-staff view |
-| GameBus exposure | Participant menu already opens `#/chef-results`; no config change required |
-| Data source (this phase) | Embedded: `kitchenGroupInput` + `inputCollectionPari.me` when present; standalone: development fixtures |
+| Route `#/chef-results-admin` | **Unified management dashboard** — Forecast & Service (Overview/Staff/Trends/History) + Kitchen Skills (Overview/Participants/Sessions/Assessments); read-only |
+| GameBus exposure | Participant menu already opens `#/chef-results`; Admin page must receive authorized group Input Collections |
+| Data source (this phase) | Embedded Forecast: `kitchenGroupInput` + `inputCollectionPari.me`; Embedded Kitchen Skills: `kitchenSkillsTrainerInput`; standalone: Forecast fixtures + Kitchen Skills unavailable/standalone notice |
 | Calculation model | Shared pure engine; per-staff simulation against shared observed service reality |
 | Participant privacy | Own results only, joined on `activity.actor.id`. You vs Team from 1 other staff member, anonymous, same units, excluding the participant |
 | Composite score / ranking | **Not approved** — no score, leaderboard, or winner language |
@@ -163,7 +163,7 @@ Full JSON Schemas and examples: `docs/contracts/STUDENT_LUNCH_GAMEBUS.md`.
 
 **Participant (`#/chef-results`):** current-service status, latest completed personal result, You vs Team for that service, Progress as Recent (last 8 own services) / Trends (Week/Month/Year) / History. You vs Team appears only on Overview; no repeated team footer or Overview summary appears in Progress. No coworker names/IDs.
 
-**Admin (`#/chef-results-admin`):** all-staff research table with real actor names when embedded; full calculation detail, weekly raw aggregation.
+**Admin (`#/chef-results-admin`):** unified Forecast & Service + Kitchen Skills management areas with identifiable participants when authorized group collections are present; incomplete services keep navigation and show only available metrics; Trends/History remain independent of the selected incomplete day; Kitchen Skills reuses trainer session/assessment read models and does not submit reviews.
 
 **Confirmed (GameBus identity):**
 

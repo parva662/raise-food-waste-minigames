@@ -1,11 +1,12 @@
 import { useCallback, type KeyboardEvent, type ReactNode } from 'react';
 
-export type ManagementPrimaryTab = 'overview' | 'staff' | 'trends';
+export type ManagementPrimaryTab = 'overview' | 'staff' | 'trends' | 'history';
 
 const TABS: { id: ManagementPrimaryTab; label: string }[] = [
   { id: 'overview', label: 'Overview' },
   { id: 'staff', label: 'Staff' },
   { id: 'trends', label: 'Trends' },
+  { id: 'history', label: 'History' },
 ];
 
 interface ManagementTabNavProps {
@@ -36,12 +37,10 @@ export function ManagementTabNav({ activeTab, onTabChange, children }: Managemen
 
   return (
     <div className="kitchen-mgmt-forecasting" data-testid="kitchen-mgmt-forecasting">
-      <h2 className="kitchen-mgmt-module-title">Forecasting</h2>
-
       <div
         className="kitchen-mgmt-primary-tabs"
         role="tablist"
-        aria-label="Forecasting views"
+        aria-label="Forecast and service views"
         data-testid="kitchen-mgmt-primary-tabs"
       >
         {TABS.map((tab, index) => (
