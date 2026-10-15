@@ -52,7 +52,9 @@ import { goToKitchenDaySection, type KitchenSkillsHashSection } from '@/app/rout
 import {
   eligibleRecipeIngredientsForTrim,
   hasReusableTrimWaste,
+  latestPortionEntryBySubmittedAt,
   remainingRecipeIngredientsForTrim,
+  selectActivePortionEntry,
   sessionRecipeReference,
 } from '@/products/kitchen-skills-challenge/domain/session/sessionRecipe';
 
@@ -67,6 +69,9 @@ interface KitchenSkillsSessionValue {
   trimEntries: KitchenSkillsTrimEntry[];
   rescueEntries: KitchenSkillsRescueEntry[];
   portionEntries: KitchenSkillsPortionEntry[];
+  /** Explicit active recipe for Trim / gates after the latest successful Portion save. */
+  activeRecipeId: string | null;
+  activePortionEntry: KitchenSkillsPortionEntry | null;
   reviews: KitchenSkillsReviewEntry[];
   groupSessions: KitchenSkillsTrainerSession[];
   recordedIngredientIds: string[];
@@ -170,6 +175,7 @@ export function KitchenSkillsSessionProvider({
   const [localRescue, setLocalRescue] = useState<KitchenSkillsRescueEntry[]>([]);
   const [localPortion, setLocalPortion] = useState<KitchenSkillsPortionEntry[]>([]);
   const [localReviews, setLocalReviews] = useState<KitchenSkillsReviewEntry[]>([]);
+  const [activeRecipeId, setActiveRecipeId] = useState<string | null>(null);
   const [showFinishSummary, setShowFinishSummary] = useState(false);
   const [trimInProgress, setTrimInProgress] = useState(false);
   const [reuseInProgress, setReuseInProgress] = useState(false);
@@ -243,6 +249,27 @@ export function KitchenSkillsSessionProvider({
     [localReviews, persisted.reviews],
   );
 
+  // Keep explicit active recipe when still present; otherwise restore latest by submittedAt
+  // (reload / hydration). Tab navigation alone must not change the active recipe.
+  useEffect(() => {
+    const latest = latestPortionEntryBySubmittedAt(portionEntries);
+    if (!latest) {
+      setActiveRecipeId(null);
+      return;
+    }
+    setActiveRecipeId((current) => {
+      if (current && portionEntries.some((entry) => entry.recipeId === current)) {
+        return current;
+      }
+      return latest.recipeId;
+    });
+  }, [portionEntries]);
+
+  const activePortionEntry = useMemo(
+    () => selectActivePortionEntry(portionEntries, activeRecipeId),
+    [portionEntries, activeRecipeId],
+  );
+
   const recordedIngredientIds = useMemo(
     () => trimEntries.map((entry) => entry.ingredientId),
     [trimEntries],
@@ -300,9 +327,11 @@ export function KitchenSkillsSessionProvider({
         return { ok: false, reason: posted.reason, keepDraft: true };
       }
       setLocalPortion((current) => [...current, { ...entry, source: 'local' }]);
+      setActiveRecipeId(entry.recipeId);
       return { ok: true, mode: 'posted_awaiting_persist' };
     }
     setLocalPortion((current) => [...current, { ...entry, source: 'local' }]);
+    setActiveRecipeId(entry.recipeId);
     return { ok: true, mode: 'local' };
   }, []);
 
@@ -376,7 +405,7 @@ export function KitchenSkillsSessionProvider({
   );
 
   const taskProgress = useMemo<KitchenSkillsTaskProgress>(() => {
-    const recipe = sessionRecipeReference(portionEntries);
+    const recipe = sessionRecipeReference(portionEntries, activeRecipeId);
     return {
       portionComplete: portionEntries.length > 0,
       trimCount: trimEntries.length,
@@ -391,6 +420,7 @@ export function KitchenSkillsSessionProvider({
     };
   }, [
     portionEntries,
+    activeRecipeId,
     trimEntries,
     rescueEntries.length,
     trimInProgress,
@@ -408,6 +438,8 @@ export function KitchenSkillsSessionProvider({
       trimEntries,
       rescueEntries,
       portionEntries,
+      activeRecipeId,
+      activePortionEntry,
       reviews,
       groupSessions: persisted.groupSessions,
       recordedIngredientIds,
@@ -434,6 +466,8 @@ export function KitchenSkillsSessionProvider({
       trimEntries,
       rescueEntries,
       portionEntries,
+      activeRecipeId,
+      activePortionEntry,
       reviews,
       persisted.groupSessions,
       recordedIngredientIds,

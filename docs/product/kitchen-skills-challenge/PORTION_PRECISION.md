@@ -41,7 +41,7 @@ These two recipe metrics stay separate. There is **no** automatic combined score
 
 ## 5. Journey
 
-Searchable recipe combobox (ordered options on open, typing filters) → compact Ingredient | Target | Actual | Result table → final recipe weight → one `SILENT_ACTIVITY` → Trim Smart. EXIT only on Finish challenge. Layout: [`../UI_STANDARD.md`](../UI_STANDARD.md).
+Searchable recipe combobox (ordered options on open, typing filters) → compact Ingredient | Target | Actual | Result table → final recipe weight → one `SILENT_ACTIVITY` → Trim Smart for that **active** recipe. The student may return to Portion, save additional recipes in the same Kitchen Skills session, and Trim then follows the newly saved active recipe. Previously saved Portion activities remain recorded. EXIT only on Finish challenge. Layout: [`../UI_STANDARD.md`](../UI_STANDARD.md).
 
 ## 6. Tutor assessment
 

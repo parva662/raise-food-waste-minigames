@@ -47,9 +47,11 @@ Live `trimTechniques` enum: `peeling`, `trimming`, `julienne`, `batonnet`, `minc
 
 **CURRENT IMPLEMENTATION / DEPRECATED for new target posts:** `practice`, `participantWasteGrams`.
 
-**Do not post:** `ingredientCategory`, `sourceActivityId`, `preparationEntryId`, calculated waste %, estimate error, kitchen average, percentile.
+**Do not post:** `ingredientCategory`, `sourceActivityId`, `preparationEntryId`, `recipeId`, calculated waste %, estimate error, kitchen average, percentile.
 
 `ingredientCategory` is **not** part of Kitchen Skills Challenge. Unlink/remove it from the Kitchen Skills `trimSmart` activity template in GameBus admin. Do not change unrelated GameBus properties.
+
+**Multi-recipe sessions:** a Kitchen Skills session may contain multiple `portionPrecision` activities. Trim Smart UI uses an in-app **active recipe** (latest successful Portion save; restored on reload by latest `submittedAt`). Trim activities still do **not** carry `recipeId`. Read-time JAMIX joins infer a recipe only when exactly one saved Portion recipe contains the Trim `ingredientId`; otherwise reference comparison is unavailable. A durable `recipeId` (or equivalent) on `trimSmart` would require an approved GameBus schema change — not introduced here.
 
 ---
 

@@ -16,6 +16,32 @@ export async function recordAnkanrintaPortion(user: User) {
   await user.click(screen.getByTestId('kitchen-day-submit-portion'));
 }
 
+export async function recordFlowMustamakkaraPortion(user: User) {
+  const recipeInput = screen.getByTestId('kitchen-day-recipe-select');
+  await user.click(recipeInput);
+  await user.type(recipeInput, 'FLOW mustamakkara');
+  await user.click(screen.getByRole('option', { name: 'FLOW mustamakkara' }));
+  await user.type(screen.getByTestId('kitchen-day-actual-tapola-gluteeniton'), '1974');
+  await user.type(screen.getByTestId('kitchen-day-actual-kaskein-750-g-puolukka-pakaste'), '1316');
+  await user.type(screen.getByTestId('kitchen-day-actual-deliverde-500g-rucola'), '263');
+  await user.type(screen.getByTestId('kitchen-day-actual-elonen-iso-ruisvuoka-1000g'), '1316');
+  await user.type(screen.getByTestId('kitchen-day-actual-coop-kidesokeri-1-kg'), '132');
+  await user.type(screen.getByTestId('kitchen-day-final-recipe-weight'), '5000');
+  await user.click(screen.getByTestId('kitchen-day-submit-portion'));
+}
+
+export async function recordBanaanismoothiePortion(user: User) {
+  const recipeInput = screen.getByTestId('kitchen-day-recipe-select');
+  await user.click(recipeInput);
+  await user.type(recipeInput, 'Banaanismoothie');
+  await user.click(screen.getByRole('option', { name: 'Banaanismoothie L, G' }));
+  await user.type(screen.getByTestId('kitchen-day-actual-banaani-banaani-1kg-peru-1lk'), '2000');
+  await user.type(screen.getByTestId('kitchen-day-actual-hunaja-juokseva-hunajainen'), '40');
+  await user.type(screen.getByTestId('kitchen-day-actual-piima-rasvaton-valio-luomutm'), '3000');
+  await user.type(screen.getByTestId('kitchen-day-final-recipe-weight'), '5040');
+  await user.click(screen.getByTestId('kitchen-day-submit-portion'));
+}
+
 export async function recordHedelmatPortion(user: User) {
   const recipeInput = screen.getByTestId('kitchen-day-recipe-select');
   await user.click(recipeInput);

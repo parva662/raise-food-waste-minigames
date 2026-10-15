@@ -150,4 +150,33 @@ describe('objective Trim vs JAMIX comparison', () => {
     expect(session.status).toBe('unavailable');
     expect(session.actualTrimPercent).toBeCloseTo((540 / 6000) * 100);
   });
+
+  it('does not compare a Trim ingredient against the first saved recipe when membership is ambiguous', () => {
+    const smoothie: KitchenSkillsPortionEntry = {
+      sessionId: 's1',
+      sessionDate: '2026-09-23',
+      submittedAt: '2026-09-23T11:10:00.000Z',
+      recipeId: '5',
+      recipeName: 'Banaanismoothie L, G',
+      recipeComposition: [],
+      finalRecipeWeightGrams: 5040,
+      source: 'persisted',
+    };
+    const aprikoosi: KitchenSkillsPortionEntry = {
+      sessionId: 's1',
+      sessionDate: '2026-09-23',
+      submittedAt: '2026-09-23T11:00:00.000Z',
+      recipeId: '4',
+      recipeName: 'Aprikoosi-omenalassi L, G',
+      recipeComposition: [],
+      finalRecipeWeightGrams: 4400,
+      source: 'persisted',
+    };
+    const session = compareTrimSessionFromPortion(
+      [trimEntry('banaani-banaani-1kg-peru-1lk', 'Banaani', 2000, 400)],
+      [smoothie, aprikoosi],
+    );
+    expect(session.status).toBe('unavailable');
+    expect(session.ingredients[0]?.status).toBe('unavailable');
+  });
 });

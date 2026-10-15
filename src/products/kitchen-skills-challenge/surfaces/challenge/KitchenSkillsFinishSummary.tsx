@@ -53,9 +53,15 @@ function portionHeadline(entries: readonly KitchenSkillsPortionEntry[]): string 
 }
 
 export function KitchenSkillsFinishSummary() {
-  const { trimEntries, rescueEntries, portionEntries, recordedIngredientIds, addAnotherIngredient } =
-    useReadyKitchenSkillsSession();
-  const recipe = sessionRecipeReference(portionEntries);
+  const {
+    trimEntries,
+    rescueEntries,
+    portionEntries,
+    activeRecipeId,
+    recordedIngredientIds,
+    addAnotherIngredient,
+  } = useReadyKitchenSkillsSession();
+  const recipe = sessionRecipeReference(portionEntries, activeRecipeId);
   const canAddAnother =
     recipe != null && remainingRecipeIngredientsForTrim(recipe, recordedIngredientIds).length > 0;
 

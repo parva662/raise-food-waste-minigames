@@ -102,6 +102,7 @@ export function KitchenSkillsTrimView() {
   const {
     session,
     portionEntries,
+    activeRecipeId,
     trimEntries,
     rescueEntries,
     recordedIngredientIds,
@@ -111,7 +112,7 @@ export function KitchenSkillsTrimView() {
     openFinishSummary,
     canFinish,
   } = useReadyKitchenSkillsSession();
-  const recipe = sessionRecipeReference(portionEntries);
+  const recipe = sessionRecipeReference(portionEntries, activeRecipeId);
   const remainingIngredients = recipe
     ? remainingRecipeIngredientsForTrim(recipe, recordedIngredientIds)
     : [];
@@ -127,6 +128,19 @@ export function KitchenSkillsTrimView() {
   const [actualRaw, setActualRaw] = useState('');
   const [timer, setTimer] = useState<PreparationTimerState>(createIdleTimer());
   const [submitError, setSubmitError] = useState<string | null>(null);
+
+  // When the student saves a different Portion recipe, clear in-progress Trim draft.
+  useEffect(() => {
+    setStep('ingredient');
+    setSelectedIngredientId('');
+    setWeightRaw('');
+    setTechnique(null);
+    setEstimateRaw('');
+    setActualRaw('');
+    setTimer(createIdleTimer());
+    setSubmitError(null);
+    setTrimInProgress(false);
+  }, [activeRecipeId, setTrimInProgress]);
   const [submitting, setSubmitting] = useState(false);
 
   const selectedLine =

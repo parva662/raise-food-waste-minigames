@@ -22,7 +22,7 @@ Standalone route, no estimate step, no timer, no reference comparison. Posts `pr
 
 ## 4. Target flow
 
-1. Choose a remaining unused recipe ingredient (`ingredientId` + name from the Portion recipe) whose kitchen Hävikki (`referenceWastePercent`) is greater than 0. 0% lines are not offered. If the recipe has none, Trim shows that there are no Trim Smart ingredients and the session can complete without fake Trim/Reuse posts.
+1. Choose a remaining unused recipe ingredient (`ingredientId` + name from the **active** Portion recipe — the most recently successfully saved recipe in this session) whose kitchen Hävikki (`referenceWastePercent`) is greater than 0. 0% lines are not offered. If the active recipe has none, Trim shows that there are no Trim Smart ingredients and the session can complete without fake Trim/Reuse posts. Saving another Portion recipe switches the active recipe for Trim without starting a new session.
 2. Technique → live plural slug `trimTechniques` (ten locked one-tap values). Layout: [`../UI_STANDARD.md`](../UI_STANDARD.md).
 3. Estimate → actual waste after timed preparation (`duration` from the timer — student does not type minutes).
 4. See recorded gram measurements (no waste % or Hävikki comparison on the student result).
@@ -32,7 +32,7 @@ Exact property list and types: slug contract. Worked example numbers belong in a
 
 ## 5. Calculated (never stored)
 
-Waste % and comparison to the **recipe-ingredient** Hävikki / JAMIX reference (0% is valid) are derived on read from saved Portion `recipeId` + generated recipe data + recorded grams. They are shown on tutor Trim evidence and Student Progress only. They are not shown on the student Trim result, challenge summary, or Session Review, and are not posted to GameBus. Discarded waste after reuse is calculated for the Reuse form.
+Waste % and comparison to the **recipe-ingredient** Hävikki / JAMIX reference (0% is valid) are derived on read from generated recipe data + recorded grams, joining Trim `ingredientId` to a saved Portion recipe that uniquely contains that ingredient. Trim activities do not persist `recipeId`; when more than one saved recipe contains the ingredient, reference comparison is unavailable rather than inventing a join. They are shown on tutor Trim evidence and Student Progress only. They are not shown on the student Trim result, challenge summary, or Session Review, and are not posted to GameBus. Discarded waste after reuse is calculated for the Reuse form.
 
 Percentile / ranking messaging is **@pending** until a sufficient-data rule is agreed.
 

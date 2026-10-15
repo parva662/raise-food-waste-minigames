@@ -2,7 +2,7 @@ import type { ReactNode } from 'react';
 import { discardedWasteGrams } from '@/products/kitchen-skills-challenge/domain/trim/derived';
 import { TRIM_TECHNIQUE_LABELS } from '@/products/kitchen-skills-challenge/domain/trim/techniques';
 import { compareTrimIngredientToRecipeReference } from '@/products/kitchen-skills-challenge/domain/trim/objectiveComparison';
-import { sessionRecipeReference } from '@/products/kitchen-skills-challenge/domain/session/sessionRecipe';
+import { resolveRecipeReferenceForTrimIngredient } from '@/products/kitchen-skills-challenge/domain/session/sessionRecipe';
 import {
   formatFinalWeightDifference,
   formatMetricPercent,
@@ -205,7 +205,7 @@ export function SessionEvidence({
   sessionPortionEntries?: readonly KitchenSkillsPortionEntry[];
 }) {
   const visible = new Set(modules);
-  const recipe = sessionRecipeReference(sessionPortionEntries ?? portionEntries);
+  const portionForTrimJoin = sessionPortionEntries ?? portionEntries;
   const reviews = resolveModuleReviews(moduleReviews, review);
   const rescueTrimLookup = trimEntriesForRescueLookup ?? trimEntries;
 
@@ -219,7 +219,10 @@ export function SessionEvidence({
             <ul className="kitchen-day-evidence-list" data-testid={`${testIdPrefix}-trim-list`}>
               {trimEntries.map((entry) => {
                 const comparison = showWasteAnalytics
-                  ? compareTrimIngredientToRecipeReference(entry, recipe)
+                  ? compareTrimIngredientToRecipeReference(
+                      entry,
+                      resolveRecipeReferenceForTrimIngredient(entry.ingredientId, portionForTrimJoin),
+                    )
                   : null;
                 const actualRemoved =
                   comparison?.actualTrimPercent != null

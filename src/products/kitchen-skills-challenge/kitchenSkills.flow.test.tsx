@@ -8,6 +8,8 @@ import {
   completeTrimAfterIngredient,
   recordAnkanrintaPortion,
   recordBanaaniTrim,
+  recordBanaanismoothiePortion,
+  recordFlowMustamakkaraPortion,
   recordHedelmatPortion,
   selectTrimIngredient,
 } from '@/products/kitchen-skills-challenge/kitchenSkills.testSupport';
@@ -287,5 +289,117 @@ describe('Kitchen Day connected flow', () => {
     expect(screen.queryByTestId('kitchen-day-finish-summary')).not.toBeInTheDocument();
     expect(screen.queryByTestId('kitchen-day-finish-challenge')).not.toBeInTheDocument();
     expect(screen.getByTestId('kitchen-day-trim-step-ingredient')).toBeInTheDocument();
+  });
+});
+
+describe('Kitchen Day multiple recipes per session (active recipe)', () => {
+  beforeEach(() => {
+    setHash('#/kitchen-day');
+  });
+
+  afterEach(() => {
+    cleanup();
+    setHash('');
+    vi.restoreAllMocks();
+  });
+
+  it('TEST A: Trim shows FLOW mustamakkara after that recipe is saved', async () => {
+    const user = userEvent.setup();
+    render(<AppRouter />);
+    await recordFlowMustamakkaraPortion(user);
+    expect(screen.getByTestId('kitchen-day-trim-recipe')).toHaveTextContent('FLOW mustamakkara');
+    expect(screen.getByTestId('kitchen-day-trim-no-eligible')).toBeInTheDocument();
+  });
+
+  it('TEST B: after saving Banaanismoothie, Trim shows that recipe and Banana', async () => {
+    const user = userEvent.setup();
+    render(<AppRouter />);
+    await recordFlowMustamakkaraPortion(user);
+    expect(screen.getByTestId('kitchen-day-trim-recipe')).toHaveTextContent('FLOW mustamakkara');
+
+    await user.click(screen.getByTestId('kitchen-day-nav-portion'));
+    expect(screen.getByTestId('kitchen-day-portion')).toBeInTheDocument();
+    await recordBanaanismoothiePortion(user);
+
+    expect(screen.getByTestId('kitchen-day-trim-recipe')).toHaveTextContent('Banaanismoothie L, G');
+    expect(screen.queryByTestId('kitchen-day-trim-recipe')).not.toHaveTextContent('FLOW mustamakkara');
+    expect(screen.queryByTestId('kitchen-day-trim-no-eligible')).not.toBeInTheDocument();
+
+    const ingredientInput = screen.getByTestId('kitchen-day-ingredient-name');
+    await user.click(ingredientInput);
+    expect(screen.getByRole('option', { name: /Banaani/i })).toBeInTheDocument();
+    expect(screen.queryByRole('option', { name: /Tapola/i })).not.toBeInTheDocument();
+
+    // Previous Portion stays recorded: finish summary lists both recipes after a Trim save.
+    await selectTrimIngredient(user, 'Banaani', 'Banaani, Banaani 1kg Peru 1lk');
+    await completeTrimAfterIngredient(user, '0');
+    await user.click(screen.getByTestId('kitchen-day-open-finish-summary'));
+    expect(screen.getByTestId('kitchen-day-finish-portion-headline')).toHaveTextContent(
+      'FLOW mustamakkara',
+    );
+    expect(screen.getByTestId('kitchen-day-finish-portion-headline')).toHaveTextContent(
+      'Banaanismoothie L, G',
+    );
+  });
+
+  it('TEST C: none-eligible then eligible recipe unlocks Trim ingredients', async () => {
+    const user = userEvent.setup();
+    render(<AppRouter />);
+    await recordAnkanrintaPortion(user);
+    expect(screen.getByTestId('kitchen-day-trim-no-eligible')).toBeInTheDocument();
+    await user.click(screen.getByTestId('kitchen-day-nav-portion'));
+    await recordBanaanismoothiePortion(user);
+    expect(screen.getByTestId('kitchen-day-trim-recipe')).toHaveTextContent('Banaanismoothie L, G');
+    expect(screen.getByTestId('kitchen-day-ingredient-name')).toBeInTheDocument();
+  });
+
+  it('TEST D: eligible then none-eligible shows the new recipe with no ingredients', async () => {
+    const user = userEvent.setup();
+    render(<AppRouter />);
+    await recordBanaanismoothiePortion(user);
+    expect(screen.getByTestId('kitchen-day-ingredient-name')).toBeInTheDocument();
+    await user.click(screen.getByTestId('kitchen-day-nav-portion'));
+    await recordFlowMustamakkaraPortion(user);
+    expect(screen.getByTestId('kitchen-day-trim-recipe')).toHaveTextContent('FLOW mustamakkara');
+    expect(screen.getByTestId('kitchen-day-trim-no-eligible')).toBeInTheDocument();
+    expect(screen.queryByTestId('kitchen-day-ingredient-name')).not.toBeInTheDocument();
+  });
+
+  it('TEST E: tab navigation without a new save keeps the active recipe', async () => {
+    const user = userEvent.setup();
+    render(<AppRouter />);
+    await recordBanaanismoothiePortion(user);
+    expect(screen.getByTestId('kitchen-day-trim-recipe')).toHaveTextContent('Banaanismoothie L, G');
+    await user.click(screen.getByTestId('kitchen-day-nav-portion'));
+    expect(screen.getByTestId('kitchen-day-portion')).toBeInTheDocument();
+    await user.click(screen.getByTestId('kitchen-day-nav-trim'));
+    expect(screen.getByTestId('kitchen-day-trim-recipe')).toHaveTextContent('Banaanismoothie L, G');
+  });
+
+  it('TEST H: overlapping ingredient ids stay unique across recipes in one session', async () => {
+    const user = userEvent.setup();
+    render(<AppRouter />);
+    await recordBanaanismoothiePortion(user);
+    await selectTrimIngredient(user, 'Banaani', 'Banaani, Banaani 1kg Peru 1lk');
+    await completeTrimAfterIngredient(user);
+    expect(screen.getByTestId('kitchen-day-trim-step-result')).toBeInTheDocument();
+
+    await user.click(screen.getByTestId('kitchen-day-nav-portion'));
+    // Aprikoosi-omenalassi also uses banaani-banaani-1kg-peru-1lk
+    const recipeInput = screen.getByTestId('kitchen-day-recipe-select');
+    await user.click(recipeInput);
+    await user.type(recipeInput, 'Aprikoosi-omenalassi');
+    await user.click(screen.getByRole('option', { name: 'Aprikoosi-omenalassi L, G' }));
+    await user.type(screen.getByTestId('kitchen-day-actual-aprikoosisose'), '1000');
+    await user.type(screen.getByTestId('kitchen-day-actual-omenataysmehu-raikastamo'), '500');
+    await user.type(screen.getByTestId('kitchen-day-actual-piima-rasvaton-valio-luomutm'), '2500');
+    await user.type(screen.getByTestId('kitchen-day-actual-banaani-banaani-1kg-peru-1lk'), '400');
+    await user.type(screen.getByTestId('kitchen-day-final-recipe-weight'), '4400');
+    await user.click(screen.getByTestId('kitchen-day-submit-portion'));
+
+    expect(screen.getByTestId('kitchen-day-trim-recipe')).toHaveTextContent('Aprikoosi-omenalassi L, G');
+    // Banana already recorded for the session — not offered again
+    expect(screen.getByTestId('kitchen-day-trim-no-remaining')).toBeInTheDocument();
+    expect(screen.queryByTestId('kitchen-day-ingredient-name')).not.toBeInTheDocument();
   });
 });

@@ -1,6 +1,6 @@
 import { wastePercentage } from '@/products/kitchen-skills-challenge/domain/trim/derived';
 import type { RecipeReference } from '@/products/kitchen-skills-challenge/domain/portion/recipes';
-import { sessionRecipeReference } from '@/products/kitchen-skills-challenge/domain/session/sessionRecipe';
+import { resolveRecipeReferenceForTrimIngredient } from '@/products/kitchen-skills-challenge/domain/session/sessionRecipe';
 import type {
   KitchenSkillsPortionEntry,
   KitchenSkillsTrimEntry,
@@ -131,9 +131,49 @@ export function compareTrimSessionToRecipeReference(
   };
 }
 
+/**
+ * Session Trim vs kitchen reference from persisted Portion rows.
+ * Each Trim ingredient joins only when exactly one saved recipe contains that ingredientId.
+ * Ambiguous or missing joins stay unavailable — no invented recipeId on Trim activities.
+ */
 export function compareTrimSessionFromPortion(
   trimEntries: readonly KitchenSkillsTrimEntry[],
   portionEntries: readonly KitchenSkillsPortionEntry[],
 ): TrimSessionObjectiveComparison {
-  return compareTrimSessionToRecipeReference(trimEntries, sessionRecipeReference(portionEntries));
+  const ingredients = trimEntries.map((entry) =>
+    compareTrimIngredientToRecipeReference(
+      entry,
+      resolveRecipeReferenceForTrimIngredient(entry.ingredientId, portionEntries),
+    ),
+  );
+  const totalStartingWeightGrams = trimEntries.reduce((sum, entry) => sum + entry.ingredientWeightGrams, 0);
+  const actualRemovedGrams = trimEntries.reduce((sum, entry) => sum + entry.actualWasteGrams, 0);
+  const actualTrimPercent = actualTrimPercentOrNull(actualRemovedGrams, totalStartingWeightGrams);
+
+  const comparable = ingredients.filter(
+    (item): item is Extract<TrimIngredientObjectiveComparison, { status: 'available' }> =>
+      item.status === 'available',
+  );
+  if (comparable.length === 0 || comparable.length !== ingredients.length || actualTrimPercent == null) {
+    return {
+      status: 'unavailable',
+      actualRemovedGrams,
+      totalStartingWeightGrams,
+      actualTrimPercent,
+      ingredients,
+    };
+  }
+
+  const referenceRemovedGrams = comparable.reduce((sum, item) => sum + item.referenceRemovedGrams, 0);
+  const referenceTrimPercent = (referenceRemovedGrams / totalStartingWeightGrams) * 100;
+  return {
+    status: 'available',
+    actualRemovedGrams,
+    referenceRemovedGrams,
+    totalStartingWeightGrams,
+    actualTrimPercent,
+    referenceTrimPercent,
+    deltaPercentagePoints: actualTrimPercent - referenceTrimPercent,
+    ingredients,
+  };
 }
