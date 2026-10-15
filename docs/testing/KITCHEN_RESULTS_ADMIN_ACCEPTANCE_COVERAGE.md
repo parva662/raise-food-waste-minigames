@@ -38,7 +38,7 @@ Route: `#/chef-results-admin`. Timezone: `Europe/Helsinki`.
 | Mobile secondary tabs | Horizontally scrollable tab strip class | `forecastResultsUnifiedDashboard.test.tsx` | COVERED |
 | Missing Kitchen Skills collection | Unavailable-data state; Forecast still works | `forecastResultsUnifiedDashboard.test.tsx` | COVERED |
 | Authorization | Platform-enforced admin access | — | `@pending` EXTERNAL |
-| Live GameBus Admin page Input Collections | Confirm `kitchenSkillsTrainerInput` attached to Admin Dashboard page | Live check 2026-10-15 on `/admindashboard` (network: Kitchen Skills group activities 200) | EXTERNAL / PLATFORM — **CONNECTED** (UI deploy of PR #5 still pending) |
+| Live GameBus Admin page Input Collections | Confirm `kitchenSkillsTrainerInput` attached; complete feeds with `limit=500` | Live check 2026-10-15 on `/admindashboard` (110 forecast/closeout; 73 Kitchen Skills; filters unchanged) | EXTERNAL / PLATFORM — **CONNECTED + COMPLETE** (PR #5 merged/deployed) |
 
 Admin authorization remains a GameBus/platform concern until a reliable permission signal exists
 in the INPUT_COLLECTIONS contract. Hiding `#/chef-results-admin` is not sufficient authorization
