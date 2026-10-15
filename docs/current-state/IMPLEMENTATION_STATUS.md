@@ -114,7 +114,7 @@ Cannot be closed from this repo’s Vitest stack (no browser E2E):
 
 | | |
 |--|--|
-| **Status** | **Unified dashboard feature-complete for approved UX scope** on feature branch / pending merge (`#/chef-results-admin`; Forecast & Service + Kitchen Skills; Forecast-only service-date selector; Kitchen Skills reporting period; detail drawers; compact Trends; assessment means; responsive tabs; authorization TBD) |
+| **Status** | **Merged and deployed** on `main` (`13f235a`; `#/chef-results-admin`; Forecast & Service + Kitchen Skills; Forecast-only service-date selector; Kitchen Skills reporting period; detail drawers; compact Trends; assessment means; responsive tabs; authorization TBD) |
 | **Gherkin** | [`../../features/kitchen/kitchen-results-admin.feature`](../../features/kitchen/kitchen-results-admin.feature) |
 | **Coverage** | [`../testing/KITCHEN_RESULTS_ADMIN_ACCEPTANCE_COVERAGE.md`](../testing/KITCHEN_RESULTS_ADMIN_ACCEPTANCE_COVERAGE.md) |
 | **Input Collections** | Forecast: `kitchenGroupInput` + `inputCollectionPari.me`. Kitchen Skills: `kitchenSkillsTrainerInput` (group). Does **not** use `kitchenGroupInputSelf`. |
