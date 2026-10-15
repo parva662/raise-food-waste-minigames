@@ -1,9 +1,10 @@
 import { useCallback, useMemo, useState, type KeyboardEvent } from 'react';
-import { formatServiceDateLong } from '@/products/forecast-results/displayFormat';
 import {
-  formatCustomerErrorCount,
-  formatNormalizedRate,
-} from '@/products/forecast-results/managementFormat';
+  formatAdminCustomerErrorCount,
+  formatCountLabel,
+} from '@/products/forecast-results/admin/adminPresentation';
+import { formatServiceDateLong } from '@/products/forecast-results/displayFormat';
+import { formatNormalizedRate } from '@/products/forecast-results/managementFormat';
 import {
   buildManagementPeriodView,
   type ManagementTrendPoint,
@@ -71,9 +72,11 @@ function TeamTrendChart({
   const chartWidth = Math.max(280, chartBuckets.length * groupWidth);
 
   return (
-    <figure className="kitchen-mgmt-chart" data-testid="kitchen-mgmt-trend-chart">
+    <figure className="kitchen-mgmt-chart kitchen-mgmt-chart--priority" data-testid="kitchen-mgmt-trend-chart">
       <figcaption className="kitchen-mgmt-chart__caption">
-        {showTrend ? 'Trend' : 'Completed service'}
+        {showTrend
+          ? 'Trend'
+          : formatCountLabel(chartBuckets.length, 'Completed service', 'Completed services')}
       </figcaption>
       {!showTrend ? (
         <p className="kitchen-mgmt-snapshot-hint" data-testid="kitchen-mgmt-chart-single-point-note">
@@ -88,65 +91,67 @@ function TeamTrendChart({
           Estimated shortage
         </span>
       </div>
-      <svg
-        className="kitchen-mgmt-chart__svg"
-        viewBox={`0 0 ${chartWidth} 132`}
-        role="img"
-        aria-label="Team estimated surplus and shortage per customer"
-        data-testid="kitchen-mgmt-trend-chart-svg"
-      >
-        <line className="kitchen-mgmt-chart__baseline" x1="8" y1="96" x2={chartWidth - 8} y2="96" />
-        {chartBuckets.map((bucket, index) => {
-          const surplusRate = bucket.overproductionRateGramsPerCustomer ?? 0;
-          const shortageRate = bucket.shortageRateGramsPerCustomer ?? 0;
-          const surplusHeight = (surplusRate / maxRate) * 72;
-          const shortageHeight = (shortageRate / maxRate) * 72;
-          const baseX = index * groupWidth + 12;
-          const isLatest = bucket.serviceDates.includes(latestServiceDate);
-          const title = bucket.serviceDates
-            .map((serviceDate) => {
-              return `${formatServiceDateLong(serviceDate)}: surplus ${formatGramsPerCustomer(
-                bucket.overproductionRateGramsPerCustomer,
-              )}, shortage ${formatGramsPerCustomer(bucket.shortageRateGramsPerCustomer)}`;
-            })
-            .join('; ');
+      <div className="kitchen-mgmt-chart__scroll">
+        <svg
+          className="kitchen-mgmt-chart__svg"
+          viewBox={`0 0 ${chartWidth} 132`}
+          role="img"
+          aria-label="Team estimated surplus and shortage per customer"
+          data-testid="kitchen-mgmt-trend-chart-svg"
+        >
+          <line className="kitchen-mgmt-chart__baseline" x1="8" y1="96" x2={chartWidth - 8} y2="96" />
+          {chartBuckets.map((bucket, index) => {
+            const surplusRate = bucket.overproductionRateGramsPerCustomer ?? 0;
+            const shortageRate = bucket.shortageRateGramsPerCustomer ?? 0;
+            const surplusHeight = (surplusRate / maxRate) * 72;
+            const shortageHeight = (shortageRate / maxRate) * 72;
+            const baseX = index * groupWidth + 12;
+            const isLatest = bucket.serviceDates.includes(latestServiceDate);
+            const title = bucket.serviceDates
+              .map((serviceDate) => {
+                return `${formatServiceDateLong(serviceDate)}: surplus ${formatGramsPerCustomer(
+                  bucket.overproductionRateGramsPerCustomer,
+                )}, shortage ${formatGramsPerCustomer(bucket.shortageRateGramsPerCustomer)}`;
+              })
+              .join('; ');
 
-          return (
-            <g key={bucket.key} data-testid={`kitchen-mgmt-chart-bucket-${bucket.key}`}>
-              <title>{title}</title>
-              <rect
-                className={
-                  isLatest
-                    ? 'kitchen-mgmt-chart__bar kitchen-mgmt-chart__bar--surplus kitchen-mgmt-chart__bar--latest'
-                    : 'kitchen-mgmt-chart__bar kitchen-mgmt-chart__bar--surplus'
-                }
-                data-testid="kitchen-mgmt-chart-bar-surplus"
-                x={baseX}
-                y={96 - surplusHeight}
-                width={18}
-                height={surplusHeight}
-                rx={3}
-              />
-              <rect
-                className={
-                  isLatest
-                    ? 'kitchen-mgmt-chart__bar kitchen-mgmt-chart__bar--shortage kitchen-mgmt-chart__bar--latest'
-                    : 'kitchen-mgmt-chart__bar kitchen-mgmt-chart__bar--shortage'
-                }
-                data-testid="kitchen-mgmt-chart-bar-shortage"
-                x={baseX + 20}
-                y={96 - shortageHeight}
-                width={18}
-                height={shortageHeight}
-                rx={3}
-              />
-              <text className="kitchen-mgmt-chart__label" x={baseX + 19} y={112} textAnchor="middle">
-                {bucket.label}
-              </text>
-            </g>
-          );
-        })}
-      </svg>
+            return (
+              <g key={bucket.key} data-testid={`kitchen-mgmt-chart-bucket-${bucket.key}`}>
+                <title>{title}</title>
+                <rect
+                  className={
+                    isLatest
+                      ? 'kitchen-mgmt-chart__bar kitchen-mgmt-chart__bar--surplus kitchen-mgmt-chart__bar--latest'
+                      : 'kitchen-mgmt-chart__bar kitchen-mgmt-chart__bar--surplus'
+                  }
+                  data-testid="kitchen-mgmt-chart-bar-surplus"
+                  x={baseX}
+                  y={96 - surplusHeight}
+                  width={18}
+                  height={surplusHeight}
+                  rx={3}
+                />
+                <rect
+                  className={
+                    isLatest
+                      ? 'kitchen-mgmt-chart__bar kitchen-mgmt-chart__bar--shortage kitchen-mgmt-chart__bar--latest'
+                      : 'kitchen-mgmt-chart__bar kitchen-mgmt-chart__bar--shortage'
+                  }
+                  data-testid="kitchen-mgmt-chart-bar-shortage"
+                  x={baseX + 20}
+                  y={96 - shortageHeight}
+                  width={18}
+                  height={shortageHeight}
+                  rx={3}
+                />
+                <text className="kitchen-mgmt-chart__label" x={baseX + 19} y={112} textAnchor="middle">
+                  {bucket.label}
+                </text>
+              </g>
+            );
+          })}
+        </svg>
+      </div>
     </figure>
   );
 }
@@ -185,38 +190,41 @@ export function ManagementTrendsSection({
   const comparison = summary.comparison;
 
   return (
-    <section className="kitchen-mgmt-trends-tab" data-testid="kitchen-mgmt-trends">
-      <h3 className="kitchen-mgmt-surface__title">Management trends</h3>
-      <p className="kitchen-mgmt-section__range" data-testid="kitchen-mgmt-trend-range">
-        {periodView.periodRangeLabel}
-      </p>
-
-      <div
-        className="kitchen-mgmt-tabs"
-        role="tablist"
-        aria-label="Management trend period"
-        data-testid="kitchen-mgmt-trend-tabs"
-      >
-        {TABS.map((tab, index) => (
-          <button
-            key={tab.id}
-            type="button"
-            role="tab"
-            id={`kitchen-mgmt-tab-${tab.id}`}
-            aria-selected={activeTab === tab.id}
-            aria-controls={`kitchen-mgmt-panel-${tab.id}`}
-            className={
-              activeTab === tab.id
-                ? 'kitchen-mgmt-tabs__tab kitchen-mgmt-tabs__tab--active'
-                : 'kitchen-mgmt-tabs__tab'
-            }
-            data-testid={`kitchen-mgmt-tab-${tab.id}`}
-            onClick={() => setActiveTab(tab.id)}
-            onKeyDown={(event) => handleTabKeyDown(event, index)}
-          >
-            {tab.label}
-          </button>
-        ))}
+    <section className="kitchen-mgmt-trends-tab kitchen-mgmt-trends-tab--compact" data-testid="kitchen-mgmt-trends">
+      <div className="kitchen-mgmt-trends-toolbar">
+        <div className="kitchen-mgmt-trends-toolbar__meta">
+          <h3 className="kitchen-mgmt-surface__title kitchen-mgmt-surface__title--inline">Trends</h3>
+          <p className="kitchen-mgmt-section__range" data-testid="kitchen-mgmt-trend-range">
+            {periodView.periodRangeLabel}
+          </p>
+        </div>
+        <div
+          className="kitchen-mgmt-tabs kitchen-mgmt-tabs--compact"
+          role="tablist"
+          aria-label="Management trend period"
+          data-testid="kitchen-mgmt-trend-tabs"
+        >
+          {TABS.map((tab, index) => (
+            <button
+              key={tab.id}
+              type="button"
+              role="tab"
+              id={`kitchen-mgmt-tab-${tab.id}`}
+              aria-selected={activeTab === tab.id}
+              aria-controls={`kitchen-mgmt-panel-${tab.id}`}
+              className={
+                activeTab === tab.id
+                  ? 'kitchen-mgmt-tabs__tab kitchen-mgmt-tabs__tab--active'
+                  : 'kitchen-mgmt-tabs__tab'
+              }
+              data-testid={`kitchen-mgmt-tab-${tab.id}`}
+              onClick={() => setActiveTab(tab.id)}
+              onKeyDown={(event) => handleTabKeyDown(event, index)}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
       </div>
 
       <div
@@ -232,9 +240,11 @@ export function ManagementTrendsSection({
           </p>
         ) : (
           <>
-            <section className="kitchen-mgmt-surface" data-testid="kitchen-mgmt-period-summary">
-              <h4 className="kitchen-mgmt-surface__subtitle">Period summary</h4>
-              <div className="kitchen-mgmt-kpi-grid kitchen-mgmt-kpi-grid--period">
+            <section
+              className="kitchen-mgmt-surface kitchen-mgmt-surface--compact"
+              data-testid="kitchen-mgmt-period-summary"
+            >
+              <div className="kitchen-mgmt-kpi-grid kitchen-mgmt-kpi-grid--period kitchen-mgmt-kpi-grid--compact">
                 <article className="kitchen-mgmt-kpi kitchen-mgmt-kpi--surplus">
                   <p className="kitchen-mgmt-kpi__value" data-testid="mgmt-team-surplus">
                     {formatNormalizedRate(summary.teamSurplusRateGramsPerCustomer)}
@@ -249,7 +259,7 @@ export function ManagementTrendsSection({
                 </article>
                 <article className="kitchen-mgmt-kpi kitchen-mgmt-kpi--forecast">
                   <p className="kitchen-mgmt-kpi__value" data-testid="mgmt-team-customer-error">
-                    {formatCustomerErrorCount(summary.meanCustomerForecastAbsoluteError)}
+                    {formatAdminCustomerErrorCount(summary.meanCustomerForecastAbsoluteError)}
                   </p>
                   <p className="kitchen-mgmt-kpi__label">Average customer error</p>
                 </article>
@@ -257,7 +267,9 @@ export function ManagementTrendsSection({
                   <p className="kitchen-mgmt-kpi__value" data-testid="mgmt-completed-services">
                     {summary.completedServices}
                   </p>
-                  <p className="kitchen-mgmt-kpi__label">Completed service</p>
+                  <p className="kitchen-mgmt-kpi__label">
+                    {summary.completedServices === 1 ? 'Completed service' : 'Completed services'}
+                  </p>
                 </article>
                 <article className="kitchen-mgmt-kpi kitchen-mgmt-kpi--forecast">
                   <p className="kitchen-mgmt-kpi__value" data-testid="mgmt-staff-forecasts-evaluated">
@@ -273,7 +285,10 @@ export function ManagementTrendsSection({
             {comparison.surplusComparison ||
             comparison.shortageComparison ||
             comparison.customerErrorComparison ? (
-              <article className="kitchen-mgmt-surface kitchen-mgmt-comparison-card" data-testid="kitchen-mgmt-period-comparison">
+              <article
+                className="kitchen-mgmt-surface kitchen-mgmt-surface--compact kitchen-mgmt-comparison-card"
+                data-testid="kitchen-mgmt-period-comparison"
+              >
                 <h4 className="kitchen-mgmt-surface__subtitle">{periodView.previousPeriodTitle}</h4>
                 <div className="kitchen-mgmt-comparison-card__rows">
                   {comparison.surplusComparison ? (
@@ -294,7 +309,7 @@ export function ManagementTrendsSection({
               </article>
             ) : null}
 
-            <section className="kitchen-mgmt-surface">
+            <section className="kitchen-mgmt-surface kitchen-mgmt-surface--compact">
               <h4 className="kitchen-mgmt-surface__subtitle">Staff performance in this period</h4>
               <div className="chef-results-table-wrap kitchen-mgmt-table-wrap">
                 <table
@@ -304,10 +319,18 @@ export function ManagementTrendsSection({
                   <thead>
                     <tr>
                       <th scope="col">Staff</th>
-                      <th scope="col" className="kitchen-mgmt-table__num">Services</th>
-                      <th scope="col" className="kitchen-mgmt-table__num">Avg surplus</th>
-                      <th scope="col" className="kitchen-mgmt-table__num">Avg shortage</th>
-                      <th scope="col" className="kitchen-mgmt-table__num">Avg customer error</th>
+                      <th scope="col" className="kitchen-mgmt-table__num">
+                        Services
+                      </th>
+                      <th scope="col" className="kitchen-mgmt-table__num">
+                        Avg surplus
+                      </th>
+                      <th scope="col" className="kitchen-mgmt-table__num">
+                        Avg shortage
+                      </th>
+                      <th scope="col" className="kitchen-mgmt-table__num">
+                        Avg customer error
+                      </th>
                     </tr>
                   </thead>
                   <tbody>
@@ -322,7 +345,7 @@ export function ManagementTrendsSection({
                           {formatNormalizedRate(staff.shortageRateGramsPerCustomer)}
                         </td>
                         <td className="kitchen-mgmt-table__num">
-                          {formatCustomerErrorCount(staff.meanCustomerForecastAbsoluteError)}
+                          {formatAdminCustomerErrorCount(staff.meanCustomerForecastAbsoluteError)}
                         </td>
                       </tr>
                     ))}

@@ -337,3 +337,39 @@ Feature: Authorized staff inspect all kitchen forecast simulation results
       And there is no winner, best staff, or worst staff framing
       And there is no composite score
       And alphabetical or service-date ordering is not presented as competitive ranking
+
+  # ---------------------------------------------------------------------------
+  # UNIFIED MANAGEMENT AREAS
+  # ---------------------------------------------------------------------------
+
+  Rule: One integrated management dashboard covers Forecast & Service and Kitchen Skills
+
+    @navigation @unified
+    Scenario: Authorized users switch between Forecast & Service and Kitchen Skills without reload
+      When an authorized management or research user opens the Kitchen Management Dashboard
+      Then the dashboard exposes Forecast & Service and Kitchen Skills as main areas
+      And Forecast & Service secondary views include Overview, Staff, Trends, and History
+      And Kitchen Skills secondary views include Overview, Participants, Sessions, and Assessments
+      And switching areas does not reload the GameBus page
+
+    @availability @partial @navigation
+    Scenario: Forecast-only services keep full Forecast navigation
+      Given eligible forecasts exist for service date D
+      And no finalized closeout exists for D
+      When admin results for D are requested
+      Then Overview, Staff, Trends, and History remain available
+      And closeout-dependent metrics remain unavailable rather than fabricated as zero
+
+    @platform @data-source @kitchen-skills
+    Scenario: Kitchen Skills management uses the trainer group Input Collection
+      Given the admin dashboard is embedded in GameBus
+      When Kitchen Skills management data is loaded
+      Then it uses kitchenSkillsTrainerInput group activities
+      And it does not use kitchenGroupInputSelf
+      And missing kitchenSkillsTrainerInput shows an unavailable-data state without inventing empty peer results
+
+    @purpose @scope @kitchen-skills
+    Scenario: Management Kitchen Skills area is read-only
+      When the Kitchen Skills management area is open
+      Then it does not create or edit trimSmart, rescueAndReuse, portionPrecision, or wastePracticeReview activities
+      And tutor assessments are shown read-only with separate time-efficiency and preparation-quality scores

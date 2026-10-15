@@ -68,12 +68,14 @@ describe('kitchen management dashboard route', () => {
     expect(getDocumentTitleForMode('chef-results-admin')).toBe('Kitchen Management Dashboard');
   });
 
-  it('does not show practical kitchen module content', () => {
+  it('exposes Kitchen Skills as a separate management area without trainer submission UI', async () => {
+    const user = userEvent.setup();
     render(<AppRouter />);
-    expect(screen.queryByText(/Trimming/i)).not.toBeInTheDocument();
-    expect(screen.queryByText(/Portioning/i)).not.toBeInTheDocument();
-    expect(screen.queryByText(/Reusing/i)).not.toBeInTheDocument();
-    expect(screen.queryByText(/Preparation/i)).not.toBeInTheDocument();
+    expect(screen.getByTestId('kitchen-mgmt-area-tab-forecast')).toBeInTheDocument();
+    expect(screen.getByTestId('kitchen-mgmt-area-tab-skills')).toBeInTheDocument();
+    await user.click(screen.getByTestId('kitchen-mgmt-area-tab-skills'));
+    expect(screen.getByTestId('kitchen-mgmt-skills-standalone')).toBeInTheDocument();
+    expect(screen.queryByTestId('kitchen-day-trainer-review-form')).not.toBeInTheDocument();
   });
 });
 
@@ -84,14 +86,17 @@ describe('kitchen management primary navigation', () => {
     vi.restoreAllMocks();
   });
 
-  it('shows Overview, Staff, and Trends tabs with Overview default', () => {
+  it('shows Overview, Staff, Trends, and History tabs with Overview default', () => {
     render(<ForecastResultsAdminApp />);
+    expect(screen.getByTestId('kitchen-mgmt-area-tab-forecast')).toHaveAttribute('aria-selected', 'true');
     expect(screen.getByTestId('kitchen-mgmt-primary-tab-overview')).toBeInTheDocument();
     expect(screen.getByTestId('kitchen-mgmt-primary-tab-staff')).toBeInTheDocument();
     expect(screen.getByTestId('kitchen-mgmt-primary-tab-trends')).toBeInTheDocument();
+    expect(screen.getByTestId('kitchen-mgmt-primary-tab-history')).toBeInTheDocument();
     expect(screen.getByTestId('kitchen-mgmt-primary-panel-overview')).not.toHaveAttribute('hidden');
     expect(screen.getByTestId('kitchen-mgmt-primary-panel-staff')).toHaveAttribute('hidden');
     expect(screen.getByTestId('kitchen-mgmt-primary-panel-trends')).toHaveAttribute('hidden');
+    expect(screen.getByTestId('kitchen-mgmt-primary-panel-history')).toHaveAttribute('hidden');
     expect(screen.getByTestId('kitchen-mgmt-service-overview')).toBeInTheDocument();
     expect(screen.queryByTestId('kitchen-mgmt-staff-results')).not.toBeInTheDocument();
     expect(screen.queryByTestId('kitchen-mgmt-trends')).not.toBeInTheDocument();
@@ -117,7 +122,7 @@ describe('kitchen management primary navigation', () => {
     await user.keyboard('{ArrowRight}');
     expect(screen.getByTestId('kitchen-mgmt-primary-tab-staff')).toHaveAttribute('aria-selected', 'true');
     await user.keyboard('{End}');
-    expect(screen.getByTestId('kitchen-mgmt-primary-tab-trends')).toHaveAttribute('aria-selected', 'true');
+    expect(screen.getByTestId('kitchen-mgmt-primary-tab-history')).toHaveAttribute('aria-selected', 'true');
   });
 });
 
@@ -191,7 +196,11 @@ describe('kitchen management service overview', () => {
   it('shows single-forecast team snapshot without medians', () => {
     const daily = buildFixtureDailyServiceResults('2026-07-31')!;
     const singleStaffDaily = { ...daily, staffResults: [daily.staffResults[0]!] };
-    render(<OverviewSection dailyResults={singleStaffDaily} />);
+    render(
+      <OverviewSection
+        view={{ kind: 'complete', serviceDate: singleStaffDaily.serviceDate, dailyResults: singleStaffDaily }}
+      />,
+    );
     expect(screen.getByTestId('team-snapshot-single')).toBeInTheDocument();
     expect(screen.queryByTestId('team-overview-median-surplus')).not.toBeInTheDocument();
   });
@@ -262,6 +271,28 @@ describe('kitchen management staff detail', () => {
     expect(screen.getByTestId('kitchen-mgmt-staff-detail-title')).toHaveTextContent(second.userName);
 
     await user.click(screen.getByTestId('kitchen-mgmt-staff-detail-close'));
+    expect(screen.queryByTestId('kitchen-mgmt-staff-detail')).not.toBeInTheDocument();
+
+    await user.click(screen.getByTestId(`staff-view-details-${first.userId}`));
+    expect(screen.getByTestId('kitchen-mgmt-staff-detail')).toBeInTheDocument();
+    await user.keyboard('{Escape}');
+    expect(screen.queryByTestId('kitchen-mgmt-staff-detail')).not.toBeInTheDocument();
+  });
+
+  it('resets staff detail when the selected service date changes', async () => {
+    const user = userEvent.setup();
+    const daily = buildFixtureDailyServiceResults('2026-07-31')!;
+    const first = [...daily.staffResults].sort((a, b) => a.userName.localeCompare(b.userName))[0]!;
+
+    render(<ForecastResultsAdminApp />);
+    await openStaffTab(user);
+    await user.click(screen.getByTestId(`staff-view-details-${first.userId}`));
+    expect(screen.getByTestId('kitchen-mgmt-staff-detail-title')).toHaveTextContent(first.userName);
+
+    const select = screen.getByTestId('chef-results-admin-date-select') as HTMLSelectElement;
+    const otherDate = [...select.options].map((option) => option.value).find((value) => value !== select.value);
+    expect(otherDate).toBeTruthy();
+    await user.selectOptions(select, otherDate!);
     expect(screen.queryByTestId('kitchen-mgmt-staff-detail')).not.toBeInTheDocument();
   });
 

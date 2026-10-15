@@ -2,66 +2,39 @@ import { useEffect, useMemo, useState } from 'react';
 import {
   getGroupAdminServiceDates,
   resolveAdminServicePartialState,
-  type AdminServicePartialState,
 } from '@/products/forecast-results/adapters/groupCalculationSource';
 import { getFixtureServiceDates } from '@/products/forecast-results/adapters/fixtureCalculationSource';
+import {
+  adminServiceViewFromPartial,
+} from '@/products/forecast-results/admin/adminServiceView';
+import {
+  buildAdminHistoryRowsFromFixtures,
+  buildAdminHistoryRowsFromGroup,
+} from '@/products/forecast-results/admin/buildAdminHistoryRows';
 import { ForecastingManagementSection } from '@/products/forecast-results/admin/components/ForecastingManagementSection';
+import { ManagementAreaNav, type ManagementAreaTab } from '@/products/forecast-results/admin/components/ManagementAreaNav';
 import { ManagementDashboardHeader } from '@/products/forecast-results/admin/components/ManagementDashboardHeader';
-import { ActualKitchenOutcomeSection } from '@/products/forecast-results/participant/components/ActualKitchenOutcomeSection';
+import { KitchenSkillsManagementSection } from '@/products/forecast-results/admin/skills/KitchenSkillsManagementSection';
+import {
+  buildKitchenSkillsManagementSummary,
+  type KitchenSkillsManagementDataState,
+} from '@/products/forecast-results/admin/skills/buildKitchenSkillsManagementSummary';
 import { useForecastResultsData } from '@/products/forecast-results/useForecastResultsData';
 import { useGameBusEmbed } from '@/platform/gamebus/useGameBusEmbed';
+import {
+  extractGroupActivities,
+  getRawKitchenSkillsTrainerActivitiesInput,
+  summarizeKitchenSkillsTrainerInput,
+} from '@/platform/gamebus/groupActivities';
 
 /**
- * Kitchen Management Dashboard — operational forecasting management for authorized users.
+ * Kitchen Management Dashboard — unified Forecast & Service + Kitchen Skills.
  * Route: #/chef-results-admin (hidden from participant navigation).
  *
- * TODO: Route-level authorization is not implemented in this frontend. Access must be
- * enforced by GameBus/platform configuration until a reliable permission signal exists
- * in the INPUT_COLLECTIONS contract.
+ * Authorization: route-level checks are not implemented in this frontend. Identifiable
+ * group data must be supplied only through GameBus-authorized Input Collections.
+ * Hiding the React route is not sufficient production authorization.
  */
-function AdminPartialServicePanel({ state }: { state: AdminServicePartialState }) {
-  if (state.kind === 'closeout_only') {
-    return (
-      <div data-testid="chef-results-admin-closeout-only">
-        <div className="kitchen-mgmt-surface">
-          <p className="kitchen-mgmt-snapshot-message">Service closeout recorded</p>
-          <p className="kitchen-mgmt-snapshot-hint">
-            No eligible staff forecasts are available for this service date, so simulated staff
-            comparisons cannot be shown.
-          </p>
-        </div>
-        <ActualKitchenOutcomeSection observed={state.dailyResults.observed} />
-      </div>
-    );
-  }
-
-  if (state.kind === 'forecast_only') {
-    return (
-      <div className="kitchen-mgmt-surface" data-testid="chef-results-admin-forecast-only">
-        <p className="kitchen-mgmt-snapshot-message">Waiting for service closeout</p>
-        <p className="kitchen-mgmt-snapshot-hint">
-          {state.staffForecasts.length} eligible staff forecast
-          {state.staffForecasts.length === 1 ? '' : 's'} available. Simulated results appear after
-          closeout is recorded.
-        </p>
-        <ul data-testid="chef-results-admin-forecast-staff-list">
-          {state.staffForecasts.map((forecast) => (
-            <li key={forecast.userId}>
-              {forecast.userName}: {forecast.forecastTotalCustomers} expected customers
-            </li>
-          ))}
-        </ul>
-      </div>
-    );
-  }
-
-  return (
-    <p className="kitchen-mgmt-empty" data-testid="chef-results-admin-empty">
-      No forecast or service-closeout data is available for this service.
-    </p>
-  );
-}
-
 export function ForecastResultsAdminApp() {
   const { embedded, inputCollections, inputCollectionsReady } = useGameBusEmbed();
   const fixtureDates = useMemo(() => getFixtureServiceDates(), []);
@@ -72,6 +45,7 @@ export function ForecastResultsAdminApp() {
 
   const serviceDates = embedded && inputCollectionsReady ? groupDates : fixtureDates;
   const [selectedDate, setSelectedDate] = useState<string>('');
+  const [activeArea, setActiveArea] = useState<ManagementAreaTab>('forecast');
 
   useEffect(() => {
     if (serviceDates.length === 0) {
@@ -87,10 +61,37 @@ export function ForecastResultsAdminApp() {
   const dailyResults = resultsState.status === 'ready' ? resultsState.dailyResults : null;
   const isLoading = resultsState.status === 'pending';
 
-  const partialState = useMemo((): AdminServicePartialState | null => {
-    if (!embedded || !inputCollectionsReady || !selectedDate || dailyResults) return null;
+  const partialState = useMemo(() => {
+    if (!embedded || !inputCollectionsReady || !selectedDate) return null;
     return resolveAdminServicePartialState(inputCollections, selectedDate);
-  }, [dailyResults, embedded, inputCollections, inputCollectionsReady, selectedDate]);
+  }, [embedded, inputCollections, inputCollectionsReady, selectedDate]);
+
+  const serviceView = useMemo(() => {
+    if (!embedded) {
+      if (!selectedDate) return adminServiceViewFromPartial('', null, null);
+      return adminServiceViewFromPartial(selectedDate, null, dailyResults);
+    }
+    if (!inputCollectionsReady) {
+      return adminServiceViewFromPartial(selectedDate, null, null);
+    }
+    return adminServiceViewFromPartial(selectedDate, partialState, dailyResults);
+  }, [dailyResults, embedded, inputCollectionsReady, partialState, selectedDate]);
+
+  const historyRows = useMemo(() => {
+    if (!embedded) return buildAdminHistoryRowsFromFixtures(fixtureDates);
+    if (!inputCollectionsReady) return [];
+    return buildAdminHistoryRowsFromGroup(inputCollections, groupDates);
+  }, [embedded, fixtureDates, groupDates, inputCollections, inputCollectionsReady]);
+
+  const skillsData = useMemo((): KitchenSkillsManagementDataState => {
+    if (!embedded) return { status: 'standalone' };
+    if (!inputCollectionsReady) return { status: 'pending' };
+    const summary = summarizeKitchenSkillsTrainerInput(inputCollections);
+    if (!summary.collectionPresent) return { status: 'unavailable' };
+    const raw = getRawKitchenSkillsTrainerActivitiesInput(inputCollections);
+    const activities = extractGroupActivities(raw);
+    return buildKitchenSkillsManagementSummary(activities);
+  }, [embedded, inputCollections, inputCollectionsReady]);
 
   return (
     <div
@@ -102,25 +103,28 @@ export function ForecastResultsAdminApp() {
         serviceDates={serviceDates}
         selectedDate={selectedDate}
         onSelectDate={setSelectedDate}
+        showServiceDateSelector={activeArea === 'forecast'}
       />
 
-      {resultsState.status === 'ready' && selectedDate && !dailyResults && !embedded ? (
-        <p className="kitchen-mgmt-empty" data-testid="chef-results-admin-empty">
-          No complete forecast and service-closeout result is available for this service.
-        </p>
-      ) : null}
-
-      {resultsState.status === 'ready' && selectedDate && !dailyResults && partialState ? (
-        <AdminPartialServicePanel state={partialState} />
-      ) : null}
-
-      {dailyResults ? (
-        <ForecastingManagementSection
-          dailyResults={dailyResults}
-          embedded={embedded}
-          inputCollectionsReady={inputCollectionsReady}
-          inputCollections={inputCollections}
-        />
+      {!isLoading ? (
+        <ManagementAreaNav activeArea={activeArea} onAreaChange={setActiveArea}>
+          {(area) => {
+            if (area === 'skills') {
+              return <KitchenSkillsManagementSection data={skillsData} />;
+            }
+            return (
+              <ForecastingManagementSection
+                view={serviceView}
+                historyRows={historyRows}
+                selectedDate={selectedDate}
+                onSelectDate={setSelectedDate}
+                embedded={embedded}
+                inputCollectionsReady={inputCollectionsReady}
+                inputCollections={inputCollections}
+              />
+            );
+          }}
+        </ManagementAreaNav>
       ) : null}
     </div>
   );

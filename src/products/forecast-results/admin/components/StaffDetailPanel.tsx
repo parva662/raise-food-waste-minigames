@@ -1,10 +1,12 @@
-import { formatServiceDateLong } from '@/products/forecast-results/displayFormat';
 import {
-  formatCustomerErrorCount,
+  formatAdminCustomerErrorCount,
+  formatAdminCustomerDifference,
+} from '@/products/forecast-results/admin/adminPresentation';
+import {
   formatManagementCategoryOutcome,
   formatNormalizedRate,
-  formatStaffDetailCustomerDifference,
 } from '@/products/forecast-results/managementFormat';
+import { buildCustomerEstimateDifferenceLabel } from '@/products/forecast-results/calculations/forecastInterpretation';
 import {
   shortageRateGramsPerCustomer,
   surplusRateGramsPerCustomer,
@@ -15,44 +17,26 @@ import { formatGrams } from '@/products/forecast-results/useForecastResultsData'
 
 interface StaffDetailPanelProps {
   result: StaffDailyResult;
-  serviceDate: string;
-  onClose: () => void;
 }
 
-export function StaffDetailPanel({ result, serviceDate, onClose }: StaffDetailPanelProps) {
+function formatDetailCustomerDifference(result: StaffDailyResult): string {
+  const label = buildCustomerEstimateDifferenceLabel(
+    result.forecastCustomers,
+    result.actualCustomers,
+  );
+  if (!label.secondary) return label.primary;
+  const magnitude = Math.abs(result.customerForecastDifference);
+  const direction = label.secondary === 'customers high' ? 'high' : 'low';
+  return formatAdminCustomerDifference(magnitude, direction);
+}
+
+/** Detail body for a completed staff result (rendered inside ManagementDetailDrawer). */
+export function StaffDetailPanel({ result }: StaffDetailPanelProps) {
   const surplusRate = surplusRateGramsPerCustomer(result);
   const shortageRate = shortageRateGramsPerCustomer(result);
 
   return (
-    <section
-      id="kitchen-mgmt-staff-detail"
-      className="kitchen-mgmt-staff-detail"
-      data-testid="kitchen-mgmt-staff-detail"
-      aria-labelledby="kitchen-mgmt-staff-detail-title"
-    >
-      <div className="kitchen-mgmt-staff-detail__header">
-        <div>
-          <h3
-            className="kitchen-mgmt-staff-detail__name"
-            id="kitchen-mgmt-staff-detail-title"
-            data-testid="kitchen-mgmt-staff-detail-title"
-          >
-            {result.userName}
-          </h3>
-          <p className="kitchen-mgmt-staff-detail__subtitle" data-testid="staff-detail-service-context">
-            Service detail — {formatServiceDateLong(serviceDate)}
-          </p>
-        </div>
-        <button
-          type="button"
-          className="kitchen-mgmt-detail-button"
-          data-testid="kitchen-mgmt-staff-detail-close"
-          onClick={onClose}
-        >
-          Close
-        </button>
-      </div>
-
+    <div className="kitchen-mgmt-drawer-content" data-testid="kitchen-mgmt-staff-detail-body">
       <div className="kitchen-mgmt-detail-cards">
         <article className="kitchen-mgmt-detail-card" data-testid="staff-detail-customer-estimate">
           <h4>Customer estimate</h4>
@@ -67,14 +51,12 @@ export function StaffDetailPanel({ result, serviceDate, onClose }: StaffDetailPa
             </div>
             <div>
               <dt>Difference</dt>
-              <dd data-testid="staff-detail-difference">
-                {formatStaffDetailCustomerDifference(result)}
-              </dd>
+              <dd data-testid="staff-detail-difference">{formatDetailCustomerDifference(result)}</dd>
             </div>
             <div>
               <dt>Customer error</dt>
               <dd data-testid="staff-detail-customer-error">
-                {formatCustomerErrorCount(result.customerForecastAbsoluteError)}
+                {formatAdminCustomerErrorCount(result.customerForecastAbsoluteError)}
               </dd>
             </div>
           </dl>
@@ -105,15 +87,22 @@ export function StaffDetailPanel({ result, serviceDate, onClose }: StaffDetailPa
         </article>
       </div>
 
-      <section className="kitchen-mgmt-surface kitchen-mgmt-surface--nested" data-testid="staff-detail-menu-breakdown">
+      <section
+        className="kitchen-mgmt-surface kitchen-mgmt-surface--nested"
+        data-testid="staff-detail-menu-breakdown"
+      >
         <h4 className="kitchen-mgmt-surface__title">By menu item</h4>
         <div className="chef-results-table-wrap kitchen-mgmt-table-wrap">
           <table className="chef-results-table kitchen-mgmt-table">
             <thead>
               <tr>
                 <th scope="col">Menu item</th>
-                <th scope="col" className="kitchen-mgmt-table__num">Forecast</th>
-                <th scope="col" className="kitchen-mgmt-table__num">Observed demand</th>
+                <th scope="col" className="kitchen-mgmt-table__num">
+                  Forecast
+                </th>
+                <th scope="col" className="kitchen-mgmt-table__num">
+                  Observed demand
+                </th>
                 <th scope="col">Outcome</th>
               </tr>
             </thead>
@@ -140,6 +129,6 @@ export function StaffDetailPanel({ result, serviceDate, onClose }: StaffDetailPa
           </table>
         </div>
       </section>
-    </section>
+    </div>
   );
 }
