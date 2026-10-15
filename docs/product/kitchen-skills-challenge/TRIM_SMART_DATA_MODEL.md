@@ -8,8 +8,8 @@
 
 ## 1. Goals
 
-1. Multiple **different** `trimSmart` activities per student Kitchen Skills session.
-2. Same `ingredientId` is **not** posted twice in one session.
+1. Multiple **different** `trimSmart` activities per student Kitchen Skills session (scoped per recipe).
+2. Same `ingredientId` is **not** posted twice for the same `recipeId` in one session (same ingredient under another recipe is allowed).
 3. Store only §3 facts; calculate analytics on read.
 4. Tutor judgement is one Trim module `wastePracticeReview` (`reviewedGame=trimSmart`), not per Trim entry and not one overall session review.
 5. v1 activities stay readable; do not rewrite them in place.
@@ -28,7 +28,7 @@ Pointers: `src/legacy/trim-smart-v1/gamebus/mapTrimSmart.ts`, `src/legacy/trim-s
 
 ## 3. Target property set
 
-`sessionId`, `sessionDate`, `submittedAt`, `ingredientId` (non-empty), `ingredientName` (non-empty), `ingredientWeightGrams`, `trimTechniques`, `estimatedWasteGrams`, `actualWasteGrams`, `duration`.
+`sessionId`, `sessionDate`, `submittedAt`, `recipeId` (required on new posts; optional on historical), `ingredientId` (non-empty), `ingredientName` (non-empty), `ingredientWeightGrams`, `trimTechniques`, `estimatedWasteGrams`, `actualWasteGrams`, `duration`.
 
 **Do not post or require** `ingredientCategory`. It is not part of Kitchen Skills Challenge. Unlink/remove it from the live `trimSmart` GameBus activity template. Existing persisted values, if present, are ignored on read.
 
@@ -38,7 +38,7 @@ Pointers: `src/legacy/trim-smart-v1/gamebus/mapTrimSmart.ts`, `src/legacy/trim-s
 
 | Relationship | Key |
 |--------------|-----|
-| `trimSmart` → `rescueAndReuse` | `sessionId` + `ingredientId` |
+| `trimSmart` → `rescueAndReuse` | `sessionId` + `recipeId` + `ingredientId` |
 | Trim module tutor assessment | same `sessionId` + `reviewedGame=trimSmart` + actor |
 | Session Review / Student Progress | `kitchenGroupInputSelf.activities` (`GET /api/me/activities`) |
 | Tutor dashboard | `kitchenSkillsTrainerInput.activities` (`GET /api/groups/activities` filtered to Kitchen Skills templates) |

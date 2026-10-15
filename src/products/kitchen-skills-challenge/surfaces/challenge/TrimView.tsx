@@ -3,7 +3,6 @@ import { formatDurationFromMinutes, formatGrams } from '@/products/kitchen-skill
 import { useReadyKitchenSkillsSession } from '@/products/kitchen-skills-challenge/domain/session/KitchenSkillsSessionContext';
 import { isIngredientAlreadyRecorded } from '@/products/kitchen-skills-challenge/domain/session/ingredientUniqueness';
 import {
-  hasReusableTrimWaste,
   remainingRecipeIngredientsForTrim,
   sessionRecipeReference,
   trimIngredientAvailability,
@@ -102,23 +101,24 @@ export function KitchenSkillsTrimView() {
   const {
     session,
     portionEntries,
-    trimEntries,
-    rescueEntries,
+    activeRecipeId,
     recordedIngredientIds,
     commitTrimEntry,
     setTrimInProgress,
     enterReuse,
     openFinishSummary,
     canFinish,
+    taskProgress,
   } = useReadyKitchenSkillsSession();
-  const recipe = sessionRecipeReference(portionEntries);
+  const recipe = sessionRecipeReference(portionEntries, activeRecipeId);
   const remainingIngredients = recipe
     ? remainingRecipeIngredientsForTrim(recipe, recordedIngredientIds)
     : [];
   const availability = recipe
     ? trimIngredientAvailability(recipe, recordedIngredientIds)
     : 'none-eligible';
-  const canRecordReuse = hasReusableTrimWaste(trimEntries);
+  // Active-recipe scope (same as challengeGate / ReuseView) — not session-wide Trim waste.
+  const canRecordReuse = taskProgress.hasReusableTrimWaste;
   const [step, setStep] = useState<TrimStep>('ingredient');
   const [selectedIngredientId, setSelectedIngredientId] = useState('');
   const [weightRaw, setWeightRaw] = useState('');
@@ -127,6 +127,19 @@ export function KitchenSkillsTrimView() {
   const [actualRaw, setActualRaw] = useState('');
   const [timer, setTimer] = useState<PreparationTimerState>(createIdleTimer());
   const [submitError, setSubmitError] = useState<string | null>(null);
+
+  // When the student saves a different Portion recipe, clear in-progress Trim draft.
+  useEffect(() => {
+    setStep('ingredient');
+    setSelectedIngredientId('');
+    setWeightRaw('');
+    setTechnique(null);
+    setEstimateRaw('');
+    setActualRaw('');
+    setTimer(createIdleTimer());
+    setSubmitError(null);
+    setTrimInProgress(false);
+  }, [activeRecipeId, setTrimInProgress]);
   const [submitting, setSubmitting] = useState(false);
 
   const selectedLine =
@@ -152,10 +165,12 @@ export function KitchenSkillsTrimView() {
     isIngredientAlreadyRecorded(recordedIngredientIds, ingredientId);
 
   useEffect(() => {
-    const drafting = step !== 'result' && remainingIngredients.length > 0;
+    // Empty ingredient picker is not draft work — resume must still allow Record reuse / Reuse nav
+    // for the active recipe's already-saved waste.
+    const drafting = step !== 'result' && (step !== 'ingredient' || Boolean(selectedIngredientId));
     setTrimInProgress(drafting);
     return () => setTrimInProgress(false);
-  }, [remainingIngredients.length, setTrimInProgress, step]);
+  }, [selectedIngredientId, setTrimInProgress, step]);
 
   function goNext() {
     const index = STEP_ORDER.indexOf(step);
@@ -181,12 +196,13 @@ export function KitchenSkillsTrimView() {
 
   function submitEntry() {
     if (!ingredientId || !weight.ok || !technique || !estimate.ok || !actual.ok) return;
-    if (timer.status !== 'finished' || submitting || duplicate) return;
+    if (!activeRecipeId || timer.status !== 'finished' || submitting || duplicate) return;
     setSubmitting(true);
     const entry = {
       sessionId: session.sessionId,
       sessionDate: session.sessionDate,
       submittedAt: new Date().toISOString(),
+      recipeId: activeRecipeId,
       ingredientId,
       ingredientName: ingredientName.trim(),
       ingredientWeightGrams: weight.value,
@@ -237,11 +253,13 @@ export function KitchenSkillsTrimView() {
               <p className="kitchen-day-card__copy" data-testid="kitchen-day-trim-no-eligible">
                 No Trim Smart ingredients for this recipe
               </p>
-              <TrimStepActions
-                continueLabel="Challenge complete"
-                continueTestId="kitchen-day-open-finish-summary"
-                onContinue={openFinishSummary}
-              />
+              {canFinish ? (
+                <TrimStepActions
+                  continueLabel="Challenge complete"
+                  continueTestId="kitchen-day-open-finish-summary"
+                  onContinue={openFinishSummary}
+                />
+              ) : null}
             </>
           ) : availability === 'all-recorded' ? (
             <>
@@ -254,13 +272,13 @@ export function KitchenSkillsTrimView() {
                   continueTestId="kitchen-day-continue-reuse"
                   onContinue={enterReuse}
                 />
-              ) : (
+              ) : canFinish ? (
                 <TrimStepActions
                   continueLabel="Challenge complete"
                   continueTestId="kitchen-day-open-finish-summary"
                   onContinue={openFinishSummary}
                 />
-              )}
+              ) : null}
             </>
           ) : (
             <>
@@ -490,7 +508,7 @@ export function KitchenSkillsTrimView() {
                 Record reuse
               </button>
             ) : null}
-            {canFinish && (rescueEntries.length > 0 || !canRecordReuse) ? (
+            {canFinish && (taskProgress.reuseComplete || !canRecordReuse) ? (
               <button
                 type="button"
                 className="kitchen-day-button kitchen-day-button--secondary"

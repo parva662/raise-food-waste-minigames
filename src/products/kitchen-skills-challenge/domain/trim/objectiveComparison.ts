@@ -1,10 +1,24 @@
 import { wastePercentage } from '@/products/kitchen-skills-challenge/domain/trim/derived';
-import type { RecipeReference } from '@/products/kitchen-skills-challenge/domain/portion/recipes';
-import { sessionRecipeReference } from '@/products/kitchen-skills-challenge/domain/session/sessionRecipe';
+import {
+  getRecipeReference,
+  type RecipeReference,
+} from '@/products/kitchen-skills-challenge/domain/portion/recipes';
+import { resolveRecipeReferenceForTrimIngredient } from '@/products/kitchen-skills-challenge/domain/session/sessionRecipe';
+import { normalizeRecipeId } from '@/products/kitchen-skills-challenge/domain/session/ingredientUniqueness';
 import type {
   KitchenSkillsPortionEntry,
   KitchenSkillsTrimEntry,
 } from '@/products/kitchen-skills-challenge/domain/types';
+
+/** Prefer explicit Trim.recipeId; legacy rows fall back to unambiguous Portion membership. */
+export function resolveRecipeReferenceForTrimEntry(
+  entry: KitchenSkillsTrimEntry,
+  portionEntries: readonly KitchenSkillsPortionEntry[],
+): RecipeReference | null {
+  const explicit = normalizeRecipeId(entry.recipeId);
+  if (explicit) return getRecipeReference(explicit);
+  return resolveRecipeReferenceForTrimIngredient(entry.ingredientId, portionEntries);
+}
 
 export type TrimReferenceUnavailableReason = 'missing-recipe' | 'missing-ingredient' | 'missing-reference';
 
@@ -131,9 +145,49 @@ export function compareTrimSessionToRecipeReference(
   };
 }
 
+/**
+ * Session Trim vs kitchen reference from persisted Portion rows.
+ * Prefer each Trim entry's explicit recipeId; legacy rows without recipeId join only when
+ * exactly one saved recipe contains that ingredientId. Ambiguous joins stay unavailable.
+ */
 export function compareTrimSessionFromPortion(
   trimEntries: readonly KitchenSkillsTrimEntry[],
   portionEntries: readonly KitchenSkillsPortionEntry[],
 ): TrimSessionObjectiveComparison {
-  return compareTrimSessionToRecipeReference(trimEntries, sessionRecipeReference(portionEntries));
+  const ingredients = trimEntries.map((entry) =>
+    compareTrimIngredientToRecipeReference(
+      entry,
+      resolveRecipeReferenceForTrimEntry(entry, portionEntries),
+    ),
+  );
+  const totalStartingWeightGrams = trimEntries.reduce((sum, entry) => sum + entry.ingredientWeightGrams, 0);
+  const actualRemovedGrams = trimEntries.reduce((sum, entry) => sum + entry.actualWasteGrams, 0);
+  const actualTrimPercent = actualTrimPercentOrNull(actualRemovedGrams, totalStartingWeightGrams);
+
+  const comparable = ingredients.filter(
+    (item): item is Extract<TrimIngredientObjectiveComparison, { status: 'available' }> =>
+      item.status === 'available',
+  );
+  if (comparable.length === 0 || comparable.length !== ingredients.length || actualTrimPercent == null) {
+    return {
+      status: 'unavailable',
+      actualRemovedGrams,
+      totalStartingWeightGrams,
+      actualTrimPercent,
+      ingredients,
+    };
+  }
+
+  const referenceRemovedGrams = comparable.reduce((sum, item) => sum + item.referenceRemovedGrams, 0);
+  const referenceTrimPercent = (referenceRemovedGrams / totalStartingWeightGrams) * 100;
+  return {
+    status: 'available',
+    actualRemovedGrams,
+    referenceRemovedGrams,
+    totalStartingWeightGrams,
+    actualTrimPercent,
+    referenceTrimPercent,
+    deltaPercentagePoints: actualTrimPercent - referenceTrimPercent,
+    ingredients,
+  };
 }

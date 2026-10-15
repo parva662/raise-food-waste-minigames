@@ -13,9 +13,11 @@ Not a scored mini-game. The tutor may still submit a module assessment for Rescu
 
 ## 2. Connection
 
-Because a student does not record the same ingredient twice in one session, the Trim source is unique as:
+The Trim source is unique as:
 
-**`sessionId` + `ingredientId`**
+**`sessionId` + `recipeId` + `ingredientId`**
+
+New Reuse posts include `recipeId` so Reuse for the same ingredient under Recipe B cannot attach to Recipe A’s Trim. Legacy activities without `recipeId` still hydrate for history.
 
 Do **not** create `sourceActivityId` or `preparationEntryId`.
 
@@ -32,7 +34,7 @@ Exact stored properties: slug contract. Do **not** duplicate `ingredientName` or
 1. `reuseDestination` is free text.
 2. No reuse status, later confirmation, inventory, or "was it used?" tracking.
 3. `reusableWasteGrams` is 0 … that Trim entry's `actualWasteGrams`.
-4. Each Trim ingredient may have at most one reuse suggestion.
+4. Each Trim ingredient under a given recipe may have at most one reuse suggestion.
 5. No reuse points; no automatic reuse tutor score.
 
 ## 4. Journey
@@ -44,7 +46,7 @@ Complete Trim through actual waste → compact reuse form → see calculated dis
 | Removed | Replacement |
 |---------|-------------|
 | Standalone Rescue game | Kitchen Skills Challenge module |
-| `sourceActivityId` / `preparationEntryId` | `sessionId` + `ingredientId` |
+| `sourceActivityId` / `preparationEntryId` | `sessionId` + `recipeId` + `ingredientId` |
 | Duplicated ingredient name/weight | Read from Trim |
 | `reuseMethod` | `reuseDestination` |
 | Stored `discardedWasteGrams` | Calculated |

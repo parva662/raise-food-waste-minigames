@@ -34,7 +34,28 @@ function trimActivity(overrides: Record<string, unknown> = {}) {
 
 describe('Kitchen Day read model', () => {
   it('parses target Trim / Rescue / Portion properties', () => {
-    expect(parsePersistedTrimEntry(trimActivity())?.ingredientId).toBe('carrot');
+    const legacyTrim = parsePersistedTrimEntry(trimActivity());
+    expect(legacyTrim?.ingredientId).toBe('carrot');
+    expect(legacyTrim?.recipeId).toBeUndefined();
+    expect(
+      parsePersistedTrimEntry(
+        trimActivity({
+          properties: [
+            { template: { slug: 'sessionId' }, value: { value: sessionId } },
+            { template: { slug: 'sessionDate' }, value: { value: '2026-09-23' } },
+            { template: { slug: 'submittedAt' }, value: { value: '2026-09-23T10:03:00.000Z' } },
+            { template: { slug: 'recipeId' }, value: { value: '42' } },
+            { template: { slug: 'ingredientId' }, value: { value: 'carrot' } },
+            { template: { slug: 'ingredientName' }, value: { value: 'Carrot' } },
+            { template: { slug: 'ingredientWeightGrams' }, value: { value: 5000 } },
+            { template: { slug: 'trimTechniques' }, value: { value: 'trimming' } },
+            { template: { slug: 'estimatedWasteGrams' }, value: { value: 600 } },
+            { template: { slug: 'actualWasteGrams' }, value: { value: 450 } },
+            { template: { slug: 'duration' }, obj: { value: 3, unit: 'minutes' } },
+          ],
+        }),
+      )?.recipeId,
+    ).toBe('42');
     expect(
       parsePersistedRescueEntry({
         id: 'act-rescue-1',
@@ -50,6 +71,22 @@ describe('Kitchen Day read model', () => {
         ],
       })?.reuseDestination,
     ).toBe('Soup');
+    expect(
+      parsePersistedRescueEntry({
+        id: 'act-rescue-2',
+        actor: { id: 'user-1' },
+        template: { slug: 'rescueAndReuse' },
+        properties: [
+          { template: { slug: 'sessionId' }, value: { value: sessionId } },
+          { template: { slug: 'sessionDate' }, value: { value: '2026-09-23' } },
+          { template: { slug: 'recipeId' }, value: { value: 42 } },
+          { template: { slug: 'ingredientId' }, value: { value: 'carrot' } },
+          { template: { slug: 'reusableWasteGrams' }, value: { value: 200 } },
+          { template: { slug: 'reuseDestination' }, value: { value: 'Soup' } },
+          { template: { slug: 'submittedAt' }, value: { value: '2026-09-23T10:10:00.000Z' } },
+        ],
+      })?.recipeId,
+    ).toBe('42');
     expect(
       parsePersistedPortionEntry({
         id: 'act-portion-1',

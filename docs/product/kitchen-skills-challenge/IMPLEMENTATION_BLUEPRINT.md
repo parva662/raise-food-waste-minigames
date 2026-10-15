@@ -11,19 +11,19 @@
 
 | Module | Activity | Cardinality |
 |--------|----------|-------------|
-| Trim Smart | `trimSmart` | 1..n **different** recipe ingredients per session |
-| Rescue & Reuse | `rescueAndReuse` | 0..1 per `sessionId` + `ingredientId` |
-| Portion Precision | `portionPrecision` | 0..n recipes/components |
+| Trim Smart | `trimSmart` | 1..n **different** ingredients per recipe (`sessionId` + `recipeId` + `ingredientId`) |
+| Rescue & Reuse | `rescueAndReuse` | 0..1 per `sessionId` + `recipeId` + `ingredientId` |
+| Portion Precision | `portionPrecision` | 0..n recipes; once per `sessionId` + `recipeId` |
 | Tutor assessment | `wastePracticeReview` | 0..1 per `sessionId` + `reviewedGame` (module) |
 | Session Review / Student Progress / Tutor dashboard | — | read-only |
 
 ## 2. Architecture constraints (keep)
 
 - One student session per locked Helsinki `sessionDate`; student activity nav is Portion / Trim / Reuse only.
-- Same `ingredientId` once per student session. Trim ingredients come from the saved Portion recipe. Reuse joins `sessionId` + `ingredientId` (no `sourceActivityId`).
-- Reuse stores only reusable amount + free-text destination.
+- Same `ingredientId` once per recipe per student session. Trim / Reuse carry `recipeId` on new posts. Reuse joins `sessionId` + `recipeId` + `ingredientId` (no `sourceActivityId`).
+- Reuse stores only reusable amount + free-text destination (+ `recipeId` on new posts).
 - Analytics calculated on read — never stored as activity properties.
-- One Portion activity per recipe; actuals in `recipeComposition`. Recipe targets come from the generated workbook extract, not a hand-maintained stub.
+- One Portion activity per recipe per session; actuals in `recipeComposition`. Recipe targets come from the generated workbook extract, not a hand-maintained stub. Finish requires every saved recipe to satisfy its own gates.
 - One tutor assessment per **completed module** (`reviewedGame`), not one score for the whole session.
 - Student challenge / Session Review / Progress: `kitchenGroupInputSelf.activities`. Trainer feedback: `kitchenSkillsTrainerInput.activities`. Do not attach raw group Kitchen Skills activities to student Progress; peer comparison waits for a privacy-safe aggregate. Keep `kitchenGroupInput` for forecast/closeout only.
 - Property names only from the slug contract.

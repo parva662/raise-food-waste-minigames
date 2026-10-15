@@ -85,10 +85,12 @@ export function parsePersistedTrimEntry(activity: unknown): KitchenSkillsTrimEnt
   ) {
     return null;
   }
+  const recipeId = readActivityPropertyString(activity, 'recipeId') ?? undefined;
   return {
     sessionId,
     sessionDate,
     submittedAt,
+    ...(recipeId ? { recipeId } : {}),
     ingredientId,
     ingredientName,
     ingredientWeightGrams,
@@ -122,9 +124,11 @@ export function parsePersistedRescueEntry(activity: unknown): KitchenSkillsRescu
   ) {
     return null;
   }
+  const recipeId = readActivityPropertyString(activity, 'recipeId') ?? undefined;
   return {
     sessionId,
     sessionDate,
+    ...(recipeId ? { recipeId } : {}),
     ingredientId,
     reusableWasteGrams,
     reuseDestination,

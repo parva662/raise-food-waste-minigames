@@ -45,10 +45,17 @@ Feature: Kitchen Skills Challenge connected session
       When the student records an ingredient preparation entry for another unused recipe ingredient
       Then both entries belong to the same kitchen day
 
-    Scenario: The same ingredient is not recorded twice
+    Scenario: The same ingredient is not recorded twice under the same recipe
       Given the student recorded an ingredient preparation entry for a recipe ingredient
-      When the student tries to start another ingredient preparation entry for that same ingredient
-      Then a second preparation entry is not created in that session
+      When the student tries to start another ingredient preparation entry for that same ingredient under the same recipe
+      Then a second preparation entry is not created for that recipe
+
+    Scenario: The same ingredient id is allowed under a different recipe
+      Given the student recorded an ingredient preparation entry for an ingredient under recipe A
+      When the student records Portion Precision for recipe B that shares that ingredient id
+      And the student records an ingredient preparation entry for that ingredient under recipe B
+      Then both Trim entries belong to the same kitchen day
+      And each Trim entry keeps its own recipeId
 
   Rule: Recipe first, then Trim from that recipe, then Reuse
 
@@ -87,8 +94,34 @@ Feature: Kitchen Skills Challenge connected session
       And already recorded recipe ingredients are not offered again
       And Record reuse is not shown until a Trim ingredient with reusable waste is saved
 
+    Scenario: Saving another recipe switches the active recipe for Trim
+      Given the student recorded a Portion Precision recipe with no Trim Smart ingredients
+      And Trim Smart shows that there are no Trim Smart ingredients for this recipe
+      When the student returns to Portion Precision
+      And the student records a different Portion Precision recipe with eligible Trim ingredients
+      Then Trim Smart shows the newly saved recipe name
+      And opening the ingredient combobox shows that new recipe's unused ingredients with Hävikki greater than 0
+      And the previous recipe name is not shown as the Trim recipe
+      And previously saved Portion activities remain recorded in the same session
+
+    Scenario: A saved recipe can be resumed without a new Portion post
+      Given the student recorded Portion Precision for recipe A and recipe B
+      And recipe B is the active recipe
+      When the student returns to Portion Precision
+      And selects recipe A
+      And chooses Continue Trim Smart
+      Then Trim Smart shows recipe A
+      And no additional portionPrecision activity is posted
+
+    Scenario: Finish waits until every saved recipe is complete
+      Given the student completed Trim and Reuse for recipe A
+      And the student saved Portion Precision for recipe B with eligible Trim ingredients
+      And recipe B has no Trim entry yet
+      Then Finish challenge is not available
+
     Scenario: A recipe with no Trim Smart ingredients can still complete
       Given the student recorded a Portion Precision recipe whose ingredients all have 0 percent Hävikki
+      And that recipe is the only saved recipe in the session
       Then Trim Smart shows that there are no Trim Smart ingredients for this recipe
       And Record reuse is not shown
       And no Trim or Reuse activity is created

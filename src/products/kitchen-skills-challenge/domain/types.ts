@@ -27,6 +27,8 @@ export interface KitchenSkillsTrimEntry {
   sessionId: string;
   sessionDate: string;
   submittedAt: string;
+  /** Required on new posts; absent on legacy GameBus activities. */
+  recipeId?: string;
   ingredientId: string;
   ingredientName: string;
   ingredientWeightGrams: number;
@@ -43,6 +45,8 @@ export interface KitchenSkillsTrimEntry {
 export interface KitchenSkillsRescueEntry {
   sessionId: string;
   sessionDate: string;
+  /** Required on new posts; absent on legacy GameBus activities. */
+  recipeId?: string;
   ingredientId: string;
   reusableWasteGrams: number;
   reuseDestination: string;

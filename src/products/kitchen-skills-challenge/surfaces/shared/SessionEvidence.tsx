@@ -1,8 +1,10 @@
 import type { ReactNode } from 'react';
 import { discardedWasteGrams } from '@/products/kitchen-skills-challenge/domain/trim/derived';
 import { TRIM_TECHNIQUE_LABELS } from '@/products/kitchen-skills-challenge/domain/trim/techniques';
-import { compareTrimIngredientToRecipeReference } from '@/products/kitchen-skills-challenge/domain/trim/objectiveComparison';
-import { sessionRecipeReference } from '@/products/kitchen-skills-challenge/domain/session/sessionRecipe';
+import {
+  compareTrimIngredientToRecipeReference,
+  resolveRecipeReferenceForTrimEntry,
+} from '@/products/kitchen-skills-challenge/domain/trim/objectiveComparison';
 import {
   formatFinalWeightDifference,
   formatMetricPercent,
@@ -205,7 +207,7 @@ export function SessionEvidence({
   sessionPortionEntries?: readonly KitchenSkillsPortionEntry[];
 }) {
   const visible = new Set(modules);
-  const recipe = sessionRecipeReference(sessionPortionEntries ?? portionEntries);
+  const portionForTrimJoin = sessionPortionEntries ?? portionEntries;
   const reviews = resolveModuleReviews(moduleReviews, review);
   const rescueTrimLookup = trimEntriesForRescueLookup ?? trimEntries;
 
@@ -219,7 +221,10 @@ export function SessionEvidence({
             <ul className="kitchen-day-evidence-list" data-testid={`${testIdPrefix}-trim-list`}>
               {trimEntries.map((entry) => {
                 const comparison = showWasteAnalytics
-                  ? compareTrimIngredientToRecipeReference(entry, recipe)
+                  ? compareTrimIngredientToRecipeReference(
+                      entry,
+                      resolveRecipeReferenceForTrimEntry(entry, portionForTrimJoin),
+                    )
                   : null;
                 const actualRemoved =
                   comparison?.actualTrimPercent != null
@@ -227,7 +232,7 @@ export function SessionEvidence({
                     : formatGrams(entry.actualWasteGrams);
                 return (
                   <li
-                    key={entry.ingredientId}
+                    key={`${entry.recipeId ?? 'legacy'}:${entry.ingredientId}`}
                     className="kitchen-day-evidence-card"
                     data-testid={`${testIdPrefix}-trim-${entry.ingredientId}`}
                   >
@@ -285,13 +290,19 @@ export function SessionEvidence({
           ) : (
             <ul className="kitchen-day-evidence-list" data-testid={`${testIdPrefix}-rescue-list`}>
               {rescueEntries.map((entry) => {
-                const trim = rescueTrimLookup.find((item) => item.ingredientId === entry.ingredientId);
+                const trim = rescueTrimLookup.find(
+                  (item) =>
+                    item.ingredientId === entry.ingredientId &&
+                    (entry.recipeId
+                      ? item.recipeId === entry.recipeId
+                      : !item.recipeId || item.recipeId === entry.recipeId),
+                );
                 const discarded = trim
                   ? discardedWasteGrams(trim.actualWasteGrams, entry.reusableWasteGrams)
                   : null;
                 return (
                   <li
-                    key={entry.ingredientId}
+                    key={`${entry.recipeId ?? 'legacy'}:${entry.ingredientId}`}
                     className="kitchen-day-evidence-card"
                     data-testid={`${testIdPrefix}-rescue-${entry.ingredientId}`}
                   >

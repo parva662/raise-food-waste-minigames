@@ -3,22 +3,49 @@ import { discardedWasteGrams } from '@/products/kitchen-skills-challenge/domain/
 import { formatGrams } from '@/products/kitchen-skills-challenge/format';
 import { useReadyKitchenSkillsSession } from '@/products/kitchen-skills-challenge/domain/session/KitchenSkillsSessionContext';
 import { KitchenSkillsGramsInput } from '@/products/kitchen-skills-challenge/surfaces/shared/KitchenSkillsGramsInput';
-import { canSaveRescueSuggestion, parseReusableWasteGrams, parseReuseDestination } from '@/products/kitchen-skills-challenge/domain/reuse/validation';
+import {
+  canSaveRescueSuggestion,
+  parseReusableWasteGrams,
+  parseReuseDestination,
+} from '@/products/kitchen-skills-challenge/domain/reuse/validation';
+import { normalizeRecipeId } from '@/products/kitchen-skills-challenge/domain/session/ingredientUniqueness';
 
 export function KitchenSkillsReuseView() {
-  const { session, trimEntries, findRescueByIngredientId, commitRescueEntry, setReuseInProgress } =
-    useReadyKitchenSkillsSession();
-  const completedTrim = trimEntries.filter((entry) => entry.actualWasteGrams > 0);
+  const {
+    session,
+    activeRecipeId,
+    trimEntries,
+    findRescueByIngredientId,
+    commitRescueEntry,
+    setReuseInProgress,
+  } = useReadyKitchenSkillsSession();
+  const active = normalizeRecipeId(activeRecipeId);
+  const completedTrim = trimEntries.filter(
+    (entry) =>
+      entry.actualWasteGrams > 0 &&
+      (!active || normalizeRecipeId(entry.recipeId) === active),
+  );
   const [ingredientId, setIngredientId] = useState(completedTrim[0]?.ingredientId ?? '');
   const [reusableRaw, setReusableRaw] = useState('');
   const [destination, setDestination] = useState('');
   const [saved, setSaved] = useState(false);
 
+  useEffect(() => {
+    setIngredientId(completedTrim[0]?.ingredientId ?? '');
+    setReusableRaw('');
+    setDestination('');
+    setSaved(false);
+    // Reset when the active recipe changes; completedTrim[0] updates with that scope.
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- intentional recipe-scope reset
+  }, [activeRecipeId]);
+
   const trim = useMemo(
     () => completedTrim.find((entry) => entry.ingredientId === ingredientId),
     [completedTrim, ingredientId],
   );
-  const existing = ingredientId ? findRescueByIngredientId(ingredientId) : undefined;
+  const existing = ingredientId
+    ? findRescueByIngredientId(ingredientId, trim?.recipeId ?? activeRecipeId)
+    : undefined;
   const reusable = trim
     ? parseReusableWasteGrams(reusableRaw, trim.actualWasteGrams)
     : { ok: false as const, issue: 'invalid' as const };
@@ -34,9 +61,12 @@ export function KitchenSkillsReuseView() {
 
   function save() {
     if (!trim || !reusable.ok || !dest.ok || existing) return;
+    const recipeId = normalizeRecipeId(trim.recipeId ?? activeRecipeId);
+    if (!recipeId) return;
     const entry = {
       sessionId: session.sessionId,
       sessionDate: session.sessionDate,
+      recipeId,
       ingredientId: trim.ingredientId,
       reusableWasteGrams: reusable.value,
       reuseDestination: dest.value,
@@ -77,7 +107,10 @@ export function KitchenSkillsReuseView() {
             disabled={complete}
           >
             {completedTrim.map((entry) => (
-              <option key={entry.ingredientId} value={entry.ingredientId}>
+              <option
+                key={`${entry.recipeId ?? 'legacy'}:${entry.ingredientId}`}
+                value={entry.ingredientId}
+              >
                 {entry.ingredientName}
               </option>
             ))}

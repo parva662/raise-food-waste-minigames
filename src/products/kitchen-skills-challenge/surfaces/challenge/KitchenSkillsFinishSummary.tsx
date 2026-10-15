@@ -35,7 +35,11 @@ function reuseHeadline(
   }
   return entries
     .map((entry) => {
-      const trim = trimEntries.find((item) => item.ingredientId === entry.ingredientId);
+      const trim = trimEntries.find(
+        (item) =>
+          item.ingredientId === entry.ingredientId &&
+          (entry.recipeId ? item.recipeId === entry.recipeId : !item.recipeId || item.recipeId === entry.recipeId),
+      );
       const name = trim?.ingredientName ?? entry.ingredientId;
       return `${name} · ${formatGrams(entry.reusableWasteGrams)} to ${entry.reuseDestination}`;
     })
@@ -53,9 +57,15 @@ function portionHeadline(entries: readonly KitchenSkillsPortionEntry[]): string 
 }
 
 export function KitchenSkillsFinishSummary() {
-  const { trimEntries, rescueEntries, portionEntries, recordedIngredientIds, addAnotherIngredient } =
-    useReadyKitchenSkillsSession();
-  const recipe = sessionRecipeReference(portionEntries);
+  const {
+    trimEntries,
+    rescueEntries,
+    portionEntries,
+    activeRecipeId,
+    recordedIngredientIds,
+    addAnotherIngredient,
+  } = useReadyKitchenSkillsSession();
+  const recipe = sessionRecipeReference(portionEntries, activeRecipeId);
   const canAddAnother =
     recipe != null && remainingRecipeIngredientsForTrim(recipe, recordedIngredientIds).length > 0;
 

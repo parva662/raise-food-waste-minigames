@@ -18,7 +18,12 @@ import {
 import { extractGroupActivities, getRawKitchenSelfActivitiesInput, getRawKitchenSkillsTrainerActivitiesInput } from '@/platform/gamebus/groupActivities';
 import { getAuthenticatedGameBusUser } from '@/platform/gamebus/inputCollections';
 import { normalizeIngredientId } from '@/shared/identifiers/ingredientId';
-import { isIngredientAlreadyRecorded } from '@/products/kitchen-skills-challenge/domain/session/ingredientUniqueness';
+import {
+  isPortionRecipeAlreadyRecorded,
+  isRescueAlreadyRecorded,
+  isTrimAlreadyRecorded,
+  normalizeRecipeId,
+} from '@/products/kitchen-skills-challenge/domain/session/ingredientUniqueness';
 import { ensureKitchenSkillsLockedSession } from '@/products/kitchen-skills-challenge/domain/session/lock';
 import { isKitchenSkillsReviewScore } from '@/products/kitchen-skills-challenge/domain/assessment/scores';
 import { buildKitchenSkillsTrainerSessions } from '@/products/kitchen-skills-challenge/read/trainerSessions';
@@ -43,6 +48,7 @@ import type {
   KitchenSkillsTrimEntry,
 } from '@/products/kitchen-skills-challenge/domain/types';
 import {
+  buildKitchenSkillsTaskProgress,
   canFinishKitchenSkillsChallenge,
   canOpenKitchenSkillsReview,
   requiredKitchenSkillsSection,
@@ -50,10 +56,8 @@ import {
 } from '@/products/kitchen-skills-challenge/domain/session/challengeGate';
 import { goToKitchenDaySection, type KitchenSkillsHashSection } from '@/app/routes';
 import {
-  eligibleRecipeIngredientsForTrim,
-  hasReusableTrimWaste,
-  remainingRecipeIngredientsForTrim,
-  sessionRecipeReference,
+  latestPortionEntryBySubmittedAt,
+  selectActivePortionEntry,
 } from '@/products/kitchen-skills-challenge/domain/session/sessionRecipe';
 
 export type KitchenSkillsCommitResult =
@@ -67,15 +71,25 @@ interface KitchenSkillsSessionValue {
   trimEntries: KitchenSkillsTrimEntry[];
   rescueEntries: KitchenSkillsRescueEntry[];
   portionEntries: KitchenSkillsPortionEntry[];
+  /** Explicit active recipe for Trim / gates after the latest successful Portion save. */
+  activeRecipeId: string | null;
+  activePortionEntry: KitchenSkillsPortionEntry | null;
   reviews: KitchenSkillsReviewEntry[];
   groupSessions: KitchenSkillsTrainerSession[];
+  /** Ingredient ids already trimmed for the active recipe. */
   recordedIngredientIds: string[];
   commitTrimEntry: (entry: KitchenSkillsTrimEntry) => KitchenSkillsCommitResult;
   commitRescueEntry: (entry: KitchenSkillsRescueEntry) => KitchenSkillsCommitResult;
   commitPortionEntry: (entry: KitchenSkillsPortionEntry) => KitchenSkillsCommitResult;
   commitReview: (entry: KitchenSkillsReviewEntry, studentActorId: string) => KitchenSkillsCommitResult;
-  findTrimByIngredientId: (ingredientId: string) => KitchenSkillsTrimEntry | undefined;
-  findRescueByIngredientId: (ingredientId: string) => KitchenSkillsRescueEntry | undefined;
+  findTrimByIngredientId: (
+    ingredientId: string,
+    recipeId?: string | null,
+  ) => KitchenSkillsTrimEntry | undefined;
+  findRescueByIngredientId: (
+    ingredientId: string,
+    recipeId?: string | null,
+  ) => KitchenSkillsRescueEntry | undefined;
   findReviewBySessionAndModule: (
     sessionId: string,
     reviewedGame: KitchenSkillsReviewedModule,
@@ -90,6 +104,8 @@ interface KitchenSkillsSessionValue {
   enterReuse: () => void;
   addAnotherIngredient: () => void;
   openFinishSummary: () => void;
+  /** Resume Trim/Reuse for an already-saved Portion recipe without re-posting. */
+  resumeSavedRecipe: (recipeId: string) => boolean;
 }
 
 const KitchenSkillsSessionContext = createContext<KitchenSkillsSessionValue | null>(null);
@@ -170,6 +186,7 @@ export function KitchenSkillsSessionProvider({
   const [localRescue, setLocalRescue] = useState<KitchenSkillsRescueEntry[]>([]);
   const [localPortion, setLocalPortion] = useState<KitchenSkillsPortionEntry[]>([]);
   const [localReviews, setLocalReviews] = useState<KitchenSkillsReviewEntry[]>([]);
+  const [activeRecipeId, setActiveRecipeId] = useState<string | null>(null);
   const [showFinishSummary, setShowFinishSummary] = useState(false);
   const [trimInProgress, setTrimInProgress] = useState(false);
   const [reuseInProgress, setReuseInProgress] = useState(false);
@@ -210,15 +227,23 @@ export function KitchenSkillsSessionProvider({
 
   const trimEntries = useMemo(
     () =>
-      mergeKitchenSkillsRecords(localTrim, persisted.trimEntries, (left, right) =>
-        left.ingredientId === right.ingredientId,
+      mergeKitchenSkillsRecords(
+        localTrim,
+        persisted.trimEntries,
+        (left, right) =>
+          left.ingredientId === right.ingredientId &&
+          normalizeRecipeId(left.recipeId) === normalizeRecipeId(right.recipeId),
       ),
     [localTrim, persisted.trimEntries],
   );
   const rescueEntries = useMemo(
     () =>
-      mergeKitchenSkillsRecords(localRescue, persisted.rescueEntries, (left, right) =>
-        left.ingredientId === right.ingredientId,
+      mergeKitchenSkillsRecords(
+        localRescue,
+        persisted.rescueEntries,
+        (left, right) =>
+          left.ingredientId === right.ingredientId &&
+          normalizeRecipeId(left.recipeId) === normalizeRecipeId(right.recipeId),
       ),
     [localRescue, persisted.rescueEntries],
   );
@@ -227,8 +252,7 @@ export function KitchenSkillsSessionProvider({
       mergeKitchenSkillsRecords(
         localPortion,
         persisted.portionEntries,
-        (left, right) =>
-          left.recipeId === right.recipeId && left.submittedAt === right.submittedAt,
+        (left, right) => normalizeRecipeId(left.recipeId) === normalizeRecipeId(right.recipeId),
       ),
     [localPortion, persisted.portionEntries],
   );
@@ -243,68 +267,124 @@ export function KitchenSkillsSessionProvider({
     [localReviews, persisted.reviews],
   );
 
-  const recordedIngredientIds = useMemo(
-    () => trimEntries.map((entry) => entry.ingredientId),
-    [trimEntries],
+  // Keep explicit active recipe when still present; otherwise restore latest by submittedAt
+  // (reload / hydration). Tab navigation alone must not change the active recipe.
+  useEffect(() => {
+    const latest = latestPortionEntryBySubmittedAt(portionEntries);
+    if (!latest) {
+      setActiveRecipeId(null);
+      return;
+    }
+    setActiveRecipeId((current) => {
+      if (current && portionEntries.some((entry) => entry.recipeId === current)) {
+        return current;
+      }
+      return latest.recipeId;
+    });
+  }, [portionEntries]);
+
+  const activePortionEntry = useMemo(
+    () => selectActivePortionEntry(portionEntries, activeRecipeId),
+    [portionEntries, activeRecipeId],
   );
 
+  const recordedIngredientIds = useMemo(() => {
+    const active = normalizeRecipeId(activeRecipeId);
+    return trimEntries
+      .filter((entry) => normalizeRecipeId(entry.recipeId) === active)
+      .map((entry) => entry.ingredientId);
+  }, [trimEntries, activeRecipeId]);
+
   const commitTrimEntry = useCallback((entry: KitchenSkillsTrimEntry): KitchenSkillsCommitResult => {
-    if (isIngredientAlreadyRecorded(recordedIngredientIds, entry.ingredientId)) {
+    const recipeId = normalizeRecipeId(entry.recipeId);
+    if (!recipeId) {
+      return { ok: false, reason: 'missing_recipe', keepDraft: true };
+    }
+    if (isTrimAlreadyRecorded(trimEntries, recipeId, entry.ingredientId)) {
       return { ok: false, reason: 'duplicate_ingredient', keepDraft: true };
     }
+    const normalized = { ...entry, recipeId };
     if (isGameBusEmbed()) {
-      const posted = tryPostKitchenSkillsTrim(entry);
+      const posted = tryPostKitchenSkillsTrim(normalized);
       if (!posted.ok) {
         return { ok: false, reason: posted.reason, keepDraft: true };
       }
       setLocalTrim((current) =>
-        current.some((item) => item.ingredientId === entry.ingredientId)
+        isTrimAlreadyRecorded(current, recipeId, entry.ingredientId)
           ? current
-          : [...current, { ...entry, source: 'local' }],
+          : [...current, { ...normalized, source: 'local' }],
       );
       return { ok: true, mode: 'posted_awaiting_persist' };
     }
     setLocalTrim((current) =>
-      current.some((item) => item.ingredientId === entry.ingredientId)
+      isTrimAlreadyRecorded(current, recipeId, entry.ingredientId)
         ? current
-        : [...current, { ...entry, source: 'local' }],
+        : [...current, { ...normalized, source: 'local' }],
     );
     return { ok: true, mode: 'local' };
-  }, [recordedIngredientIds]);
+  }, [trimEntries]);
 
   const commitRescueEntry = useCallback((entry: KitchenSkillsRescueEntry): KitchenSkillsCommitResult => {
-    if (!trimEntries.some((item) => item.ingredientId === entry.ingredientId)) {
+    const recipeId = normalizeRecipeId(entry.recipeId);
+    if (!recipeId) {
+      return { ok: false, reason: 'missing_recipe', keepDraft: true };
+    }
+    if (
+      !trimEntries.some(
+        (item) =>
+          item.ingredientId === entry.ingredientId && normalizeRecipeId(item.recipeId) === recipeId,
+      )
+    ) {
       return { ok: false, reason: 'missing_trim', keepDraft: true };
     }
-    if (rescueEntries.some((item) => item.ingredientId === entry.ingredientId)) {
+    if (isRescueAlreadyRecorded(rescueEntries, recipeId, entry.ingredientId)) {
       return { ok: false, reason: 'duplicate_rescue', keepDraft: true };
     }
+    const normalized = { ...entry, recipeId };
     if (isGameBusEmbed()) {
-      const posted = tryPostKitchenSkillsRescue(entry);
+      const posted = tryPostKitchenSkillsRescue(normalized);
       if (!posted.ok) {
         return { ok: false, reason: posted.reason, keepDraft: true };
       }
-      setLocalRescue((current) => [...current, { ...entry, source: 'local' }]);
+      setLocalRescue((current) => [...current, { ...normalized, source: 'local' }]);
       setShowFinishSummary(true);
       return { ok: true, mode: 'posted_awaiting_persist' };
     }
-    setLocalRescue((current) => [...current, { ...entry, source: 'local' }]);
+    setLocalRescue((current) => [...current, { ...normalized, source: 'local' }]);
     setShowFinishSummary(true);
     return { ok: true, mode: 'local' };
   }, [rescueEntries, trimEntries]);
 
-  const commitPortionEntry = useCallback((entry: KitchenSkillsPortionEntry): KitchenSkillsCommitResult => {
-    if (isGameBusEmbed()) {
-      const posted = tryPostKitchenSkillsPortion(entry);
-      if (!posted.ok) {
-        return { ok: false, reason: posted.reason, keepDraft: true };
+  const commitPortionEntry = useCallback(
+    (entry: KitchenSkillsPortionEntry): KitchenSkillsCommitResult => {
+      const recipeId = normalizeRecipeId(entry.recipeId);
+      if (!recipeId) {
+        return { ok: false, reason: 'missing_recipe', keepDraft: true };
       }
-      setLocalPortion((current) => [...current, { ...entry, source: 'local' }]);
-      return { ok: true, mode: 'posted_awaiting_persist' };
-    }
-    setLocalPortion((current) => [...current, { ...entry, source: 'local' }]);
-    return { ok: true, mode: 'local' };
-  }, []);
+      if (
+        isPortionRecipeAlreadyRecorded(
+          portionEntries.map((item) => item.recipeId),
+          recipeId,
+        )
+      ) {
+        return { ok: false, reason: 'duplicate_recipe', keepDraft: true };
+      }
+      const normalized = { ...entry, recipeId };
+      if (isGameBusEmbed()) {
+        const posted = tryPostKitchenSkillsPortion(normalized);
+        if (!posted.ok) {
+          return { ok: false, reason: posted.reason, keepDraft: true };
+        }
+        setLocalPortion((current) => [...current, { ...normalized, source: 'local' }]);
+        setActiveRecipeId(recipeId);
+        return { ok: true, mode: 'posted_awaiting_persist' };
+      }
+      setLocalPortion((current) => [...current, { ...normalized, source: 'local' }]);
+      setActiveRecipeId(recipeId);
+      return { ok: true, mode: 'local' };
+    },
+    [portionEntries],
+  );
 
   const enterReuse = useCallback(() => {
     setTrimInProgress(false);
@@ -320,6 +400,23 @@ export function KitchenSkillsSessionProvider({
   const openFinishSummary = useCallback(() => {
     setShowFinishSummary(true);
   }, []);
+
+  const resumeSavedRecipe = useCallback(
+    (recipeId: string): boolean => {
+      const normalized = normalizeRecipeId(recipeId);
+      if (!normalized) return false;
+      if (!portionEntries.some((entry) => normalizeRecipeId(entry.recipeId) === normalized)) {
+        return false;
+      }
+      setActiveRecipeId(normalized);
+      setShowFinishSummary(false);
+      setTrimInProgress(false);
+      setReuseInProgress(false);
+      goToKitchenDaySection('trim');
+      return true;
+    },
+    [portionEntries],
+  );
 
   const commitReview = useCallback((entry: KitchenSkillsReviewEntry, studentActorId: string): KitchenSkillsCommitResult => {
     if (
@@ -360,12 +457,26 @@ export function KitchenSkillsSessionProvider({
   }, [reviews]);
 
   const findTrimByIngredientId = useCallback(
-    (ingredientId: string) => trimEntries.find((entry) => entry.ingredientId === ingredientId),
-    [trimEntries],
+    (ingredientId: string, recipeId?: string | null) => {
+      const scope = normalizeRecipeId(recipeId) ?? normalizeRecipeId(activeRecipeId);
+      return trimEntries.find(
+        (entry) =>
+          entry.ingredientId === ingredientId &&
+          (scope ? normalizeRecipeId(entry.recipeId) === scope : true),
+      );
+    },
+    [trimEntries, activeRecipeId],
   );
   const findRescueByIngredientId = useCallback(
-    (ingredientId: string) => rescueEntries.find((entry) => entry.ingredientId === ingredientId),
-    [rescueEntries],
+    (ingredientId: string, recipeId?: string | null) => {
+      const scope = normalizeRecipeId(recipeId) ?? normalizeRecipeId(activeRecipeId);
+      return rescueEntries.find(
+        (entry) =>
+          entry.ingredientId === ingredientId &&
+          (scope ? normalizeRecipeId(entry.recipeId) === scope : true),
+      );
+    },
+    [rescueEntries, activeRecipeId],
   );
   const findReviewBySessionAndModule = useCallback(
     (sessionId: string, reviewedGame: KitchenSkillsReviewedModule) =>
@@ -375,28 +486,25 @@ export function KitchenSkillsSessionProvider({
     [reviews],
   );
 
-  const taskProgress = useMemo<KitchenSkillsTaskProgress>(() => {
-    const recipe = sessionRecipeReference(portionEntries);
-    return {
-      portionComplete: portionEntries.length > 0,
-      trimCount: trimEntries.length,
-      reuseComplete: rescueEntries.length > 0,
+  const taskProgress = useMemo<KitchenSkillsTaskProgress>(
+    () =>
+      buildKitchenSkillsTaskProgress({
+        portionEntries,
+        trimEntries,
+        rescueEntries,
+        activeRecipeId,
+        trimInProgress,
+        reuseInProgress,
+      }),
+    [
+      portionEntries,
+      trimEntries,
+      rescueEntries,
+      activeRecipeId,
       trimInProgress,
       reuseInProgress,
-      hasEligibleTrimIngredients: recipe ? eligibleRecipeIngredientsForTrim(recipe).length > 0 : false,
-      hasRemainingEligibleTrimIngredients: recipe
-        ? remainingRecipeIngredientsForTrim(recipe, recordedIngredientIds).length > 0
-        : false,
-      hasReusableTrimWaste: hasReusableTrimWaste(trimEntries),
-    };
-  }, [
-    portionEntries,
-    trimEntries,
-    rescueEntries.length,
-    trimInProgress,
-    reuseInProgress,
-    recordedIngredientIds,
-  ]);
+    ],
+  );
   const requiredSection = requiredKitchenSkillsSection(taskProgress);
   const reviewAllowed = canOpenKitchenSkillsReview(taskProgress);
   const canFinish = canFinishKitchenSkillsChallenge(taskProgress);
@@ -408,6 +516,8 @@ export function KitchenSkillsSessionProvider({
       trimEntries,
       rescueEntries,
       portionEntries,
+      activeRecipeId,
+      activePortionEntry,
       reviews,
       groupSessions: persisted.groupSessions,
       recordedIngredientIds,
@@ -428,12 +538,15 @@ export function KitchenSkillsSessionProvider({
       enterReuse,
       addAnotherIngredient,
       openFinishSummary,
+      resumeSavedRecipe,
     }),
     [
       session,
       trimEntries,
       rescueEntries,
       portionEntries,
+      activeRecipeId,
+      activePortionEntry,
       reviews,
       persisted.groupSessions,
       recordedIngredientIds,
@@ -452,6 +565,7 @@ export function KitchenSkillsSessionProvider({
       enterReuse,
       addAnotherIngredient,
       openFinishSummary,
+      resumeSavedRecipe,
     ],
   );
 

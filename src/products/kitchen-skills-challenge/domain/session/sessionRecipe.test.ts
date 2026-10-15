@@ -3,33 +3,59 @@ import { getRecipeReference } from '@/products/kitchen-skills-challenge/domain/p
 import {
   eligibleRecipeIngredientsForTrim,
   hasReusableTrimWaste,
+  latestPortionEntryBySubmittedAt,
   remainingRecipeIngredientsForTrim,
+  resolveRecipeReferenceForTrimIngredient,
+  selectActivePortionEntry,
   sessionRecipeEntry,
+  sessionRecipeReference,
   trimIngredientAvailability,
 } from '@/products/kitchen-skills-challenge/domain/session/sessionRecipe';
 import type { KitchenSkillsPortionEntry } from '@/products/kitchen-skills-challenge/domain/types';
 
-const portion: KitchenSkillsPortionEntry = {
-  sessionId: 'kitchen-day:t:user-1:2026-09-23',
-  sessionDate: '2026-09-23',
-  submittedAt: '2026-09-23T11:00:00.000Z',
-  recipeId: '42',
-  recipeName: 'Hedelmät M,G',
-  recipeComposition: [],
-  finalRecipeWeightGrams: 3700,
-  source: 'local',
-};
+function portion(
+  recipeId: string,
+  recipeName: string,
+  submittedAt: string,
+): KitchenSkillsPortionEntry {
+  return {
+    sessionId: 'kitchen-day:t:user-1:2026-09-23',
+    sessionDate: '2026-09-23',
+    submittedAt,
+    recipeId,
+    recipeName,
+    recipeComposition: [],
+    finalRecipeWeightGrams: 3700,
+    source: 'local',
+  };
+}
+
+const hedelmat = portion('42', 'Hedelmät M,G', '2026-09-23T11:00:00.000Z');
+const mustamakkara = portion('23', 'FLOW mustamakkara', '2026-09-23T11:05:00.000Z');
+const smoothie = portion('5', 'Banaanismoothie L, G', '2026-09-23T11:10:00.000Z');
 
 describe('session recipe for connected Trim', () => {
-  it('uses the first recorded Portion recipe for the session', () => {
-    expect(sessionRecipeEntry([portion])?.recipeId).toBe('42');
+  it('selects the latest Portion by submittedAt, not array order', () => {
+    expect(latestPortionEntryBySubmittedAt([smoothie, hedelmat, mustamakkara])?.recipeId).toBe('5');
+    expect(selectActivePortionEntry([smoothie, hedelmat, mustamakkara], null)?.recipeId).toBe('5');
     expect(sessionRecipeEntry([])).toBeNull();
   });
 
+  it('prefers an explicit active recipe id over array order and submission order', () => {
+    expect(selectActivePortionEntry([smoothie, hedelmat, mustamakkara], '23')?.recipeName).toBe(
+      'FLOW mustamakkara',
+    );
+    expect(sessionRecipeReference([smoothie, hedelmat, mustamakkara], '42')?.recipeId).toBe('42');
+  });
+
+  it('falls back to the latest submission when the preferred active id is missing', () => {
+    expect(selectActivePortionEntry([hedelmat, smoothie], 'missing')?.recipeId).toBe('5');
+  });
+
   it('offers only unused recipe ingredients with Hävikki greater than 0', () => {
-    const smoothie = getRecipeReference('5');
-    expect(smoothie).not.toBeNull();
-    const remaining = remainingRecipeIngredientsForTrim(smoothie!, []);
+    const recipe = getRecipeReference('5');
+    expect(recipe).not.toBeNull();
+    const remaining = remainingRecipeIngredientsForTrim(recipe!, []);
     expect(remaining.map((line) => line.ingredientId)).toEqual(['banaani-banaani-1kg-peru-1lk']);
     expect(remaining.every((line) => (line.referenceWastePercent ?? 0) > 0)).toBe(true);
   });
@@ -98,5 +124,20 @@ describe('session recipe for connected Trim', () => {
         },
       ]),
     ).toBe(true);
+  });
+
+  it('joins a Trim ingredient to a recipe only when membership is unambiguous', () => {
+    expect(resolveRecipeReferenceForTrimIngredient('banaani', [hedelmat])?.recipeId).toBe('42');
+    expect(resolveRecipeReferenceForTrimIngredient('banaani', [smoothie, mustamakkara])).toBeNull();
+    expect(
+      resolveRecipeReferenceForTrimIngredient('banaani-banaani-1kg-peru-1lk', [smoothie])?.recipeId,
+    ).toBe('5');
+  });
+
+  it('does not invent a recipe join when the same ingredientId appears in multiple saved recipes', () => {
+    const aprikoosi = portion('4', 'Aprikoosi-omenalassi L, G', '2026-09-23T11:00:00.000Z');
+    expect(
+      resolveRecipeReferenceForTrimIngredient('banaani-banaani-1kg-peru-1lk', [aprikoosi, smoothie]),
+    ).toBeNull();
   });
 });

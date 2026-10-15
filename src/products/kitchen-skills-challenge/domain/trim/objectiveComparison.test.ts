@@ -15,11 +15,13 @@ function trimEntry(
   ingredientName: string,
   startingWeightGrams: number,
   actualWasteGrams: number,
+  recipeId?: string,
 ): KitchenSkillsTrimEntry {
   return {
     sessionId: 's1',
     sessionDate: '2026-09-23',
     submittedAt: '2026-09-23T10:03:00.000Z',
+    ...(recipeId ? { recipeId } : {}),
     ingredientId,
     ingredientName,
     ingredientWeightGrams: startingWeightGrams,
@@ -149,5 +151,83 @@ describe('objective Trim vs JAMIX comparison', () => {
     );
     expect(session.status).toBe('unavailable');
     expect(session.actualTrimPercent).toBeCloseTo((540 / 6000) * 100);
+  });
+
+  it('does not compare a Trim ingredient against the first saved recipe when membership is ambiguous', () => {
+    const smoothie: KitchenSkillsPortionEntry = {
+      sessionId: 's1',
+      sessionDate: '2026-09-23',
+      submittedAt: '2026-09-23T11:10:00.000Z',
+      recipeId: '5',
+      recipeName: 'Banaanismoothie L, G',
+      recipeComposition: [],
+      finalRecipeWeightGrams: 5040,
+      source: 'persisted',
+    };
+    const aprikoosi: KitchenSkillsPortionEntry = {
+      sessionId: 's1',
+      sessionDate: '2026-09-23',
+      submittedAt: '2026-09-23T11:00:00.000Z',
+      recipeId: '4',
+      recipeName: 'Aprikoosi-omenalassi L, G',
+      recipeComposition: [],
+      finalRecipeWeightGrams: 4400,
+      source: 'persisted',
+    };
+    const session = compareTrimSessionFromPortion(
+      [trimEntry('banaani-banaani-1kg-peru-1lk', 'Banaani', 2000, 400)],
+      [smoothie, aprikoosi],
+    );
+    expect(session.status).toBe('unavailable');
+    expect(session.ingredients[0]?.status).toBe('unavailable');
+  });
+
+  it('uses each Trim entry explicit recipeId for recipe-specific JAMIX references', () => {
+    const smoothie: KitchenSkillsPortionEntry = {
+      sessionId: 's1',
+      sessionDate: '2026-09-23',
+      submittedAt: '2026-09-23T11:10:00.000Z',
+      recipeId: '5',
+      recipeName: 'Banaanismoothie L, G',
+      recipeComposition: [],
+      finalRecipeWeightGrams: 5040,
+      source: 'persisted',
+    };
+    const aprikoosi: KitchenSkillsPortionEntry = {
+      sessionId: 's1',
+      sessionDate: '2026-09-23',
+      submittedAt: '2026-09-23T11:00:00.000Z',
+      recipeId: '4',
+      recipeName: 'Aprikoosi-omenalassi L, G',
+      recipeComposition: [],
+      finalRecipeWeightGrams: 4400,
+      source: 'persisted',
+    };
+    const session = compareTrimSessionFromPortion(
+      [
+        trimEntry('banaani-banaani-1kg-peru-1lk', 'Banaani', 2000, 400, '5'),
+        trimEntry('banaani-banaani-1kg-peru-1lk', 'Banaani', 1500, 200, '4'),
+      ],
+      [aprikoosi, smoothie],
+    );
+    expect(session.status).toBe('available');
+    expect(session.ingredients).toHaveLength(2);
+    expect(session.ingredients.every((item) => item.status === 'available')).toBe(true);
+    const smoothieRef = getRecipeReference('5')?.lines.find(
+      (line) => line.ingredientId === 'banaani-banaani-1kg-peru-1lk',
+    )?.referenceWastePercent;
+    const aprikoosiRef = getRecipeReference('4')?.lines.find(
+      (line) => line.ingredientId === 'banaani-banaani-1kg-peru-1lk',
+    )?.referenceWastePercent;
+    expect(smoothieRef).toBeDefined();
+    expect(aprikoosiRef).toBeDefined();
+    expect(session.ingredients[0]).toMatchObject({
+      status: 'available',
+      referenceWastePercent: smoothieRef,
+    });
+    expect(session.ingredients[1]).toMatchObject({
+      status: 'available',
+      referenceWastePercent: aprikoosiRef,
+    });
   });
 });
