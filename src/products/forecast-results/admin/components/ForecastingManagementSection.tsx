@@ -1,14 +1,16 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import type { GameBusInputCollectionsPayload } from '@/platform/gamebus/types';
 import type { AdminHistoryServiceRow } from '@/products/forecast-results/admin/adminServiceView';
 import type { AdminServiceView } from '@/products/forecast-results/admin/adminServiceView';
 import { ForecastPendingStaffTable } from '@/products/forecast-results/admin/components/ForecastPendingStaffTable';
 import { HistorySection } from '@/products/forecast-results/admin/components/HistorySection';
+import { ManagementDetailDrawer } from '@/products/forecast-results/admin/components/ManagementDetailDrawer';
 import { ManagementTabNav, type ManagementPrimaryTab } from '@/products/forecast-results/admin/components/ManagementTabNav';
 import { ManagementTrendsSection } from '@/products/forecast-results/admin/components/ManagementTrendsSection';
 import { OverviewSection } from '@/products/forecast-results/admin/components/OverviewSection';
 import { StaffDetailPanel } from '@/products/forecast-results/admin/components/StaffDetailPanel';
 import { StaffResultsTable } from '@/products/forecast-results/admin/components/StaffResultsTable';
+import { formatServiceDateLong } from '@/products/forecast-results/displayFormat';
 import { buildManagementTrendPoints } from '@/products/forecast-results/calculations/managementTrendsData';
 
 interface ForecastingManagementSectionProps {
@@ -40,6 +42,16 @@ export function ForecastingManagementSection({
     if (!completeResults) return null;
     return completeResults.staffResults.find((result) => result.userId === selectedStaffId) ?? null;
   }, [completeResults, selectedStaffId]);
+
+  useEffect(() => {
+    setSelectedStaffId(null);
+  }, [selectedDate, view.kind]);
+
+  useEffect(() => {
+    if (selectedStaffId && completeResults && !selectedStaff) {
+      setSelectedStaffId(null);
+    }
+  }, [completeResults, selectedStaff, selectedStaffId]);
 
   const trendAsOf =
     selectedDate ||
@@ -83,13 +95,24 @@ export function ForecastingManagementSection({
                   selectedStaffId={selectedStaffId}
                   onSelectStaff={setSelectedStaffId}
                 />
-                {selectedStaff ? (
-                  <StaffDetailPanel
-                    result={selectedStaff}
-                    serviceDate={completeResults.serviceDate}
-                    onClose={() => setSelectedStaffId(null)}
-                  />
-                ) : null}
+                <ManagementDetailDrawer
+                  open={Boolean(selectedStaff)}
+                  title={selectedStaff?.userName ?? 'Staff detail'}
+                  subtitle={`Service detail — ${formatServiceDateLong(completeResults.serviceDate)}`}
+                  onClose={() => setSelectedStaffId(null)}
+                  testId="kitchen-mgmt-staff-detail"
+                  titleTestId="kitchen-mgmt-staff-detail-title"
+                  closeTestId="kitchen-mgmt-staff-detail-close"
+                >
+                  {selectedStaff ? (
+                    <>
+                      <p className="kitchen-mgmt-sr-only" data-testid="staff-detail-service-context">
+                        Service detail — {formatServiceDateLong(completeResults.serviceDate)}
+                      </p>
+                      <StaffDetailPanel result={selectedStaff} />
+                    </>
+                  ) : null}
+                </ManagementDetailDrawer>
               </>
             );
           }

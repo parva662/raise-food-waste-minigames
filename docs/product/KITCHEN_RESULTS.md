@@ -48,7 +48,9 @@ Two surfaces exist in the current repository:
 - Admin partial data must not collapse to a single empty paragraph; Forecast & Service secondary tabs remain available.
 - Admin History includes complete, forecast-only, and closeout-only services without converting missing values to zero.
 - Admin Kitchen Skills uses `kitchenSkillsTrainerInput` (group feed), never `kitchenGroupInputSelf`.
-- Admin keeps its historical service-date selector (not a "today dashboard").
+- Admin Forecast & Service keeps its historical service-date selector (not a "today dashboard"). Kitchen Skills does not use that selector; it shows an independent reporting period defaulting to all recorded sessions.
+- Staff, participant, and session details open in a contextual drawer so the main dashboard stays compact.
+- Kitchen Skills Overview reports mean time-efficiency and preparation-quality scores separately per module from recorded `wastePracticeReview` assessments only; unassessed modules are shown as not assessed (not zero).
 - No composite score, ranking, or winner language.
 - Shared calculation engine for participant and admin for the same actor + targetDate.
 - Management dashboard is read-only (no forecast, closeout, or tutor assessment submission).

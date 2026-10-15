@@ -1,12 +1,17 @@
-import { useCallback, useMemo, useState, type KeyboardEvent, type ReactNode } from 'react';
+import { useCallback, useEffect, useMemo, useState, type KeyboardEvent } from 'react';
+import { ManagementDetailDrawer } from '@/products/forecast-results/admin/components/ManagementDetailDrawer';
+import { formatCountLabel } from '@/products/forecast-results/admin/adminPresentation';
 import { SessionEvidence } from '@/products/kitchen-skills-challenge/surfaces/shared/SessionEvidence';
 import type { KitchenSkillsTrainerSession } from '@/products/kitchen-skills-challenge/domain/types';
 import {
   assessmentStatusLabel,
-  buildKitchenSkillsManagementSummary,
+  filterSessionsByDateRange,
+  formatMeanScoreOutOfFive,
   recordedModulesLabel,
+  summarizeFilteredKitchenSkillsSessions,
   type KitchenSkillsAssessmentRow,
   type KitchenSkillsManagementDataState,
+  type KitchenSkillsModuleAssessmentAverage,
   KITCHEN_SKILLS_MODULE_TITLES,
   KITCHEN_SKILLS_REVIEWED_MODULES,
 } from '@/products/forecast-results/admin/skills/buildKitchenSkillsManagementSummary';
@@ -47,31 +52,50 @@ function UnavailablePanel({
   );
 }
 
-function DetailPanel({
-  title,
-  subtitle,
-  onClose,
-  children,
-  testId,
+function ModuleAssessmentPerformance({
+  averages,
 }: {
-  title: string;
-  subtitle: string;
-  onClose: () => void;
-  children: ReactNode;
-  testId: string;
+  averages: readonly KitchenSkillsModuleAssessmentAverage[];
 }) {
   return (
-    <section className="kitchen-mgmt-staff-detail" data-testid={testId}>
-      <div className="kitchen-mgmt-staff-detail__header">
-        <div>
-          <h3 className="kitchen-mgmt-staff-detail__name">{title}</h3>
-          <p className="kitchen-mgmt-staff-detail__subtitle">{subtitle}</p>
-        </div>
-        <button type="button" className="kitchen-mgmt-detail-button" onClick={onClose}>
-          Close
-        </button>
+    <section className="kitchen-mgmt-surface" data-testid="kitchen-mgmt-skills-assessment-performance">
+      <h3 className="kitchen-mgmt-surface__title">Assessment performance</h3>
+      <p className="kitchen-mgmt-helper">
+        Mean tutor scores from recorded assessments only. Time efficiency and preparation quality
+        stay separate; unassessed modules are not treated as zero.
+      </p>
+      <div className="kitchen-mgmt-assessment-grid" role="list">
+        {averages.map((row) => (
+          <article
+            key={row.module}
+            className="kitchen-mgmt-assessment-card"
+            role="listitem"
+            data-testid={`skills-assessment-avg-${row.module}`}
+          >
+            <h4 className="kitchen-mgmt-assessment-card__title">{row.moduleTitle}</h4>
+            <dl className="kitchen-mgmt-assessment-card__metrics">
+              <div>
+                <dt>Time efficiency</dt>
+                <dd data-testid={`skills-assessment-avg-time-${row.module}`}>
+                  {formatMeanScoreOutOfFive(row.meanTimeEfficiency)}
+                </dd>
+              </div>
+              <div>
+                <dt>Preparation quality</dt>
+                <dd data-testid={`skills-assessment-avg-quality-${row.module}`}>
+                  {formatMeanScoreOutOfFive(row.meanPreparationQuality)}
+                </dd>
+              </div>
+              <div>
+                <dt>Assessments</dt>
+                <dd data-testid={`skills-assessment-avg-count-${row.module}`}>
+                  {formatCountLabel(row.assessmentCount, 'assessment', 'assessments')}
+                </dd>
+              </div>
+            </dl>
+          </article>
+        ))}
       </div>
-      {children}
     </section>
   );
 }
@@ -86,7 +110,7 @@ function SkillsOverview({
     .slice(0, 5);
 
   return (
-    <div className="kitchen-mgmt-overview" data-testid="kitchen-mgmt-skills-overview">
+    <div className="kitchen-mgmt-overview kitchen-mgmt-overview--skills" data-testid="kitchen-mgmt-skills-overview">
       <section className="kitchen-mgmt-surface">
         <h3 className="kitchen-mgmt-surface__title">Kitchen Skills overview</h3>
         <div className="kitchen-mgmt-kpi-grid" data-testid="kitchen-mgmt-skills-kpis">
@@ -117,47 +141,37 @@ function SkillsOverview({
         </div>
       </section>
 
-      <section className="kitchen-mgmt-surface" data-testid="kitchen-mgmt-skills-module-chart">
-        <h3 className="kitchen-mgmt-surface__title">Module activity</h3>
-        <div className="kitchen-mgmt-bar-chart" role="img" aria-label="Module activity counts">
-          {KITCHEN_SKILLS_REVIEWED_MODULES.map((module) => {
-            const count = data.moduleActivityCounts[module];
-            const max = Math.max(
-              ...KITCHEN_SKILLS_REVIEWED_MODULES.map((key) => data.moduleActivityCounts[key]),
-              1,
-            );
-            const height = Math.max(8, Math.round((count / max) * 120));
-            return (
-              <div key={module} className="kitchen-mgmt-bar-chart__item">
-                <div
-                  className="kitchen-mgmt-bar-chart__bar"
-                  style={{ height }}
-                  data-testid={`skills-module-bar-${module}`}
-                  title={`${KITCHEN_SKILLS_MODULE_TITLES[module]}: ${count}`}
-                />
-                <span className="kitchen-mgmt-bar-chart__value">{count}</span>
-                <span className="kitchen-mgmt-bar-chart__label">
-                  {KITCHEN_SKILLS_MODULE_TITLES[module]}
-                </span>
-              </div>
-            );
-          })}
-        </div>
-      </section>
+      <div className="kitchen-mgmt-skills-overview-split">
+        <section className="kitchen-mgmt-surface" data-testid="kitchen-mgmt-skills-module-chart">
+          <h3 className="kitchen-mgmt-surface__title">Module activity</h3>
+          <div className="kitchen-mgmt-bar-chart" role="img" aria-label="Module activity counts">
+            {KITCHEN_SKILLS_REVIEWED_MODULES.map((module) => {
+              const count = data.moduleActivityCounts[module];
+              const max = Math.max(
+                ...KITCHEN_SKILLS_REVIEWED_MODULES.map((key) => data.moduleActivityCounts[key]),
+                1,
+              );
+              const height = Math.max(8, Math.round((count / max) * 100));
+              return (
+                <div key={module} className="kitchen-mgmt-bar-chart__item">
+                  <div
+                    className="kitchen-mgmt-bar-chart__bar"
+                    style={{ height }}
+                    data-testid={`skills-module-bar-${module}`}
+                    title={`${KITCHEN_SKILLS_MODULE_TITLES[module]}: ${count}`}
+                  />
+                  <span className="kitchen-mgmt-bar-chart__value">{count}</span>
+                  <span className="kitchen-mgmt-bar-chart__label">
+                    {KITCHEN_SKILLS_MODULE_TITLES[module]}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+        </section>
 
-      <section className="kitchen-mgmt-surface" data-testid="kitchen-mgmt-skills-assessment-summary">
-        <h3 className="kitchen-mgmt-surface__title">Assessment status</h3>
-        <dl className="kitchen-mgmt-kpi-grid kitchen-mgmt-kpi-grid--snapshot">
-          <div>
-            <dt>Reviewed modules</dt>
-            <dd data-testid="skills-reviewed-modules">{data.modulesReviewed}</dd>
-          </div>
-          <div>
-            <dt>Awaiting assessment</dt>
-            <dd data-testid="skills-awaiting-modules">{data.modulesAwaitingAssessment}</dd>
-          </div>
-        </dl>
-      </section>
+        <ModuleAssessmentPerformance averages={data.moduleAssessmentAverages} />
+      </div>
 
       <section className="kitchen-mgmt-surface" data-testid="kitchen-mgmt-skills-recent">
         <h3 className="kitchen-mgmt-surface__title">Recent sessions</h3>
@@ -196,7 +210,7 @@ function SkillsParticipants({
   participants,
 }: {
   sessions: readonly KitchenSkillsTrainerSession[];
-  participants: ReturnType<typeof buildKitchenSkillsManagementSummary>['participants'];
+  participants: Extract<KitchenSkillsManagementDataState, { status: 'ready' }>['participants'];
 }) {
   const [query, setQuery] = useState('');
   const [page, setPage] = useState(0);
@@ -211,7 +225,16 @@ function SkillsParticipants({
 
   const { rows, pageCount, page: safePage } = paginate(filtered, page);
   const selectedSessions = sessions.filter((session) => session.actorId === selectedActorId);
-  const selectedName = selectedSessions[0]?.actorName ?? selectedActorId;
+  const selectedName =
+    participants.find((participant) => participant.actorId === selectedActorId)?.actorName ??
+    selectedSessions[0]?.actorName ??
+    selectedActorId;
+
+  useEffect(() => {
+    if (selectedActorId && !participants.some((participant) => participant.actorId === selectedActorId)) {
+      setSelectedActorId(null);
+    }
+  }, [participants, selectedActorId]);
 
   return (
     <section data-testid="kitchen-mgmt-skills-participants">
@@ -258,6 +281,7 @@ function SkillsParticipants({
                     type="button"
                     className="kitchen-mgmt-detail-button"
                     data-testid={`skills-participant-view-${participant.actorId}`}
+                    aria-expanded={selectedActorId === participant.actorId}
                     onClick={() => setSelectedActorId(participant.actorId)}
                   >
                     View
@@ -291,31 +315,30 @@ function SkillsParticipants({
           </button>
         </div>
       ) : null}
-      {selectedActorId ? (
-        <DetailPanel
-          title={selectedName ?? 'Participant'}
-          subtitle="Read-only Kitchen Skills history"
-          onClose={() => setSelectedActorId(null)}
-          testId="kitchen-mgmt-skills-participant-detail"
-        >
-          {selectedSessions.map((session) => (
-            <div key={session.sessionId} className="kitchen-mgmt-surface kitchen-mgmt-surface--nested">
-              <h4 className="kitchen-mgmt-surface__title">
-                {session.sessionDate} · {assessmentStatusLabel(session)}
-              </h4>
-              <SessionEvidence
-                trimEntries={session.trimEntries}
-                rescueEntries={session.rescueEntries}
-                portionEntries={session.portionEntries}
-                moduleReviews={session.moduleReviews}
-                sessionPortionEntries={session.portionEntries}
-                showWasteAnalytics
-                testIdPrefix={`skills-participant-${session.sessionId}`}
-              />
-            </div>
-          ))}
-        </DetailPanel>
-      ) : null}
+      <ManagementDetailDrawer
+        open={Boolean(selectedActorId)}
+        title={selectedName ?? 'Participant'}
+        subtitle="Read-only Kitchen Skills history"
+        onClose={() => setSelectedActorId(null)}
+        testId="kitchen-mgmt-skills-participant-detail"
+      >
+        {selectedSessions.map((session) => (
+          <div key={session.sessionId} className="kitchen-mgmt-surface kitchen-mgmt-surface--nested">
+            <h4 className="kitchen-mgmt-surface__title">
+              {session.sessionDate} · {assessmentStatusLabel(session)}
+            </h4>
+            <SessionEvidence
+              trimEntries={session.trimEntries}
+              rescueEntries={session.rescueEntries}
+              portionEntries={session.portionEntries}
+              moduleReviews={session.moduleReviews}
+              sessionPortionEntries={session.portionEntries}
+              showWasteAnalytics
+              testIdPrefix={`skills-participant-${session.sessionId}`}
+            />
+          </div>
+        ))}
+      </ManagementDetailDrawer>
     </section>
   );
 }
@@ -350,6 +373,12 @@ function SkillsSessions({ sessions }: { sessions: readonly KitchenSkillsTrainerS
   const selected = sessions.find(
     (session) => `${session.actorId}:${session.sessionId}` === selectedKey,
   );
+
+  useEffect(() => {
+    if (selectedKey && !selected) {
+      setSelectedKey(null);
+    }
+  }, [selected, selectedKey]);
 
   return (
     <section data-testid="kitchen-mgmt-skills-sessions">
@@ -427,6 +456,7 @@ function SkillsSessions({ sessions }: { sessions: readonly KitchenSkillsTrainerS
                       type="button"
                       className="kitchen-mgmt-detail-button"
                       data-testid={`skills-session-view-${session.sessionId}`}
+                      aria-expanded={selectedKey === key}
                       onClick={() => setSelectedKey(key)}
                     >
                       View
@@ -461,13 +491,16 @@ function SkillsSessions({ sessions }: { sessions: readonly KitchenSkillsTrainerS
           </button>
         </div>
       ) : null}
-      {selected ? (
-        <DetailPanel
-          title={selected.actorName}
-          subtitle={`${selected.sessionDate} · ${assessmentStatusLabel(selected)}`}
-          onClose={() => setSelectedKey(null)}
-          testId="kitchen-mgmt-skills-session-detail"
-        >
+      <ManagementDetailDrawer
+        open={Boolean(selected)}
+        title={selected?.actorName ?? 'Session'}
+        subtitle={
+          selected ? `${selected.sessionDate} · ${assessmentStatusLabel(selected)}` : undefined
+        }
+        onClose={() => setSelectedKey(null)}
+        testId="kitchen-mgmt-skills-session-detail"
+      >
+        {selected ? (
           <SessionEvidence
             trimEntries={selected.trimEntries}
             rescueEntries={selected.rescueEntries}
@@ -477,8 +510,8 @@ function SkillsSessions({ sessions }: { sessions: readonly KitchenSkillsTrainerS
             showWasteAnalytics
             testIdPrefix={`skills-session-${selected.sessionId}`}
           />
-        </DetailPanel>
-      ) : null}
+        ) : null}
+      </ManagementDetailDrawer>
     </section>
   );
 }
@@ -588,8 +621,87 @@ function SkillsAssessments({ assessments }: { assessments: readonly KitchenSkill
   );
 }
 
+function KitchenSkillsReportingPeriodPanel({
+  allSessions,
+  fromDate,
+  toDate,
+  onFromChange,
+  onToChange,
+  onReset,
+  filteredSessionCount,
+}: {
+  allSessions: readonly KitchenSkillsTrainerSession[];
+  fromDate: string;
+  toDate: string;
+  onFromChange: (value: string) => void;
+  onToChange: (value: string) => void;
+  onReset: () => void;
+  filteredSessionCount: number;
+}) {
+  const period = useMemo(() => {
+    if (allSessions.length === 0) {
+      return { earliest: null as string | null, latest: null as string | null };
+    }
+    const dates = allSessions.map((session) => session.sessionDate).sort();
+    return { earliest: dates[0] ?? null, latest: dates[dates.length - 1] ?? null };
+  }, [allSessions]);
+
+  const isFiltered = Boolean(fromDate || toDate);
+
+  return (
+    <section
+      className="kitchen-mgmt-surface kitchen-mgmt-surface--compact kitchen-mgmt-skills-period"
+      data-testid="kitchen-mgmt-skills-reporting-period"
+    >
+      <div className="kitchen-mgmt-skills-period__header">
+        <h3 className="kitchen-mgmt-surface__title kitchen-mgmt-surface__title--inline">
+          Kitchen Skills reporting period
+        </h3>
+        <p className="kitchen-mgmt-helper" data-testid="kitchen-mgmt-skills-period-default">
+          {period.earliest && period.latest
+            ? isFiltered
+              ? `Showing ${formatCountLabel(filteredSessionCount, 'session', 'sessions')} in the selected range.`
+              : `All recorded sessions (${period.earliest} – ${period.latest}).`
+            : 'No recorded sessions yet.'}
+        </p>
+      </div>
+      <div className="kitchen-mgmt-skills-period__controls">
+        <label className="kitchen-mgmt-search">
+          <span className="kitchen-mgmt-search__label">From</span>
+          <input
+            type="date"
+            value={fromDate}
+            onChange={(event) => onFromChange(event.target.value)}
+            data-testid="kitchen-mgmt-skills-period-from"
+          />
+        </label>
+        <label className="kitchen-mgmt-search">
+          <span className="kitchen-mgmt-search__label">To</span>
+          <input
+            type="date"
+            value={toDate}
+            onChange={(event) => onToChange(event.target.value)}
+            data-testid="kitchen-mgmt-skills-period-to"
+          />
+        </label>
+        <button
+          type="button"
+          className="kitchen-mgmt-detail-button"
+          data-testid="kitchen-mgmt-skills-period-reset"
+          onClick={onReset}
+          disabled={!isFiltered}
+        >
+          All sessions
+        </button>
+      </div>
+    </section>
+  );
+}
+
 export function KitchenSkillsManagementSection({ data }: KitchenSkillsManagementSectionProps) {
   const [activeTab, setActiveTab] = useState<SkillsTab>('overview');
+  const [fromDate, setFromDate] = useState('');
+  const [toDate, setToDate] = useState('');
 
   const handleKeyDown = useCallback(
     (event: KeyboardEvent<HTMLButtonElement>, index: number) => {
@@ -640,10 +752,29 @@ export function KitchenSkillsManagementSection({ data }: KitchenSkillsManagement
     );
   }
 
+  const filteredSessions = filterSessionsByDateRange(
+    data.sessions,
+    fromDate || toDate ? { fromDate, toDate } : null,
+  );
+  const viewData = summarizeFilteredKitchenSkillsSessions(filteredSessions);
+
   return (
     <div className="kitchen-mgmt-skills" data-testid="kitchen-mgmt-skills">
+      <KitchenSkillsReportingPeriodPanel
+        allSessions={data.sessions}
+        fromDate={fromDate}
+        toDate={toDate}
+        onFromChange={setFromDate}
+        onToChange={setToDate}
+        onReset={() => {
+          setFromDate('');
+          setToDate('');
+        }}
+        filteredSessionCount={viewData.sessionCount}
+      />
+
       <div
-        className="kitchen-mgmt-primary-tabs"
+        className="kitchen-mgmt-primary-tabs kitchen-mgmt-primary-tabs--scroll"
         role="tablist"
         aria-label="Kitchen Skills views"
         data-testid="kitchen-mgmt-skills-tabs"
@@ -682,13 +813,13 @@ export function KitchenSkillsManagementSection({ data }: KitchenSkillsManagement
         >
           {activeTab === tab.id ? (
             tab.id === 'overview' ? (
-              <SkillsOverview data={data} />
+              <SkillsOverview data={viewData} />
             ) : tab.id === 'participants' ? (
-              <SkillsParticipants sessions={data.sessions} participants={data.participants} />
+              <SkillsParticipants sessions={viewData.sessions} participants={viewData.participants} />
             ) : tab.id === 'sessions' ? (
-              <SkillsSessions sessions={data.sessions} />
+              <SkillsSessions sessions={viewData.sessions} />
             ) : (
-              <SkillsAssessments assessments={data.assessments} />
+              <SkillsAssessments assessments={viewData.assessments} />
             )
           ) : null}
         </div>

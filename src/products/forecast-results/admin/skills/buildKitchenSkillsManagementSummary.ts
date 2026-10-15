@@ -29,6 +29,8 @@ export type KitchenSkillsManagementDataState =
       modulesAwaitingAssessment: number;
       modulesReviewed: number;
       assessments: readonly KitchenSkillsAssessmentRow[];
+      moduleAssessmentAverages: readonly KitchenSkillsModuleAssessmentAverage[];
+      reportingPeriod: KitchenSkillsReportingPeriod;
     };
 
 export type KitchenSkillsAssessmentRow = {
@@ -39,6 +41,25 @@ export type KitchenSkillsAssessmentRow = {
   module: KitchenSkillsReviewedModule;
   moduleTitle: string;
   review: KitchenSkillsReviewEntry;
+};
+
+export type KitchenSkillsModuleAssessmentAverage = {
+  module: KitchenSkillsReviewedModule;
+  moduleTitle: string;
+  assessmentCount: number;
+  meanTimeEfficiency: number | null;
+  meanPreparationQuality: number | null;
+};
+
+export type KitchenSkillsReportingPeriod = {
+  earliestSessionDate: string | null;
+  latestSessionDate: string | null;
+  sessionCount: number;
+};
+
+export type KitchenSkillsDateRangeFilter = {
+  fromDate: string;
+  toDate: string;
 };
 
 function countModuleActivities(sessions: readonly KitchenSkillsTrainerSession[]) {
@@ -77,10 +98,70 @@ function collectAssessments(
   return rows.sort((left, right) => right.review.submittedAt.localeCompare(left.review.submittedAt));
 }
 
-export function buildKitchenSkillsManagementSummary(
-  activities: readonly unknown[] | null | undefined,
+function meanOf(values: readonly number[]): number | null {
+  if (values.length === 0) return null;
+  const sum = values.reduce((total, value) => total + value, 0);
+  return sum / values.length;
+}
+
+/**
+ * Arithmetic means per module and dimension from recorded wastePracticeReview assessments only.
+ * Unassessed modules are omitted from the mean (not treated as zero).
+ */
+export function buildModuleAssessmentAverages(
+  assessments: readonly KitchenSkillsAssessmentRow[],
+): KitchenSkillsModuleAssessmentAverage[] {
+  return KITCHEN_SKILLS_REVIEWED_MODULES.map((module) => {
+    const moduleRows = assessments.filter((row) => row.module === module);
+    const timeScores = moduleRows
+      .map((row) => row.review.timeEfficiencyScore)
+      .filter((score) => Number.isFinite(score));
+    const qualityScores = moduleRows
+      .map((row) => row.review.preparationQualityScore)
+      .filter((score) => Number.isFinite(score));
+
+    return {
+      module,
+      moduleTitle: KITCHEN_SKILLS_MODULE_TITLES[module],
+      assessmentCount: moduleRows.length,
+      meanTimeEfficiency: meanOf(timeScores),
+      meanPreparationQuality: meanOf(qualityScores),
+    };
+  });
+}
+
+export function buildKitchenSkillsReportingPeriod(
+  sessions: readonly KitchenSkillsTrainerSession[],
+): KitchenSkillsReportingPeriod {
+  if (sessions.length === 0) {
+    return { earliestSessionDate: null, latestSessionDate: null, sessionCount: 0 };
+  }
+  const dates = sessions.map((session) => session.sessionDate).sort();
+  return {
+    earliestSessionDate: dates[0] ?? null,
+    latestSessionDate: dates[dates.length - 1] ?? null,
+    sessionCount: sessions.length,
+  };
+}
+
+/** Filter sessions by inclusive YYYY-MM-DD range. Empty bounds keep all sessions. */
+export function filterSessionsByDateRange(
+  sessions: readonly KitchenSkillsTrainerSession[],
+  filter: KitchenSkillsDateRangeFilter | null,
+): KitchenSkillsTrainerSession[] {
+  if (!filter) return [...sessions];
+  const from = filter.fromDate.trim();
+  const to = filter.toDate.trim();
+  return sessions.filter((session) => {
+    if (from && session.sessionDate < from) return false;
+    if (to && session.sessionDate > to) return false;
+    return true;
+  });
+}
+
+export function summarizeFilteredKitchenSkillsSessions(
+  sessions: readonly KitchenSkillsTrainerSession[],
 ): Exclude<KitchenSkillsManagementDataState, { status: 'standalone' | 'pending' | 'unavailable' }> {
-  const sessions = buildKitchenSkillsTrainerSessions(activities ?? []);
   const participants = buildKitchenSkillsTrainerStaffSummaries(sessions);
   const moduleActivityCounts = countModuleActivities(sessions);
   const activityCount =
@@ -92,6 +173,7 @@ export function buildKitchenSkillsManagementSummary(
     0,
   );
   const modulesReviewed = sessions.reduce((sum, session) => sum + modulesReviewedCount(session), 0);
+  const assessments = collectAssessments(sessions);
 
   return {
     status: 'ready',
@@ -103,8 +185,17 @@ export function buildKitchenSkillsManagementSummary(
     activityCount,
     modulesAwaitingAssessment,
     modulesReviewed,
-    assessments: collectAssessments(sessions),
+    assessments,
+    moduleAssessmentAverages: buildModuleAssessmentAverages(assessments),
+    reportingPeriod: buildKitchenSkillsReportingPeriod(sessions),
   };
+}
+
+export function buildKitchenSkillsManagementSummary(
+  activities: readonly unknown[] | null | undefined,
+): Exclude<KitchenSkillsManagementDataState, { status: 'standalone' | 'pending' | 'unavailable' }> {
+  const sessions = buildKitchenSkillsTrainerSessions(activities ?? []);
+  return summarizeFilteredKitchenSkillsSessions(sessions);
 }
 
 export function recordedModulesLabel(session: KitchenSkillsTrainerSession): string {
@@ -118,6 +209,11 @@ export function assessmentStatusLabel(session: KitchenSkillsTrainerSession): str
   if (status === 'reviewed') return 'Reviewed';
   if (status === 'partially_reviewed') return 'Partially reviewed';
   return 'Awaiting assessment';
+}
+
+export function formatMeanScoreOutOfFive(value: number | null): string {
+  if (value === null || !Number.isFinite(value)) return 'Not assessed';
+  return `${value.toFixed(1)} / 5`;
 }
 
 export { KITCHEN_SKILLS_MODULE_TITLES, KITCHEN_SKILLS_REVIEWED_MODULES };

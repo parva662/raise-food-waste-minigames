@@ -38,7 +38,7 @@ export function ManagementTabNav({ activeTab, onTabChange, children }: Managemen
   return (
     <div className="kitchen-mgmt-forecasting" data-testid="kitchen-mgmt-forecasting">
       <div
-        className="kitchen-mgmt-primary-tabs"
+        className="kitchen-mgmt-primary-tabs kitchen-mgmt-primary-tabs--scroll"
         role="tablist"
         aria-label="Forecast and service views"
         data-testid="kitchen-mgmt-primary-tabs"

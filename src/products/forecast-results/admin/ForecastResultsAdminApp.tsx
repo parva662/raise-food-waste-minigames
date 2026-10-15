@@ -103,6 +103,7 @@ export function ForecastResultsAdminApp() {
         serviceDates={serviceDates}
         selectedDate={selectedDate}
         onSelectDate={setSelectedDate}
+        showServiceDateSelector={activeArea === 'forecast'}
       />
 
       {!isLoading ? (

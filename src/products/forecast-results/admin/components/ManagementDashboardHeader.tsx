@@ -5,6 +5,8 @@ interface ManagementDashboardHeaderProps {
   serviceDates: readonly string[];
   selectedDate: string;
   onSelectDate: (date: string) => void;
+  /** Forecast service-date selector is Forecast & Service only. */
+  showServiceDateSelector: boolean;
 }
 
 export function ManagementDashboardHeader({
@@ -12,6 +14,7 @@ export function ManagementDashboardHeader({
   serviceDates,
   selectedDate,
   onSelectDate,
+  showServiceDateSelector,
 }: ManagementDashboardHeaderProps) {
   return (
     <header className="kitchen-mgmt-header" data-testid="kitchen-mgmt-header">
@@ -27,7 +30,7 @@ export function ManagementDashboardHeader({
           </p>
         ) : null}
       </div>
-      {!isLoading ? (
+      {!isLoading && showServiceDateSelector ? (
         <ServiceDateSelector
           serviceDates={serviceDates}
           selectedDate={selectedDate}

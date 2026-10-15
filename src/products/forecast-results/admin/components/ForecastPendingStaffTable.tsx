@@ -1,4 +1,5 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import { ManagementDetailDrawer } from '@/products/forecast-results/admin/components/ManagementDetailDrawer';
 import { formatServiceDateLong } from '@/products/forecast-results/displayFormat';
 import { RESULT_CATEGORY_KEYS, RESULT_CATEGORY_LABELS } from '@/products/forecast-results/types';
 import type { ChefForecastForCalculation } from '@/products/forecast-results/types';
@@ -25,6 +26,16 @@ export function ForecastPendingStaffTable({
   }, [query, staffForecasts]);
 
   const selected = filtered.find((row) => row.userId === selectedStaffId) ?? null;
+
+  useEffect(() => {
+    setSelectedStaffId(null);
+  }, [serviceDate]);
+
+  useEffect(() => {
+    if (selectedStaffId && !selected) {
+      setSelectedStaffId(null);
+    }
+  }, [selected, selectedStaffId]);
 
   return (
     <section className="kitchen-mgmt-staff-tab" data-testid="kitchen-mgmt-staff-results">
@@ -106,6 +117,7 @@ export function ForecastPendingStaffTable({
                       className="kitchen-mgmt-detail-button"
                       data-testid={`staff-view-details-${forecast.userId}`}
                       aria-expanded={isSelected}
+                      aria-controls="kitchen-mgmt-staff-detail"
                       onClick={() => setSelectedStaffId(forecast.userId)}
                     >
                       View
@@ -118,65 +130,49 @@ export function ForecastPendingStaffTable({
         </table>
       </div>
 
-      {selected ? (
-        <section
-          className="kitchen-mgmt-staff-detail"
-          data-testid="kitchen-mgmt-staff-detail"
-          aria-labelledby="kitchen-mgmt-staff-detail-title"
-        >
-          <div className="kitchen-mgmt-staff-detail__header">
-            <div>
-              <h3
-                className="kitchen-mgmt-staff-detail__name"
-                id="kitchen-mgmt-staff-detail-title"
-                data-testid="kitchen-mgmt-staff-detail-title"
-              >
-                {selected.userName}
-              </h3>
-              <p
-                className="kitchen-mgmt-staff-detail__subtitle"
-                data-testid="staff-detail-service-context"
-              >
-                Submitted forecast — {formatServiceDateLong(serviceDate)}
-              </p>
-            </div>
-            <button
-              type="button"
-              className="kitchen-mgmt-detail-button"
-              data-testid="kitchen-mgmt-staff-detail-close"
-              onClick={() => setSelectedStaffId(null)}
-            >
-              Close
-            </button>
-          </div>
-          <div className="kitchen-mgmt-detail-cards">
-            <article className="kitchen-mgmt-detail-card">
-              <h4>Customer estimate</h4>
-              <dl>
-                <div>
-                  <dt>Expected customers</dt>
-                  <dd data-testid="staff-detail-predicted">{selected.forecastTotalCustomers}</dd>
-                </div>
-                <div>
-                  <dt>Customer error</dt>
-                  <dd>Unavailable until closeout</dd>
-                </div>
-              </dl>
-            </article>
-            <article className="kitchen-mgmt-detail-card">
-              <h4>Forecasted quantities</h4>
-              <dl>
-                {RESULT_CATEGORY_KEYS.map((key) => (
-                  <div key={key}>
-                    <dt>{RESULT_CATEGORY_LABELS[key]}</dt>
-                    <dd>{selected[key].forecastQuantity}</dd>
+      <ManagementDetailDrawer
+        open={Boolean(selected)}
+        title={selected?.userName ?? 'Staff detail'}
+        subtitle={`Submitted forecast — ${formatServiceDateLong(serviceDate)}`}
+        onClose={() => setSelectedStaffId(null)}
+        testId="kitchen-mgmt-staff-detail"
+        titleTestId="kitchen-mgmt-staff-detail-title"
+        closeTestId="kitchen-mgmt-staff-detail-close"
+      >
+        {selected ? (
+          <>
+            <p className="kitchen-mgmt-sr-only" data-testid="staff-detail-service-context">
+              Submitted forecast — {formatServiceDateLong(serviceDate)}
+            </p>
+            <div className="kitchen-mgmt-detail-cards">
+              <article className="kitchen-mgmt-detail-card">
+                <h4>Customer estimate</h4>
+                <dl>
+                  <div>
+                    <dt>Expected customers</dt>
+                    <dd data-testid="staff-detail-predicted">{selected.forecastTotalCustomers}</dd>
                   </div>
-                ))}
-              </dl>
-            </article>
-          </div>
-        </section>
-      ) : null}
+                  <div>
+                    <dt>Customer error</dt>
+                    <dd>Unavailable until closeout</dd>
+                  </div>
+                </dl>
+              </article>
+              <article className="kitchen-mgmt-detail-card">
+                <h4>Forecasted quantities</h4>
+                <dl>
+                  {RESULT_CATEGORY_KEYS.map((key) => (
+                    <div key={key}>
+                      <dt>{RESULT_CATEGORY_LABELS[key]}</dt>
+                      <dd>{selected[key].forecastQuantity}</dd>
+                    </div>
+                  ))}
+                </dl>
+              </article>
+            </div>
+          </>
+        ) : null}
+      </ManagementDetailDrawer>
     </section>
   );
 }

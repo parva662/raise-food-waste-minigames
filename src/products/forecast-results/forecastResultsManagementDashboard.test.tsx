@@ -272,6 +272,28 @@ describe('kitchen management staff detail', () => {
 
     await user.click(screen.getByTestId('kitchen-mgmt-staff-detail-close'));
     expect(screen.queryByTestId('kitchen-mgmt-staff-detail')).not.toBeInTheDocument();
+
+    await user.click(screen.getByTestId(`staff-view-details-${first.userId}`));
+    expect(screen.getByTestId('kitchen-mgmt-staff-detail')).toBeInTheDocument();
+    await user.keyboard('{Escape}');
+    expect(screen.queryByTestId('kitchen-mgmt-staff-detail')).not.toBeInTheDocument();
+  });
+
+  it('resets staff detail when the selected service date changes', async () => {
+    const user = userEvent.setup();
+    const daily = buildFixtureDailyServiceResults('2026-07-31')!;
+    const first = [...daily.staffResults].sort((a, b) => a.userName.localeCompare(b.userName))[0]!;
+
+    render(<ForecastResultsAdminApp />);
+    await openStaffTab(user);
+    await user.click(screen.getByTestId(`staff-view-details-${first.userId}`));
+    expect(screen.getByTestId('kitchen-mgmt-staff-detail-title')).toHaveTextContent(first.userName);
+
+    const select = screen.getByTestId('chef-results-admin-date-select') as HTMLSelectElement;
+    const otherDate = [...select.options].map((option) => option.value).find((value) => value !== select.value);
+    expect(otherDate).toBeTruthy();
+    await user.selectOptions(select, otherDate!);
+    expect(screen.queryByTestId('kitchen-mgmt-staff-detail')).not.toBeInTheDocument();
   });
 
   it('shows menu item outcomes for all categories', async () => {

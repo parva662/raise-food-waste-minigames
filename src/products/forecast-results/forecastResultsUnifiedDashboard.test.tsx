@@ -1,9 +1,13 @@
 // @vitest-environment jsdom
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { cleanup, render, screen } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { ForecastResultsAdminApp } from '@/products/forecast-results/admin/ForecastResultsAdminApp';
-import { buildKitchenSkillsManagementSummary } from '@/products/forecast-results/admin/skills/buildKitchenSkillsManagementSummary';
+import {
+  buildKitchenSkillsManagementSummary,
+  buildModuleAssessmentAverages,
+  filterSessionsByDateRange,
+} from '@/products/forecast-results/admin/skills/buildKitchenSkillsManagementSummary';
 import { OverviewSection } from '@/products/forecast-results/admin/components/OverviewSection';
 import {
   KITCHEN_GROUP_ACTIVITIES_REQUEST_KEY,
@@ -85,9 +89,10 @@ function reviewActivity(
   sessionId: string,
   sessionDate: string,
   reviewedGame: string,
+  scores: { time?: number; quality?: number } = {},
 ) {
   return {
-    id: `review-${actorId}-${reviewedGame}`,
+    id: `review-${actorId}-${sessionId}-${reviewedGame}`,
     actor: { id: actorId, name: actorName },
     createdBy: { id: 'tutor-1', name: 'Tutor One' },
     template: { slug: 'wastePracticeReview' },
@@ -96,8 +101,8 @@ function reviewActivity(
       { template: { slug: 'sessionDate' }, value: { value: sessionDate } },
       { template: { slug: 'submittedAt' }, value: { value: `${sessionDate}T12:00:00.000Z` } },
       { template: { slug: 'reviewedGame' }, value: { value: reviewedGame } },
-      { template: { slug: 'timeEfficiencyScore' }, value: { value: 4 } },
-      { template: { slug: 'preparationQualityScore' }, value: { value: 5 } },
+      { template: { slug: 'timeEfficiencyScore' }, value: { value: scores.time ?? 4 } },
+      { template: { slug: 'preparationQualityScore' }, value: { value: scores.quality ?? 5 } },
       { template: { slug: 'chefFeedback' }, value: { value: 'Solid work' } },
     ],
   };
@@ -192,6 +197,14 @@ describe('unified Kitchen Management Dashboard', () => {
     expect(screen.getByTestId('skills-kpi-activities')).toHaveTextContent('2');
     expect(screen.getByTestId('skills-kpi-awaiting')).toHaveTextContent('1');
     expect(screen.getByTestId('skills-module-bar-trimSmart')).toBeInTheDocument();
+    expect(screen.getByTestId('skills-assessment-avg-time-trimSmart')).toHaveTextContent('4.0 / 5');
+    expect(screen.getByTestId('skills-assessment-avg-quality-trimSmart')).toHaveTextContent('5.0 / 5');
+    expect(screen.getByTestId('skills-assessment-avg-time-rescueAndReuse')).toHaveTextContent(
+      'Not assessed',
+    );
+    expect(screen.getByTestId('skills-assessment-avg-time-portionPrecision')).toHaveTextContent(
+      'Not assessed',
+    );
 
     await user.click(screen.getByTestId('kitchen-mgmt-skills-tab-participants'));
     expect(screen.getByTestId('skills-participant-row-user-1')).toHaveTextContent('Student One');
@@ -208,6 +221,104 @@ describe('unified Kitchen Management Dashboard', () => {
       '5 / 5',
     );
     expect(screen.queryByText(/overall score|composite/i)).not.toBeInTheDocument();
+  });
+
+  it('shows Forecast service-date selector only in Forecast & Service', async () => {
+    const user = userEvent.setup();
+    ingestInputCollectionsForTests({
+      ...forecastOnlyPayload(),
+      [KITCHEN_SKILLS_TRAINER_INPUT_COLLECTION_KEY]: {
+        [KITCHEN_GROUP_ACTIVITIES_REQUEST_KEY]: [
+          trimActivity('user-1', 'Student One', 'kitchen-day:t:user-1:2026-09-23', '2026-09-23'),
+        ],
+      },
+    });
+    render(<ForecastResultsAdminApp />);
+
+    expect(screen.getByTestId('chef-results-admin-date-select')).toBeInTheDocument();
+    await user.click(screen.getByTestId('kitchen-mgmt-area-tab-skills'));
+    expect(screen.queryByTestId('chef-results-admin-date-select')).not.toBeInTheDocument();
+    expect(screen.getByTestId('kitchen-mgmt-skills-reporting-period')).toBeInTheDocument();
+    expect(screen.getByTestId('kitchen-mgmt-skills-period-default')).toHaveTextContent(
+      /All recorded sessions/,
+    );
+
+    await user.click(screen.getByTestId('kitchen-mgmt-area-tab-forecast'));
+    expect(screen.getByTestId('chef-results-admin-date-select')).toBeInTheDocument();
+  });
+
+  it('keeps Kitchen Skills reporting period independent of Forecast date', async () => {
+    const user = userEvent.setup();
+    ingestInputCollectionsForTests({
+      ...forecastOnlyPayload(),
+      [KITCHEN_SKILLS_TRAINER_INPUT_COLLECTION_KEY]: {
+        [KITCHEN_GROUP_ACTIVITIES_REQUEST_KEY]: [
+          trimActivity('user-1', 'Student One', 'kitchen-day:t:user-1:2026-09-23', '2026-09-23'),
+          trimActivity('user-1', 'Student One', 'kitchen-day:t:user-1:2026-09-24', '2026-09-24'),
+        ],
+      },
+    });
+    render(<ForecastResultsAdminApp />);
+
+    const forecastSelect = screen.getByTestId('chef-results-admin-date-select') as HTMLSelectElement;
+    const forecastDateBefore = forecastSelect.value;
+    await user.click(screen.getByTestId('kitchen-mgmt-area-tab-skills'));
+    expect(screen.getByTestId('skills-kpi-sessions')).toHaveTextContent('2');
+
+    fireEvent.change(screen.getByTestId('kitchen-mgmt-skills-period-from'), {
+      target: { value: '2026-09-24' },
+    });
+    expect(screen.getByTestId('skills-kpi-sessions')).toHaveTextContent('1');
+
+    await user.click(screen.getByTestId('kitchen-mgmt-area-tab-forecast'));
+    expect(
+      (screen.getByTestId('chef-results-admin-date-select') as HTMLSelectElement).value,
+    ).toBe(forecastDateBefore);
+  });
+
+  it('opens and closes Kitchen Skills participant detail drawer with correct actor', async () => {
+    const user = userEvent.setup();
+    const sessionA = 'kitchen-day:t:user-1:2026-09-23';
+    const sessionB = 'kitchen-day:t:user-2:2026-09-24';
+    ingestInputCollectionsForTests({
+      ...forecastOnlyPayload(),
+      [KITCHEN_SKILLS_TRAINER_INPUT_COLLECTION_KEY]: {
+        [KITCHEN_GROUP_ACTIVITIES_REQUEST_KEY]: [
+          trimActivity('user-1', 'Student One', sessionA, '2026-09-23'),
+          trimActivity('user-2', 'Student Two', sessionB, '2026-09-24'),
+        ],
+      },
+    });
+    render(<ForecastResultsAdminApp />);
+    await user.click(screen.getByTestId('kitchen-mgmt-area-tab-skills'));
+    await user.click(screen.getByTestId('kitchen-mgmt-skills-tab-participants'));
+    await user.click(screen.getByTestId('skills-participant-view-user-1'));
+
+    expect(screen.getByTestId('kitchen-mgmt-skills-participant-detail')).toBeInTheDocument();
+    expect(screen.getByTestId('kitchen-mgmt-skills-participant-detail-title')).toHaveTextContent(
+      'Student One',
+    );
+    expect(screen.queryByText('Student Two')).toBeInTheDocument();
+
+    await user.keyboard('{Escape}');
+    expect(screen.queryByTestId('kitchen-mgmt-skills-participant-detail')).not.toBeInTheDocument();
+  });
+
+  it('exposes scrollable Kitchen Skills tabs for mobile navigation', async () => {
+    const user = userEvent.setup();
+    ingestInputCollectionsForTests({
+      ...forecastOnlyPayload(),
+      [KITCHEN_SKILLS_TRAINER_INPUT_COLLECTION_KEY]: {
+        [KITCHEN_GROUP_ACTIVITIES_REQUEST_KEY]: [
+          trimActivity('user-1', 'Student One', 'kitchen-day:t:user-1:2026-09-23', '2026-09-23'),
+        ],
+      },
+    });
+    render(<ForecastResultsAdminApp />);
+    await user.click(screen.getByTestId('kitchen-mgmt-area-tab-skills'));
+    const tabs = screen.getByTestId('kitchen-mgmt-skills-tabs');
+    expect(tabs.className).toMatch(/kitchen-mgmt-primary-tabs--scroll/);
+    expect(screen.getByTestId('kitchen-mgmt-skills-tab-assessments')).toBeInTheDocument();
   });
 });
 
@@ -233,6 +344,55 @@ describe('Kitchen Skills management summary builder', () => {
     expect(summary.assessments).toHaveLength(1);
     expect(summary.assessments[0]?.actorId).toBe('user-1');
     expect(summary.assessments[0]?.sessionId).toBe(sessionA);
+  });
+
+  it('calculates per-module assessment means without treating missing modules as zero', () => {
+    const sessionA = 'kitchen-day:t:user-1:2026-09-23';
+    const sessionB = 'kitchen-day:t:user-1:2026-09-24';
+    const summary = buildKitchenSkillsManagementSummary([
+      trimActivity('user-1', 'Student One', sessionA, '2026-09-23'),
+      trimActivity('user-1', 'Student One', sessionB, '2026-09-24'),
+      reviewActivity('user-1', 'Student One', sessionA, '2026-09-23', 'trimSmart', {
+        time: 4,
+        quality: 5,
+      }),
+      reviewActivity('user-1', 'Student One', sessionB, '2026-09-24', 'trimSmart', {
+        time: 2,
+        quality: 3,
+      }),
+    ]);
+    const averages = buildModuleAssessmentAverages(summary.assessments);
+    const trim = averages.find((row) => row.module === 'trimSmart')!;
+    const rescue = averages.find((row) => row.module === 'rescueAndReuse')!;
+    expect(trim.assessmentCount).toBe(2);
+    expect(trim.meanTimeEfficiency).toBe(3);
+    expect(trim.meanPreparationQuality).toBe(4);
+    expect(rescue.assessmentCount).toBe(0);
+    expect(rescue.meanTimeEfficiency).toBeNull();
+    expect(rescue.meanPreparationQuality).toBeNull();
+  });
+
+  it('keeps multi-session participant attribution separate by session', () => {
+    const sessionA = 'kitchen-day:t:user-1:2026-09-23';
+    const sessionB = 'kitchen-day:t:user-1:2026-09-24';
+    const summary = buildKitchenSkillsManagementSummary([
+      trimActivity('user-1', 'Student One', sessionA, '2026-09-23'),
+      trimActivity('user-1', 'Student One', sessionB, '2026-09-24'),
+      reviewActivity('user-1', 'Student One', sessionA, '2026-09-23', 'trimSmart', {
+        time: 5,
+        quality: 5,
+      }),
+    ]);
+    expect(summary.participants).toHaveLength(1);
+    expect(summary.participants[0]?.sessionCount).toBe(2);
+    expect(summary.assessments).toHaveLength(1);
+    expect(summary.assessments[0]?.sessionId).toBe(sessionA);
+    const filtered = filterSessionsByDateRange(summary.sessions, {
+      fromDate: '2026-09-24',
+      toDate: '2026-09-24',
+    });
+    expect(filtered).toHaveLength(1);
+    expect(filtered[0]?.sessionId).toBe(sessionB);
   });
 });
 

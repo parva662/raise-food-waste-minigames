@@ -17,10 +17,16 @@ Route: `#/chef-results-admin`. Timezone: `Europe/Helsinki`.
 7. Unified areas: Forecast & Service and Kitchen Skills.
 8. Kitchen Skills uses `kitchenSkillsTrainerInput` only (never self feed).
 9. Management dashboard remains read-only.
+10. Forecast service-date selector is Forecast & Service only; Kitchen Skills uses an independent reporting period (all recorded sessions by default).
+11. Staff / participant / session details open in a contextual drawer (right-side desktop, full-width mobile); stale details reset when selection or data changes.
+12. Kitchen Skills Overview shows separate mean time-efficiency and preparation-quality scores per module from recorded assessments only (missing ≠ zero).
 
 | Area | Key scenarios | Automated coverage | Status |
 |---|---|---|---|
 | Unified area navigation | Forecast & Service / Kitchen Skills tabs | `forecastResultsManagementDashboard.test.tsx`; `forecastResultsUnifiedDashboard.test.tsx` | COVERED |
+| Forecast-only date selector | Service date control hidden in Kitchen Skills | `forecastResultsUnifiedDashboard.test.tsx` | COVERED |
+| Kitchen Skills reporting period | Independent of Forecast date; defaults to all sessions | `forecastResultsUnifiedDashboard.test.tsx` | COVERED |
+| Detail drawers | Open / close / Escape; actor association; reset on date change | `forecastResultsManagementDashboard.test.tsx`; `forecastResultsUnifiedDashboard.test.tsx` | COVERED |
 | Complete service results | Shared engine staff table + overview | `forecastResultsManagementDashboard.test.tsx`; calculation tests | COVERED |
 | Partial closeout-only | Actuals + explanation + tabs remain | `resolveAdminServicePartialState` + OverviewSection | COVERED (path) |
 | Partial forecast-only | Forecast list + pending closeout + Staff/Trends/History | `forecastResultsUnifiedDashboard.test.tsx` (8 Oct fixture) | COVERED |
@@ -28,6 +34,8 @@ Route: `#/chef-results-admin`. Timezone: `Europe/Helsinki`.
 | Empty service | Clear empty state | `kitchenResultsProgressIndependence.test.ts` (empty kind) | COVERED |
 | Trends chart 0/1/2+ | Single-point chart allowed; independent of incomplete selected day | `forecastResultsManagementDashboard.test.tsx`; `ManagementTrendsSection` | COVERED |
 | Kitchen Skills summaries | Participants / sessions / assessments attribution | `forecastResultsUnifiedDashboard.test.tsx`; trainer session tests | COVERED |
+| Assessment means | Per-module / per-dimension means; missing not zero | `forecastResultsUnifiedDashboard.test.tsx` | COVERED |
+| Mobile secondary tabs | Horizontally scrollable tab strip class | `forecastResultsUnifiedDashboard.test.tsx` | COVERED |
 | Missing Kitchen Skills collection | Unavailable-data state; Forecast still works | `forecastResultsUnifiedDashboard.test.tsx` | COVERED |
 | Authorization | Platform-enforced admin access | — | `@pending` EXTERNAL |
 | Live GameBus Admin page Input Collections | Confirm `kitchenSkillsTrainerInput` attached to Admin Dashboard page | — | EXTERNAL / PLATFORM — **NOT VERIFIED** |
