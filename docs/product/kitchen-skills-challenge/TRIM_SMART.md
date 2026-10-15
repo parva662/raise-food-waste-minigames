@@ -12,9 +12,9 @@ Estimate waste before preparation and measure actual waste after. Recipe-ingredi
 
 ## 2. Place in the session
 
-One `trimSmart` activity = one ingredient preparation entry. A student records **multiple different ingredients from the session recipe**. The **same ingredient is not recorded twice** in that session. Trim cannot start until Portion Precision has saved that recipe.
+One `trimSmart` activity = one ingredient preparation entry for one saved recipe. A student records **multiple different eligible ingredients per recipe**. Uniqueness is `sessionId` + `recipeId` + `ingredientId` (the same ingredient may appear under a different recipe). Trim cannot start until Portion Precision has saved at least one recipe; UI work is scoped to the **active** recipe.
 
-Reuse (0..1) joins this entry by `sessionId` + `ingredientId`.
+Reuse (0..1) joins this entry by `sessionId` + `recipeId` + `ingredientId`.
 
 ## 3. LEGACY IMPLEMENTATION (v1 at `#/waste/trim-smart`)
 
@@ -22,7 +22,7 @@ Standalone route, no estimate step, no timer, no reference comparison. Posts `pr
 
 ## 4. Target flow
 
-1. Choose a remaining unused recipe ingredient (`ingredientId` + name from the **active** Portion recipe — the most recently successfully saved recipe in this session) whose kitchen Hävikki (`referenceWastePercent`) is greater than 0. 0% lines are not offered. If the active recipe has none, Trim shows that there are no Trim Smart ingredients and the session can complete without fake Trim/Reuse posts. Saving another Portion recipe switches the active recipe for Trim without starting a new session.
+1. Choose a remaining unused recipe ingredient (`ingredientId` + name from the **active** Portion recipe — latest successful save, or a saved recipe resumed from Portion without a new post) whose kitchen Hävikki (`referenceWastePercent`) is greater than 0. 0% lines are not offered. If the active recipe has none, Trim shows that there are no Trim Smart ingredients for that recipe. Saving another Portion recipe or resuming a saved recipe switches the active recipe without starting a new session. New Trim posts include `recipeId`.
 2. Technique → live plural slug `trimTechniques` (ten locked one-tap values). Layout: [`../UI_STANDARD.md`](../UI_STANDARD.md).
 3. Estimate → actual waste after timed preparation (`duration` from the timer — student does not type minutes).
 4. See recorded gram measurements (no waste % or Hävikki comparison on the student result).
@@ -32,7 +32,7 @@ Exact property list and types: slug contract. Worked example numbers belong in a
 
 ## 5. Calculated (never stored)
 
-Waste % and comparison to the **recipe-ingredient** Hävikki / JAMIX reference (0% is valid) are derived on read from generated recipe data + recorded grams, joining Trim `ingredientId` to a saved Portion recipe that uniquely contains that ingredient. Trim activities do not persist `recipeId`; when more than one saved recipe contains the ingredient, reference comparison is unavailable rather than inventing a join. They are shown on tutor Trim evidence and Student Progress only. They are not shown on the student Trim result, challenge summary, or Session Review, and are not posted to GameBus. Discarded waste after reuse is calculated for the Reuse form.
+Waste % and comparison to the **recipe-ingredient** Hävikki / JAMIX reference (0% is valid) are derived on read from generated recipe data + recorded grams. New Trim activities carry `recipeId` and use that recipe’s ingredient reference. Legacy Trim rows without `recipeId` join only when exactly one saved Portion recipe contains the ingredient; otherwise reference comparison is unavailable. They are shown on tutor Trim evidence and Student Progress only. They are not shown on the student Trim result, challenge summary, or Session Review, and are not posted to GameBus. Discarded waste after reuse is calculated for the Reuse form.
 
 Percentile / ranking messaging is **@pending** until a sufficient-data rule is agreed.
 
@@ -42,4 +42,4 @@ This module is **evidence** for one optional `wastePracticeReview` with `reviewe
 
 ## 7. Non-goals
 
-One ingredient only per day; same ingredient twice per session; free-text ingredient names; tutor score from waste %; storing analytics; renaming `trimTechniques`.
+One ingredient only per day; same ingredient twice under the same recipe; free-text ingredient names; tutor score from waste %; storing analytics; renaming `trimTechniques`.

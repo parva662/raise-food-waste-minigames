@@ -27,13 +27,18 @@ Feature: Reuse suggestions connected to ingredient preparation
       Then no independent reuse inventory is offered
       And the student is guided to record an ingredient preparation entry first
 
-  Rule: Join is session plus ingredient
+  Rule: Join is session plus recipe plus ingredient
 
-    Scenario: The reuse record joins the Trim entry by session and ingredient
+    Scenario: The reuse record joins the Trim entry by session, recipe, and ingredient
       When the student saves a reuse suggestion for "Carrot"
-      Then the reuse record stores the session id and the ingredient id
+      Then the reuse record stores the session id, recipe id, and the ingredient id
       And the reuse record stores the reusable amount and the destination
       And the reuse record does not store a second copy of the ingredient name, category, or starting weight
+
+    Scenario: Reuse for the same ingredient under another recipe stays separate
+      Given Trim waste for Banana under recipe A and Banana under recipe B
+      When the student saves a reuse suggestion for Banana under recipe B
+      Then that reuse joins only the recipe B Trim entry
 
   Rule: Reusable amount and free-text destination
 

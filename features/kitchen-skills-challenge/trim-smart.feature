@@ -164,11 +164,15 @@ Feature: Ingredient preparation in a kitchen day
       Then both entries belong to the same kitchen day
       And each entry keeps its own measurements
 
-    Scenario: The same ingredient is not recorded twice
+    Scenario: The same ingredient is not recorded twice under the same recipe
       Given the student has recorded an ingredient preparation entry for one recipe ingredient
-      When the student tries to record another ingredient preparation entry for that same ingredient
-      Then a second preparation entry is not created in that session
-      And that ingredient is not offered in the recipe ingredient list
+      When the student tries to record another ingredient preparation entry for that same ingredient under the same recipe
+      Then a second preparation entry is not created for that recipe
+      And that ingredient is not offered in the active recipe ingredient list
+
+    Scenario: New Trim posts include recipeId
+      When the student saves an ingredient preparation entry for the active recipe
+      Then the trimSmart activity stores the recipeId with the session id and ingredient id
 
     Scenario: Add more ingredients stays on Trim
       Given the student has finished measuring actual waste for one recipe ingredient

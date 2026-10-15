@@ -141,9 +141,9 @@ Gherkin: [`../../features/kitchen-skills-challenge/`](../../features/kitchen-ski
 
 | Module | On `main` | Notes |
 |--------|-----------|--------|
-| Trim Smart | `#/kitchen-day/trim` | Recipe-ingredient dropdown after Portion save (unused lines with `referenceWastePercent > 0`); estimate → timed prep → actual; unique `ingredientId` per session; Add more ingredients stays on Trim; Record reuse opens Reuse when there is reusable waste |
-| Rescue & Reuse | `#/kitchen-day/reuse` | Join `sessionId` + `ingredientId`; save opens challenge complete summary |
-| Portion Precision | `#/kitchen-day` (`#/kitchen-day/portion`) | Generated recipe reference; multiple recipes per session; latest successful save is the active recipe for Trim |
+| Trim Smart | `#/kitchen-day/trim` | Active-recipe ingredients (`referenceWastePercent > 0`); new posts include `recipeId`; uniqueness `sessionId`+`recipeId`+`ingredientId`; Add more ingredients stays on Trim; Record reuse opens Reuse when there is reusable waste |
+| Rescue & Reuse | `#/kitchen-day/reuse` | Join `sessionId` + `recipeId` + `ingredientId`; save opens challenge complete summary when gates allow |
+| Portion Precision | `#/kitchen-day` (`#/kitchen-day/portion`) | Generated recipe reference; multiple different recipes per session (once each); active recipe = latest save or resumed saved recipe; Continue Trim Smart without re-post |
 | Session Review / Progress / trainer | `#/kitchen-day/review`, `#/kitchen-day-progress`, `#/kitchen-day-tutor` | Review is read-only; Progress Overview Trim card shows Actual trim / Kitchen reference (or Reference unavailable) / Difference; module Recent (last 8 sessions, Recent-only charts) + History archive + Trim vs kitchen reference; peer cards gated pending a privacy-safe aggregate; trainer Trim evidence includes JAMIX comparison; session Reviewed when every **evidenced** module is reviewed (missing Trim/Rescue do not stay awaiting); one `wastePracticeReview` per module via `reviewedGame` (`SILENT_ACTIVITY` + `actors`); scores remain Time efficiency + Preparation quality only |
 | Legacy Trim Smart v1 | `#/waste/trim-smart` | Deprecated; old payload |
 

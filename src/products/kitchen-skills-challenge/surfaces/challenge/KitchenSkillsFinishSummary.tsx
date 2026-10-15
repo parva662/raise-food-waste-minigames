@@ -35,7 +35,11 @@ function reuseHeadline(
   }
   return entries
     .map((entry) => {
-      const trim = trimEntries.find((item) => item.ingredientId === entry.ingredientId);
+      const trim = trimEntries.find(
+        (item) =>
+          item.ingredientId === entry.ingredientId &&
+          (entry.recipeId ? item.recipeId === entry.recipeId : !item.recipeId || item.recipeId === entry.recipeId),
+      );
       const name = trim?.ingredientName ?? entry.ingredientId;
       return `${name} · ${formatGrams(entry.reusableWasteGrams)} to ${entry.reuseDestination}`;
     })

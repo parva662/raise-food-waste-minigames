@@ -376,6 +376,37 @@ describe('Kitchen Day multiple recipes per session (active recipe)', () => {
     expect(screen.getByTestId('kitchen-day-trim-recipe')).toHaveTextContent('Banaanismoothie L, G');
   });
 
+  it('TEST F: resume a saved recipe without posting another Portion activity', async () => {
+    const user = userEvent.setup();
+    render(<AppRouter />);
+    await recordFlowMustamakkaraPortion(user);
+    await user.click(screen.getByTestId('kitchen-day-nav-portion'));
+    await recordBanaanismoothiePortion(user);
+    expect(screen.getByTestId('kitchen-day-trim-recipe')).toHaveTextContent('Banaanismoothie L, G');
+    await user.click(screen.getByTestId('kitchen-day-nav-portion'));
+    const recipeInput = screen.getByTestId('kitchen-day-recipe-select');
+    await user.click(recipeInput);
+    await user.type(recipeInput, 'FLOW mustamakkara');
+    await user.click(screen.getByRole('option', { name: 'FLOW mustamakkara' }));
+    expect(screen.getByTestId('kitchen-day-portion-already-saved')).toBeInTheDocument();
+    expect(screen.queryByTestId('kitchen-day-submit-portion')).not.toBeInTheDocument();
+    await user.click(screen.getByTestId('kitchen-day-resume-saved-recipe'));
+    expect(screen.getByTestId('kitchen-day-trim-recipe')).toHaveTextContent('FLOW mustamakkara');
+  });
+
+  it('TEST G: duplicate Portion recipe is blocked', async () => {
+    const user = userEvent.setup();
+    render(<AppRouter />);
+    await recordHedelmatPortion(user);
+    await user.click(screen.getByTestId('kitchen-day-nav-portion'));
+    const recipeInput = screen.getByTestId('kitchen-day-recipe-select');
+    await user.click(recipeInput);
+    await user.type(recipeInput, 'Hedelmät');
+    await user.click(screen.getByRole('option', { name: 'Hedelmät M,G' }));
+    expect(screen.getByTestId('kitchen-day-portion-already-saved')).toBeInTheDocument();
+    expect(screen.queryByTestId('kitchen-day-submit-portion')).not.toBeInTheDocument();
+  });
+
   it('TEST H: overlapping ingredient ids stay unique across recipes in one session', async () => {
     const user = userEvent.setup();
     render(<AppRouter />);
@@ -398,8 +429,10 @@ describe('Kitchen Day multiple recipes per session (active recipe)', () => {
     await user.click(screen.getByTestId('kitchen-day-submit-portion'));
 
     expect(screen.getByTestId('kitchen-day-trim-recipe')).toHaveTextContent('Aprikoosi-omenalassi L, G');
-    // Banana already recorded for the session — not offered again
-    expect(screen.getByTestId('kitchen-day-trim-no-remaining')).toBeInTheDocument();
-    expect(screen.queryByTestId('kitchen-day-ingredient-name')).not.toBeInTheDocument();
+    // Same ingredientId is allowed again under a different recipeId
+    expect(screen.getByTestId('kitchen-day-ingredient-name')).toBeInTheDocument();
+    await selectTrimIngredient(user, 'Banaani', 'Banaani, Banaani 1kg Peru 1lk');
+    await completeTrimAfterIngredient(user);
+    expect(screen.getByTestId('kitchen-day-trim-step-result')).toBeInTheDocument();
   });
 });

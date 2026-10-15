@@ -33,6 +33,7 @@ const trimEntry: KitchenSkillsTrimEntry = {
   sessionId: 'kitchen-day:kitchen-day-task-1:user-1:2026-09-23',
   sessionDate: '2026-09-23',
   submittedAt: '2026-09-23T10:05:00.000Z',
+  recipeId: 'mayonnaise',
   ingredientId: 'carrot',
   ingredientName: 'Carrot',
   ingredientWeightGrams: 5000,
@@ -48,6 +49,7 @@ const trimEntry: KitchenSkillsTrimEntry = {
 const rescueEntry: KitchenSkillsRescueEntry = {
   sessionId: 'kitchen-day:kitchen-day-task-1:user-1:2026-09-23',
   sessionDate: '2026-09-23',
+  recipeId: 'mayonnaise',
   ingredientId: 'carrot',
   reusableWasteGrams: 500,
   reuseDestination: 'Carrot soup tomorrow',

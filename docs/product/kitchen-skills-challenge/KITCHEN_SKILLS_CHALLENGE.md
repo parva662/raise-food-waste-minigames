@@ -25,9 +25,12 @@ Students record practical kitchen work on one operational day (Europe/Helsinki).
 
 ```text
 Kitchen Skills session (student actor + sessionId + sessionDate)
-  ├── Portion Precision entry (0..n recipes/components)          → portionPrecision
-  ├── Ingredient preparation entry (1..n different recipe ingredients)  → trimSmart
-  │     └── Reuse suggestion (0..1 per ingredient)               → rescueAndReuse
+  ├── Recipe A (portionPrecision) — once per recipeId
+  │     ├── Ingredient 1 (trimSmart) — sessionId + recipeId + ingredientId
+  │     │     └── Reuse (rescueAndReuse) — same key
+  │     └── Ingredient 2 (trimSmart)
+  ├── Recipe B (portionPrecision)
+  │     └── …
   ├── Session Review (current session only, read-only)
   ├── Student Progress (own history, separate page)
   └── Tutor assessment per completed module (reviewedGame)       → wastePracticeReview
@@ -38,11 +41,11 @@ Kitchen Skills session (student actor + sessionId + sessionDate)
 | GameBus actor | The student |
 | `sessionId` | Opaque key for one student session (`kitchen-day:…` prefix in embed) |
 | `sessionDate` | Europe/Helsinki operational date |
-| `ingredientId` | Unique Trim entry within a session; reuse join; taken from a saved Portion recipe |
-| `recipeId` | Portion Precision recipe identity; a session may contain multiple saved recipes |
-| Active recipe | The most recently successfully saved Portion recipe; Trim Smart and challenge gates use it |
+| `recipeId` | Recipe identity from the dataset; one Portion activity per `sessionId` + `recipeId`; carried on new Trim / Reuse posts |
+| `ingredientId` | Ingredient identity within a recipe; Trim / Reuse uniqueness is `sessionId` + `recipeId` + `ingredientId` |
+| Active recipe | Latest successful Portion save, or an explicitly resumed saved recipe; Trim / Reuse UI and active-recipe gates use it |
 
-**Same ingredient once:** a student does not create more than one Trim Smart entry for the same `ingredientId` in the same session. Many **different** ingredients are expected.
+**Uniqueness:** Portion once per recipe per session. Same `ingredientId` allowed under different recipes. Same ingredient twice under one recipe is blocked. Finish requires every saved recipe to satisfy its own Trim / Reuse rules (eligible Trim skip when none; Reuse when that recipe has reusable waste).
 
 Exact stored properties: slug contract. Module intent: [`TRIM_SMART.md`](TRIM_SMART.md), [`RESCUE_AND_REUSE.md`](RESCUE_AND_REUSE.md), [`PORTION_PRECISION.md`](PORTION_PRECISION.md). Review / Progress / tutor: [`CHEF_REVIEW.md`](CHEF_REVIEW.md).
 
@@ -59,12 +62,12 @@ Session Review is the current locked session only. Progress is own history. Tuto
 
 ## 4. Kitchen reference (analytics)
 
-Each generated recipe ingredient keeps its source `Hävikki` as `referenceWastePercent` on that **recipe ingredient entry** (not a generic ingredient norm). `0` is a valid reference and is not treated as missing. Tutor Trim evidence and Student Progress derive actual % vs this recipe-specific JAMIX value by joining Trim `ingredientId` to a saved Portion recipe that uniquely contains that ingredient (Trim activities do not persist `recipeId`). When membership is ambiguous across multiple saved recipes, show reference unavailable rather than inventing a join. It is not shown on the student Trim result, challenge summary, or Session Review. Do not store averages, waste %, or percentiles on GameBus activities. Percentile / ranking stays off until a sufficient-data rule is agreed (**@pending** analytics decision). Anonymous Progress peer medians are blocked until a verified privacy-safe GameBus aggregate exists; when unblocked they would compare Trim **delta vs each person's own JAMIX**, not raw waste % across ingredients. Do not attach `GET /api/groups/activities` to the participant Progress page.
+Each generated recipe ingredient keeps its source `Hävikki` as `referenceWastePercent` on that **recipe ingredient entry** (not a generic ingredient norm). `0` is a valid reference and is not treated as missing. Tutor Trim evidence and Student Progress derive actual % vs this recipe-specific JAMIX value using the Trim activity’s explicit `recipeId` when present; legacy Trim rows without `recipeId` join only when exactly one saved Portion recipe contains that `ingredientId`. When membership is ambiguous, show reference unavailable rather than inventing a join. It is not shown on the student Trim result, challenge summary, or Session Review. Do not store averages, waste %, or percentiles on GameBus activities. Percentile / ranking stays off until a sufficient-data rule is agreed (**@pending** analytics decision). Anonymous Progress peer medians are blocked until a verified privacy-safe GameBus aggregate exists; when unblocked they would compare Trim **delta vs each person's own JAMIX**, not raw waste % across ingredients. Do not attach `GET /api/groups/activities` to the participant Progress page.
 
 ## 5. Non-goals
 
 - Three independent standalone games
-- Same ingredient twice in one student's session
+- Same ingredient twice under the same recipe in one student's session
 - `sourceActivityId` / `preparationEntryId`
 - Reuse status / later confirmation
 - One Portion activity per ingredient line

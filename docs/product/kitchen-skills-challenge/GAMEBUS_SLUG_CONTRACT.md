@@ -28,13 +28,14 @@ Payload shape: each property posts `{ "value": … }` (plus `unit` where the sch
 
 ## `trimSmart` — one ingredient preparation entry
 
-Within one Kitchen Skills session, a student does **not** create more than one Trim Smart entry for the same `ingredientId`. Multiple **different** ingredients are expected.
+Within one Kitchen Skills session, uniqueness is **`sessionId` + `recipeId` + `ingredientId`**. The same `ingredientId` may appear under different recipes. Multiple **different** ingredients are expected within each recipe.
 
 | Slug | Required | Notes |
 |------|----------|-------|
 | `sessionId` | yes | Kitchen Skills session (`kitchen-day:…` prefix) |
 | `sessionDate` | yes | `format: date`, Europe/Helsinki operational date |
 | `submittedAt` | yes | `format: date-time` |
+| `recipeId` | yes (new posts) | Same Property Template as Portion `recipeId`; string identity from the recipe dataset. Optional on historical activities. |
 | `ingredientId` | yes | non-empty string; keys reuse join and kitchen-reference lookup |
 | `ingredientName` | yes | non-empty string |
 | `ingredientWeightGrams` | yes | number > 0 (`exclusiveMinimum: 0`) — starting weight before preparation |
@@ -47,22 +48,23 @@ Live `trimTechniques` enum: `peeling`, `trimming`, `julienne`, `batonnet`, `minc
 
 **CURRENT IMPLEMENTATION / DEPRECATED for new target posts:** `practice`, `participantWasteGrams`.
 
-**Do not post:** `ingredientCategory`, `sourceActivityId`, `preparationEntryId`, `recipeId`, calculated waste %, estimate error, kitchen average, percentile.
+**Do not post:** `ingredientCategory`, `sourceActivityId`, `preparationEntryId`, calculated waste %, estimate error, kitchen average, percentile.
 
 `ingredientCategory` is **not** part of Kitchen Skills Challenge. Unlink/remove it from the Kitchen Skills `trimSmart` activity template in GameBus admin. Do not change unrelated GameBus properties.
 
-**Multi-recipe sessions:** a Kitchen Skills session may contain multiple `portionPrecision` activities. Trim Smart UI uses an in-app **active recipe** (latest successful Portion save; restored on reload by latest `submittedAt`). Trim activities still do **not** carry `recipeId`. Read-time JAMIX joins infer a recipe only when exactly one saved Portion recipe contains the Trim `ingredientId`; otherwise reference comparison is unavailable. A durable `recipeId` (or equivalent) on `trimSmart` would require an approved GameBus schema change — not introduced here.
+**Multi-recipe sessions:** a Kitchen Skills session may contain multiple `portionPrecision` activities (each `recipeId` once). Trim Smart UI uses an in-app **active recipe** (latest successful Portion save, or an explicitly resumed saved recipe; restored on reload by latest `submittedAt`). New Trim posts carry `recipeId`. JAMIX joins prefer that explicit `recipeId`; legacy Trim rows without `recipeId` infer a recipe only when exactly one saved Portion recipe contains the Trim `ingredientId`; otherwise reference comparison is unavailable.
 
 ---
 
 ## `rescueAndReuse` — reuse suggestion for one Trim Smart entry
 
-Join to Trim Smart with **`sessionId` + `ingredientId`** (unique within one student's session).
+Join to Trim Smart with **`sessionId` + `recipeId` + `ingredientId`** (unique within one student's session). Legacy rows without `recipeId` still hydrate; new posts require `recipeId`.
 
 | Slug | Required | Notes |
 |------|----------|-------|
 | `sessionId` | yes | same Kitchen Skills session as the Trim entry |
 | `sessionDate` | yes | `format: date` |
+| `recipeId` | yes (new posts) | Same Property Template as Portion / Trim `recipeId`. Optional on historical activities. |
 | `ingredientId` | yes | same id as the Trim entry |
 | `reusableWasteGrams` | yes | number ≥ 0; ≤ that Trim entry's `actualWasteGrams` (client-side) |
 | `reuseDestination` | yes | free text |
@@ -155,11 +157,22 @@ This is **not** a platform blocker and is **not** a new API invented in the SPA.
 
 ## GameBus admin actions (exact)
 
+### Safe deployment sequence (recipeId on Trim / Reuse)
+
+Do **not** make live GameBus reject the currently deployed client before the updated application is deployed.
+
+1. **Link (optional) `recipeId`** on Kitchen Skills `trimSmart` and `rescueAndReuse` using the **existing** Portion `recipeId` Property Template. Keep all currently required properties required. Do **not** mark `recipeId` required yet.
+2. **Deploy** the application that posts and reads `recipeId` on new Trim / Reuse activities.
+3. **Only after** the updated client is live everywhere that posts Kitchen Skills: optionally mark `recipeId` required on those two templates if GameBus admin policy requires it. Historical activities without `recipeId` must remain readable (readers already treat it as optional).
+
+If GameBus cannot link `recipeId` as optional while keeping historical posts valid, **stop** and do not require the property until a backwards-compatible path exists.
+
 ### Trim Smart
 
 - Fix `ingredientId` schema to non-empty string
 - Fix `ingredientName` schema to non-empty string
 - **Unlink/remove `ingredientCategory` from the Kitchen Skills `trimSmart` template.** It is no longer part of this product.
+- **Link `recipeId`** (reuse Portion Property Template; optional until the updated client is deployed — see sequence above)
 - Keep `trimTechniques`
 - Link `duration`
 - Ensure `estimatedWasteGrams` and `actualWasteGrams` are linked
@@ -170,6 +183,7 @@ This is **not** a platform blocker and is **not** a new API invented in the SPA.
 
 - Keep/link `sessionId`
 - Keep/link `sessionDate`
+- **Link `recipeId`** (same Property Template as Portion / Trim; optional until the updated client is deployed)
 - Keep/link `ingredientId`
 - Keep/link `reusableWasteGrams`
 - Create/link `reuseDestination`
@@ -208,7 +222,7 @@ Anonymous peer comparison stays data-gated (“Not enough peer data yet”) unti
 
 | Name | Reason |
 |------|--------|
-| `sourceActivityId`, `preparationEntryId` | Cancelled. Join reuse with `sessionId` + `ingredientId` |
+| `sourceActivityId`, `preparationEntryId` | Cancelled. Join reuse with `sessionId` + `recipeId` + `ingredientId` |
 | `practice`, `wastePractice` | **CURRENT IMPLEMENTATION / DEPRECATED** — use `trimTechniques` |
 | `participantWasteGrams` | **CURRENT IMPLEMENTATION / DEPRECATED** — use `actualWasteGrams` |
 | `trimTechnique` (singular) | Live slug is `trimTechniques` |

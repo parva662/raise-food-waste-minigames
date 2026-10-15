@@ -1,10 +1,24 @@
 import { wastePercentage } from '@/products/kitchen-skills-challenge/domain/trim/derived';
-import type { RecipeReference } from '@/products/kitchen-skills-challenge/domain/portion/recipes';
+import {
+  getRecipeReference,
+  type RecipeReference,
+} from '@/products/kitchen-skills-challenge/domain/portion/recipes';
 import { resolveRecipeReferenceForTrimIngredient } from '@/products/kitchen-skills-challenge/domain/session/sessionRecipe';
+import { normalizeRecipeId } from '@/products/kitchen-skills-challenge/domain/session/ingredientUniqueness';
 import type {
   KitchenSkillsPortionEntry,
   KitchenSkillsTrimEntry,
 } from '@/products/kitchen-skills-challenge/domain/types';
+
+/** Prefer explicit Trim.recipeId; legacy rows fall back to unambiguous Portion membership. */
+export function resolveRecipeReferenceForTrimEntry(
+  entry: KitchenSkillsTrimEntry,
+  portionEntries: readonly KitchenSkillsPortionEntry[],
+): RecipeReference | null {
+  const explicit = normalizeRecipeId(entry.recipeId);
+  if (explicit) return getRecipeReference(explicit);
+  return resolveRecipeReferenceForTrimIngredient(entry.ingredientId, portionEntries);
+}
 
 export type TrimReferenceUnavailableReason = 'missing-recipe' | 'missing-ingredient' | 'missing-reference';
 
@@ -133,8 +147,8 @@ export function compareTrimSessionToRecipeReference(
 
 /**
  * Session Trim vs kitchen reference from persisted Portion rows.
- * Each Trim ingredient joins only when exactly one saved recipe contains that ingredientId.
- * Ambiguous or missing joins stay unavailable — no invented recipeId on Trim activities.
+ * Prefer each Trim entry's explicit recipeId; legacy rows without recipeId join only when
+ * exactly one saved recipe contains that ingredientId. Ambiguous joins stay unavailable.
  */
 export function compareTrimSessionFromPortion(
   trimEntries: readonly KitchenSkillsTrimEntry[],
@@ -143,7 +157,7 @@ export function compareTrimSessionFromPortion(
   const ingredients = trimEntries.map((entry) =>
     compareTrimIngredientToRecipeReference(
       entry,
-      resolveRecipeReferenceForTrimIngredient(entry.ingredientId, portionEntries),
+      resolveRecipeReferenceForTrimEntry(entry, portionEntries),
     ),
   );
   const totalStartingWeightGrams = trimEntries.reduce((sum, entry) => sum + entry.ingredientWeightGrams, 0);

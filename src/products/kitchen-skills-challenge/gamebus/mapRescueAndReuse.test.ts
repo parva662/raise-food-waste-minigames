@@ -6,6 +6,7 @@ describe('Rescue and Reuse mapper contract', () => {
     expect(orderedRescueAndReusePropertyRefs()).toEqual([
       'sessionId',
       'sessionDate',
+      'recipeId',
       'ingredientId',
       'reusableWasteGrams',
       'reuseDestination',
@@ -14,6 +15,7 @@ describe('Rescue and Reuse mapper contract', () => {
     const values = mapRescueAndReuse({
       sessionId: 'kitchen-day:standalone:2026-09-23',
       sessionDate: '2026-09-23',
+      recipeId: '42',
       ingredientId: 'carrot',
       reusableWasteGrams: 500,
       reuseDestination: 'Carrot soup tomorrow',
@@ -21,6 +23,7 @@ describe('Rescue and Reuse mapper contract', () => {
       source: 'local',
     });
     expect(Object.keys(values)).toEqual([...orderedRescueAndReusePropertyRefs()]);
+    expect(values.recipeId).toEqual({ value: '42' });
     expect(values).not.toHaveProperty('ingredientName');
     expect(values).not.toHaveProperty('ingredientCategory');
     expect(values).not.toHaveProperty('ingredientWeightGrams');

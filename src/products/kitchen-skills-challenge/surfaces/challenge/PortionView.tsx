@@ -14,24 +14,31 @@ import {
 } from '@/products/kitchen-skills-challenge/domain/portion/validation';
 
 export function KitchenSkillsPortionView() {
-  const { session, commitPortionEntry } = useReadyKitchenSkillsSession();
+  const { session, portionEntries, commitPortionEntry, resumeSavedRecipe } =
+    useReadyKitchenSkillsSession();
   const recipes = listRecipeReferences();
   const [recipeId, setRecipeId] = useState('');
   const [actuals, setActuals] = useState<Record<string, string>>({});
   const [finalWeightRaw, setFinalWeightRaw] = useState('');
   const [savedName, setSavedName] = useState<string | null>(null);
+  const [submitError, setSubmitError] = useState<string | null>(null);
   const [pickerKey, setPickerKey] = useState(0);
   const recipeOptions = useMemo(
     () => recipes.map((item) => ({ id: item.recipeId, label: item.recipeName })),
     [recipes],
   );
+  const savedRecipeIds = useMemo(
+    () => new Set(portionEntries.map((entry) => entry.recipeId)),
+    [portionEntries],
+  );
 
   const recipe = useMemo(() => (recipeId ? getRecipeReference(recipeId) : null), [recipeId]);
+  const alreadySaved = Boolean(recipeId && savedRecipeIds.has(recipeId));
   const composition = recipe ? buildRecipeComposition(recipe, actuals) : null;
   const finalWeight = parseFinalRecipeWeightGrams(finalWeightRaw);
 
   function submit() {
-    if (!recipe || !composition || !finalWeight.ok) return;
+    if (!recipe || !composition || !finalWeight.ok || alreadySaved) return;
     const entry = {
       sessionId: session.sessionId,
       sessionDate: session.sessionDate,
@@ -42,7 +49,15 @@ export function KitchenSkillsPortionView() {
       finalRecipeWeightGrams: finalWeight.value,
     };
     const result = commitPortionEntry({ ...entry, source: 'local' });
-    if (!result.ok) return;
+    if (!result.ok) {
+      setSubmitError(
+        result.reason === 'duplicate_recipe'
+          ? 'This recipe is already recorded for this kitchen day.'
+          : 'This recipe could not be saved.',
+      );
+      return;
+    }
+    setSubmitError(null);
     setSavedName(recipe.recipeName);
     setRecipeId('');
     setActuals({});
@@ -56,6 +71,12 @@ export function KitchenSkillsPortionView() {
     setActuals({});
     setFinalWeightRaw('');
     setSavedName(null);
+    setSubmitError(null);
+  }
+
+  function continueSavedRecipe() {
+    if (!recipeId) return;
+    resumeSavedRecipe(recipeId);
   }
 
   return (
@@ -71,7 +92,25 @@ export function KitchenSkillsPortionView() {
         />
       </label>
 
-      {recipe ? (
+      {recipe && alreadySaved ? (
+        <div data-testid={`kitchen-day-recipe-${recipe.recipeId}`}>
+          <p className="kitchen-day-card__copy" data-testid="kitchen-day-portion-already-saved">
+            {recipe.recipeName} is already recorded for this kitchen day.
+          </p>
+          <div className="kitchen-day-form-actions kitchen-day-form-actions--sticky">
+            <button
+              type="button"
+              className="kitchen-day-button kitchen-day-button--primary"
+              data-testid="kitchen-day-resume-saved-recipe"
+              onClick={continueSavedRecipe}
+            >
+              Continue Trim Smart
+            </button>
+          </div>
+        </div>
+      ) : null}
+
+      {recipe && !alreadySaved ? (
         <div data-testid={`kitchen-day-recipe-${recipe.recipeId}`}>
           <div className="kitchen-day-portion-entry-wrap">
             <table className="kitchen-day-portion-entry" aria-label="Recipe ingredients">
@@ -195,6 +234,11 @@ export function KitchenSkillsPortionView() {
       {savedName ? (
         <p className="kitchen-day-success" data-testid="kitchen-day-portion-saved">
           {savedName} recorded for this kitchen day.
+        </p>
+      ) : null}
+      {submitError ? (
+        <p className="kitchen-day-error" data-testid="kitchen-day-portion-error">
+          {submitError}
         </p>
       ) : null}
     </section>

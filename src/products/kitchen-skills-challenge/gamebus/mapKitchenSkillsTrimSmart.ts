@@ -5,6 +5,7 @@ export const KITCHEN_SKILLS_TRIM_REQUIRED_REFS = [
   'sessionId',
   'sessionDate',
   'submittedAt',
+  'recipeId',
   'ingredientId',
   'ingredientName',
   'ingredientWeightGrams',
@@ -21,10 +22,14 @@ export function orderedKitchenSkillsTrimPropertyRefs(): readonly KitchenSkillsTr
 }
 
 export function mapKitchenSkillsTrimSmart(entry: KitchenSkillsTrimEntry) {
+  if (!entry.recipeId) {
+    throw new Error('trimSmart posts require recipeId');
+  }
   return {
     sessionId: { value: entry.sessionId },
     sessionDate: { value: entry.sessionDate },
     submittedAt: { value: entry.submittedAt },
+    recipeId: { value: entry.recipeId },
     ingredientId: { value: entry.ingredientId },
     ingredientName: { value: entry.ingredientName },
     ingredientWeightGrams: { value: entry.ingredientWeightGrams },

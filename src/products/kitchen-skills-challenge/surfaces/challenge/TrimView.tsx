@@ -195,12 +195,13 @@ export function KitchenSkillsTrimView() {
 
   function submitEntry() {
     if (!ingredientId || !weight.ok || !technique || !estimate.ok || !actual.ok) return;
-    if (timer.status !== 'finished' || submitting || duplicate) return;
+    if (!activeRecipeId || timer.status !== 'finished' || submitting || duplicate) return;
     setSubmitting(true);
     const entry = {
       sessionId: session.sessionId,
       sessionDate: session.sessionDate,
       submittedAt: new Date().toISOString(),
+      recipeId: activeRecipeId,
       ingredientId,
       ingredientName: ingredientName.trim(),
       ingredientWeightGrams: weight.value,

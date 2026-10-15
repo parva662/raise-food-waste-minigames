@@ -26,7 +26,11 @@ function Probe() {
       <span data-testid="kd-session-id">{value.session?.sessionId ?? ''}</span>
       <span data-testid="kd-session-date">{value.session?.sessionDate ?? ''}</span>
       <span data-testid="kd-trim-count">{value.trimEntries.length}</span>
+      <span data-testid="kd-active-recipe">{value.activeRecipeId ?? ''}</span>
       <span data-testid="kd-ids">{value.recordedIngredientIds.join(',')}</span>
+      <span data-testid="kd-all-trim-ids">
+        {value.trimEntries.map((entry) => entry.ingredientId).join(',')}
+      </span>
     </div>
   );
 }
@@ -44,6 +48,7 @@ const persistedCollections = {
           { template: { slug: 'sessionId' }, value: { value: 'kitchen-day:kitchen-day-task-1:user-1:2026-09-23' } },
           { template: { slug: 'sessionDate' }, value: { value: '2026-09-23' } },
           { template: { slug: 'submittedAt' }, value: { value: '2026-09-23T10:03:00.000Z' } },
+          { template: { slug: 'recipeId' }, value: { value: 'mayonnaise' } },
           { template: { slug: 'ingredientId' }, value: { value: 'carrot' } },
           { template: { slug: 'ingredientName' }, value: { value: 'Carrot' } },
           { template: { slug: 'ingredientCategory' }, value: { value: 'root' } },
@@ -61,6 +66,7 @@ const persistedCollections = {
         properties: [
           { template: { slug: 'sessionId' }, value: { value: 'kitchen-day:kitchen-day-task-1:user-1:2026-09-23' } },
           { template: { slug: 'sessionDate' }, value: { value: '2026-09-23' } },
+          { template: { slug: 'recipeId' }, value: { value: 'mayonnaise' } },
           { template: { slug: 'ingredientId' }, value: { value: 'carrot' } },
           { template: { slug: 'reusableWasteGrams' }, value: { value: 200 } },
           { template: { slug: 'reuseDestination' }, value: { value: 'Soup' } },
@@ -180,6 +186,10 @@ describe('Kitchen Day session initialization and hydration', () => {
     await waitFor(() => {
       expect(screen.getByTestId('kd-trim-count')).toHaveTextContent('1');
     });
+    expect(screen.getByTestId('kd-all-trim-ids')).toHaveTextContent('carrot');
+    await waitFor(() => {
+      expect(screen.getByTestId('kd-active-recipe')).toHaveTextContent('mayonnaise');
+    });
     expect(screen.getByTestId('kd-ids')).toHaveTextContent('carrot');
   });
 
@@ -199,6 +209,7 @@ describe('Kitchen Day session initialization and hydration', () => {
               sessionId: session.sessionId,
               sessionDate: session.sessionDate,
               submittedAt: '2026-09-23T12:00:00.000Z',
+              recipeId: 'mayonnaise',
               ingredientId: 'carrot',
               ingredientName: 'Carrot',
               ingredientWeightGrams: 1000,
@@ -303,7 +314,7 @@ describe('Kitchen Day session initialization and hydration', () => {
     await waitFor(() => {
       expect(screen.getByTestId('kd-trim-count')).toHaveTextContent('1');
     });
-    expect(screen.getByTestId('kd-ids')).toHaveTextContent('carrot');
+    expect(screen.getByTestId('kd-all-trim-ids')).toHaveTextContent('carrot');
   });
 
   it('retains a successful silent Trim locally immediately', async () => {
@@ -325,6 +336,7 @@ describe('Kitchen Day session initialization and hydration', () => {
               sessionId: session.sessionId,
               sessionDate: session.sessionDate,
               submittedAt: '2026-09-23T12:00:00.000Z',
+              recipeId: 'mayonnaise',
               ingredientId: 'carrot',
               ingredientName: 'Carrot',
               ingredientWeightGrams: 5000,
@@ -354,7 +366,7 @@ describe('Kitchen Day session initialization and hydration', () => {
     await waitFor(() => {
       expect(screen.getByTestId('kd-trim-count')).toHaveTextContent('1');
     });
-    expect(screen.getByTestId('kd-ids')).toHaveTextContent('carrot');
+    expect(screen.getByTestId('kd-all-trim-ids')).toHaveTextContent('carrot');
   });
 
   it('deduplicates local Trim once persisted self activities arrive', async () => {
@@ -376,6 +388,7 @@ describe('Kitchen Day session initialization and hydration', () => {
               sessionId: session.sessionId,
               sessionDate: session.sessionDate,
               submittedAt: '2026-09-23T12:00:00.000Z',
+              recipeId: 'mayonnaise',
               ingredientId: 'carrot',
               ingredientName: 'Carrot',
               ingredientWeightGrams: 5000,

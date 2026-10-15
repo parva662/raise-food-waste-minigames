@@ -69,7 +69,7 @@ export function tryPostKitchenSkillsTrim(entry: KitchenSkillsTrimEntry): Kitchen
   return tryPostKitchenSkillsActivity(
     getGameBusTask(),
     (task) => buildKitchenSkillsTrimSmartActivityMessage(task, entry),
-    `trim:${entry.sessionId}:${entry.ingredientId}`,
+    `trim:${entry.sessionId}:${entry.recipeId}:${entry.ingredientId}`,
     canPostKitchenSkillsStudentActivity(),
     KITCHEN_SKILLS_STUDENT_LIVE_BLOCK_REASON,
   );
@@ -79,7 +79,7 @@ export function tryPostKitchenSkillsRescue(entry: KitchenSkillsRescueEntry): Kit
   return tryPostKitchenSkillsActivity(
     getGameBusTask(),
     (task) => buildRescueAndReuseActivityMessage(task, entry),
-    `rescue:${entry.sessionId}:${entry.ingredientId}`,
+    `rescue:${entry.sessionId}:${entry.recipeId}:${entry.ingredientId}`,
     canPostKitchenSkillsStudentActivity(),
     KITCHEN_SKILLS_STUDENT_LIVE_BLOCK_REASON,
   );
@@ -89,7 +89,7 @@ export function tryPostKitchenSkillsPortion(entry: KitchenSkillsPortionEntry): K
   return tryPostKitchenSkillsActivity(
     getGameBusTask(),
     (task) => buildPortionPrecisionActivityMessage(task, entry),
-    `portion:${entry.sessionId}:${entry.recipeId}:${entry.submittedAt}`,
+    `portion:${entry.sessionId}:${entry.recipeId}`,
     canPostKitchenSkillsStudentActivity(),
     KITCHEN_SKILLS_STUDENT_LIVE_BLOCK_REASON,
   );
