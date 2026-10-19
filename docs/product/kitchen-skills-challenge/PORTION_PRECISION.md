@@ -41,11 +41,11 @@ These two recipe metrics stay separate. There is **no** automatic combined score
 
 ## 5. Journey
 
-Searchable recipe combobox (ordered options on open, typing filters) → compact Ingredient | Target | Actual | Result table → final recipe weight → one `SILENT_ACTIVITY` → Trim Smart for that **active** recipe. Each `recipeId` may be saved only once per session. The student may return to Portion to save additional **different** recipes, or select an already saved recipe and **Continue Trim Smart** (resumes that recipe without posting another Portion activity). Previously saved Portion activities and their Trim / Reuse work remain recorded. EXIT only on Finish challenge. Layout: [`../UI_STANDARD.md`](../UI_STANDARD.md).
+Searchable recipe combobox (ordered options on open, typing filters; touch scroll must not select) → compact Ingredient | Target | Actual | Result table → final recipe weight → **Save recipe** (one `SILENT_ACTIVITY`) → Trim Smart for that **active** recipe. **Save recipe** means Portion measurements are recorded; it does **not** mean the recipe’s practical Trim/Reuse work is complete. Each `recipeId` may be saved only once per session. A **different** recipe may be saved only when every already-saved recipe satisfies its completion rules and there is no unfinished Trim/Reuse draft. Select an already saved recipe and **Continue Trim Smart** to resume without posting another Portion activity. EXIT only on Finish challenge. Layout: [`../UI_STANDARD.md`](../UI_STANDARD.md).
 
 ## 6. Tutor assessment
 
-Evidence only. The tutor still enters time / quality scores for `reviewedGame: portionPrecision`. See [`CHEF_REVIEW.md`](CHEF_REVIEW.md).
+Evidence only. The tutor enters time / quality scores for `reviewedGame: portionPrecision` **per recipe** (`recipeId`). See [`CHEF_REVIEW.md`](CHEF_REVIEW.md).
 
 ## 7. GameBus admin / deprecated names
 
