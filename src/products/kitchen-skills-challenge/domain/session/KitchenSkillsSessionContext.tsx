@@ -51,9 +51,15 @@ import {
   buildKitchenSkillsTaskProgress,
   canFinishKitchenSkillsChallenge,
   canOpenKitchenSkillsReview,
+  canStartAnotherKitchenSkillsRecipe,
+  newRecipeBlockedReason,
   requiredKitchenSkillsSection,
   type KitchenSkillsTaskProgress,
 } from '@/products/kitchen-skills-challenge/domain/session/challengeGate';
+import {
+  hasDuplicateReviewIdentity,
+  reviewIdentityKey,
+} from '@/products/kitchen-skills-challenge/domain/session/reviewIdentity';
 import { goToKitchenDaySection, type KitchenSkillsHashSection } from '@/app/routes';
 import {
   latestPortionEntryBySubmittedAt,
@@ -93,17 +99,22 @@ interface KitchenSkillsSessionValue {
   findReviewBySessionAndModule: (
     sessionId: string,
     reviewedGame: KitchenSkillsReviewedModule,
+    recipeId?: string | null,
   ) => KitchenSkillsReviewEntry | undefined;
   showFinishSummary: boolean;
   taskProgress: KitchenSkillsTaskProgress;
   requiredSection: Exclude<KitchenSkillsHashSection, 'review'>;
   reviewAllowed: boolean;
   canFinish: boolean;
+  canStartAnotherRecipe: boolean;
+  newRecipeBlockedReason: string | null;
   setTrimInProgress: (value: boolean) => void;
   setReuseInProgress: (value: boolean) => void;
   enterReuse: () => void;
   addAnotherIngredient: () => void;
   openFinishSummary: () => void;
+  /** Return to Portion to pick a different unsaved recipe (same sessionId). */
+  startAnotherRecipe: () => void;
   /** Resume Trim/Reuse for an already-saved Portion recipe without re-posting. */
   resumeSavedRecipe: (recipeId: string) => boolean;
 }
@@ -111,7 +122,7 @@ interface KitchenSkillsSessionValue {
 const KitchenSkillsSessionContext = createContext<KitchenSkillsSessionValue | null>(null);
 
 function reviewDedupeKey(review: KitchenSkillsReviewEntry): string {
-  return review.persistId ?? `${review.sessionId}::${review.reviewedGame}`;
+  return review.persistId ?? reviewIdentityKey(review);
 }
 
 function dedupePersistedReviews(
@@ -369,6 +380,17 @@ export function KitchenSkillsSessionProvider({
       ) {
         return { ok: false, reason: 'duplicate_recipe', keepDraft: true };
       }
+      const gateProgress = buildKitchenSkillsTaskProgress({
+        portionEntries,
+        trimEntries,
+        rescueEntries,
+        activeRecipeId,
+        trimInProgress,
+        reuseInProgress,
+      });
+      if (!canStartAnotherKitchenSkillsRecipe(gateProgress)) {
+        return { ok: false, reason: 'unfinished_recipe', keepDraft: true };
+      }
       const normalized = { ...entry, recipeId };
       if (isGameBusEmbed()) {
         const posted = tryPostKitchenSkillsPortion(normalized);
@@ -377,13 +399,22 @@ export function KitchenSkillsSessionProvider({
         }
         setLocalPortion((current) => [...current, { ...normalized, source: 'local' }]);
         setActiveRecipeId(recipeId);
+        setShowFinishSummary(false);
         return { ok: true, mode: 'posted_awaiting_persist' };
       }
       setLocalPortion((current) => [...current, { ...normalized, source: 'local' }]);
       setActiveRecipeId(recipeId);
+      setShowFinishSummary(false);
       return { ok: true, mode: 'local' };
     },
-    [portionEntries],
+    [
+      portionEntries,
+      trimEntries,
+      rescueEntries,
+      activeRecipeId,
+      trimInProgress,
+      reuseInProgress,
+    ],
   );
 
   const enterReuse = useCallback(() => {
@@ -399,6 +430,13 @@ export function KitchenSkillsSessionProvider({
 
   const openFinishSummary = useCallback(() => {
     setShowFinishSummary(true);
+  }, []);
+
+  const startAnotherRecipe = useCallback(() => {
+    setShowFinishSummary(false);
+    setTrimInProgress(false);
+    setReuseInProgress(false);
+    goToKitchenDaySection('portion');
   }, []);
 
   const resumeSavedRecipe = useCallback(
@@ -425,11 +463,10 @@ export function KitchenSkillsSessionProvider({
     ) {
       return { ok: false, reason: 'invalid_scores', keepDraft: true };
     }
-    if (
-      reviews.some(
-        (item) => item.sessionId === entry.sessionId && item.reviewedGame === entry.reviewedGame,
-      )
-    ) {
+    if (!normalizeRecipeId(entry.recipeId ?? '')) {
+      return { ok: false, reason: 'missing_recipe', keepDraft: true };
+    }
+    if (hasDuplicateReviewIdentity(reviews, entry)) {
       return { ok: false, reason: 'duplicate_review', keepDraft: true };
     }
     if (isGameBusEmbed()) {
@@ -438,18 +475,14 @@ export function KitchenSkillsSessionProvider({
         return { ok: false, reason: posted.reason, keepDraft: true };
       }
       setLocalReviews((current) =>
-        current.some(
-          (item) => item.sessionId === entry.sessionId && item.reviewedGame === entry.reviewedGame,
-        )
+        hasDuplicateReviewIdentity(current, entry)
           ? current
           : [...current, { ...entry, source: 'local' }],
       );
       return { ok: true, mode: 'posted_awaiting_persist' };
     }
     setLocalReviews((current) =>
-      current.some(
-        (item) => item.sessionId === entry.sessionId && item.reviewedGame === entry.reviewedGame,
-      )
+      hasDuplicateReviewIdentity(current, entry)
         ? current
         : [...current, { ...entry, source: 'local' }],
     );
@@ -479,10 +512,23 @@ export function KitchenSkillsSessionProvider({
     [rescueEntries, activeRecipeId],
   );
   const findReviewBySessionAndModule = useCallback(
-    (sessionId: string, reviewedGame: KitchenSkillsReviewedModule) =>
-      reviews.find(
-        (entry) => entry.sessionId === sessionId && entry.reviewedGame === reviewedGame,
-      ),
+    (sessionId: string, reviewedGame: KitchenSkillsReviewedModule, recipeId?: string | null) => {
+      const rid = normalizeRecipeId(recipeId ?? '');
+      if (rid) {
+        return reviews.find(
+          (entry) =>
+            entry.sessionId === sessionId &&
+            entry.reviewedGame === reviewedGame &&
+            normalizeRecipeId(entry.recipeId ?? '') === rid,
+        );
+      }
+      return reviews.find(
+        (entry) =>
+          entry.sessionId === sessionId &&
+          entry.reviewedGame === reviewedGame &&
+          !normalizeRecipeId(entry.recipeId ?? ''),
+      );
+    },
     [reviews],
   );
 
@@ -508,6 +554,8 @@ export function KitchenSkillsSessionProvider({
   const requiredSection = requiredKitchenSkillsSection(taskProgress);
   const reviewAllowed = canOpenKitchenSkillsReview(taskProgress);
   const canFinish = canFinishKitchenSkillsChallenge(taskProgress);
+  const canStartAnotherRecipe = canStartAnotherKitchenSkillsRecipe(taskProgress);
+  const blockedNewRecipeReason = newRecipeBlockedReason(taskProgress);
 
   const value = useMemo<KitchenSkillsSessionValue>(
     () => ({
@@ -533,11 +581,14 @@ export function KitchenSkillsSessionProvider({
       requiredSection,
       reviewAllowed,
       canFinish,
+      canStartAnotherRecipe,
+      newRecipeBlockedReason: blockedNewRecipeReason,
       setTrimInProgress,
       setReuseInProgress,
       enterReuse,
       addAnotherIngredient,
       openFinishSummary,
+      startAnotherRecipe,
       resumeSavedRecipe,
     }),
     [
@@ -559,12 +610,15 @@ export function KitchenSkillsSessionProvider({
       findReviewBySessionAndModule,
       showFinishSummary,
       canFinish,
+      canStartAnotherRecipe,
+      blockedNewRecipeReason,
       taskProgress,
       requiredSection,
       reviewAllowed,
       enterReuse,
       addAnotherIngredient,
       openFinishSummary,
+      startAnotherRecipe,
       resumeSavedRecipe,
     ],
   );

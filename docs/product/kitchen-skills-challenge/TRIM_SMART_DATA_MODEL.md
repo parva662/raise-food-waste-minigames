@@ -11,7 +11,7 @@
 1. Multiple **different** `trimSmart` activities per student Kitchen Skills session (scoped per recipe).
 2. Same `ingredientId` is **not** posted twice for the same `recipeId` in one session (same ingredient under another recipe is allowed).
 3. Store only §3 facts; calculate analytics on read.
-4. Tutor judgement is one Trim module `wastePracticeReview` (`reviewedGame=trimSmart`), not per Trim entry and not one overall session review.
+4. Tutor judgement is one Trim `wastePracticeReview` per recipe (`recipeId` + `reviewedGame=trimSmart`), not per Trim entry and not one overall session review.
 5. v1 activities stay readable; do not rewrite them in place.
 
 ### 1.1 Calculated (never stored)

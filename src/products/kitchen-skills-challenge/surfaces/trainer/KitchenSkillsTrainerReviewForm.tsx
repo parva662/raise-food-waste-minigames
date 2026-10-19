@@ -6,10 +6,9 @@ import type {
   KitchenSkillsReviewEntry,
   KitchenSkillsTrainerSession,
 } from '@/products/kitchen-skills-challenge/domain/types';
-import {
-  findModuleReview,
-  moduleHasEvidence,
-} from '@/products/kitchen-skills-challenge/read/trainerSessions';
+import { recipeModuleHasEvidence } from '@/products/kitchen-skills-challenge/domain/session/reviewIdentity';
+import { findRecipeModuleReview } from '@/products/kitchen-skills-challenge/read/trainerSessions';
+import { normalizeRecipeId } from '@/products/kitchen-skills-challenge/domain/session/ingredientUniqueness';
 
 function reviewTestId(reviewedGame: KitchenSkillsReviewedModule, suffix: string): string {
   return `kitchen-day-review-${reviewedGame}-${suffix}`;
@@ -85,19 +84,22 @@ function ReviewReadback({
 
 export function KitchenSkillsTrainerModuleReviewForm({
   selected,
+  recipeId,
   reviewedGame,
   moduleTitle,
   onDraftChange,
 }: {
   selected: KitchenSkillsTrainerSession;
+  recipeId: string;
   reviewedGame: KitchenSkillsReviewedModule;
   moduleTitle: string;
   onDraftChange?: (dirty: boolean) => void;
 }) {
   const { commitReview, findReviewBySessionAndModule } = useReadyKitchenSkillsSession();
+  const normalizedRecipeId = normalizeRecipeId(recipeId) ?? recipeId;
   const existing =
-    findModuleReview(selected, reviewedGame) ??
-    findReviewBySessionAndModule(selected.sessionId, reviewedGame);
+    findRecipeModuleReview(selected, normalizedRecipeId, reviewedGame) ??
+    findReviewBySessionAndModule(selected.sessionId, reviewedGame, normalizedRecipeId);
   const [timeScore, setTimeScore] = useState('');
   const [qualityScore, setQualityScore] = useState('');
   const [feedback, setFeedback] = useState('');
@@ -108,7 +110,7 @@ export function KitchenSkillsTrainerModuleReviewForm({
     setQualityScore('');
     setFeedback('');
     setError(null);
-  }, [reviewedGame, selected.sessionId]);
+  }, [reviewedGame, selected.sessionId, normalizedRecipeId]);
 
   useEffect(() => {
     if (existing) {
@@ -121,7 +123,7 @@ export function KitchenSkillsTrainerModuleReviewForm({
     return () => onDraftChange?.(false);
   }, [existing, timeScore, qualityScore, feedback, onDraftChange]);
 
-  if (!moduleHasEvidence(selected, reviewedGame)) {
+  if (!recipeModuleHasEvidence(selected, normalizedRecipeId, reviewedGame)) {
     return null;
   }
 
@@ -152,6 +154,7 @@ export function KitchenSkillsTrainerModuleReviewForm({
         sessionId: selected.sessionId,
         sessionDate: selected.sessionDate,
         submittedAt: new Date().toISOString(),
+        recipeId: normalizedRecipeId,
         reviewedGame,
         timeEfficiencyScore: parsedTime.value,
         preparationQualityScore: parsedQuality.value,

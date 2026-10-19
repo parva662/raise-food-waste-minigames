@@ -83,29 +83,36 @@ Feature: Session Review, Student Progress, and tutor assessment
       When the tutor submits the two scores for a module without feedback
       Then the module review is accepted
 
-    Scenario: One review covers one module only
-      Given the kitchen day has Trim Smart and Rescue & Reuse evidence
-      When the tutor submits a Trim Smart review
-      Then one review is recorded for that session and reviewedGame trimSmart
-      And Rescue & Reuse remains open for assessment
+    Scenario: One review covers one recipe and module only
+      Given the kitchen day has Trim Smart and Rescue & Reuse evidence for one recipe
+      When the tutor submits a Trim Smart review for that recipe
+      Then one review is recorded for that session, recipeId, and reviewedGame trimSmart
+      And Rescue & Reuse for that recipe remains open for assessment
       And the review is not one judgement per ingredient
       And there is no overall session-level tutor score
 
-  Rule: Session assessment status uses only modules with participant evidence
+    Scenario: Two Portion recipes need two independent Portion assessments
+      Given the student recorded Portion Precision for recipe A and recipe B
+      When the tutor submits a Portion Precision review for recipe A
+      Then recipe A Portion is reviewed
+      And recipe B Portion still needs assessment
+      And the session status is Partially reviewed
 
-    Scenario: Portion-only session is Reviewed after the Portion assessment
-      Given the student recorded Portion Precision only
-      And Trim Smart and Rescue & Reuse have no participant evidence
-      And the tutor submitted a Portion Precision review
+  Rule: Session assessment status uses evidenced recipe-module pairs
+
+    Scenario: Portion-only session is Reviewed after the Portion assessment for that recipe
+      Given the student recorded Portion Precision only for one recipe
+      And Trim Smart and Rescue & Reuse have no participant evidence for that recipe
+      And the tutor submitted a Portion Precision review for that recipe
       Then the session status is Reviewed
       And Trim Smart and Rescue & Reuse do not require a review
       And those modules do not appear as needs review
       And they do not inflate the awaiting-assessment count
 
     Scenario: Portion and Trim reviewed without Reuse evidence is Reviewed
-      Given the student recorded Portion Precision and Trim Smart
-      And Rescue & Reuse has no participant evidence
-      And the tutor reviewed Portion Precision and Trim Smart
+      Given the student recorded Portion Precision and Trim Smart for one recipe
+      And Rescue & Reuse has no participant evidence for that recipe
+      And the tutor reviewed Portion Precision and Trim Smart for that recipe
       Then the session status is Reviewed
 
     Scenario: One unreviewed module among recorded evidence is Partially reviewed

@@ -14,8 +14,14 @@ import {
 } from '@/products/kitchen-skills-challenge/domain/portion/validation';
 
 export function KitchenSkillsPortionView() {
-  const { session, portionEntries, commitPortionEntry, resumeSavedRecipe } =
-    useReadyKitchenSkillsSession();
+  const {
+    session,
+    portionEntries,
+    commitPortionEntry,
+    resumeSavedRecipe,
+    canStartAnotherRecipe,
+    newRecipeBlockedReason,
+  } = useReadyKitchenSkillsSession();
   const recipes = listRecipeReferences();
   const [recipeId, setRecipeId] = useState('');
   const [actuals, setActuals] = useState<Record<string, string>>({});
@@ -39,6 +45,13 @@ export function KitchenSkillsPortionView() {
 
   function submit() {
     if (!recipe || !composition || !finalWeight.ok || alreadySaved) return;
+    if (!canStartAnotherRecipe && portionEntries.length > 0) {
+      setSubmitError(
+        newRecipeBlockedReason ??
+          'Finish the current recipe before starting another recipe.',
+      );
+      return;
+    }
     const entry = {
       sessionId: session.sessionId,
       sessionDate: session.sessionDate,
@@ -53,7 +66,10 @@ export function KitchenSkillsPortionView() {
       setSubmitError(
         result.reason === 'duplicate_recipe'
           ? 'This recipe is already recorded for this kitchen day.'
-          : 'This recipe could not be saved.',
+          : result.reason === 'unfinished_recipe'
+            ? (newRecipeBlockedReason ??
+              'Finish the current recipe before starting another recipe.')
+            : 'This recipe could not be saved.',
       );
       return;
     }
@@ -110,7 +126,30 @@ export function KitchenSkillsPortionView() {
         </div>
       ) : null}
 
-      {recipe && !alreadySaved ? (
+      {recipe && !alreadySaved && !canStartAnotherRecipe && portionEntries.length > 0 ? (
+        <div data-testid="kitchen-day-new-recipe-blocked">
+          <p className="kitchen-day-error" data-testid="kitchen-day-new-recipe-blocked-reason">
+            {newRecipeBlockedReason ??
+              'Finish the current recipe before starting another recipe.'}
+          </p>
+          <div className="kitchen-day-form-actions kitchen-day-form-actions--sticky">
+            <button
+              type="button"
+              className="kitchen-day-button kitchen-day-button--primary"
+              data-testid="kitchen-day-return-to-saved-recipe"
+              onClick={() => {
+                const unfinished =
+                  portionEntries.find((entry) => entry.recipeId) ?? portionEntries[0];
+                if (unfinished) resumeSavedRecipe(unfinished.recipeId);
+              }}
+            >
+              Continue saved recipe
+            </button>
+          </div>
+        </div>
+      ) : null}
+
+      {recipe && !alreadySaved && (canStartAnotherRecipe || portionEntries.length === 0) ? (
         <div data-testid={`kitchen-day-recipe-${recipe.recipeId}`}>
           <div className="kitchen-day-portion-entry-wrap">
             <table className="kitchen-day-portion-entry" aria-label="Recipe ingredients">

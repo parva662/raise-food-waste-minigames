@@ -10,6 +10,7 @@ import {
 import {
   attachModuleReviewToMatchingSessions,
   emptyModuleReviews,
+  emptySessionReviews,
 } from '@/products/kitchen-skills-challenge/read/trainerSessions';
 
 /**
@@ -57,6 +58,7 @@ export function buildKitchenSkillsStudentProgressSessions(
       trimEntries: [],
       rescueEntries: [],
       portionEntries: [],
+      reviews: emptySessionReviews(),
       moduleReviews: emptyModuleReviews(),
     };
     sessions.set(sessionId, created);

@@ -49,7 +49,18 @@ export function buildKitchenSkillsProgressPoints(
       const portionMetrics = session.portionEntries.map((entry) =>
         buildPortionRecipeMetrics(entry, getRecipeReference(entry.recipeId)),
       );
-      const { trimSmart, rescueAndReuse, portionPrecision } = session.moduleReviews;
+      const chartReview = (module: KitchenSkillsReviewedModule) => {
+        const recipeReviews = (session.reviews ?? []).filter(
+          (entry) => entry.reviewedGame === module && Boolean(entry.recipeId?.trim()),
+        );
+        if (recipeReviews.length === 1) return recipeReviews[0]!;
+        // Multiple recipe assessments: do not invent a combined session score for charts.
+        if (recipeReviews.length > 1) return null;
+        return session.moduleReviews[module];
+      };
+      const trimSmart = chartReview('trimSmart');
+      const rescueAndReuse = chartReview('rescueAndReuse');
+      const portionPrecision = chartReview('portionPrecision');
       return {
         sessionId: session.sessionId,
         sessionDate: session.sessionDate,
@@ -136,9 +147,17 @@ export function moduleReviewHistory(
   module: KitchenSkillsReviewedModule,
 ): Array<{ session: KitchenSkillsTrainerSession; review: KitchenSkillsReviewEntry }> {
   return sortKitchenSkillsSessionsNewestFirst(sessions).flatMap((session) => {
-    const review = session.moduleReviews[module];
-    if (!review) return [];
-    return [{ session, review }];
+    const recipeReviews = (session.reviews ?? []).filter(
+      (entry) => entry.reviewedGame === module && Boolean(entry.recipeId?.trim()),
+    );
+    if (recipeReviews.length > 0) {
+      return [...recipeReviews]
+        .sort((left, right) => right.submittedAt.localeCompare(left.submittedAt))
+        .map((review) => ({ session, review }));
+    }
+    const legacy = session.moduleReviews[module];
+    if (!legacy) return [];
+    return [{ session, review: legacy }];
   });
 }
 
@@ -204,7 +223,10 @@ export function filterModuleHistorySessions(
     if (fromDate && session.sessionDate < fromDate) return false;
     if (toDate && session.sessionDate > toDate) return false;
     if (reviewStatus === 'all') return true;
-    const reviewed = session.moduleReviews[module] !== null;
+    const hasRecipeReview = (session.reviews ?? []).some(
+      (entry) => entry.reviewedGame === module && Boolean(entry.recipeId?.trim()),
+    );
+    const reviewed = hasRecipeReview || session.moduleReviews[module] !== null;
     return reviewStatus === 'reviewed' ? reviewed : !reviewed;
   });
 }

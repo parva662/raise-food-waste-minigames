@@ -12,7 +12,30 @@ const sessionOne = 'kitchen-day:kitchen-day-task-1:user-1:2026-09-23';
 const sessionTwo = 'kitchen-day:kitchen-day-task-1:user-2:2026-09-23';
 const sessionSelfOnly = 'kitchen-day:kitchen-day-task-1:user-self:2026-09-23';
 
+const baseRecipeId = 'test-recipe-1';
+
 const baseActivities = [
+  {
+    id: 'act-portion-1',
+    actor: { id: 'user-1', name: 'Student One' },
+    template: { slug: 'portionPrecision' },
+    properties: [
+      { template: { slug: 'sessionId' }, value: { value: sessionOne } },
+      { template: { slug: 'sessionDate' }, value: { value: '2026-09-23' } },
+      { template: { slug: 'submittedAt' }, value: { value: '2026-09-23T09:00:00.000Z' } },
+      { template: { slug: 'recipeId' }, value: { value: baseRecipeId } },
+      { template: { slug: 'recipeName' }, value: { value: 'Test Recipe' } },
+      { template: { slug: 'finalRecipeWeightGrams' }, value: { value: 4500 } },
+      {
+        template: { slug: 'recipeComposition' },
+        value: {
+          value: [
+            { ingredientId: 'carrot', ingredientName: 'Carrot', actualAmount: 5000, unit: 'g' },
+          ],
+        },
+      },
+    ],
+  },
   {
     id: 'act-trim-1',
     actor: { id: 'user-1', name: 'Student One' },
@@ -23,6 +46,7 @@ const baseActivities = [
       { template: { slug: 'sessionId' }, value: { value: sessionOne } },
       { template: { slug: 'sessionDate' }, value: { value: '2026-09-23' } },
       { template: { slug: 'submittedAt' }, value: { value: '2026-09-23T10:03:00.000Z' } },
+      { template: { slug: 'recipeId' }, value: { value: baseRecipeId } },
       { template: { slug: 'ingredientId' }, value: { value: 'carrot' } },
       { template: { slug: 'ingredientName' }, value: { value: 'Carrot' } },
       { template: { slug: 'ingredientCategory' }, value: { value: 'root' } },
@@ -73,6 +97,7 @@ function secondStudentTrimActivity() {
       { template: { slug: 'sessionId' }, value: { value: sessionTwo } },
       { template: { slug: 'sessionDate' }, value: { value: '2026-09-23' } },
       { template: { slug: 'submittedAt' }, value: { value: '2026-09-23T10:03:00.000Z' } },
+      { template: { slug: 'recipeId' }, value: { value: 'student-two-recipe' } },
       { template: { slug: 'ingredientId' }, value: { value: 'onion' } },
       { template: { slug: 'ingredientName' }, value: { value: 'Onion' } },
       { template: { slug: 'ingredientWeightGrams' }, value: { value: 1000 } },
@@ -80,6 +105,28 @@ function secondStudentTrimActivity() {
       { template: { slug: 'estimatedWasteGrams' }, value: { value: 100 } },
       { template: { slug: 'actualWasteGrams' }, value: { value: 80 } },
       { template: { slug: 'duration' }, obj: { value: 2, unit: 'minutes' } },
+    ],
+  };
+}
+
+function secondStudentPortionActivity() {
+  return {
+    id: 'act-portion-2',
+    actor: { id: 'user-2', name: 'Student Two' },
+    template: { slug: 'portionPrecision' },
+    properties: [
+      { template: { slug: 'sessionId' }, value: { value: sessionTwo } },
+      { template: { slug: 'sessionDate' }, value: { value: '2026-09-23' } },
+      { template: { slug: 'submittedAt' }, value: { value: '2026-09-23T09:00:00.000Z' } },
+      { template: { slug: 'recipeId' }, value: { value: 'student-two-recipe' } },
+      { template: { slug: 'recipeName' }, value: { value: 'Student Two Recipe' } },
+      { template: { slug: 'finalRecipeWeightGrams' }, value: { value: 900 } },
+      {
+        template: { slug: 'recipeComposition' },
+        value: {
+          value: [{ ingredientId: 'onion', ingredientName: 'Onion', actualAmount: 1000, unit: 'g' }],
+        },
+      },
     ],
   };
 }
@@ -250,17 +297,19 @@ describe('Kitchen Day module chef review', () => {
       kitchenSkillsTrainerInput: {
         activities: [
           {
-            ...baseActivities[0],
+            ...baseActivities[1],
             id: 'act-trim-pending',
-            properties: baseActivities[0]!.properties.map((property) =>
+            properties: baseActivities[1]!.properties.map((property) =>
               property.template.slug === 'sessionId'
                 ? { ...property, value: { value: pendingSession } }
                 : property.template.slug === 'sessionDate'
                   ? { ...property, value: { value: '2026-09-25' } }
                   : property.template.slug === 'submittedAt'
                     ? { ...property, value: { value: '2026-09-25T10:03:00.000Z' } }
-                    : property,
-            ),
+                    : property.template.slug === 'recipeId'
+                      ? { ...property, value: { value: undefined } }
+                      : property,
+            ).filter((property) => property.template.slug !== 'recipeId'),
           },
           {
             id: 'act-trim-partial',
@@ -408,6 +457,7 @@ describe('Kitchen Day module chef review', () => {
               { template: { slug: 'sessionId' }, value: { value: portionOnlyReviewed } },
               { template: { slug: 'sessionDate' }, value: { value: '2026-09-25' } },
               { template: { slug: 'submittedAt' }, value: { value: '2026-09-25T15:00:00.000Z' } },
+              { template: { slug: 'recipeId' }, value: { value: '42' } },
               { template: { slug: 'reviewedGame' }, value: { value: 'portionPrecision' } },
               { template: { slug: 'timeEfficiencyScore' }, value: { value: 4 } },
               { template: { slug: 'preparationQualityScore' }, value: { value: 5 } },
@@ -489,6 +539,7 @@ describe('Kitchen Day module chef review', () => {
               { template: { slug: 'sessionId' }, value: { value: sessionOne } },
               { template: { slug: 'sessionDate' }, value: { value: '2026-09-23' } },
               { template: { slug: 'submittedAt' }, value: { value: '2026-09-23T15:00:00.000Z' } },
+              { template: { slug: 'recipeId' }, value: { value: baseRecipeId } },
               { template: { slug: 'reviewedGame' }, value: { value: 'trimSmart' } },
               { template: { slug: 'timeEfficiencyScore' }, value: { value: 4 } },
               { template: { slug: 'preparationQualityScore' }, value: { value: 3 } },
@@ -546,6 +597,7 @@ describe('Kitchen Day module chef review', () => {
               { template: { slug: 'sessionId' }, value: { value: sessionOne } },
               { template: { slug: 'sessionDate' }, value: { value: '2026-09-23' } },
               { template: { slug: 'submittedAt' }, value: { value: '2026-09-23T15:00:00.000Z' } },
+              { template: { slug: 'recipeId' }, value: { value: baseRecipeId } },
               { template: { slug: 'reviewedGame' }, value: { value: 'trimSmart' } },
               { template: { slug: 'timeEfficiencyScore' }, value: { value: 4 } },
               { template: { slug: 'preparationQualityScore' }, value: { value: 3 } },
@@ -595,7 +647,9 @@ describe('Kitchen Day module chef review', () => {
       kitchenGroupInput: {
         activities: [{ id: 'chef-forecast', template: { slug: 'chefForecast' }, actor: { id: 'chef-1', name: 'Chef' }, properties: [] }],
       },
-      kitchenSkillsTrainerInput: { activities: [...baseActivities, secondStudentTrimActivity()] },
+      kitchenSkillsTrainerInput: {
+        activities: [...baseActivities, secondStudentPortionActivity(), secondStudentTrimActivity()],
+      },
       inputCollectionPari: { me: { id: 'chef-1', firstName: 'Chef', lastName: 'One' } },
     });
     await waitFor(() => {
@@ -624,6 +678,7 @@ describe('Kitchen Day module chef review', () => {
       'sessionId',
       'sessionDate',
       'submittedAt',
+      'recipeId',
       'reviewedGame',
       'timeEfficiencyScore',
       'preparationQualityScore',
@@ -632,6 +687,7 @@ describe('Kitchen Day module chef review', () => {
     expect(properties.map((property) => property.template)).not.toContain('studentId');
     expect(properties.find((property) => property.template === 'sessionId')?.obj).toEqual({ value: sessionOne });
     expect(properties.find((property) => property.template === 'sessionDate')?.obj).toEqual({ value: '2026-09-23' });
+    expect(properties.find((property) => property.template === 'recipeId')?.obj).toEqual({ value: baseRecipeId });
     expect(properties.find((property) => property.template === 'reviewedGame')?.obj).toEqual({ value: 'trimSmart' });
     expect(properties.find((property) => property.template === 'timeEfficiencyScore')?.obj).toEqual({ value: 4 });
     expect(properties.find((property) => property.template === 'preparationQualityScore')?.obj).toEqual({ value: 5 });

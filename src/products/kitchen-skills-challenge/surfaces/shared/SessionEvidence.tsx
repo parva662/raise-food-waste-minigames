@@ -149,6 +149,15 @@ function ModuleReviewReadback({
         <span hidden data-testid={`${testIdPrefix}-tutor-review-trimSmart`} />
       ) : null}
       <h3 className="kitchen-day-evidence-section__title">Tutor assessment</h3>
+      {review.recipeId ? (
+        <p className="kitchen-day-evidence-note" data-testid={`${testId}-recipe`}>
+          Recipe: {review.recipeId}
+        </p>
+      ) : (
+        <p className="kitchen-day-evidence-note" data-testid={`${testId}-legacy`}>
+          Historical session-level assessment
+        </p>
+      )}
       <dl className="kitchen-day-facts">
         <Fact label="Time efficiency" value={formatScore(review.timeEfficiencyScore)} />
         <Fact label="Preparation quality" value={formatScore(review.preparationQualityScore)} />

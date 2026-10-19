@@ -38,7 +38,7 @@ Percentile / ranking messaging is **@pending** until a sufficient-data rule is a
 
 ## 6. Tutor assessment
 
-This module is **evidence** for one optional `wastePracticeReview` with `reviewedGame: trimSmart`. It is not a separate automatic score and not one review for the whole session. See [`CHEF_REVIEW.md`](CHEF_REVIEW.md).
+This module is **evidence** for one optional `wastePracticeReview` per recipe with `reviewedGame: trimSmart` (and that recipe’s `recipeId`). It is not a separate automatic score and not one review for the whole session. See [`CHEF_REVIEW.md`](CHEF_REVIEW.md).
 
 ## 7. Non-goals
 

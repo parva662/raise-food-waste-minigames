@@ -1,5 +1,5 @@
 /** @vitest-environment jsdom */
-import { cleanup, render, screen } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { useState } from 'react';
 import { afterEach, describe, expect, it } from 'vitest';
@@ -158,5 +158,82 @@ describe('KitchenSkillsRecipeCombobox', () => {
     expect(input).toHaveAttribute('aria-expanded', 'false');
     expect(input).toHaveValue('Ankanrinta FLOW');
     expect(screen.getByTestId('selected-id')).toHaveTextContent('1');
+  });
+
+  it('does not select on touch pointerdown so the list can scroll', async () => {
+    const user = userEvent.setup();
+    render(<Harness />);
+    await user.click(screen.getByTestId('kitchen-day-recipe-select'));
+    const option = screen.getByRole('option', { name: 'Ankanrinta FLOW' });
+    option.dispatchEvent(
+      new PointerEvent('pointerdown', {
+        bubbles: true,
+        cancelable: true,
+        pointerType: 'touch',
+        pointerId: 1,
+        clientX: 10,
+        clientY: 10,
+      }),
+    );
+    expect(screen.getByTestId('selected-id')).toHaveTextContent('none');
+    expect(screen.getByRole('listbox')).toBeInTheDocument();
+  });
+
+  it('does not select when a touch pointer moves beyond the tap slop', async () => {
+    const user = userEvent.setup();
+    render(<Harness />);
+    await user.click(screen.getByTestId('kitchen-day-recipe-select'));
+    const option = screen.getByRole('option', { name: 'Uuniperuna L,G' });
+    option.dispatchEvent(
+      new PointerEvent('pointerdown', {
+        bubbles: true,
+        cancelable: true,
+        pointerType: 'touch',
+        pointerId: 2,
+        clientX: 10,
+        clientY: 10,
+      }),
+    );
+    option.dispatchEvent(
+      new PointerEvent('pointermove', {
+        bubbles: true,
+        cancelable: true,
+        pointerType: 'touch',
+        pointerId: 2,
+        clientX: 10,
+        clientY: 40,
+      }),
+    );
+    option.dispatchEvent(
+      new PointerEvent('pointerup', {
+        bubbles: true,
+        cancelable: true,
+        pointerType: 'touch',
+        pointerId: 2,
+        clientX: 10,
+        clientY: 40,
+      }),
+    );
+    expect(screen.getByTestId('selected-id')).toHaveTextContent('none');
+  });
+
+  it('selects on a deliberate touch tap without movement', async () => {
+    const user = userEvent.setup();
+    render(<Harness />);
+    await user.click(screen.getByTestId('kitchen-day-recipe-select'));
+    const option = screen.getByRole('option', { name: 'Vihreä powersmoothie M,G' });
+    fireEvent.pointerDown(option, {
+      pointerType: 'touch',
+      pointerId: 3,
+      clientX: 12,
+      clientY: 12,
+    });
+    fireEvent.pointerUp(option, {
+      pointerType: 'touch',
+      pointerId: 3,
+      clientX: 14,
+      clientY: 13,
+    });
+    expect(screen.getByTestId('selected-id')).toHaveTextContent('3');
   });
 });

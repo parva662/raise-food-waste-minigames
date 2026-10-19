@@ -90,7 +90,7 @@ function reviewActivity(
   sessionId: string,
   reviewedGame: KitchenSkillsReviewedModule,
   sessionDate = '2026-09-23',
-  scores: { time?: number; quality?: number; feedback?: string } = {},
+  scores: { time?: number; quality?: number; feedback?: string; recipeId?: string } = {},
 ) {
   const properties = [
     { template: { slug: 'sessionId' }, value: { value: sessionId } },
@@ -100,11 +100,14 @@ function reviewActivity(
     { template: { slug: 'timeEfficiencyScore' }, value: { value: scores.time ?? 4 } },
     { template: { slug: 'preparationQualityScore' }, value: { value: scores.quality ?? 3 } },
   ];
+  if (scores.recipeId) {
+    properties.push({ template: { slug: 'recipeId' }, value: { value: scores.recipeId } });
+  }
   if (scores.feedback) {
     properties.push({ template: { slug: 'chefFeedback' }, value: { value: scores.feedback } });
   }
   return {
-    id: `review-${actorId}-${reviewedGame}-${sessionId}`,
+    id: `review-${actorId}-${reviewedGame}-${sessionId}-${scores.recipeId ?? 'legacy'}`,
     actor: { id: actorId, name: actorId === 'user-1' ? 'Student One' : 'Student Two' },
     template: { slug: 'wastePracticeReview' },
     properties,
@@ -269,9 +272,22 @@ describe('Kitchen Day chef session grouping', () => {
       trimActivity('user-1', complete, 'potato', '2026-09-23'),
       rescueActivity('user-1', complete, 'potato', '2026-09-23'),
       portionActivity('user-1', complete, 'mayonnaise', '2026-09-23'),
-      reviewActivity('user-1', complete, 'trimSmart', '2026-09-23', { time: 4, quality: 5, feedback: 'Clean knife work.' }),
-      reviewActivity('user-1', complete, 'rescueAndReuse', '2026-09-23', { time: 3, quality: 4 }),
-      reviewActivity('user-1', complete, 'portionPrecision', '2026-09-23', { time: 5, quality: 5 }),
+      reviewActivity('user-1', complete, 'trimSmart', '2026-09-23', {
+        time: 4,
+        quality: 5,
+        feedback: 'Clean knife work.',
+        recipeId: 'mayonnaise',
+      }),
+      reviewActivity('user-1', complete, 'rescueAndReuse', '2026-09-23', {
+        time: 3,
+        quality: 4,
+        recipeId: 'mayonnaise',
+      }),
+      reviewActivity('user-1', complete, 'portionPrecision', '2026-09-23', {
+        time: 5,
+        quality: 5,
+        recipeId: 'mayonnaise',
+      }),
       trimActivity('user-1', trimOnlyReviewed, 'celery', '2026-09-22'),
       reviewActivity('user-1', trimOnlyReviewed, 'trimSmart', '2026-09-22'),
     ]);
@@ -285,9 +301,11 @@ describe('Kitchen Day chef session grouping', () => {
     expect(partitioned.needsAssessment.map((s) => s.sessionId).sort()).toEqual([partial, pendingOnly].sort());
     expect(partitioned.reviewed.map((s) => s.sessionId).sort()).toEqual([complete, trimOnlyReviewed].sort());
     expect(modulesAwaitingAssessmentCount(sessions.find((s) => s.sessionId === trimOnlyReviewed)!)).toBe(0);
-    expect(sessions.find((s) => s.sessionId === complete)?.moduleReviews.trimSmart?.chefFeedback).toBe(
-      'Clean knife work.',
-    );
+    expect(
+      sessions
+        .find((s) => s.sessionId === complete)
+        ?.reviews.find((review) => review.reviewedGame === 'trimSmart')?.chefFeedback,
+    ).toBe('Clean knife work.');
   });
 
   it('treats session status as Reviewed when every recorded module is reviewed', () => {
@@ -297,16 +315,26 @@ describe('Kitchen Day chef session grouping', () => {
     const portionUnreviewed = 'kitchen-day:task-1:user-1:portion-unreviewed';
     const sessions = buildKitchenSkillsTrainerSessions([
       portionActivity('user-1', portionOnly, 'mayonnaise', '2026-09-25'),
-      reviewActivity('user-1', portionOnly, 'portionPrecision', '2026-09-25'),
+      reviewActivity('user-1', portionOnly, 'portionPrecision', '2026-09-25', {
+        recipeId: 'mayonnaise',
+      }),
       portionActivity('user-1', portionTrim, 'mayonnaise', '2026-09-24'),
       trimActivity('user-1', portionTrim, 'carrot', '2026-09-24'),
-      reviewActivity('user-1', portionTrim, 'portionPrecision', '2026-09-24'),
-      reviewActivity('user-1', portionTrim, 'trimSmart', '2026-09-24'),
+      reviewActivity('user-1', portionTrim, 'portionPrecision', '2026-09-24', {
+        recipeId: 'mayonnaise',
+      }),
+      reviewActivity('user-1', portionTrim, 'trimSmart', '2026-09-24', {
+        recipeId: 'mayonnaise',
+      }),
       portionActivity('user-1', allThreePartial, 'mayonnaise', '2026-09-23'),
       trimActivity('user-1', allThreePartial, 'carrot', '2026-09-23'),
       rescueActivity('user-1', allThreePartial, 'carrot', '2026-09-23'),
-      reviewActivity('user-1', allThreePartial, 'portionPrecision', '2026-09-23'),
-      reviewActivity('user-1', allThreePartial, 'trimSmart', '2026-09-23'),
+      reviewActivity('user-1', allThreePartial, 'portionPrecision', '2026-09-23', {
+        recipeId: 'mayonnaise',
+      }),
+      reviewActivity('user-1', allThreePartial, 'trimSmart', '2026-09-23', {
+        recipeId: 'mayonnaise',
+      }),
       portionActivity('user-1', portionUnreviewed, 'mayonnaise', '2026-09-22'),
     ]);
 

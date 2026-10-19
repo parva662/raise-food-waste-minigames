@@ -62,15 +62,22 @@ function formatDurationMinutes(value: number): string {
 function TutorAssessmentCard({
   review,
   sessionDate,
+  recipeName,
   compact = false,
   testIdBase,
 }: {
   review: KitchenSkillsReviewEntry;
   sessionDate: string;
+  recipeName?: string | null;
   compact?: boolean;
   /** Stable test ids only for the primary/latest card (avoid duplicates in history). */
   testIdBase?: string;
 }) {
+  const recipeLabel = recipeName?.trim()
+    ? recipeName
+    : review.recipeId?.trim()
+      ? review.recipeId
+      : null;
   return (
     <div
       className={
@@ -80,6 +87,21 @@ function TutorAssessmentCard({
       }
       data-testid={testIdBase}
     >
+      {recipeLabel ? (
+        <p
+          className="kitchen-day-progress-tutor-card__session"
+          data-testid={testIdBase ? `${testIdBase}-recipe` : undefined}
+        >
+          Recipe: {recipeLabel}
+        </p>
+      ) : (
+        <p
+          className="kitchen-day-progress-tutor-card__session"
+          data-testid={testIdBase ? `${testIdBase}-legacy` : undefined}
+        >
+          Historical session-level assessment
+        </p>
+      )}
       <dl className="kitchen-day-progress-tutor-card__scores">
         <div>
           <dt>Time efficiency</dt>
@@ -246,6 +268,18 @@ function ModuleSummaryMetrics({
   );
 }
 
+function moduleReviewsForSession(
+  session: KitchenSkillsTrainerSession,
+  module: KitchenSkillsReviewedModule,
+): KitchenSkillsReviewEntry[] {
+  const recipeReviews = (session.reviews ?? []).filter(
+    (entry) => entry.reviewedGame === module && Boolean(entry.recipeId?.trim()),
+  );
+  if (recipeReviews.length > 0) return recipeReviews;
+  const legacy = findModuleReview(session, module);
+  return legacy ? [legacy] : [];
+}
+
 function ModuleSessionCard({
   session,
   module,
@@ -255,7 +289,8 @@ function ModuleSessionCard({
   module: KitchenSkillsReviewedModule;
   point?: ReturnType<typeof buildKitchenSkillsProgressPoints>[number];
 }) {
-  const review = findModuleReview(session, module);
+  const reviews = moduleReviewsForSession(session, module);
+  const review = reviews[0] ?? null;
   const metrics = moduleSessionMetrics(session, module, point);
   const trimComparison =
     module === 'trimSmart' ? compareTrimSessionFromPortion(session.trimEntries, session.portionEntries) : null;
@@ -269,12 +304,16 @@ function ModuleSessionCard({
         </span>
         <span
           className={
-            review
+            reviews.length > 0
               ? 'kitchen-day-tutor-status kitchen-day-tutor-status--reviewed'
               : 'kitchen-day-tutor-status kitchen-day-tutor-status--needs'
           }
         >
-          {review ? `Reviewed ${review.timeEfficiencyScore}/${review.preparationQualityScore}` : 'Awaiting review'}
+          {review
+            ? reviews.length > 1
+              ? `${reviews.length} assessments`
+              : `Reviewed ${review.timeEfficiencyScore}/${review.preparationQualityScore}`
+            : 'Awaiting review'}
         </span>
       </summary>
       <div className="kitchen-day-progress-session-card__body">
@@ -293,8 +332,21 @@ function ModuleSessionCard({
             testId={`kitchen-day-progress-session-norm-${session.sessionId}`}
           />
         ) : null}
-        {review ? (
-          <TutorAssessmentCard review={review} sessionDate={session.sessionDate} compact />
+        {reviews.length > 0 ? (
+          reviews.map((item) => {
+            const recipeName =
+              session.portionEntries.find((portion) => portion.recipeId === item.recipeId)?.recipeName ??
+              item.recipeId;
+            return (
+              <TutorAssessmentCard
+                key={item.persistId ?? `${item.recipeId ?? 'legacy'}-${item.submittedAt}`}
+                review={item}
+                sessionDate={session.sessionDate}
+                recipeName={recipeName}
+                compact
+              />
+            );
+          })
         ) : (
           <p className="kitchen-day-progress-empty">No tutor assessment for this session.</p>
         )}
@@ -312,7 +364,8 @@ function ModuleHistoryRow({
   module: KitchenSkillsReviewedModule;
   point?: ReturnType<typeof buildKitchenSkillsProgressPoints>[number];
 }) {
-  const review = findModuleReview(session, module);
+  const reviews = moduleReviewsForSession(session, module);
+  const review = reviews[0] ?? null;
   const metrics = moduleSessionMetrics(session, module, point);
   const trimComparison =
     module === 'trimSmart' ? compareTrimSessionFromPortion(session.trimEntries, session.portionEntries) : null;
@@ -329,12 +382,16 @@ function ModuleHistoryRow({
         </span>
         <span
           className={
-            review
+            reviews.length > 0
               ? 'kitchen-day-tutor-status kitchen-day-tutor-status--reviewed'
               : 'kitchen-day-tutor-status kitchen-day-tutor-status--needs'
           }
         >
-          {review ? `${review.timeEfficiencyScore}/${review.preparationQualityScore}` : 'Awaiting'}
+          {review
+            ? reviews.length > 1
+              ? `${reviews.length} assessments`
+              : `${review.timeEfficiencyScore}/${review.preparationQualityScore}`
+            : 'Awaiting'}
         </span>
       </summary>
       <div className="kitchen-day-progress-history-row__body">
@@ -344,8 +401,21 @@ function ModuleHistoryRow({
             testId={`kitchen-day-progress-history-norm-${session.sessionId}`}
           />
         ) : null}
-        {review ? (
-          <TutorAssessmentCard review={review} sessionDate={session.sessionDate} compact />
+        {reviews.length > 0 ? (
+          reviews.map((item) => {
+            const recipeName =
+              session.portionEntries.find((portion) => portion.recipeId === item.recipeId)?.recipeName ??
+              item.recipeId;
+            return (
+              <TutorAssessmentCard
+                key={item.persistId ?? `${item.recipeId ?? 'legacy'}-${item.submittedAt}`}
+                review={item}
+                sessionDate={session.sessionDate}
+                recipeName={recipeName}
+                compact
+              />
+            );
+          })
         ) : (
           <p className="kitchen-day-progress-empty">No tutor assessment for this session.</p>
         )}
@@ -618,6 +688,11 @@ function ModuleProgressPanel({
             <TutorAssessmentCard
               review={latestReview.review}
               sessionDate={latestReview.session.sessionDate}
+              recipeName={
+                latestReview.session.portionEntries.find(
+                  (portion) => portion.recipeId === latestReview.review.recipeId,
+                )?.recipeName ?? latestReview.review.recipeId
+              }
               testIdBase={`kitchen-day-progress-tutor-${module}`}
             />
           </>

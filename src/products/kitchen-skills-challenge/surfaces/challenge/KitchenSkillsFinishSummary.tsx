@@ -64,6 +64,7 @@ export function KitchenSkillsFinishSummary() {
     activeRecipeId,
     recordedIngredientIds,
     addAnotherIngredient,
+    startAnotherRecipe,
   } = useReadyKitchenSkillsSession();
   const recipe = sessionRecipeReference(portionEntries, activeRecipeId);
   const canAddAnother =
@@ -119,6 +120,14 @@ export function KitchenSkillsFinishSummary() {
               Add another ingredient
             </button>
           ) : null}
+          <button
+            type="button"
+            className="chef-zero-dialog__btn kitchen-day-button kitchen-day-button--secondary"
+            data-testid="kitchen-day-start-another-recipe"
+            onClick={startAnotherRecipe}
+          >
+            Start another recipe
+          </button>
           <button
             type="button"
             className="chef-zero-dialog__btn chef-zero-dialog__btn--confirm kitchen-day-button kitchen-day-button--primary"

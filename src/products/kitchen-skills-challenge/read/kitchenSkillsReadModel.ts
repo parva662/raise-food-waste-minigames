@@ -214,6 +214,8 @@ export function parsePersistedReviewEntry(activity: unknown): KitchenSkillsRevie
   const preparationQualityScore = readActivityPropertyNumber(activity, 'preparationQualityScore');
   const chefFeedback = readActivityPropertyString(activity, 'chefFeedback');
   const reviewedGame = readActivityPropertyString(activity, 'reviewedGame');
+  const recipeIdRaw = readActivityPropertyString(activity, 'recipeId');
+  const recipeId = recipeIdRaw?.trim() || undefined;
   if (
     !sessionId ||
     !sessionDate ||
@@ -231,6 +233,7 @@ export function parsePersistedReviewEntry(activity: unknown): KitchenSkillsRevie
     sessionId,
     sessionDate,
     submittedAt,
+    ...(recipeId ? { recipeId } : {}),
     reviewedGame,
     timeEfficiencyScore,
     preparationQualityScore,

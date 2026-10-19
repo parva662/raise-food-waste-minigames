@@ -115,17 +115,18 @@ This activity does **not** use `ingredientCategory`.
 
 ---
 
-## `wastePracticeReview` — one tutor assessment per completed module
+## `wastePracticeReview` — one tutor assessment per recipe and evidenced module
 
 The GameBus activity slug remains `wastePracticeReview`. The product UI wording is Tutor assessment.
 
-One review per student Kitchen Skills module (`reviewedGame`), not one judgement per activity or ingredient. A session may have up to three reviews (Trim Smart, Rescue & Reuse, Portion Precision) when each has evidence.
+One tutor assessment per recipe and evidenced module within a Kitchen Skills session (`sessionId` + `recipeId` + `reviewedGame`), not one judgement per ingredient and not one review for the whole module across recipes. Example: three Portion recipes in one session require three independent Portion assessments.
 
 | Slug | Required | Notes |
 |------|----------|-------|
 | `sessionId` | yes | reviewed student's session |
 | `sessionDate` | yes | |
 | `submittedAt` | yes | |
+| `recipeId` | yes on **new** client posts; **optional** on the live GameBus property link until all clients are updated | Reuse the existing Portion/Trim/Reuse `recipeId` Property Template. Historical rows may omit it (legacy session-level). |
 | `reviewedGame` | yes | `trimSmart` \| `rescueAndReuse` \| `portionPrecision` |
 | `timeEfficiencyScore` | yes | integer 0–5 |
 | `preparationQualityScore` | yes | integer 0–5 |
@@ -202,13 +203,23 @@ If GameBus cannot link `recipeId` as optional while keeping historical posts val
 
 ### Tutor assessment (`wastePracticeReview`)
 
-- Make `wastePracticeReview` one assessment per completed module (`reviewedGame`)
+- Make `wastePracticeReview` one assessment per recipe and evidenced module (`sessionId` + `recipeId` + `reviewedGame`)
 - Keep: `sessionId`, `sessionDate`, `submittedAt`, `reviewedGame`, `timeEfficiencyScore`, `preparationQualityScore`, `chefFeedback`
+- **Link (optional) `recipeId`** using the **existing** Portion `recipeId` Property Template before deploying the client that posts it. Do **not** mark `recipeId` required until all applicable clients are updated.
 - `reviewedGame` values: `trimSmart`, `rescueAndReuse`, `portionPrecision`
 - `chefFeedback` optional
 - Post `SILENT_ACTIVITY` with `actors: [selectedStudentActorId]`
 - Do **not** add `studentId`
 - Unlink / stop requiring: `reviewedActivityId`, `reasonCode`, `freeTextNote`, `unusualEvent`, `serviceDate`
+
+### Safe deployment sequence (recipeId on `wastePracticeReview`)
+
+1. In GameBus, link the existing `recipeId` Property Template to `wastePracticeReview` as **OPTIONAL**.
+2. Verify the currently deployed client can still post its existing review payload (without `recipeId`).
+3. Deploy the updated application that posts `recipeId` on every new review.
+4. Verify new recipe-specific reviews persist with `recipeId`.
+5. Verify reload and tutor/student readbacks (including mixed legacy + recipe-specific histories).
+6. Only consider marking `recipeId` required after all applicable clients are updated and historical compatibility is verified.
 
 ### Student Progress — do not attach a raw group Kitchen Skills feed
 

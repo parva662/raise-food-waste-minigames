@@ -1,4 +1,13 @@
 import { getActivityTemplateReference } from '@/platform/gamebus/groupActivities';
+import {
+  evidencedRecipeModules,
+  findRecipeModuleReview,
+  hasDuplicateReviewIdentity,
+  isLegacySessionReview,
+  recipeModulesAwaitingAssessment,
+  reviewIdentityKey,
+  unattributedEvidenceModules,
+} from '@/products/kitchen-skills-challenge/domain/session/reviewIdentity';
 import type {
   KitchenSkillsReviewedModule,
   KitchenSkillsReviewEntry,
@@ -25,6 +34,10 @@ export function emptyModuleReviews(): KitchenSkillsTrainerSession['moduleReviews
   };
 }
 
+export function emptySessionReviews(): KitchenSkillsReviewEntry[] {
+  return [];
+}
+
 export function moduleHasEvidence(
   session: KitchenSkillsTrainerSession,
   module: KitchenSkillsReviewedModule,
@@ -43,37 +56,53 @@ export function findModuleReview(
   session: KitchenSkillsTrainerSession,
   module: KitchenSkillsReviewedModule,
 ): KitchenSkillsReviewEntry | null {
+  // Prefer a recipe-specific review when there is exactly one evidenced recipe for the module.
+  const recipePairs = evidencedRecipeModules(session).filter((pair) => pair.module === module);
+  if (recipePairs.length === 1) {
+    const recipeReview = findRecipeModuleReview(session, recipePairs[0].recipeId, module);
+    if (recipeReview) return recipeReview;
+  }
   return session.moduleReviews[module];
 }
 
-/** Latest submitted module review for read-only summaries until per-module UI lands. */
+/** Latest submitted module review for read-only summaries. */
 export function latestModuleReview(
   session: KitchenSkillsTrainerSession,
 ): KitchenSkillsReviewEntry | null {
-  const reviews = KITCHEN_SKILLS_REVIEWED_MODULES.map((module) => session.moduleReviews[module]).filter(
-    (entry): entry is KitchenSkillsReviewEntry => entry !== null,
-  );
+  const recipeReviews = session.reviews.filter((entry) => !isLegacySessionReview(entry));
+  const legacy = KITCHEN_SKILLS_REVIEWED_MODULES.map(
+    (module) => session.moduleReviews[module],
+  ).filter((entry): entry is KitchenSkillsReviewEntry => entry !== null);
+  const reviews = [...recipeReviews, ...legacy];
   if (reviews.length === 0) return null;
   return [...reviews].sort((left, right) => right.submittedAt.localeCompare(left.submittedAt))[0];
 }
 
 export function modulesWithEvidenceCount(session: KitchenSkillsTrainerSession): number {
-  return KITCHEN_SKILLS_REVIEWED_MODULES.filter((module) => moduleHasEvidence(session, module)).length;
+  return (
+    evidencedRecipeModules(session).length + unattributedEvidenceModules(session).length
+  );
 }
 
 export function modulesReviewedCount(session: KitchenSkillsTrainerSession): number {
-  return KITCHEN_SKILLS_REVIEWED_MODULES.filter(
-    (module) => moduleHasEvidence(session, module) && findModuleReview(session, module) !== null,
+  const recipeReviewed = evidencedRecipeModules(session).filter(
+    (pair) => findRecipeModuleReview(session, pair.recipeId, pair.module) !== null,
   ).length;
+  const legacyReviewed = unattributedEvidenceModules(session).filter(
+    (module) => session.moduleReviews[module] !== null,
+  ).length;
+  return recipeReviewed + legacyReviewed;
 }
 
 export function modulesAwaitingAssessmentCount(session: KitchenSkillsTrainerSession): number {
-  return KITCHEN_SKILLS_REVIEWED_MODULES.filter(
-    (module) => moduleHasEvidence(session, module) && findModuleReview(session, module) === null,
+  const recipeAwaiting = recipeModulesAwaitingAssessment(session).length;
+  const legacyAwaiting = unattributedEvidenceModules(session).filter(
+    (module) => session.moduleReviews[module] === null,
   ).length;
+  return recipeAwaiting + legacyAwaiting;
 }
 
-/** Assessment state from modules that have participant evidence only. Missing modules are not pending. */
+/** Assessment state from evidenced recipe-module pairs (plus unattributed legacy modules). */
 export type KitchenSkillsSessionAssessmentStatus =
   | 'needs_assessment'
   | 'partially_reviewed'
@@ -97,23 +126,39 @@ export const KITCHEN_SKILLS_MODULE_SHORT_LABELS: Record<KitchenSkillsReviewedMod
 };
 
 export function sessionPendingStatusPhrases(session: KitchenSkillsTrainerSession): string[] {
-  return KITCHEN_SKILLS_REVIEWED_MODULES.flatMap((module) => {
-    if (!moduleHasEvidence(session, module)) return [];
+  const phrases: string[] = [];
+  for (const pair of evidencedRecipeModules(session)) {
+    const label = KITCHEN_SKILLS_MODULE_SHORT_LABELS[pair.module];
+    if (findRecipeModuleReview(session, pair.recipeId, pair.module)) {
+      phrases.push(`${label} ✓`);
+    } else {
+      phrases.push(`${label} needs review`);
+    }
+  }
+  for (const module of unattributedEvidenceModules(session)) {
     const label = KITCHEN_SKILLS_MODULE_SHORT_LABELS[module];
-    if (findModuleReview(session, module)) return [`${label} ✓`];
-    return [`${label} needs review`];
-  });
+    if (session.moduleReviews[module]) phrases.push(`${label} ✓`);
+    else phrases.push(`${label} needs review`);
+  }
+  return phrases;
 }
 
 export function sessionReviewedScorePhrases(session: KitchenSkillsTrainerSession): string[] {
-  return KITCHEN_SKILLS_REVIEWED_MODULES.flatMap((module) => {
-    if (!moduleHasEvidence(session, module)) return [];
-    const review = findModuleReview(session, module);
+  const phrases = evidencedRecipeModules(session).flatMap((pair) => {
+    const review = findRecipeModuleReview(session, pair.recipeId, pair.module);
     if (!review) return [];
     return [
-      `${KITCHEN_SKILLS_MODULE_SHORT_LABELS[module]} ${review.timeEfficiencyScore}/${review.preparationQualityScore}`,
+      `${KITCHEN_SKILLS_MODULE_SHORT_LABELS[pair.module]} ${review.timeEfficiencyScore}/${review.preparationQualityScore}`,
     ];
   });
+  for (const module of unattributedEvidenceModules(session)) {
+    const review = session.moduleReviews[module];
+    if (!review) continue;
+    phrases.push(
+      `${KITCHEN_SKILLS_MODULE_SHORT_LABELS[module]} ${review.timeEfficiencyScore}/${review.preparationQualityScore}`,
+    );
+  }
+  return phrases;
 }
 
 export function isSessionAwaitingAssessment(session: KitchenSkillsTrainerSession): boolean {
@@ -155,8 +200,15 @@ export function attachModuleReviewToMatchingSessions(
     : candidates;
 
   for (const session of targetSessions) {
-    if (session.moduleReviews[review.reviewedGame] !== null) continue;
-    session.moduleReviews[review.reviewedGame] = review;
+    if (!session.reviews) session.reviews = [];
+    if (hasDuplicateReviewIdentity(session.reviews, review)) continue;
+    session.reviews.push(review);
+
+    if (isLegacySessionReview(review)) {
+      if (session.moduleReviews[review.reviewedGame] === null) {
+        session.moduleReviews[review.reviewedGame] = review;
+      }
+    }
   }
 }
 
@@ -233,6 +285,7 @@ export function buildKitchenSkillsTrainerSessions(
       trimEntries: [],
       rescueEntries: [],
       portionEntries: [],
+      reviews: emptySessionReviews(),
       moduleReviews: emptyModuleReviews(),
     };
     sessions.set(key, created);
@@ -320,3 +373,5 @@ export function findKitchenSkillsTrainerSession(
       (actorId == null || actorId === '' || session.actorId === actorId),
   );
 }
+
+export { reviewIdentityKey, findRecipeModuleReview, evidencedRecipeModules };

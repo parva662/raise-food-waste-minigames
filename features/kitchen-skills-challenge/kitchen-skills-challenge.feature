@@ -97,12 +97,21 @@ Feature: Kitchen Skills Challenge connected session
     Scenario: Saving another recipe switches the active recipe for Trim
       Given the student recorded a Portion Precision recipe with no Trim Smart ingredients
       And Trim Smart shows that there are no Trim Smart ingredients for this recipe
-      When the student returns to Portion Precision
+      When the student chooses Start another recipe
       And the student records a different Portion Precision recipe with eligible Trim ingredients
       Then Trim Smart shows the newly saved recipe name
       And opening the ingredient combobox shows that new recipe's unused ingredients with Hävikki greater than 0
       And the previous recipe name is not shown as the Trim recipe
       And previously saved Portion activities remain recorded in the same session
+      And no EXIT was posted
+
+    Scenario: A new recipe cannot start while mandatory Trim or Reuse remains
+      Given the student saved Portion Precision for recipe A
+      And recipe A still requires Trim Smart or Rescue & Reuse
+      When the student tries to save Portion Precision for recipe B
+      Then the new Portion activity is not created
+      And the student is told to finish the current recipe first
+      And the student can resume recipe A
 
     Scenario: A saved recipe can be resumed without a new Portion post
       Given the student recorded Portion Precision for recipe A and recipe B
@@ -125,7 +134,7 @@ Feature: Kitchen Skills Challenge connected session
       Then Trim Smart shows that there are no Trim Smart ingredients for this recipe
       And Record reuse is not shown
       And no Trim or Reuse activity is created
-      When the student chooses Challenge complete
+      When the student chooses Finish challenge from Recipe complete
       Then Finish challenge is available
 
     Scenario: A started Trim ingredient must be finished before going forward

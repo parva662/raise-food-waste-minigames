@@ -33,7 +33,8 @@ Kitchen Skills session (student actor + sessionId + sessionDate)
   │     └── …
   ├── Session Review (current session only, read-only)
   ├── Student Progress (own history, separate page)
-  └── Tutor assessment per completed module (reviewedGame)       → wastePracticeReview
+  └── Tutor assessment per recipe + evidenced module             → wastePracticeReview
+      (sessionId + recipeId + reviewedGame)
 ```
 
 | Identifier | Role |

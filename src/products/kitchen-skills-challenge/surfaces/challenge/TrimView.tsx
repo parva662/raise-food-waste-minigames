@@ -107,6 +107,7 @@ export function KitchenSkillsTrimView() {
     setTrimInProgress,
     enterReuse,
     openFinishSummary,
+    startAnotherRecipe,
     canFinish,
     taskProgress,
   } = useReadyKitchenSkillsSession();
@@ -254,10 +255,9 @@ export function KitchenSkillsTrimView() {
                 No Trim Smart ingredients for this recipe
               </p>
               {canFinish ? (
-                <TrimStepActions
-                  continueLabel="Challenge complete"
-                  continueTestId="kitchen-day-open-finish-summary"
-                  onContinue={openFinishSummary}
+                <RecipeCompleteActions
+                  onStartAnother={startAnotherRecipe}
+                  onFinish={openFinishSummary}
                 />
               ) : null}
             </>
@@ -273,10 +273,9 @@ export function KitchenSkillsTrimView() {
                   onContinue={enterReuse}
                 />
               ) : canFinish ? (
-                <TrimStepActions
-                  continueLabel="Challenge complete"
-                  continueTestId="kitchen-day-open-finish-summary"
-                  onContinue={openFinishSummary}
+                <RecipeCompleteActions
+                  onStartAnother={startAnotherRecipe}
+                  onFinish={openFinishSummary}
                 />
               ) : null}
             </>
@@ -509,19 +508,55 @@ export function KitchenSkillsTrimView() {
               </button>
             ) : null}
             {canFinish && (taskProgress.reuseComplete || !canRecordReuse) ? (
-              <button
-                type="button"
-                className="kitchen-day-button kitchen-day-button--secondary"
-                data-testid="kitchen-day-open-finish-summary"
-                onClick={openFinishSummary}
-              >
-                Challenge complete
-              </button>
+              <RecipeCompleteActions
+                onStartAnother={startAnotherRecipe}
+                onFinish={openFinishSummary}
+              />
             ) : null}
           </div>
         </div>
       ) : null}
     </section>
+  );
+}
+
+function RecipeCompleteActions({
+  onStartAnother,
+  onFinish,
+}: {
+  onStartAnother: () => void;
+  onFinish: () => void;
+}) {
+  return (
+    <div
+      className="kitchen-day-recipe-complete"
+      data-testid="kitchen-day-recipe-complete"
+    >
+      <p className="kitchen-day-success" data-testid="kitchen-day-recipe-complete-label">
+        Recipe complete
+      </p>
+      <p className="kitchen-day-card__copy">
+        Portion measurements are saved. Required practical steps for this recipe are done.
+      </p>
+      <div className="kitchen-day-form-actions kitchen-day-form-actions--sticky">
+        <button
+          type="button"
+          className="kitchen-day-button kitchen-day-button--secondary"
+          data-testid="kitchen-day-start-another-recipe"
+          onClick={onStartAnother}
+        >
+          Start another recipe
+        </button>
+        <button
+          type="button"
+          className="kitchen-day-button kitchen-day-button--primary"
+          data-testid="kitchen-day-open-finish-summary"
+          onClick={onFinish}
+        >
+          Finish challenge
+        </button>
+      </div>
+    </div>
   );
 }
 
