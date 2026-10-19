@@ -30,7 +30,7 @@
 - Parsed into `GameBusChefForecast`; matched by exact `targetDate` only (no cross-date fallback).
 - Eligible Kitchen Forecast retrieval rules apply (exact date; eligibility windows; latest eligible per actor; later ineligible cannot replace eligible).
 - **Display set (own vs all staff):** master plan and current UI show authenticated-user "Submitted forecast" context; older contract wording mentioned all exact-date staff forecasts. The approved display set remains an open product question (`@pending` in Gherkin). Current implementation resolves the authenticated user's eligible forecast only.
-- When `SERVICE_CLOSEOUT_CONFIG.syntheticForecastFallbackEnabled` is true and no real exact-date forecast exists for that resolution path, a labelled synthetic test forecast is shown (never posted). **Must be false before production data collection.**
+- When `SERVICE_CLOSEOUT_CONFIG.syntheticForecastFallbackEnabled` is true and no real exact-date forecast exists for that resolution path, a labelled synthetic test forecast is shown (never posted). The repository default is **`import.meta.env.DEV`** so production builds never enable synthetic fallback; never post synthetic activities to GameBus.
 - Displayed **read-only** in the closeout UI.
 - Forecast values are **not** copied into `wasteMeasurement`.
 

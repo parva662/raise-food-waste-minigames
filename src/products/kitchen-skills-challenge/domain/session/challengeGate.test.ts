@@ -8,6 +8,7 @@ import {
   isKitchenSkillsNavEnabled,
   isKitchenSkillsRecipeComplete,
   requiredKitchenSkillsSection,
+  unfinishedKitchenSkillsRecipeId,
   type KitchenSkillsRecipeProgress,
   type KitchenSkillsTaskProgress,
 } from '@/products/kitchen-skills-challenge/domain/session/challengeGate';
@@ -230,6 +231,28 @@ describe('Kitchen Skills prerequisite-gated navigation', () => {
         reuseComplete: true,
       }),
     ).toBe(true);
+  });
+
+  it('resolves the unfinished recipe preferring the active recipe over array order', () => {
+    const unfinishedEarly = recipe({
+      recipeId: 'first-unfinished',
+      hasEligibleTrimIngredients: true,
+      trimCount: 0,
+    });
+    const unfinishedActive = recipe({
+      recipeId: 'active-unfinished',
+      hasEligibleTrimIngredients: true,
+      trimCount: 0,
+    });
+    const progress = {
+      ...start,
+      portionComplete: true,
+      allRecipesComplete: false,
+      recipes: [unfinishedEarly, unfinishedActive],
+      hasEligibleTrimIngredients: true,
+    };
+    expect(unfinishedKitchenSkillsRecipeId(progress, 'active-unfinished')).toBe('active-unfinished');
+    expect(unfinishedKitchenSkillsRecipeId(progress, null)).toBe('first-unfinished');
   });
 
   it('does not let one completed recipe satisfy another unfinished recipe', () => {

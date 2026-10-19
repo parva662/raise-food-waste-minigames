@@ -34,7 +34,8 @@ import { gamebusDevLog } from '@/platform/gamebus/devLog';
 import { logStudentTryPostActivityResult } from '@/products/lunch-declaration/gamebus/studentGameBusSubmissionDebug';
 
 export type LunchUiStep = 'edit' | 'review';
-export type LunchSubmitStatus = 'idle' | 'sending' | 'failed' | 'success';
+/** `dispatched` = ACTIVITY postMessage succeeded; GameBus persistence not confirmed. */
+export type LunchSubmitStatus = 'idle' | 'sending' | 'failed' | 'success' | 'dispatched';
 
 export interface LunchSelectionState {
   draft: DraftSnapshot;
@@ -54,6 +55,7 @@ type LunchAction =
   | { type: 'SUBMIT_START' }
   | { type: 'SUBMIT_FAILURE'; message: string }
   | { type: 'SUBMIT_SUCCESS'; savedSnapshot: SavedSnapshot; message: string }
+  | { type: 'SUBMIT_DISPATCHED'; savedSnapshot: SavedSnapshot; message: string }
   | { type: 'RESTORE'; savedSnapshot: SavedSnapshot; draft: DraftSnapshot }
   | { type: 'CLEAR_SUCCESS' };
 
@@ -137,6 +139,22 @@ function lunchReducer(state: LunchSelectionState, action: LunchAction): LunchSel
         submitError: null,
         uiStep: 'review',
       };
+    case 'SUBMIT_DISPATCHED':
+      return {
+        ...state,
+        draft: {
+          mealChoice: action.savedSnapshot.mealChoice,
+          mainQuantity: action.savedSnapshot.mainQuantity,
+          vegetarianQuantity: action.savedSnapshot.vegetarianQuantity,
+          soupQuantity: action.savedSnapshot.soupQuantity,
+          dessertQuantity: action.savedSnapshot.dessertQuantity,
+        },
+        savedSnapshot: action.savedSnapshot,
+        successMessage: action.message,
+        submitStatus: 'dispatched',
+        submitError: null,
+        uiStep: 'review',
+      };
     case 'RESTORE':
       return {
         draft: { ...action.draft },
@@ -160,6 +178,16 @@ function buildSuccessMessage(
 ): string {
   const mealSummary = summaryLines.map((line) => `${line.label}: ${line.detail}`).join('; ');
   return `Submitted for ${formatDisplayDate(lunchDate)}. ${mealSummary}. Time ${formatSubmissionTime(submittedAt)} Helsinki.`;
+}
+
+/** Embedded path: postMessage is not GameBus persistence confirmation. */
+function buildDispatchedMessage(
+  lunchDate: string,
+  summaryLines: MealSummaryLine[],
+  submittedAt: string,
+): string {
+  const mealSummary = summaryLines.map((line) => `${line.label}: ${line.detail}`).join('; ');
+  return `Declaration sent for ${formatDisplayDate(lunchDate)}. ${mealSummary}. Time ${formatSubmissionTime(submittedAt)} Helsinki. Waiting for GameBus confirmation — do not submit again.`;
 }
 
 export function useLunchSelection(clock: Clock = systemClock) {
@@ -354,11 +382,7 @@ export function useLunchSelection(clock: Clock = systemClock) {
       return;
     }
 
-    const successMessage = buildSuccessMessage(
-      lunchDate,
-      buildMealSummary(state.draft, mealSlots),
-      declaration.submittedAt,
-    );
+    const mealSummary = buildMealSummary(state.draft, mealSlots);
 
     if (embedded) {
       const result = tryPostActivity(declaration, state.draft, mealSlots);
@@ -374,14 +398,21 @@ export function useLunchSelection(clock: Clock = systemClock) {
         });
         return;
       }
+      // One-shot lock after dispatch; do not claim GameBus persistence (no iframe ACK).
       const savedSnapshot = snapshotFromDeclaration(declaration, mealSlots);
       dispatch({
-        type: 'SUBMIT_SUCCESS',
+        type: 'SUBMIT_DISPATCHED',
         savedSnapshot,
-        message: successMessage,
+        message: buildDispatchedMessage(lunchDate, mealSummary, declaration.submittedAt),
       });
       return;
     }
+
+    const successMessage = buildSuccessMessage(
+      lunchDate,
+      mealSummary,
+      declaration.submittedAt,
+    );
 
     try {
       declarationRepository.upsertDeclaration(declaration);

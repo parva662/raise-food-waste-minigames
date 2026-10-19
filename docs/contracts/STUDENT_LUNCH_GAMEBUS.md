@@ -194,7 +194,7 @@ The theoretical maximum of 11 properties requires positive quantities in both pa
 | Duplicate safety | Bridge in-flight and `hasPosted` guards reject a second post as `duplicate` |
 | Mapping | `mapStudentLunchCheckin` → `buildActivityMessage` → `ACTIVITY` with `start` = `submittedAt`, `end` = `+1 min` |
 | TASK validation | `resolveActivityProperties` matches templates by **slug**, requires all 7 always-required refs to be linked, and fails a submission if a needed item-ID ref is missing from the template |
-| Persistence (embedded) | The ACTIVITY is the only record written; the app does **not** write local storage in embedded mode |
+| Persistence (embedded) | The ACTIVITY is the only record written; the app does **not** write local storage in embedded mode. A successful `postMessage` is treated as **dispatched** (one-shot locked) — not as confirmed GameBus persistence — because official custom-embed docs do not provide an activity ACK to the iframe. UI copy says the declaration was sent and is waiting for confirmation. |
 | Persistence (standalone) | `LocalStorageDeclarationRepository` only, for the GitHub Pages demo |
 
 ### C.1 Internal legacy that is not part of the GameBus contract

@@ -2,7 +2,7 @@ import type { SubmissionWindowStatus } from '@/products/lunch-declaration/types/
 import type { MealSummaryLine } from '@/products/lunch-declaration/mealChoice';
 import { ActionButtons } from '@/products/lunch-declaration/components/ActionButtons';
 import { SavedStatusRow } from '@/products/lunch-declaration/components/SavedStatusRow';
-import { formatDisplayDate } from '@/shared/time/dates';
+import { formatDisplayDate, formatSubmissionTime } from '@/shared/time/dates';
 import type { LunchSubmitStatus, LunchUiStep } from '@/products/lunch-declaration/useLunchSelection';
 
 interface SelectionPanelProps {
@@ -48,7 +48,9 @@ export function SelectionPanel({
   let statusText: string | null = null;
   if (submitStatus === 'sending') statusText = 'Sending declaration…';
   else if (submitStatus === 'failed' && submitError) statusText = submitError;
-  else if (submitStatus === 'success') statusText = 'Declaration submitted successfully.';
+  else if (submitStatus === 'dispatched') {
+    statusText = 'Declaration sent. Waiting for GameBus confirmation.';
+  } else if (submitStatus === 'success') statusText = 'Declaration submitted successfully.';
 
   return (
     <aside className="selection-panel selection-panel--compact" data-testid="selection-panel">
@@ -62,10 +64,19 @@ export function SelectionPanel({
 
       {hasSavedDeclaration && updatedAt && (
         <>
-          <SavedStatusRow updatedAt={updatedAt} />
-          <p className="selection-panel__final-notice" role="status">
-            Final — no changes allowed.
-          </p>
+          {submitStatus === 'dispatched' ? (
+            <p className="selection-panel__saved" data-testid="declaration-dispatched-status" role="status">
+              Declaration sent at {formatSubmissionTime(updatedAt)} Helsinki — waiting for GameBus
+              confirmation. Final — do not submit again.
+            </p>
+          ) : (
+            <>
+              <SavedStatusRow updatedAt={updatedAt} />
+              <p className="selection-panel__final-notice" role="status">
+                Final — no changes allowed.
+              </p>
+            </>
+          )}
         </>
       )}
 

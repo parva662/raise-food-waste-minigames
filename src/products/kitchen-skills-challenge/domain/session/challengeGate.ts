@@ -61,6 +61,23 @@ export function canStartAnotherKitchenSkillsRecipe(progress: KitchenSkillsTaskPr
   return canFinishKitchenSkillsChallenge(progress);
 }
 
+/** First unfinished saved recipe id, preferring the active recipe when it is unfinished. */
+export function unfinishedKitchenSkillsRecipeId(
+  progress: KitchenSkillsTaskProgress,
+  activeRecipeId?: string | null,
+): string | null {
+  const active = normalizeRecipeId(activeRecipeId ?? '');
+  if (active) {
+    const activeProgress = progress.recipes.find(
+      (recipe) => normalizeRecipeId(recipe.recipeId) === active,
+    );
+    if (activeProgress && !isKitchenSkillsRecipeComplete(activeProgress)) {
+      return activeProgress.recipeId;
+    }
+  }
+  return progress.recipes.find((recipe) => !isKitchenSkillsRecipeComplete(recipe))?.recipeId ?? null;
+}
+
 /** Human-readable reason a new recipe cannot start yet (null when allowed). */
 export function newRecipeBlockedReason(progress: KitchenSkillsTaskProgress): string | null {
   if (canStartAnotherKitchenSkillsRecipe(progress)) return null;
@@ -72,7 +89,10 @@ export function newRecipeBlockedReason(progress: KitchenSkillsTaskProgress): str
       return 'Finish Rescue & Reuse for the current recipe before starting another recipe.';
     }
   }
-  const unfinished = progress.recipes.find((recipe) => !isKitchenSkillsRecipeComplete(recipe));
+  const unfinishedId = unfinishedKitchenSkillsRecipeId(progress);
+  const unfinished = unfinishedId
+    ? progress.recipes.find((recipe) => recipe.recipeId === unfinishedId)
+    : undefined;
   if (!unfinished) {
     return 'Finish the current recipe before starting another recipe.';
   }

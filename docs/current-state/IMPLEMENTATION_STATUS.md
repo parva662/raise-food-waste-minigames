@@ -95,7 +95,7 @@ Cannot be closed from this repo’s Vitest stack (no browser E2E):
 | **Gherkin** | [`../../features/kitchen/service-closeout.feature`](../../features/kitchen/service-closeout.feature) |
 | **Coverage** | [`../testing/SERVICE_CLOSEOUT_ACCEPTANCE_COVERAGE.md`](../testing/SERVICE_CLOSEOUT_ACCEPTANCE_COVERAGE.md) |
 | **Contract** | [`../contracts/SERVICE_CLOSEOUT_GAMEBUS.md`](../contracts/SERVICE_CLOSEOUT_GAMEBUS.md) |
-| **Notes** | Synthetic forecast fallback still enabled for pilot; production authorization remains platform-dependent |
+| **Notes** | Synthetic forecast fallback is DEV/test-only (`import.meta.env.DEV`); production authorization remains platform-dependent |
 
 ---
 

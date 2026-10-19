@@ -126,7 +126,7 @@ describe('saved status', () => {
         updatedAt={SUBMISSION_TIMES.midday.toISOString()}
         lunchDate={FIXTURE_LUNCH_DATE}
         uiStep="review"
-        submitStatus="success"
+        submitStatus="dispatched"
         submitError={null}
         isReviewDisabled
         isConfirmDisabled
@@ -138,7 +138,8 @@ describe('saved status', () => {
         onSubmit={() => undefined}
       />,
     );
-    expect(screen.getByText('Lunch saved')).toBeInTheDocument();
+    expect(screen.getByTestId('declaration-dispatched-status')).toHaveTextContent(/waiting for GameBus/i);
+    expect(screen.queryByText('Lunch saved')).not.toBeInTheDocument();
     expect(screen.queryByText(/points/i)).not.toBeInTheDocument();
   });
 });
