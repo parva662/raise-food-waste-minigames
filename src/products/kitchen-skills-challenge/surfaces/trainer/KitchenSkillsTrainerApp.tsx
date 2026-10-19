@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, type MouseEvent } from 'react';
 import {
   KitchenSkillsSessionProvider,
   useKitchenSkillsSession,
@@ -16,6 +16,10 @@ import {
 import type { KitchenSkillsTrainerSession } from '@/products/kitchen-skills-challenge/domain/types';
 import { KITCHEN_SKILLS_REVIEWED_MODULES } from '@/products/kitchen-skills-challenge/domain/types';
 import { KitchenSkillsTrainerSessionDetail } from '@/products/kitchen-skills-challenge/surfaces/trainer/KitchenSkillsTrainerSessionDetail';
+import {
+  hasAnyUnsavedReviewDraft,
+  type KitchenSkillsReviewFormDraft,
+} from '@/products/kitchen-skills-challenge/surfaces/trainer/reviewDrafts';
 import { postKitchenSkillsChallengeExit } from '@/products/kitchen-skills-challenge/gamebus/postExit';
 import {
   kitchenDayTutorHashFor,
@@ -23,6 +27,9 @@ import {
   parseKitchenDaySelectedSessionId,
 } from '@/app/routes';
 import { formatOperationalTime } from '@/shared/time/dates';
+
+const UNSAVED_DRAFT_CONFIRM =
+  'You have an unsaved tutor assessment draft. Leave without submitting?';
 
 type StaffSessionTab = 'needs' | 'reviewed';
 
@@ -80,19 +87,32 @@ function KitchenSkillsTrainerBody() {
   const [selectedSessionId, setSelectedSessionId] = useState(() => parseKitchenDaySelectedSessionId());
   const [selectedActorId, setSelectedActorId] = useState(() => parseKitchenDaySelectedActorId());
   const [staffQuery, setStaffQuery] = useState('');
-  const [reviewDraftDirty, setReviewDraftDirty] = useState(false);
+  const [reviewDrafts, setReviewDrafts] = useState<Record<string, KitchenSkillsReviewFormDraft>>({});
   const [staffSessionTab, setStaffSessionTab] = useState<StaffSessionTab>('needs');
+  const hasUnsavedDrafts = hasAnyUnsavedReviewDraft(reviewDrafts);
 
   useEffect(() => {
     const sync = () => {
+      // Do not clear drafts on hashchange — navigation confirmations own discard.
       setSelectedSessionId(parseKitchenDaySelectedSessionId());
       setSelectedActorId(parseKitchenDaySelectedActorId());
-      setReviewDraftDirty(false);
       setStaffSessionTab('needs');
     };
     window.addEventListener('hashchange', sync);
     return () => window.removeEventListener('hashchange', sync);
   }, []);
+
+  const confirmLeaveUnsaved = (): boolean => {
+    if (!hasUnsavedDrafts) return true;
+    return window.confirm(UNSAVED_DRAFT_CONFIRM);
+  };
+
+  const guardNavigationClick = (event: MouseEvent<HTMLAnchorElement>) => {
+    if (!hasUnsavedDrafts) return;
+    if (!window.confirm(UNSAVED_DRAFT_CONFIRM)) {
+      event.preventDefault();
+    }
+  };
 
   const staffSummaries = useMemo(
     () => buildKitchenSkillsTrainerStaffSummaries(sessions),
@@ -110,13 +130,24 @@ function KitchenSkillsTrainerBody() {
   const selected = findKitchenSkillsTrainerSession(sessions, selectedSessionId, selectedActorId);
 
   const closeTrainer = () => {
-    if (reviewDraftDirty) {
-      const leave = window.confirm(
-        'You have an unsaved tutor assessment draft. Close without submitting?',
-      );
-      if (!leave) return;
-    }
+    if (!confirmLeaveUnsaved()) return;
     postKitchenSkillsChallengeExit();
+  };
+
+  const updateReviewDraft = (key: string, draft: KitchenSkillsReviewFormDraft) => {
+    setReviewDrafts((current) => {
+      const empty =
+        draft.timeScore.trim().length === 0 &&
+        draft.qualityScore.trim().length === 0 &&
+        draft.feedback.trim().length === 0;
+      if (empty) {
+        if (!(key in current)) return current;
+        const next = { ...current };
+        delete next[key];
+        return next;
+      }
+      return { ...current, [key]: draft };
+    });
   };
 
   if (!session) {
@@ -159,6 +190,7 @@ function KitchenSkillsTrainerBody() {
             <a
               href={kitchenDayTutorHashFor({ actorId: selected.actorId })}
               data-testid="kitchen-day-tutor-back-staff"
+              onClick={guardNavigationClick}
             >
               ← Back to {selected.actorName}
             </a>
@@ -166,7 +198,8 @@ function KitchenSkillsTrainerBody() {
           <KitchenSkillsTrainerSessionDetail
             key={`${selected.actorId}:${selected.sessionId}`}
             selected={selected}
-            onDraftChange={setReviewDraftDirty}
+            drafts={reviewDrafts}
+            onDraftChange={updateReviewDraft}
           />
         </>
       ) : selectedSessionId ? (
@@ -174,7 +207,11 @@ function KitchenSkillsTrainerBody() {
       ) : selectedActorId && selectedStaff ? (
         <>
           <p className="kitchen-day-tutor-back">
-            <a href={kitchenDayTutorHashFor()} data-testid="kitchen-day-tutor-back-staff-list">
+            <a
+              href={kitchenDayTutorHashFor()}
+              data-testid="kitchen-day-tutor-back-staff-list"
+              onClick={guardNavigationClick}
+            >
               ← Back to staff
             </a>
           </p>

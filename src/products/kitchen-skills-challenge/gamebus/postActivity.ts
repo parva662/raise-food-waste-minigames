@@ -43,6 +43,10 @@ export function clearKitchenSkillsPostAttempt(attemptKey: string): void {
   attemptedKeys.delete(attemptKey);
 }
 
+export function hasKitchenSkillsPostAttempt(attemptKey: string): boolean {
+  return attemptedKeys.has(attemptKey);
+}
+
 export function tryPostKitchenSkillsActivity(
   task: TaskData | null,
   messageBuilder: (task: TaskData) => GameBusOutboundActivityMessage,

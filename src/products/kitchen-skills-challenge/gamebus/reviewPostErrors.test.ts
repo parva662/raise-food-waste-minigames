@@ -1,7 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import { kitchenSkillsTrainerTaskFixture } from '@/products/kitchen-skills-challenge/gamebus/kitchenSkillsTaskFixtures';
 import {
+  kitchenSkillsReviewAwaitingMessage,
   kitchenSkillsReviewCommitErrorMessage,
+  kitchenSkillsReviewSavedMessage,
   validateWastePracticeReviewLinkedProperties,
 } from '@/products/kitchen-skills-challenge/gamebus/reviewPostErrors';
 import type { KitchenSkillsReviewEntry } from '@/products/kitchen-skills-challenge/domain/types';
@@ -43,18 +45,14 @@ describe('wastePracticeReview linked property validation', () => {
     }
   });
 
-  it('explains selectedTaskOfMission-style GameBus rejections without claiming we send that field', () => {
-    const message = kitchenSkillsReviewCommitErrorMessage(
-      'selectedTaskOfMission: Property template is not linked to this activity template',
-      'Portion Precision',
-    );
-    expect(message).toMatch(/does not send selectedTaskOfMission/i);
-    expect(message).toMatch(/not saved/i);
-  });
-
-  it('maps unlinked property reasons to actionable copy', () => {
+  it('describes client configuration failures without claiming a GameBus server rejection', () => {
     expect(kitchenSkillsReviewCommitErrorMessage('unlinked_property:recipeId', 'Trim Smart')).toMatch(
-      /recipeId/,
+      /activity configuration is incomplete/i,
     );
+    expect(kitchenSkillsReviewCommitErrorMessage('already_dispatched', 'Portion Precision')).toMatch(
+      /could not be verified/i,
+    );
+    expect(kitchenSkillsReviewAwaitingMessage()).toMatch(/Waiting for confirmation/i);
+    expect(kitchenSkillsReviewSavedMessage()).toMatch(/saved/i);
   });
 });

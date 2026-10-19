@@ -17,25 +17,17 @@ import {
 } from '@/products/kitchen-skills-challenge/domain/session/reviewIdentity';
 import { formatSessionDate } from '@/products/kitchen-skills-challenge/format';
 import { SessionEvidence } from '@/products/kitchen-skills-challenge/surfaces/shared/SessionEvidence';
+import { KitchenSkillsTrainerModuleReviewForm } from '@/products/kitchen-skills-challenge/surfaces/trainer/KitchenSkillsTrainerReviewForm';
 import {
-  KitchenSkillsTrainerModuleReviewForm,
+  EMPTY_REVIEW_DRAFT,
+  reviewDraftStorageKey,
   type KitchenSkillsReviewFormDraft,
-} from '@/products/kitchen-skills-challenge/surfaces/trainer/KitchenSkillsTrainerReviewForm';
+} from '@/products/kitchen-skills-challenge/surfaces/trainer/reviewDrafts';
 import { normalizeRecipeId } from '@/products/kitchen-skills-challenge/domain/session/ingredientUniqueness';
 import {
   moduleHasEvidence,
   sessionAssessmentStatus,
 } from '@/products/kitchen-skills-challenge/read/trainerSessions';
-
-const EMPTY_DRAFT: KitchenSkillsReviewFormDraft = {
-  timeScore: '',
-  qualityScore: '',
-  feedback: '',
-};
-
-function draftKey(recipeId: string, module: KitchenSkillsReviewedModule): string {
-  return `${recipeId}::${module}`;
-}
 
 function defaultModuleForRecipe(
   session: KitchenSkillsTrainerSession,
@@ -114,17 +106,19 @@ function LegacyReviewsSection({
 
 export function KitchenSkillsTrainerSessionDetail({
   selected,
+  drafts,
   onDraftChange,
 }: {
   selected: KitchenSkillsTrainerSession;
-  onDraftChange?: (dirty: boolean) => void;
+  /** Parent-owned drafts keyed by actor::session::recipe::module. */
+  drafts: Readonly<Record<string, KitchenSkillsReviewFormDraft>>;
+  onDraftChange: (key: string, draft: KitchenSkillsReviewFormDraft) => void;
 }) {
   const recipeIds = useMemo(() => listSessionRecipeIds(selected), [selected]);
   const [activeRecipeId, setActiveRecipeId] = useState<string | null>(() => recipeIds[0] ?? null);
   const [activeModule, setActiveModule] = useState<KitchenSkillsReviewedModule>(() =>
     recipeIds[0] ? defaultModuleForRecipe(selected, recipeIds[0]) : defaultModuleTab(selected),
   );
-  const [drafts, setDrafts] = useState<Record<string, KitchenSkillsReviewFormDraft>>({});
 
   useEffect(() => {
     const nextIds = listSessionRecipeIds(selected);
@@ -248,8 +242,21 @@ export function KitchenSkillsTrainerSessionDetail({
   const trimForRecipe = entriesForRecipe(selected, selected.trimEntries, recipeId);
   const rescueForRecipe = entriesForRecipe(selected, selected.rescueEntries, recipeId);
   const portionForRecipe = entriesForRecipe(selected, selected.portionEntries, recipeId);
-  const currentDraftKey = draftKey(recipeId, moduleForPanel);
-  const currentDraft = drafts[currentDraftKey] ?? EMPTY_DRAFT;
+  const currentDraftKey = reviewDraftStorageKey(
+    selected.actorId,
+    selected.sessionId,
+    recipeId,
+    moduleForPanel,
+  );
+  const currentDraft = drafts[currentDraftKey] ?? EMPTY_REVIEW_DRAFT;
+  const sessionHasUnsavedDraft = Object.entries(drafts).some(([key, draft]) => {
+    if (!key.startsWith(`${selected.actorId}::${selected.sessionId}::`)) return false;
+    return (
+      draft.timeScore.trim().length > 0 ||
+      draft.qualityScore.trim().length > 0 ||
+      draft.feedback.trim().length > 0
+    );
+  });
 
   return (
     <div data-testid="kitchen-day-chef-selected" className="kitchen-day-tutor-session-detail">
@@ -315,6 +322,15 @@ export function KitchenSkillsTrainerSessionDetail({
         data-testid="kitchen-day-tutor-active-recipe"
       >
         {recipeName} — {recipeStatusLabel(recipeStatus)}
+        {sessionHasUnsavedDraft ? (
+          <span
+            className="kitchen-day-tutor-unsaved-hint"
+            data-testid="kitchen-day-tutor-unsaved-hint"
+          >
+            {' '}
+            · Unsaved assessment draft
+          </span>
+        ) : null}
       </p>
 
       <div
@@ -364,10 +380,7 @@ export function KitchenSkillsTrainerSessionDetail({
               reviewedGame={moduleForPanel}
               moduleTitle={moduleTitle}
               draft={currentDraft}
-              onDraftChange={(next) =>
-                setDrafts((current) => ({ ...current, [currentDraftKey]: next }))
-              }
-              onDraftDirtyChange={onDraftChange}
+              onDraftChange={(next) => onDraftChange(currentDraftKey, next)}
             />
           </>
         ) : (

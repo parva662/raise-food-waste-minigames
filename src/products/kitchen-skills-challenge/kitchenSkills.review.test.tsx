@@ -7,6 +7,7 @@ import { ingestInputCollectionsForTests, ingestTaskForTests, resetGameBusBridgeF
 import { AppRouter } from '@/app/AppRouter';
 import { kitchenSkillsTrainerTaskFixture } from '@/products/kitchen-skills-challenge/gamebus/kitchenSkillsTaskFixtures';
 import { resetKitchenSkillsPostStateForTests } from '@/products/kitchen-skills-challenge/gamebus/postActivity';
+import { clearKitchenSkillsReviewDispatchMarkersForTests } from '@/products/kitchen-skills-challenge/gamebus/reviewDispatchMarker';
 
 const sessionOne = 'kitchen-day:kitchen-day-task-1:user-1:2026-09-23';
 const sessionTwo = 'kitchen-day:kitchen-day-task-1:user-2:2026-09-23';
@@ -136,6 +137,7 @@ describe('Kitchen Day module chef review', () => {
     cleanup();
     resetGameBusBridgeForTests();
     resetKitchenSkillsPostStateForTests();
+    clearKitchenSkillsReviewDispatchMarkersForTests();
     setHash('');
     vi.restoreAllMocks();
   });
@@ -897,7 +899,64 @@ describe('Kitchen Day module chef review', () => {
     }
   });
 
-  it('preserves draft scores and shows an actionable error when GameBus rejects the post', async () => {
+  it('does not offer retry or post again while an assessment is awaiting confirmation', async () => {
+    const user = userEvent.setup();
+    vi.spyOn(detectEmbed, 'isGameBusEmbed').mockReturnValue(true);
+    const postMessage = vi.spyOn(window.parent, 'postMessage').mockImplementation(() => undefined);
+    ingestTaskForTests(kitchenSkillsTrainerTaskFixture);
+    setHash(`#/kitchen-day-tutor?actorId=user-1&sessionId=${encodeURIComponent(sessionOne)}`);
+    render(<AppRouter />);
+    ingestInputCollectionsForTests({
+      kitchenSkillsTrainerInput: { activities: baseActivities },
+      inputCollectionPari: { me: { id: 'chef-1', firstName: 'Chef', lastName: 'One' } },
+    });
+    await waitFor(() => {
+      expect(screen.getByTestId('kitchen-day-review-form')).toBeInTheDocument();
+    });
+    await user.type(screen.getByTestId('kitchen-day-review-time'), '4');
+    await user.type(screen.getByTestId('kitchen-day-review-quality'), '5');
+    await user.click(screen.getByTestId('kitchen-day-review-submit'));
+    await waitFor(() => {
+      expect(screen.getByTestId('kitchen-day-review-awaiting')).toBeInTheDocument();
+    });
+    expect(screen.queryByTestId('kitchen-day-review-retry')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('kitchen-day-review-submit')).not.toBeInTheDocument();
+    const reviewCalls = postMessage.mock.calls.filter((call) => {
+      const payload = call[0] as { type?: string; data?: { template?: string } };
+      return payload?.type === 'SILENT_ACTIVITY' && payload.data?.template === 'wastePracticeReview';
+    });
+    expect(reviewCalls).toHaveLength(1);
+  });
+
+  it('keeps inactive-module drafts and confirms Close when any draft is unsaved', async () => {
+    const user = userEvent.setup();
+    const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(false);
+    setHash(`#/kitchen-day-tutor?actorId=user-1&sessionId=${encodeURIComponent(sessionOne)}`);
+    render(<AppRouter />);
+    ingestInputCollectionsForTests({
+      kitchenSkillsTrainerInput: { activities: baseActivities },
+      inputCollectionPari: { me: { id: 'chef-1', firstName: 'Chef', lastName: 'One' } },
+    });
+    await waitFor(() => {
+      expect(screen.getByTestId('kitchen-day-review-form')).toBeInTheDocument();
+    });
+    await user.type(screen.getByTestId('kitchen-day-review-time'), '3');
+    await user.click(screen.getByTestId('kitchen-day-tutor-module-tab-portionPrecision'));
+    await waitFor(() => {
+      expect(screen.getByTestId('kitchen-day-review-portionPrecision-form')).toBeInTheDocument();
+    });
+    expect(screen.getByTestId('kitchen-day-tutor-unsaved-hint')).toBeInTheDocument();
+    await user.click(screen.getByTestId('kitchen-day-tutor-close'));
+    expect(confirmSpy).toHaveBeenCalled();
+    expect(screen.getByTestId('kitchen-day-tutor-page')).toBeInTheDocument();
+    await user.click(screen.getByTestId('kitchen-day-tutor-module-tab-trimSmart'));
+    await waitFor(() => {
+      expect(screen.getByTestId('kitchen-day-review-time')).toHaveValue('3');
+    });
+    confirmSpy.mockRestore();
+  });
+
+  it('preserves draft scores and shows an actionable error when client validation blocks the post', async () => {
     const user = userEvent.setup();
     vi.spyOn(detectEmbed, 'isGameBusEmbed').mockReturnValue(true);
     ingestTaskForTests({
@@ -923,11 +982,14 @@ describe('Kitchen Day module chef review', () => {
     await user.type(screen.getByTestId('kitchen-day-review-quality'), '5');
     await user.click(screen.getByTestId('kitchen-day-review-submit'));
     await waitFor(() => {
-      expect(screen.getByTestId('kitchen-day-review-error')).toHaveTextContent(/recipeId/i);
+      expect(screen.getByTestId('kitchen-day-review-error')).toHaveTextContent(
+        /activity configuration is incomplete/i,
+      );
     });
     expect(screen.getByTestId('kitchen-day-review-time')).toHaveValue('4');
     expect(screen.getByTestId('kitchen-day-review-quality')).toHaveValue('5');
     expect(screen.queryByTestId('kitchen-day-review-submitted')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('kitchen-day-review-awaiting')).not.toBeInTheDocument();
   });
 
   it('retains unsaved assessment drafts when switching recipes', async () => {

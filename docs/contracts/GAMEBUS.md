@@ -69,8 +69,9 @@ Resolved implementation defect (2026-10-12): Custom Pages such as `#/chef-result
 ### Empirically verified live behaviour (foodtracker / deployments)
 
 - Student Kitchen Skills Trim / Reuse / Portion use **`SILENT_ACTIVITY`** so the same task iframe can continue; **Finish challenge** posts **`{ type: 'EXIT' }`** (`src/platform/gamebus/exit.ts` via `postKitchenSkillsChallengeExit`).
-- Trainer dashboard **Close** also posts **`EXIT`** (no review post on Close). Confirm dialog only when an unsaved assessment draft is dirty.
+- Trainer dashboard **Close** also posts **`EXIT`** (no review post on Close). Confirm dialog when **any** unsaved tutor assessment draft remains (all recipe–module drafts, not only the active tab).
 - Tutor `wastePracticeReview` stays **`SILENT_ACTIVITY`** (+ RAISE `actors`) so the tutor iframe remains open for the next student/module.
+- Official custom-embed docs do **not** describe an activity-rejection ACK back to the iframe. RAISE therefore treats successful `postMessage` as **dispatched, awaiting feed confirmation**, not as persisted, and does not automatically re-post while outcome is unknown.
 - Lunch, forecast, and closeout still post **`ACTIVITY`** where those products need task completion + dialog close.
 - Input collections in this repo include `inputCollectionPari.me`; `kitchenGroupInput.activities` (`GET /groups/activities` filtered to `chefForecast` / `wasteMeasurement` for forecast/closeout); Kitchen Skills student `kitchenGroupInputSelf.activities` (`GET /api/me/activities`); and Kitchen Skills trainer `kitchenSkillsTrainerInput.activities` (`GET /api/groups/activities` filtered to `trimSmart`, `rescueAndReuse`, `portionPrecision`, `wastePracticeReview`). Do not reuse `kitchenGroupInput` for Kitchen Skills. Do **not** attach a trainer-style group Kitchen Skills feed to student Progress: peer comparison needs a privacy-safe anonymous aggregate, which this repo does not invent.
 

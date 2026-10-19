@@ -18,7 +18,7 @@ function linkedPropertyRefs(task: TaskData, activitySlug: string): string[] {
 }
 
 /**
- * Validate that every property we are about to send is linked on the TASK activity template.
+ * Client-side TASK linked-property check before postMessage.
  * Does not invent selectedTaskOfMission — that field is not part of our outbound payload.
  */
 export function validateWastePracticeReviewLinkedProperties(
@@ -44,7 +44,6 @@ export function validateWastePracticeReviewLinkedProperties(
     };
   }
 
-  // Only required refs must be linked. Optional chefFeedback is omitted at build time if unlinked.
   const missing = WASTE_PRACTICE_REVIEW_REQUIRED_REFS.filter((ref) => !linked.has(ref));
   if (missing.length > 0) {
     return {
@@ -56,54 +55,55 @@ export function validateWastePracticeReviewLinkedProperties(
   return { ok: true };
 }
 
-/** Sanitize commit/post reasons for tutor-facing copy (no student PII). */
+/**
+ * Tutor-facing copy. Distinguishes client validation from unconfirmed dispatch.
+ * GameBus does not document a reliable activity-rejection ACK to the iframe.
+ */
 export function kitchenSkillsReviewCommitErrorMessage(
   reason: string,
   moduleTitle: string,
 ): string {
   switch (reason) {
     case 'no_task':
-      return 'Missing GameBus task. Open tutor assessment from the GameBus challenge.';
+      return 'Assessment cannot be submitted because the GameBus task is not available.';
     case 'missing_task_template':
-      return 'The wastePracticeReview activity template is missing from this GameBus task.';
     case 'missing_property_links':
-      return 'GameBus has no property templates linked to wastePracticeReview. The review was not saved.';
+      return 'Assessment cannot be submitted because the activity configuration is incomplete.';
     case 'missing_student_actor':
-      return 'Missing student identity for this session. The review was not saved.';
+      return 'Assessment cannot be submitted because the student session identity is missing.';
     case 'tutor_live_blocked':
       return 'Tutor assessment cannot be submitted from this page yet.';
     case 'duplicate_review':
-      return `This ${moduleTitle} module already has a confirmed tutor assessment.`;
+      return `This ${moduleTitle} assessment is already saved.`;
     case 'duplicate':
-      return 'A previous submission for this assessment is still pending confirmation. Retry only if GameBus rejected it.';
+    case 'already_dispatched':
+    case 'submission_outcome_unknown':
+      return 'The submission status could not be verified. Do not submit again until it has been checked in GameBus.';
     case 'invalid_scores':
       return 'Enter integer scores from 0 to 5. Blank is not a score.';
     case 'missing_recipe':
-      return 'This assessment requires a recipe id. The review was not saved.';
+      return 'Assessment cannot be submitted because the recipe identity is missing.';
     case 'in_flight':
       return 'Another Kitchen Skills submission is already in progress. Try again in a moment.';
     case 'build_failed':
-      return 'The review payload could not be built. The review was not saved.';
-    case 'submission_not_confirmed':
-      return 'The review was sent to GameBus but is not confirmed saved yet. You can retry if it does not appear after reload.';
+      return 'Assessment cannot be submitted because the payload could not be built.';
     default:
       break;
   }
 
   if (reason.startsWith('unlinked_property:')) {
-    const prop = reason.slice('unlinked_property:'.length);
-    return `GameBus rejected property “${prop}”: it is not linked to the wastePracticeReview activity template. The review was not saved.`;
+    return 'Assessment cannot be submitted because the activity configuration is incomplete.';
   }
 
-  if (/selectedTaskOfMission/i.test(reason) || /not linked to this activity template/i.test(reason)) {
-    return 'GameBus rejected the activity (property template not linked). Our app does not send selectedTaskOfMission — check live GameBus task/mission linking. The review was not saved.';
-  }
+  return 'Assessment cannot be submitted. Check the configuration and try again.';
+}
 
-  if (/template/i.test(reason) && /propert/i.test(reason)) {
-    return 'GameBus reported a property-template mismatch. The review was not saved.';
-  }
+export function kitchenSkillsReviewAwaitingMessage(): string {
+  return 'Assessment sent. Waiting for confirmation from GameBus.';
+}
 
-  return 'The review could not be saved. Check the GameBus task configuration and try again.';
+export function kitchenSkillsReviewSavedMessage(): string {
+  return 'Assessment saved.';
 }
 
 /** Dev/diagnostic log payload — session/module only, never student names or feedback text. */

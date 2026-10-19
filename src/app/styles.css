@@ -6191,6 +6191,11 @@ ul {
   margin-top: var(--spacing-sm);
 }
 
+.kitchen-day-tutor-unsaved-hint {
+  font-weight: 500;
+  color: var(--color-primary-dark);
+}
+
 .kitchen-day-module-tabs {
   display: flex;
   flex-wrap: wrap;

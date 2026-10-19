@@ -34,7 +34,7 @@ import {
 } from '@/products/kitchen-skills-challenge/read/kitchenSkillsReadModel';
 import type { KitchenSkillsTrainerSession } from '@/products/kitchen-skills-challenge/domain/types';
 import {
-  clearKitchenSkillsPostAttempt,
+  hasKitchenSkillsPostAttempt,
   kitchenSkillsReviewAttemptKey,
   tryPostKitchenSkillsPortion,
   tryPostKitchenSkillsRescue,
@@ -43,6 +43,12 @@ import {
 } from '@/products/kitchen-skills-challenge/gamebus/postActivity';
 import { gamebusDevLog } from '@/platform/gamebus/devLog';
 import { kitchenSkillsReviewDiagnosticPayload } from '@/products/kitchen-skills-challenge/gamebus/reviewPostErrors';
+import {
+  awaitingReviewsFromDispatchMarkers,
+  clearKitchenSkillsReviewDispatchMarker,
+  hasKitchenSkillsReviewDispatchMarker,
+  markKitchenSkillsReviewDispatched,
+} from '@/products/kitchen-skills-challenge/gamebus/reviewDispatchMarker';
 import type {
   KitchenSkillsLockedSession,
   KitchenSkillsPortionEntry,
@@ -63,6 +69,7 @@ import {
 import {
   findReviewByIdentity,
   hasDuplicateReviewIdentity,
+  isReviewPersistConfirmed,
   reviewIdentityKey,
 } from '@/products/kitchen-skills-challenge/domain/session/reviewIdentity';
 import { goToKitchenDaySection, type KitchenSkillsHashSection } from '@/app/routes';
@@ -272,21 +279,45 @@ export function KitchenSkillsSessionProvider({
       ),
     [localPortion, persisted.portionEntries],
   );
+  const markerAwaitingReviews = useMemo(
+    () =>
+      awaitingReviewsFromDispatchMarkers(
+        persisted.groupSessions.map((session) => ({
+          actorId: session.actorId,
+          sessionId: session.sessionId,
+        })),
+      ),
+    [persisted.groupSessions],
+  );
+
   const reviews = useMemo(
     () =>
       mergeKitchenSkillsRecords(
-        localReviews,
+        [...localReviews, ...markerAwaitingReviews],
         persisted.reviews,
         (left, right) => reviewIdentityKey(left) === reviewIdentityKey(right),
       ),
-    [localReviews, persisted.reviews],
+    [localReviews, markerAwaitingReviews, persisted.reviews],
   );
+
+  // Clear non-authoritative dispatch markers once the feed confirms persistence.
+  useEffect(() => {
+    for (const session of persisted.groupSessions) {
+      for (const review of session.reviews) {
+        if (!isReviewPersistConfirmed(review)) continue;
+        clearKitchenSkillsReviewDispatchMarker(session.actorId, review);
+      }
+    }
+  }, [persisted.groupSessions]);
 
   /** Trainer list/detail must see awaiting local reviews until GameBus hydrates them. */
   const groupSessions = useMemo(() => {
-    if (localReviews.length === 0) return persisted.groupSessions;
+    const awaitingLocals = [...localReviews, ...markerAwaitingReviews];
+    if (awaitingLocals.length === 0) return persisted.groupSessions;
     return persisted.groupSessions.map((session) => {
-      const localsForSession = localReviews.filter((review) => review.sessionId === session.sessionId);
+      const localsForSession = awaitingLocals.filter(
+        (review) => review.sessionId === session.sessionId,
+      );
       if (localsForSession.length === 0) return session;
       const mergedReviews = mergeKitchenSkillsRecords(
         localsForSession,
@@ -295,7 +326,7 @@ export function KitchenSkillsSessionProvider({
       );
       return { ...session, reviews: mergedReviews };
     });
-  }, [persisted.groupSessions, localReviews]);
+  }, [persisted.groupSessions, localReviews, markerAwaitingReviews]);
 
   // Keep explicit active recipe when still present; otherwise restore latest by submittedAt
   // (reload / hydration). Tab navigation alone must not change the active recipe.
@@ -489,27 +520,34 @@ export function KitchenSkillsSessionProvider({
       return { ok: false, reason: 'duplicate_review', keepDraft: true };
     }
 
+    const actorId = studentActorId.trim();
     const attemptKey = kitchenSkillsReviewAttemptKey(entry);
     const existing = findReviewByIdentity(reviews, entry);
 
-    if (isGameBusEmbed()) {
-      // Allow safe retry after an unconfirmed / failed attempt (never permanently block).
-      if (existing?.awaitingPersist) {
-        clearKitchenSkillsPostAttempt(attemptKey);
-        setLocalReviews((current) =>
-          current.filter((item) => reviewIdentityKey(item) !== reviewIdentityKey(entry)),
-        );
-      }
+    // Dispatched-but-unconfirmed must never post again (no GameBus ACK / idempotency).
+    if (
+      existing?.awaitingPersist ||
+      hasKitchenSkillsPostAttempt(attemptKey) ||
+      (actorId !== '' && hasKitchenSkillsReviewDispatchMarker(actorId, entry))
+    ) {
+      gamebusDevLog(
+        'kitchen-skills-review.already-dispatched',
+        kitchenSkillsReviewDiagnosticPayload('already_dispatched', entry),
+      );
+      return { ok: false, reason: 'already_dispatched', keepDraft: true };
+    }
 
-      const posted = tryPostKitchenSkillsReview(entry, studentActorId);
+    if (isGameBusEmbed()) {
+      const posted = tryPostKitchenSkillsReview(entry, actorId);
       if (!posted.ok) {
-        clearKitchenSkillsPostAttempt(attemptKey);
+        // Definite pre-dispatch failure: attempt key was not recorded — retry is allowed.
         gamebusDevLog(
           'kitchen-skills-review.commit-failed',
           kitchenSkillsReviewDiagnosticPayload(posted.reason, entry),
         );
         return { ok: false, reason: posted.reason, keepDraft: true };
       }
+      markKitchenSkillsReviewDispatched(actorId, entry);
       setLocalReviews((current) => {
         const withoutIdentity = current.filter(
           (item) => reviewIdentityKey(item) !== reviewIdentityKey(entry),

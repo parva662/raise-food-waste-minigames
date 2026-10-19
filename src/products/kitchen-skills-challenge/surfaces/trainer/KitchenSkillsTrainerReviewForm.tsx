@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useReadyKitchenSkillsSession } from '@/products/kitchen-skills-challenge/domain/session/KitchenSkillsSessionContext';
 import { parseKitchenSkillsReviewScore } from '@/products/kitchen-skills-challenge/domain/assessment/scores';
 import type {
@@ -13,22 +13,16 @@ import {
 } from '@/products/kitchen-skills-challenge/domain/session/reviewIdentity';
 import { normalizeRecipeId } from '@/products/kitchen-skills-challenge/domain/session/ingredientUniqueness';
 import {
+  kitchenSkillsReviewAwaitingMessage,
   kitchenSkillsReviewCommitErrorMessage,
   kitchenSkillsReviewDiagnosticPayload,
+  kitchenSkillsReviewSavedMessage,
 } from '@/products/kitchen-skills-challenge/gamebus/reviewPostErrors';
 import { gamebusDevLog } from '@/platform/gamebus/devLog';
-
-export type KitchenSkillsReviewFormDraft = {
-  timeScore: string;
-  qualityScore: string;
-  feedback: string;
-};
-
-const EMPTY_DRAFT: KitchenSkillsReviewFormDraft = {
-  timeScore: '',
-  qualityScore: '',
-  feedback: '',
-};
+import {
+  EMPTY_REVIEW_DRAFT,
+  type KitchenSkillsReviewFormDraft,
+} from '@/products/kitchen-skills-challenge/surfaces/trainer/reviewDrafts';
 
 function reviewTestId(reviewedGame: KitchenSkillsReviewedModule, suffix: string): string {
   return `kitchen-day-review-${reviewedGame}-${suffix}`;
@@ -61,8 +55,8 @@ function ReviewReadback({
         <span hidden data-testid={legacyTrimTestId(reviewedGame, 'submitted')} />
       ) : null}
       <h3 className="chef-results-panel__title">Tutor assessment</h3>
-      <p className="chef-results-panel__intro">
-        This {moduleTitle} assessment is confirmed saved.
+      <p className="chef-results-panel__intro" data-testid={reviewTestId(reviewedGame, 'saved-note')}>
+        {kitchenSkillsReviewSavedMessage()} This {moduleTitle} assessment is confirmed in GameBus.
       </p>
       <dl className="chef-results-metrics chef-results-metrics--compact">
         <div>
@@ -108,18 +102,19 @@ function ReviewAwaiting({
   review,
   moduleTitle,
   reviewedGame,
-  onRetry,
 }: {
   review: KitchenSkillsReviewEntry;
   moduleTitle: string;
   reviewedGame: KitchenSkillsReviewedModule;
-  onRetry: () => void;
 }) {
   return (
     <section
       className="chef-results-panel"
-      data-testid={reviewTestId(reviewedGame, 'awaiting')}
+      data-testid={legacyTrimTestId(reviewedGame, 'awaiting') ?? reviewTestId(reviewedGame, 'awaiting')}
     >
+      {legacyTrimTestId(reviewedGame, 'awaiting') ? (
+        <span hidden data-testid={reviewTestId(reviewedGame, 'awaiting')} />
+      ) : null}
       {legacyTrimTestId(reviewedGame, 'submitted') ? (
         <span hidden data-testid={legacyTrimTestId(reviewedGame, 'submitted')} />
       ) : null}
@@ -129,8 +124,8 @@ function ReviewAwaiting({
         className="chef-results-panel__intro"
         data-testid={reviewTestId(reviewedGame, 'awaiting-note')}
       >
-        Sent to GameBus — waiting for confirmation. This {moduleTitle} assessment is not marked
-        reviewed until it appears in the trainer feed.
+        {kitchenSkillsReviewAwaitingMessage()} This {moduleTitle} assessment is not marked reviewed
+        until it appears in the trainer feed. Do not submit again.
       </p>
       <dl className="chef-results-metrics chef-results-metrics--compact">
         <div>
@@ -168,14 +163,6 @@ function ReviewAwaiting({
           </div>
         ) : null}
       </dl>
-      <button
-        type="button"
-        className="kitchen-day-button"
-        data-testid={legacyTrimTestId(reviewedGame, 'retry') ?? reviewTestId(reviewedGame, 'retry')}
-        onClick={onRetry}
-      >
-        Retry submission
-      </button>
     </section>
   );
 }
@@ -187,47 +174,28 @@ export function KitchenSkillsTrainerModuleReviewForm({
   moduleTitle,
   draft,
   onDraftChange,
-  onDraftDirtyChange,
 }: {
   selected: KitchenSkillsTrainerSession;
   recipeId: string;
   reviewedGame: KitchenSkillsReviewedModule;
   moduleTitle: string;
   /** Parent-owned draft so recipe/module switches do not lose unsaved scores. */
-  draft?: KitchenSkillsReviewFormDraft;
-  onDraftChange?: (draft: KitchenSkillsReviewFormDraft) => void;
-  onDraftDirtyChange?: (dirty: boolean) => void;
+  draft: KitchenSkillsReviewFormDraft;
+  onDraftChange: (draft: KitchenSkillsReviewFormDraft) => void;
 }) {
   const { commitReview } = useReadyKitchenSkillsSession();
   const normalizedRecipeId = normalizeRecipeId(recipeId) ?? recipeId;
   const confirmed = findConfirmedRecipeModuleReview(selected, normalizedRecipeId, reviewedGame);
   const awaiting = findAwaitingRecipeModuleReview(selected, normalizedRecipeId, reviewedGame);
-  const controlled = draft != null && onDraftChange != null;
-  const [localDraft, setLocalDraft] = useState<KitchenSkillsReviewFormDraft>(EMPTY_DRAFT);
   const [error, setError] = useState<string | null>(null);
-
-  const currentDraft = controlled ? draft! : localDraft;
-  const setDraft = (next: KitchenSkillsReviewFormDraft) => {
-    if (controlled) onDraftChange!(next);
-    else setLocalDraft(next);
-  };
+  const [sending, setSending] = useState(false);
+  const sendingRef = useRef(false);
 
   useEffect(() => {
     setError(null);
+    setSending(false);
+    sendingRef.current = false;
   }, [reviewedGame, selected.sessionId, normalizedRecipeId]);
-
-  useEffect(() => {
-    if (confirmed || awaiting) {
-      onDraftDirtyChange?.(false);
-      return;
-    }
-    const dirty =
-      currentDraft.timeScore.trim().length > 0 ||
-      currentDraft.qualityScore.trim().length > 0 ||
-      currentDraft.feedback.trim().length > 0;
-    onDraftDirtyChange?.(dirty);
-    return () => onDraftDirtyChange?.(false);
-  }, [confirmed, awaiting, currentDraft, onDraftDirtyChange]);
 
   if (!recipeModuleHasEvidence(selected, normalizedRecipeId, reviewedGame)) {
     return null;
@@ -237,69 +205,17 @@ export function KitchenSkillsTrainerModuleReviewForm({
     return <ReviewReadback review={confirmed} moduleTitle={moduleTitle} reviewedGame={reviewedGame} />;
   }
 
-  const submitEntry = (): KitchenSkillsReviewEntry | null => {
-    const parsedTime = parseKitchenSkillsReviewScore(currentDraft.timeScore);
-    const parsedQuality = parseKitchenSkillsReviewScore(currentDraft.qualityScore);
-    if (!parsedTime.ok || !parsedQuality.ok) {
-      setError('Enter integer scores from 0 to 5. Blank is not a score.');
-      return null;
-    }
-    return {
-      sessionId: selected.sessionId,
-      sessionDate: selected.sessionDate,
-      submittedAt: new Date().toISOString(),
-      recipeId: normalizedRecipeId,
-      reviewedGame,
-      timeEfficiencyScore: parsedTime.value,
-      preparationQualityScore: parsedQuality.value,
-      ...(currentDraft.feedback.trim() ? { chefFeedback: currentDraft.feedback.trim() } : {}),
-      source: 'local',
-    };
-  };
-
-  const runCommit = (entry: KitchenSkillsReviewEntry) => {
-    const result = commitReview(entry, selected.actorId);
-    if (!result.ok) {
-      const message = kitchenSkillsReviewCommitErrorMessage(result.reason, moduleTitle);
-      setError(message);
-      gamebusDevLog(
-        'kitchen-skills-review.ui-error',
-        kitchenSkillsReviewDiagnosticPayload(result.reason, entry),
-      );
-      return;
-    }
-    setError(null);
-    onDraftDirtyChange?.(false);
-  };
-
   if (awaiting) {
     return (
-      <ReviewAwaiting
-        review={awaiting}
-        moduleTitle={moduleTitle}
-        reviewedGame={reviewedGame}
-        onRetry={() => {
-          // Preserve scores in draft, then resubmit (commit clears awaiting + attempt key).
-          setDraft({
-            timeScore: String(awaiting.timeEfficiencyScore),
-            qualityScore: String(awaiting.preparationQualityScore),
-            feedback: awaiting.chefFeedback ?? '',
-          });
-          runCommit({
-            ...awaiting,
-            submittedAt: new Date().toISOString(),
-            awaitingPersist: undefined,
-          });
-        }}
-      />
+      <ReviewAwaiting review={awaiting} moduleTitle={moduleTitle} reviewedGame={reviewedGame} />
     );
   }
 
-  const parsedTime = parseKitchenSkillsReviewScore(currentDraft.timeScore);
-  const parsedQuality = parseKitchenSkillsReviewScore(currentDraft.qualityScore);
-  const canSubmit = parsedTime.ok && parsedQuality.ok;
-  const timeInvalid = currentDraft.timeScore.trim().length > 0 && !parsedTime.ok;
-  const qualityInvalid = currentDraft.qualityScore.trim().length > 0 && !parsedQuality.ok;
+  const parsedTime = parseKitchenSkillsReviewScore(draft.timeScore);
+  const parsedQuality = parseKitchenSkillsReviewScore(draft.qualityScore);
+  const canSubmit = parsedTime.ok && parsedQuality.ok && !sending;
+  const timeInvalid = draft.timeScore.trim().length > 0 && !parsedTime.ok;
+  const qualityInvalid = draft.qualityScore.trim().length > 0 && !parsedQuality.ok;
   const legacyForm = legacyTrimTestId(reviewedGame, 'form');
   const legacyTime = legacyTrimTestId(reviewedGame, 'time');
   const legacyQuality = legacyTrimTestId(reviewedGame, 'quality');
@@ -309,15 +225,52 @@ export function KitchenSkillsTrainerModuleReviewForm({
   const legacyError = legacyTrimTestId(reviewedGame, 'error');
 
   const submit = () => {
-    const entry = submitEntry();
-    if (!entry) return;
-    runCommit(entry);
+    if (sendingRef.current) return;
+    if (!parsedTime.ok || !parsedQuality.ok) {
+      setError('Enter integer scores from 0 to 5. Blank is not a score.');
+      return;
+    }
+    sendingRef.current = true;
+    setSending(true);
+    const entry: KitchenSkillsReviewEntry = {
+      sessionId: selected.sessionId,
+      sessionDate: selected.sessionDate,
+      submittedAt: new Date().toISOString(),
+      recipeId: normalizedRecipeId,
+      reviewedGame,
+      timeEfficiencyScore: parsedTime.value,
+      preparationQualityScore: parsedQuality.value,
+      ...(draft.feedback.trim() ? { chefFeedback: draft.feedback.trim() } : {}),
+      source: 'local',
+    };
+    const result = commitReview(entry, selected.actorId);
+    if (!result.ok) {
+      sendingRef.current = false;
+      setSending(false);
+      const message = kitchenSkillsReviewCommitErrorMessage(result.reason, moduleTitle);
+      setError(message);
+      gamebusDevLog(
+        'kitchen-skills-review.ui-error',
+        kitchenSkillsReviewDiagnosticPayload(result.reason, entry),
+      );
+      return;
+    }
+    setError(null);
+    // Clear unsent draft once dispatched (scores remain visible on awaiting panel).
+    onDraftChange(EMPTY_REVIEW_DRAFT);
+    sendingRef.current = false;
+    setSending(false);
   };
 
   return (
     <section className="chef-results-panel kitchen-day-tutor-assessment" data-testid={reviewTestId(reviewedGame, 'form')}>
       {legacyForm ? <span hidden data-testid={legacyForm} /> : null}
       <h3 className="chef-results-panel__title">Tutor assessment</h3>
+      {sending ? (
+        <p className="chef-results-panel__intro" data-testid={reviewTestId(reviewedGame, 'sending')}>
+          Sending assessment…
+        </p>
+      ) : null}
       <label className="kitchen-day-field">
         Time efficiency (0–5)
         <input
@@ -326,10 +279,11 @@ export function KitchenSkillsTrainerModuleReviewForm({
           inputMode="numeric"
           maxLength={1}
           aria-invalid={timeInvalid || undefined}
-          value={currentDraft.timeScore}
+          disabled={sending}
+          value={draft.timeScore}
           onChange={(event) => {
             const next = acceptKitchenSkillsScoreInput(event.target.value);
-            if (next !== null) setDraft({ ...currentDraft, timeScore: next });
+            if (next !== null) onDraftChange({ ...draft, timeScore: next });
           }}
         />
         {legacyTime ? <span hidden data-testid={reviewTestId(reviewedGame, 'time')} /> : null}
@@ -342,10 +296,11 @@ export function KitchenSkillsTrainerModuleReviewForm({
           inputMode="numeric"
           maxLength={1}
           aria-invalid={qualityInvalid || undefined}
-          value={currentDraft.qualityScore}
+          disabled={sending}
+          value={draft.qualityScore}
           onChange={(event) => {
             const next = acceptKitchenSkillsScoreInput(event.target.value);
-            if (next !== null) setDraft({ ...currentDraft, qualityScore: next });
+            if (next !== null) onDraftChange({ ...draft, qualityScore: next });
           }}
         />
         {legacyQuality ? <span hidden data-testid={reviewTestId(reviewedGame, 'quality')} /> : null}
@@ -355,8 +310,9 @@ export function KitchenSkillsTrainerModuleReviewForm({
         <textarea
           className="kitchen-day-input"
           data-testid={legacyFeedback ?? reviewTestId(reviewedGame, 'feedback')}
-          value={currentDraft.feedback}
-          onChange={(event) => setDraft({ ...currentDraft, feedback: event.target.value })}
+          disabled={sending}
+          value={draft.feedback}
+          onChange={(event) => onDraftChange({ ...draft, feedback: event.target.value })}
         />
         {legacyFeedback ? <span hidden data-testid={reviewTestId(reviewedGame, 'feedback')} /> : null}
       </label>
@@ -379,7 +335,7 @@ export function KitchenSkillsTrainerModuleReviewForm({
         disabled={!canSubmit}
         onClick={submit}
       >
-        Submit assessment
+        {sending ? 'Sending…' : 'Submit assessment'}
       </button>
       {legacySubmit ? (
         <span hidden data-testid={reviewTestId(reviewedGame, 'submit')} />
