@@ -2,6 +2,8 @@ import { describe, expect, it } from 'vitest';
 import {
   buildKitchenSkillsTaskProgress,
   canFinishKitchenSkillsChallenge,
+  canStartAnotherKitchenSkillsRecipe,
+  newRecipeBlockedReason,
   canOpenKitchenSkillsReview,
   isKitchenSkillsNavEnabled,
   isKitchenSkillsRecipeComplete,
@@ -196,6 +198,38 @@ describe('Kitchen Skills prerequisite-gated navigation', () => {
     ).toBe(true);
     expect(canFinishKitchenSkillsChallenge({ ...complete, trimInProgress: true })).toBe(false);
     expect(canFinishKitchenSkillsChallenge({ ...complete, reuseInProgress: true })).toBe(false);
+  });
+
+  it('blocks starting another recipe until every saved recipe is complete', () => {
+    expect(canStartAnotherKitchenSkillsRecipe(start)).toBe(true);
+    const unfinished = {
+      ...start,
+      portionComplete: true,
+      allRecipesComplete: false,
+      recipes: [
+        recipe({
+          recipeId: '42',
+          hasEligibleTrimIngredients: true,
+          trimCount: 1,
+          hasReusableTrimWaste: true,
+          reuseComplete: false,
+        }),
+      ],
+      hasEligibleTrimIngredients: true,
+      trimCount: 1,
+      hasReusableTrimWaste: true,
+      reuseComplete: false,
+    };
+    expect(canStartAnotherKitchenSkillsRecipe(unfinished)).toBe(false);
+    expect(newRecipeBlockedReason(unfinished)).toMatch(/Rescue & Reuse/i);
+    expect(
+      canStartAnotherKitchenSkillsRecipe({
+        ...unfinished,
+        allRecipesComplete: true,
+        recipes: unfinished.recipes.map((item) => ({ ...item, reuseComplete: true })),
+        reuseComplete: true,
+      }),
+    ).toBe(true);
   });
 
   it('does not let one completed recipe satisfy another unfinished recipe', () => {

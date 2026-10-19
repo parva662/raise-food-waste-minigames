@@ -5593,6 +5593,9 @@ ul {
   right: 0;
   max-height: min(16rem, 50vh);
   overflow: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  touch-action: pan-y;
   margin: 0;
   padding: var(--spacing-xs) 0;
   list-style: none;
@@ -5613,6 +5616,7 @@ ul {
   display: flex;
   align-items: center;
   min-height: 2.75rem;
+  touch-action: pan-y;
 }
 
 .kitchen-day-combobox__option--active {

@@ -73,8 +73,20 @@ export function peerModuleScoreStatistic(
 ): AnonymousPeerStatistic {
   const scores: number[] = [];
   for (const actorSessions of sessionsByOtherActors(peerSessions, viewerActorId).values()) {
-    const latest = actorSessions.find((session) => session.moduleReviews[module] != null);
-    const review = latest?.moduleReviews[module];
+    const latest = actorSessions.find((session) => {
+      const hasRecipe = (session.reviews ?? []).some(
+        (entry) => entry.reviewedGame === module && Boolean(entry.recipeId?.trim()),
+      );
+      return hasRecipe || session.moduleReviews[module] != null;
+    });
+    if (!latest) continue;
+    const recipeReviews = (latest.reviews ?? []).filter(
+      (entry) => entry.reviewedGame === module && Boolean(entry.recipeId?.trim()),
+    );
+    // Use one representative score per peer actor (latest recipe review); never average recipes.
+    const review =
+      recipeReviews.sort((left, right) => right.submittedAt.localeCompare(left.submittedAt))[0] ??
+      latest.moduleReviews[module];
     if (review) scores.push(review[score]);
   }
   return anonymize(scores);

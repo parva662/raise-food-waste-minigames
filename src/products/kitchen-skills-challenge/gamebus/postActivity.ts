@@ -106,7 +106,7 @@ export function tryPostKitchenSkillsReview(
   return tryPostKitchenSkillsActivity(
     getGameBusTask(),
     (task) => buildWastePracticeReviewActivityMessage(task, entry, actorId),
-    `review:${entry.sessionId}:${entry.reviewedGame}`,
+    `review:${entry.sessionId}:${entry.recipeId ?? ''}:${entry.reviewedGame}`,
     canPostKitchenSkillsTrainerReview(),
     KITCHEN_SKILLS_TRAINER_LIVE_BLOCK_REASON,
   );

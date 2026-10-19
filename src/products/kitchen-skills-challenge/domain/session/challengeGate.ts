@@ -52,6 +52,39 @@ export function canFinishKitchenSkillsChallenge(progress: KitchenSkillsTaskProgr
   return progress.allRecipesComplete;
 }
 
+/**
+ * A new Portion recipe may be started only when every already-saved recipe is complete
+ * and there is no unfinished Trim/Reuse draft.
+ */
+export function canStartAnotherKitchenSkillsRecipe(progress: KitchenSkillsTaskProgress): boolean {
+  if (progress.portionComplete === false) return true;
+  return canFinishKitchenSkillsChallenge(progress);
+}
+
+/** Human-readable reason a new recipe cannot start yet (null when allowed). */
+export function newRecipeBlockedReason(progress: KitchenSkillsTaskProgress): string | null {
+  if (canStartAnotherKitchenSkillsRecipe(progress)) return null;
+  if (hasKitchenSkillsDraftWork(progress)) {
+    if (progress.trimInProgress) {
+      return 'Finish the current Trim Smart measurement before starting another recipe.';
+    }
+    if (progress.reuseInProgress) {
+      return 'Finish Rescue & Reuse for the current recipe before starting another recipe.';
+    }
+  }
+  const unfinished = progress.recipes.find((recipe) => !isKitchenSkillsRecipeComplete(recipe));
+  if (!unfinished) {
+    return 'Finish the current recipe before starting another recipe.';
+  }
+  if (unfinished.hasEligibleTrimIngredients && unfinished.trimCount === 0) {
+    return 'Complete Trim Smart for the saved recipe before starting another recipe.';
+  }
+  if (unfinished.hasReusableTrimWaste && !unfinished.reuseComplete) {
+    return 'Complete Rescue & Reuse for the saved recipe before starting another recipe.';
+  }
+  return 'Finish the current recipe before starting another recipe.';
+}
+
 export function requiredKitchenSkillsSection(
   progress: KitchenSkillsTaskProgress,
 ): Exclude<KitchenSkillsHashSection, 'review'> {

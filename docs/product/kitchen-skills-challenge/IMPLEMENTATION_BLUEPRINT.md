@@ -14,7 +14,7 @@
 | Trim Smart | `trimSmart` | 1..n **different** ingredients per recipe (`sessionId` + `recipeId` + `ingredientId`) |
 | Rescue & Reuse | `rescueAndReuse` | 0..1 per `sessionId` + `recipeId` + `ingredientId` |
 | Portion Precision | `portionPrecision` | 0..n recipes; once per `sessionId` + `recipeId` |
-| Tutor assessment | `wastePracticeReview` | 0..1 per `sessionId` + `reviewedGame` (module) |
+| Tutor assessment | `wastePracticeReview` | 0..1 per `sessionId` + `recipeId` + `reviewedGame` |
 | Session Review / Student Progress / Tutor dashboard | — | read-only |
 
 ## 2. Architecture constraints (keep)

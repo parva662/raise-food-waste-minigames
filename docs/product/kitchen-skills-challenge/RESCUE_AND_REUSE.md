@@ -9,7 +9,7 @@
 
 After a Trim Smart entry records actual waste, the student records how much of **that ingredient's** waste can be reused and where.
 
-Not a scored mini-game. The tutor may still submit a module assessment for Rescue when evidence exists (`reviewedGame: rescueAndReuse`); system metrics do not set those scores.
+Not a scored mini-game. The tutor may still submit a Rescue assessment when evidence exists for that recipe (`recipeId` + `reviewedGame: rescueAndReuse`); system metrics do not set those scores.
 
 ## 2. Connection
 

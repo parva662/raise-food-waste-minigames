@@ -12,7 +12,7 @@
 | Layer | Content |
 |-------|---------|
 | Objective Trim vs JAMIX | Recipe-ingredient Hävikki (`referenceWastePercent`) compared with recorded starting weight and removed grams. Not a tutor score. Not shown on the student Trim game. |
-| Tutor assessment | One review per completed module (`reviewedGame`): Time efficiency 0–5, Preparation quality 0–5, optional feedback |
+| Tutor assessment | One review per **recipe and evidenced module** (`sessionId` + `recipeId` + `reviewedGame`): Time efficiency 0–5, Preparation quality 0–5, optional feedback |
 | Anonymous peer context | Progress-only. Group median of Trim **delta vs each person's own JAMIX**, and like-for-like tutor score medians. Never a new overall score. |
 
 Objective Trim math (shared read-model): actual % = removed / starting × 100; reference grams = starting × JAMIX % / 100; delta pp = actual % − JAMIX %. Session totals weight by starting grams (Σ removed / Σ starting; Σ expected reference grams / Σ starting). Neutral copy: above / below / at reference — not “better”. Missing join → **Reference unavailable** (never guessed). 0% Hävikki is a valid reference.
@@ -28,16 +28,18 @@ System comparison never pre-fills tutor scores. Analytics are never stored as ac
 
 Neither posts measurement activities. Progress does not invent ranking or an overall tutor score.
 
-## 3. Tutor dashboard — one assessment per module
+## 3. Tutor dashboard — one assessment per recipe and evidenced module
 
-`#/kitchen-day-tutor`: **staff list** → **Needs assessment** / **Reviewed** session tabs → **session detail** with module tabs (Trim / Rescue / Portion).
+`#/kitchen-day-tutor`: **staff list** → **Needs assessment** / **Reviewed** session tabs → **session detail** → **recipe selection** → module tabs (Trim / Rescue / Portion).
 
-- Session status uses **only modules with participant evidence**. Evidence + no review → Needs assessment; every evidenced module reviewed → **Reviewed**; some but not all evidenced modules reviewed → Partially reviewed. Modules with no participant evidence create **no** review requirement, are not “Not applicable”, and do not appear as “Trim needs review” / “Rescue needs review” or inflate awaiting counts. Portion-only + Portion reviewed is Reviewed.
-- Trim evidence (when the session Portion recipe joins) shows starting weight, actual removed g/%, JAMIX % and expected grams, and delta in percentage points. Tutor score controls stay unchanged.
-- Independent draft per module tab; scores **0–5** (empty ≠ `0`).
-- Submit one `wastePracticeReview` per module with evidence as `SILENT_ACTIVITY` + RAISE `actors: [selectedStudentActorId]` and `reviewedGame` set to that module slug. Exact properties: slug contract.
+- Session status uses **evidenced recipe–module pairs**. Each saved Portion recipe needs its own Portion assessment; Trim/Reuse assessments are required only when that recipe has Trim/Reuse evidence. Every evidenced pair reviewed → **Reviewed**; some but not all → Partially reviewed; none reviewed → Needs assessment. Modules without evidence for a recipe create **no** review requirement.
+- When a session has one recipe, it is selected automatically. Selecting another recipe shows only that recipe’s evidence and its independent assessment form (no score leakage).
+- Trim evidence (when Portion `recipeId` joins) shows starting weight, actual removed g/%, JAMIX % and expected grams, and delta in percentage points. Tutor score controls stay unchanged.
+- Independent draft per student + `sessionId` + `recipeId` + module; scores **0–5** (empty ≠ `0`).
+- Submit one `wastePracticeReview` per recipe–module pair with evidence as `SILENT_ACTIVITY` + RAISE `actors: [selectedStudentActorId]`, with `recipeId` and `reviewedGame`. Exact properties: slug contract.
 - **Close** posts `{ type: 'EXIT' }` only (no review). Confirm if the active draft is dirty.
-- Duplicate posts for the same `sessionId` + `reviewedGame` are rejected.
+- Duplicate posts for the same `sessionId` + `recipeId` + `reviewedGame` are rejected.
+- **Historical compatibility:** older `wastePracticeReview` rows without `recipeId` remain readable as **Historical session-level assessment**. They do not invent a recipe association, do not mark every recipe reviewed, and do not block new recipe-specific reviews.
 
 **DEPRECATED property names:** see slug contract (`reviewedActivityId`, `reasonCode`, `freeTextNote`, `unusualEvent`, `serviceDate`, …).
 
@@ -45,7 +47,7 @@ Neither posts measurement activities. Progress does not invent ranking or an ove
 
 | Who | Product rule | Feed |
 |-----|--------------|------|
-| Student | Progress shows Trim / Reuse / Portion before tutor review exists; keep only activities whose `actor.id` matches the authenticated user; attach reviews by `sessionId` + `reviewedGame` for that same actor | `kitchenGroupInputSelf` |
+| Student | Progress shows Trim / Reuse / Portion before tutor review exists; keep only activities whose `actor.id` matches the authenticated user; attach reviews by `sessionId` + `recipeId` + `reviewedGame` (legacy rows without `recipeId` stay session-level) for that same actor | `kitchenGroupInputSelf` |
 | Student Progress peers | Anonymous aggregate only. Raw peer activities, identities, reviews, and chef feedback must never reach the participant client. Blocked until a verified privacy-safe GameBus projection exists; UI shows “Not enough peer data yet”. Do not attach trainer-style `GET /api/groups/activities` | none |
 | Tutor | Group by actor; actor match when attaching reviews | `kitchenSkillsTrainerInput` |
 | Session Review | May hydrate reviews from both self and trainer feeds (dedupe) | both |

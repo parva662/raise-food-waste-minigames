@@ -8,6 +8,7 @@ export const WASTE_PRACTICE_REVIEW_REQUIRED_REFS = [
   'sessionId',
   'sessionDate',
   'submittedAt',
+  'recipeId',
   'reviewedGame',
   'timeEfficiencyScore',
   'preparationQualityScore',
@@ -34,10 +35,14 @@ export function orderedWastePracticeReviewPropertyRefs(
 }
 
 export function mapWastePracticeReview(entry: KitchenSkillsReviewEntry) {
+  if (!entry.recipeId) {
+    throw new Error('wastePracticeReview posts require recipeId');
+  }
   const values: Partial<Record<WastePracticeReviewPropertyRef, { value: string | number }>> = {
     sessionId: { value: entry.sessionId },
     sessionDate: { value: entry.sessionDate },
     submittedAt: { value: entry.submittedAt },
+    recipeId: { value: entry.recipeId },
     reviewedGame: { value: entry.reviewedGame },
     timeEfficiencyScore: { value: entry.timeEfficiencyScore },
     preparationQualityScore: { value: entry.preparationQualityScore },

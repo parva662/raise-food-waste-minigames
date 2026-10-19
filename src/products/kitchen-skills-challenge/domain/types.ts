@@ -93,6 +93,8 @@ export interface KitchenSkillsReviewEntry {
   sessionId: string;
   sessionDate: string;
   submittedAt: string;
+  /** Required on new posts; absent on legacy session-level GameBus reviews. */
+  recipeId?: string;
   reviewedGame: KitchenSkillsReviewedModule;
   timeEfficiencyScore: number;
   preparationQualityScore: number;
@@ -101,6 +103,7 @@ export interface KitchenSkillsReviewEntry {
   persistId?: string;
 }
 
+/** One review slot per module — used for legacy session-level assessments only. */
 export type KitchenSkillsModuleReviews = {
   trimSmart: KitchenSkillsReviewEntry | null;
   rescueAndReuse: KitchenSkillsReviewEntry | null;
@@ -115,6 +118,12 @@ export interface KitchenSkillsTrainerSession {
   trimEntries: KitchenSkillsTrimEntry[];
   rescueEntries: KitchenSkillsRescueEntry[];
   portionEntries: KitchenSkillsPortionEntry[];
+  /** All tutor reviews for this session (recipe-specific and legacy). */
+  reviews: KitchenSkillsReviewEntry[];
+  /**
+   * Legacy session-level reviews only (no recipeId).
+   * Recipe-specific assessments live in {@link reviews}.
+   */
   moduleReviews: KitchenSkillsModuleReviews;
 }
 

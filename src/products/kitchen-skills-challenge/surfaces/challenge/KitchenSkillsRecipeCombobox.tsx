@@ -1,9 +1,19 @@
-import { useEffect, useId, useMemo, useRef, useState } from 'react';
+import {
+  useEffect,
+  useId,
+  useMemo,
+  useRef,
+  useState,
+  type PointerEvent as ReactPointerEvent,
+} from 'react';
 
 export type KitchenSkillsRecipeOption = {
   id: string;
   label: string;
 };
+
+/** Movement beyond this distance (px) counts as a scroll, not a tap. */
+export const COMBBOX_TOUCH_TAP_SLOP_PX = 10;
 
 export function filterRecipeOptions(
   options: readonly KitchenSkillsRecipeOption[],
@@ -13,6 +23,13 @@ export function filterRecipeOptions(
   if (!needle) return [...options];
   return options.filter((option) => option.label.toLocaleLowerCase('fi-FI').includes(needle));
 }
+
+type TouchTrack = {
+  pointerId: number;
+  x: number;
+  y: number;
+  moved: boolean;
+};
 
 export function KitchenSkillsRecipeCombobox({
   options,
@@ -34,6 +51,7 @@ export function KitchenSkillsRecipeCombobox({
   const listId = useId();
   const rootRef = useRef<HTMLDivElement>(null);
   const suppressOpenRef = useRef(false);
+  const touchTrackRef = useRef<TouchTrack | null>(null);
   const selected = options.find((option) => option.id === value) ?? null;
   const [query, setQuery] = useState(selected?.label ?? '');
   const [open, setOpen] = useState(false);
@@ -82,6 +100,48 @@ export function KitchenSkillsRecipeCombobox({
     setOpen(true);
     if (selected && next !== selected.label) {
       onChange('');
+    }
+  }
+
+  function onOptionPointerDown(event: ReactPointerEvent<HTMLLIElement>, option: KitchenSkillsRecipeOption) {
+    if (event.pointerType === 'touch') {
+      // Do not preventDefault — iOS needs the gesture for native list scrolling.
+      touchTrackRef.current = {
+        pointerId: event.pointerId,
+        x: event.clientX,
+        y: event.clientY,
+        moved: false,
+      };
+      return;
+    }
+    event.preventDefault();
+    event.stopPropagation();
+    selectOption(option);
+  }
+
+  function onOptionPointerMove(event: ReactPointerEvent<HTMLLIElement>) {
+    const track = touchTrackRef.current;
+    if (!track || track.pointerId !== event.pointerId) return;
+    const dx = event.clientX - track.x;
+    const dy = event.clientY - track.y;
+    if (Math.hypot(dx, dy) > COMBBOX_TOUCH_TAP_SLOP_PX) {
+      track.moved = true;
+    }
+  }
+
+  function onOptionPointerUp(event: ReactPointerEvent<HTMLLIElement>, option: KitchenSkillsRecipeOption) {
+    const track = touchTrackRef.current;
+    if (!track || track.pointerId !== event.pointerId) return;
+    touchTrackRef.current = null;
+    if (track.moved) return;
+    event.preventDefault();
+    event.stopPropagation();
+    selectOption(option);
+  }
+
+  function onOptionPointerCancel(event: ReactPointerEvent<HTMLLIElement>) {
+    if (touchTrackRef.current?.pointerId === event.pointerId) {
+      touchTrackRef.current = null;
     }
   }
 
@@ -155,12 +215,12 @@ export function KitchenSkillsRecipeCombobox({
                 }
                 data-testid={`kitchen-day-recipe-option-${option.id}`}
                 onMouseEnter={() => setActiveIndex(index)}
-                onPointerDown={(event) => {
-                  event.preventDefault();
-                  event.stopPropagation();
-                  selectOption(option);
-                }}
+                onPointerDown={(event) => onOptionPointerDown(event, option)}
+                onPointerMove={onOptionPointerMove}
+                onPointerUp={(event) => onOptionPointerUp(event, option)}
+                onPointerCancel={onOptionPointerCancel}
                 onClick={(event) => {
+                  // Mouse selection already handled on pointerdown; block synthetic click reopen.
                   event.preventDefault();
                   event.stopPropagation();
                 }}

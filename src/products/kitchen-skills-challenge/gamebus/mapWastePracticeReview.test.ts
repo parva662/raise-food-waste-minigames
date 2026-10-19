@@ -11,6 +11,7 @@ const entry: KitchenSkillsReviewEntry = {
   sessionId: 'kitchen-day:task-1:user-1:2026-09-23',
   sessionDate: '2026-09-23',
   submittedAt: '2026-09-23T14:00:00.000Z',
+  recipeId: 'ankanrinta-flow',
   reviewedGame: 'trimSmart',
   timeEfficiencyScore: 0,
   preparationQualityScore: 5,
@@ -23,6 +24,7 @@ describe('wastePracticeReview mapper', () => {
       'sessionId',
       'sessionDate',
       'submittedAt',
+      'recipeId',
       'reviewedGame',
       'timeEfficiencyScore',
       'preparationQualityScore',
@@ -32,10 +34,12 @@ describe('wastePracticeReview mapper', () => {
       'sessionId',
       'sessionDate',
       'submittedAt',
+      'recipeId',
       'reviewedGame',
       'timeEfficiencyScore',
       'preparationQualityScore',
     ]);
+    expect(values.recipeId).toEqual({ value: 'ankanrinta-flow' });
     expect(values.reviewedGame).toEqual({ value: 'trimSmart' });
     expect(values).not.toHaveProperty('chefFeedback');
     expect(values).not.toHaveProperty('studentId');
@@ -44,6 +48,11 @@ describe('wastePracticeReview mapper', () => {
     expect(values).not.toHaveProperty('freeTextNote');
     expect(values).not.toHaveProperty('unusualEvent');
     expect(values).not.toHaveProperty('serviceDate');
+  });
+
+  it('rejects posts without recipeId', () => {
+    const { recipeId: _omit, ...legacy } = entry;
+    expect(() => mapWastePracticeReview(legacy)).toThrow(/recipeId/);
   });
 
   it('includes chefFeedback only when non-empty', () => {

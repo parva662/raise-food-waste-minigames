@@ -358,7 +358,9 @@ describe('Kitchen Day multiple recipes per session (active recipe)', () => {
     render(<AppRouter />);
     await recordBanaanismoothiePortion(user);
     expect(screen.getByTestId('kitchen-day-ingredient-name')).toBeInTheDocument();
-    await user.click(screen.getByTestId('kitchen-day-nav-portion'));
+    await selectTrimIngredient(user, 'Banaani', 'Banaani, Banaani 1kg Peru 1lk');
+    await completeTrimAfterIngredient(user, '0');
+    await user.click(screen.getByTestId('kitchen-day-start-another-recipe'));
     await recordFlowMustamakkaraPortion(user);
     expect(screen.getByTestId('kitchen-day-trim-recipe')).toHaveTextContent('FLOW mustamakkara');
     expect(screen.getByTestId('kitchen-day-trim-no-eligible')).toBeInTheDocument();
@@ -413,8 +415,12 @@ describe('Kitchen Day multiple recipes per session (active recipe)', () => {
     await recordHedelmatPortion(user);
     await recordBanaaniTrim(user, '450');
     expect(screen.getByTestId('kitchen-day-continue-reuse')).toBeInTheDocument();
-
-    await user.click(screen.getByTestId('kitchen-day-nav-portion'));
+    await user.click(screen.getByTestId('kitchen-day-continue-reuse'));
+    await user.type(screen.getByTestId('kitchen-day-reusable-waste'), '200');
+    await user.type(screen.getByTestId('kitchen-day-reuse-destination'), 'Stock');
+    await user.click(screen.getByTestId('kitchen-day-save-rescue'));
+    expect(screen.getByTestId('kitchen-day-finish-summary')).toBeInTheDocument();
+    await user.click(screen.getByTestId('kitchen-day-start-another-recipe'));
     await recordBanaanismoothiePortion(user);
     await selectTrimIngredient(user, 'Banaani', 'Banaani, Banaani 1kg Peru 1lk');
     await completeTrimAfterIngredient(user, '0');
@@ -422,45 +428,36 @@ describe('Kitchen Day multiple recipes per session (active recipe)', () => {
     expect(screen.getByTestId('kitchen-day-trim-recipe')).toHaveTextContent('Banaanismoothie L, G');
     expect(screen.queryByTestId('kitchen-day-continue-reuse')).not.toBeInTheDocument();
     expect(screen.getByTestId('kitchen-day-nav-reuse')).toHaveAttribute('aria-disabled', 'true');
-
-    await user.click(screen.getByTestId('kitchen-day-nav-portion'));
-    const recipeInput = screen.getByTestId('kitchen-day-recipe-select');
-    await user.click(recipeInput);
-    await user.type(recipeInput, 'Hedelmät');
-    await user.click(screen.getByRole('option', { name: 'Hedelmät M,G' }));
-    await user.click(screen.getByTestId('kitchen-day-resume-saved-recipe'));
-    expect(screen.getByTestId('kitchen-day-trim-recipe')).toHaveTextContent('Hedelmät M,G');
-    expect(screen.getByTestId('kitchen-day-nav-reuse').tagName).toBe('A');
-    await user.click(screen.getByTestId('kitchen-day-nav-reuse'));
-    expect(screen.getByTestId('kitchen-day-rescue')).toBeInTheDocument();
-    expect(screen.getByTestId('kitchen-day-rescue-ingredient')).toHaveDisplayValue(/Banaani/i);
-    expect(screen.queryByTestId('kitchen-day-rescue-empty')).not.toBeInTheDocument();
   });
 
-  it('TEST J: Challenge complete stays hidden while another saved recipe is unfinished', async () => {
+  it('TEST J: new recipe is blocked while the saved recipe still needs Reuse', async () => {
     const user = userEvent.setup();
     render(<AppRouter />);
     await recordHedelmatPortion(user);
     await recordBanaaniTrim(user, '450');
-    expect(screen.queryByTestId('kitchen-day-open-finish-summary')).not.toBeInTheDocument();
-
-    await user.click(screen.getByTestId('kitchen-day-nav-portion'));
-    await recordFlowMustamakkaraPortion(user);
-    expect(screen.getByTestId('kitchen-day-trim-no-eligible')).toBeInTheDocument();
-    expect(screen.queryByTestId('kitchen-day-open-finish-summary')).not.toBeInTheDocument();
-    expect(screen.queryByTestId('kitchen-day-finish-summary')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('kitchen-day-recipe-complete')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('kitchen-day-start-another-recipe')).not.toBeInTheDocument();
 
     await user.click(screen.getByTestId('kitchen-day-nav-portion'));
     const recipeInput = screen.getByTestId('kitchen-day-recipe-select');
     await user.click(recipeInput);
-    await user.type(recipeInput, 'Hedelmät');
-    await user.click(screen.getByRole('option', { name: 'Hedelmät M,G' }));
-    await user.click(screen.getByTestId('kitchen-day-resume-saved-recipe'));
+    await user.type(recipeInput, 'FLOW mustamakkara');
+    await user.click(screen.getByRole('option', { name: 'FLOW mustamakkara' }));
+    expect(screen.getByTestId('kitchen-day-new-recipe-blocked')).toBeInTheDocument();
+    expect(screen.getByTestId('kitchen-day-new-recipe-blocked-reason')).toHaveTextContent(/Rescue & Reuse/i);
+    expect(screen.queryByTestId('kitchen-day-submit-portion')).not.toBeInTheDocument();
+
+    await user.click(screen.getByTestId('kitchen-day-return-to-saved-recipe'));
     expect(screen.getByTestId('kitchen-day-nav-reuse').tagName).toBe('A');
     await user.click(screen.getByTestId('kitchen-day-nav-reuse'));
     await user.type(screen.getByTestId('kitchen-day-reusable-waste'), '200');
     await user.type(screen.getByTestId('kitchen-day-reuse-destination'), 'Stock');
     await user.click(screen.getByTestId('kitchen-day-save-rescue'));
+    expect(screen.getByTestId('kitchen-day-finish-summary')).toBeInTheDocument();
+    await user.click(screen.getByTestId('kitchen-day-start-another-recipe'));
+    await recordFlowMustamakkaraPortion(user);
+    expect(screen.getByTestId('kitchen-day-trim-no-eligible')).toBeInTheDocument();
+    await user.click(screen.getByTestId('kitchen-day-open-finish-summary'));
     expect(screen.getByTestId('kitchen-day-finish-summary')).toBeInTheDocument();
     expect(screen.getByTestId('kitchen-day-finish-portion-headline')).toHaveTextContent('Hedelmät M,G');
     expect(screen.getByTestId('kitchen-day-finish-portion-headline')).toHaveTextContent(
@@ -473,10 +470,9 @@ describe('Kitchen Day multiple recipes per session (active recipe)', () => {
     render(<AppRouter />);
     await recordBanaanismoothiePortion(user);
     await selectTrimIngredient(user, 'Banaani', 'Banaani, Banaani 1kg Peru 1lk');
-    await completeTrimAfterIngredient(user);
-    expect(screen.getByTestId('kitchen-day-trim-step-result')).toBeInTheDocument();
-
-    await user.click(screen.getByTestId('kitchen-day-nav-portion'));
+    await completeTrimAfterIngredient(user, '0');
+    expect(screen.getByTestId('kitchen-day-recipe-complete')).toBeInTheDocument();
+    await user.click(screen.getByTestId('kitchen-day-start-another-recipe'));
     // Aprikoosi-omenalassi also uses banaani-banaani-1kg-peru-1lk
     const recipeInput = screen.getByTestId('kitchen-day-recipe-select');
     await user.click(recipeInput);
@@ -493,7 +489,7 @@ describe('Kitchen Day multiple recipes per session (active recipe)', () => {
     // Same ingredientId is allowed again under a different recipeId
     expect(screen.getByTestId('kitchen-day-ingredient-name')).toBeInTheDocument();
     await selectTrimIngredient(user, 'Banaani', 'Banaani, Banaani 1kg Peru 1lk');
-    await completeTrimAfterIngredient(user);
+    await completeTrimAfterIngredient(user, '0');
     expect(screen.getByTestId('kitchen-day-trim-step-result')).toBeInTheDocument();
   });
 });
