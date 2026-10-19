@@ -398,7 +398,7 @@ export function SessionEvidence({
                           className="kitchen-day-portion-details"
                           data-testid={`${testIdPrefix}-portion-details-${entry.recipeId}`}
                         >
-                          <summary>View recipe details</summary>
+                          <summary>Show ingredient details</summary>
                           <PortionCompositionTable
                             entry={entry}
                             recipe={recipe}

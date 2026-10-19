@@ -10,12 +10,17 @@ import {
   canPostKitchenSkillsStudentActivity,
   canPostKitchenSkillsTrainerReview,
 } from '@/products/kitchen-skills-challenge/gamebus/liveIntegration';
+import {
+  kitchenSkillsReviewDiagnosticPayload,
+  validateWastePracticeReviewLinkedProperties,
+} from '@/products/kitchen-skills-challenge/gamebus/reviewPostErrors';
 import type {
   KitchenSkillsPortionEntry,
   KitchenSkillsRescueEntry,
   KitchenSkillsReviewEntry,
   KitchenSkillsTrimEntry,
 } from '@/products/kitchen-skills-challenge/domain/types';
+import { gamebusDevLog } from '@/platform/gamebus/devLog';
 
 export type KitchenSkillsPostResult =
   | { ok: true; status: 'posted_awaiting_persist'; message: GameBusOutboundActivityMessage }
@@ -27,6 +32,19 @@ let postInFlight = false;
 export function resetKitchenSkillsPostStateForTests(): void {
   attemptedKeys.clear();
   postInFlight = false;
+}
+
+export function kitchenSkillsReviewAttemptKey(entry: KitchenSkillsReviewEntry): string {
+  return `review:${entry.sessionId}:${entry.recipeId ?? ''}:${entry.reviewedGame}`;
+}
+
+/** Release a prior attempt so a verified failure can be retried without permanent blocking. */
+export function clearKitchenSkillsPostAttempt(attemptKey: string): void {
+  attemptedKeys.delete(attemptKey);
+}
+
+export function hasKitchenSkillsPostAttempt(attemptKey: string): boolean {
+  return attemptedKeys.has(attemptKey);
 }
 
 export function tryPostKitchenSkillsActivity(
@@ -53,6 +71,7 @@ export function tryPostKitchenSkillsActivity(
   try {
     const message = messageBuilder(task);
     window.parent.postMessage(message, '*');
+    // postMessage delivery is not GameBus persistence confirmation.
     attemptedKeys.add(attemptKey);
     return { ok: true, status: 'posted_awaiting_persist', message };
   } catch (error) {
@@ -103,10 +122,25 @@ export function tryPostKitchenSkillsReview(
   if (!actorId) {
     return { ok: false, reason: 'missing_student_actor' };
   }
+
+  const task = getGameBusTask();
+  if (!task) {
+    return { ok: false, reason: 'no_task' };
+  }
+
+  const linked = validateWastePracticeReviewLinkedProperties(task, entry);
+  if (!linked.ok) {
+    gamebusDevLog(
+      'kitchen-skills-review.unlinked-properties',
+      kitchenSkillsReviewDiagnosticPayload(linked.reason, entry, { missing: linked.missing }),
+    );
+    return { ok: false, reason: linked.reason };
+  }
+
   return tryPostKitchenSkillsActivity(
-    getGameBusTask(),
-    (task) => buildWastePracticeReviewActivityMessage(task, entry, actorId),
-    `review:${entry.sessionId}:${entry.recipeId ?? ''}:${entry.reviewedGame}`,
+    task,
+    (currentTask) => buildWastePracticeReviewActivityMessage(currentTask, entry, actorId),
+    kitchenSkillsReviewAttemptKey(entry),
     canPostKitchenSkillsTrainerReview(),
     KITCHEN_SKILLS_TRAINER_LIVE_BLOCK_REASON,
   );

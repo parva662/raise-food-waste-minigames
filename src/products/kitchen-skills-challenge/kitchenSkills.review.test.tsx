@@ -7,6 +7,7 @@ import { ingestInputCollectionsForTests, ingestTaskForTests, resetGameBusBridgeF
 import { AppRouter } from '@/app/AppRouter';
 import { kitchenSkillsTrainerTaskFixture } from '@/products/kitchen-skills-challenge/gamebus/kitchenSkillsTaskFixtures';
 import { resetKitchenSkillsPostStateForTests } from '@/products/kitchen-skills-challenge/gamebus/postActivity';
+import { clearKitchenSkillsReviewDispatchMarkersForTests } from '@/products/kitchen-skills-challenge/gamebus/reviewDispatchMarker';
 
 const sessionOne = 'kitchen-day:kitchen-day-task-1:user-1:2026-09-23';
 const sessionTwo = 'kitchen-day:kitchen-day-task-1:user-2:2026-09-23';
@@ -136,6 +137,7 @@ describe('Kitchen Day module chef review', () => {
     cleanup();
     resetGameBusBridgeForTests();
     resetKitchenSkillsPostStateForTests();
+    clearKitchenSkillsReviewDispatchMarkersForTests();
     setHash('');
     vi.restoreAllMocks();
   });
@@ -788,5 +790,249 @@ describe('Kitchen Day module chef review', () => {
       '28.0 percentage points below reference',
     );
     expect(screen.getByTestId('kitchen-day-review-time')).toHaveValue('2');
+  });
+
+  it('keeps three Portion assessments distinct across submit, awaiting, and hydration', async () => {
+    const user = userEvent.setup();
+    vi.spyOn(detectEmbed, 'isGameBusEmbed').mockReturnValue(true);
+    const postMessage = vi.spyOn(window.parent, 'postMessage').mockImplementation(() => undefined);
+    ingestTaskForTests(kitchenSkillsTrainerTaskFixture);
+    const multiSession = 'kitchen-day:kitchen-day-task-1:user-1:2026-10-01';
+    const portions = ['recipe-a', 'recipe-b', 'recipe-c'].map((recipeId, index) => ({
+      id: `act-portion-${recipeId}`,
+      actor: { id: 'user-1', name: 'Student One' },
+      template: { slug: 'portionPrecision' },
+      properties: [
+        { template: { slug: 'sessionId' }, value: { value: multiSession } },
+        { template: { slug: 'sessionDate' }, value: { value: '2026-10-01' } },
+        { template: { slug: 'submittedAt' }, value: { value: `2026-10-01T09:0${index}:00.000Z` } },
+        { template: { slug: 'recipeId' }, value: { value: recipeId } },
+        { template: { slug: 'recipeName' }, value: { value: recipeId.toUpperCase() } },
+        { template: { slug: 'finalRecipeWeightGrams' }, value: { value: 1000 } },
+        {
+          template: { slug: 'recipeComposition' },
+          value: {
+            value: [{ ingredientId: 'carrot', ingredientName: 'Carrot', actualAmount: 500, unit: 'g' }],
+          },
+        },
+      ],
+    }));
+
+    setHash(`#/kitchen-day-tutor?actorId=user-1&sessionId=${encodeURIComponent(multiSession)}`);
+    render(<AppRouter />);
+    ingestInputCollectionsForTests({
+      kitchenSkillsTrainerInput: { activities: portions },
+      inputCollectionPari: { me: { id: 'chef-1', firstName: 'Chef', lastName: 'One' } },
+    });
+
+    await waitFor(() => {
+      expect(screen.getByTestId('kitchen-day-tutor-recipe-tabs')).toBeInTheDocument();
+    });
+    expect(screen.getByTestId('kitchen-day-tutor-session-status')).toHaveTextContent('NEEDS ASSESSMENT');
+
+    for (const recipeId of ['recipe-a', 'recipe-b', 'recipe-c']) {
+      await user.click(screen.getByTestId(`kitchen-day-tutor-recipe-tab-${recipeId}`));
+      await waitFor(() => {
+        expect(screen.getByTestId('kitchen-day-review-portionPrecision-form')).toBeInTheDocument();
+      });
+      await user.type(screen.getByTestId('kitchen-day-review-portionPrecision-time'), '3');
+      await user.type(screen.getByTestId('kitchen-day-review-portionPrecision-quality'), '4');
+      await user.click(screen.getByTestId('kitchen-day-review-portionPrecision-submit'));
+      await waitFor(() => {
+        expect(screen.getByTestId('kitchen-day-review-portionPrecision-awaiting')).toBeInTheDocument();
+      });
+      // Awaiting must not flip the recipe to REVIEWED before GameBus hydration.
+      expect(screen.getByTestId('kitchen-day-tutor-active-recipe')).toHaveTextContent('NEEDS ASSESSMENT');
+    }
+
+    const reviewMessages = postMessage.mock.calls
+      .map((call) => call[0])
+      .filter(
+        (payload): payload is {
+          type: string;
+          data?: { template?: string; properties?: { template: string; obj: { value: string } }[] };
+        } =>
+          Boolean(
+            payload &&
+              typeof payload === 'object' &&
+              'type' in payload &&
+              (payload as { type: string }).type === 'SILENT_ACTIVITY',
+          ),
+      )
+      .filter((payload) => payload.data?.template === 'wastePracticeReview');
+    expect(reviewMessages).toHaveLength(3);
+    const postedRecipeIds = reviewMessages.map(
+      (message) =>
+        message.data?.properties?.find((property) => property.template === 'recipeId')?.obj.value,
+    );
+    expect(postedRecipeIds.sort()).toEqual(['recipe-a', 'recipe-b', 'recipe-c']);
+
+    const hydratedReviews = ['recipe-a', 'recipe-b', 'recipe-c'].map((recipeId, index) => ({
+      id: `act-review-${recipeId}`,
+      actor: { id: 'user-1', name: 'Student One' },
+      template: { slug: 'wastePracticeReview' },
+      properties: [
+        { template: { slug: 'sessionId' }, value: { value: multiSession } },
+        { template: { slug: 'sessionDate' }, value: { value: '2026-10-01' } },
+        { template: { slug: 'submittedAt' }, value: { value: `2026-10-01T12:0${index}:00.000Z` } },
+        { template: { slug: 'recipeId' }, value: { value: recipeId } },
+        { template: { slug: 'reviewedGame' }, value: { value: 'portionPrecision' } },
+        { template: { slug: 'timeEfficiencyScore' }, value: { value: 3 } },
+        { template: { slug: 'preparationQualityScore' }, value: { value: 4 } },
+      ],
+    }));
+    ingestInputCollectionsForTests({
+      kitchenSkillsTrainerInput: { activities: [...portions, ...hydratedReviews] },
+      inputCollectionPari: { me: { id: 'chef-1', firstName: 'Chef', lastName: 'One' } },
+    });
+
+    await waitFor(() => {
+      expect(screen.getByTestId('kitchen-day-tutor-session-status')).toHaveTextContent(/^Session: REVIEWED$/);
+    });
+    for (const recipeId of ['recipe-a', 'recipe-b', 'recipe-c']) {
+      await user.click(screen.getByTestId(`kitchen-day-tutor-recipe-tab-${recipeId}`));
+      await waitFor(() => {
+        expect(screen.getByTestId('kitchen-day-tutor-active-recipe')).toHaveTextContent('REVIEWED');
+        expect(screen.getByTestId('kitchen-day-review-portionPrecision-submitted')).toBeInTheDocument();
+        expect(screen.queryByTestId('kitchen-day-review-portionPrecision-awaiting')).not.toBeInTheDocument();
+      });
+    }
+  });
+
+  it('does not offer retry or post again while an assessment is awaiting confirmation', async () => {
+    const user = userEvent.setup();
+    vi.spyOn(detectEmbed, 'isGameBusEmbed').mockReturnValue(true);
+    const postMessage = vi.spyOn(window.parent, 'postMessage').mockImplementation(() => undefined);
+    ingestTaskForTests(kitchenSkillsTrainerTaskFixture);
+    setHash(`#/kitchen-day-tutor?actorId=user-1&sessionId=${encodeURIComponent(sessionOne)}`);
+    render(<AppRouter />);
+    ingestInputCollectionsForTests({
+      kitchenSkillsTrainerInput: { activities: baseActivities },
+      inputCollectionPari: { me: { id: 'chef-1', firstName: 'Chef', lastName: 'One' } },
+    });
+    await waitFor(() => {
+      expect(screen.getByTestId('kitchen-day-review-form')).toBeInTheDocument();
+    });
+    await user.type(screen.getByTestId('kitchen-day-review-time'), '4');
+    await user.type(screen.getByTestId('kitchen-day-review-quality'), '5');
+    await user.click(screen.getByTestId('kitchen-day-review-submit'));
+    await waitFor(() => {
+      expect(screen.getByTestId('kitchen-day-review-awaiting')).toBeInTheDocument();
+    });
+    expect(screen.queryByTestId('kitchen-day-review-retry')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('kitchen-day-review-submit')).not.toBeInTheDocument();
+    const reviewCalls = postMessage.mock.calls.filter((call) => {
+      const payload = call[0] as { type?: string; data?: { template?: string } };
+      return payload?.type === 'SILENT_ACTIVITY' && payload.data?.template === 'wastePracticeReview';
+    });
+    expect(reviewCalls).toHaveLength(1);
+  });
+
+  it('keeps inactive-module drafts and confirms Close when any draft is unsaved', async () => {
+    const user = userEvent.setup();
+    const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(false);
+    setHash(`#/kitchen-day-tutor?actorId=user-1&sessionId=${encodeURIComponent(sessionOne)}`);
+    render(<AppRouter />);
+    ingestInputCollectionsForTests({
+      kitchenSkillsTrainerInput: { activities: baseActivities },
+      inputCollectionPari: { me: { id: 'chef-1', firstName: 'Chef', lastName: 'One' } },
+    });
+    await waitFor(() => {
+      expect(screen.getByTestId('kitchen-day-review-form')).toBeInTheDocument();
+    });
+    await user.type(screen.getByTestId('kitchen-day-review-time'), '3');
+    await user.click(screen.getByTestId('kitchen-day-tutor-module-tab-portionPrecision'));
+    await waitFor(() => {
+      expect(screen.getByTestId('kitchen-day-review-portionPrecision-form')).toBeInTheDocument();
+    });
+    expect(screen.getByTestId('kitchen-day-tutor-unsaved-hint')).toBeInTheDocument();
+    await user.click(screen.getByTestId('kitchen-day-tutor-close'));
+    expect(confirmSpy).toHaveBeenCalled();
+    expect(screen.getByTestId('kitchen-day-tutor-page')).toBeInTheDocument();
+    await user.click(screen.getByTestId('kitchen-day-tutor-module-tab-trimSmart'));
+    await waitFor(() => {
+      expect(screen.getByTestId('kitchen-day-review-time')).toHaveValue('3');
+    });
+    confirmSpy.mockRestore();
+  });
+
+  it('preserves draft scores and shows an actionable error when client validation blocks the post', async () => {
+    const user = userEvent.setup();
+    vi.spyOn(detectEmbed, 'isGameBusEmbed').mockReturnValue(true);
+    ingestTaskForTests({
+      ...kitchenSkillsTrainerTaskFixture,
+      activityTemplates: kitchenSkillsTrainerTaskFixture.activityTemplates.map((template) => {
+        if (template.slug !== 'wastePracticeReview') return template;
+        return {
+          ...template,
+          linkedProperties: (template.linkedProperties ?? []).filter((item) => item.ref !== 'recipeId'),
+        };
+      }),
+    });
+    setHash(`#/kitchen-day-tutor?actorId=user-1&sessionId=${encodeURIComponent(sessionOne)}`);
+    render(<AppRouter />);
+    ingestInputCollectionsForTests({
+      kitchenSkillsTrainerInput: { activities: baseActivities },
+      inputCollectionPari: { me: { id: 'chef-1', firstName: 'Chef', lastName: 'One' } },
+    });
+    await waitFor(() => {
+      expect(screen.getByTestId('kitchen-day-review-form')).toBeInTheDocument();
+    });
+    await user.type(screen.getByTestId('kitchen-day-review-time'), '4');
+    await user.type(screen.getByTestId('kitchen-day-review-quality'), '5');
+    await user.click(screen.getByTestId('kitchen-day-review-submit'));
+    await waitFor(() => {
+      expect(screen.getByTestId('kitchen-day-review-error')).toHaveTextContent(
+        /activity configuration is incomplete/i,
+      );
+    });
+    expect(screen.getByTestId('kitchen-day-review-time')).toHaveValue('4');
+    expect(screen.getByTestId('kitchen-day-review-quality')).toHaveValue('5');
+    expect(screen.queryByTestId('kitchen-day-review-submitted')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('kitchen-day-review-awaiting')).not.toBeInTheDocument();
+  });
+
+  it('retains unsaved assessment drafts when switching recipes', async () => {
+    const user = userEvent.setup();
+    const multiSession = 'kitchen-day:kitchen-day-task-1:user-1:2026-10-02';
+    const portions = ['draft-a', 'draft-b'].map((recipeId, index) => ({
+      id: `act-portion-${recipeId}`,
+      actor: { id: 'user-1', name: 'Student One' },
+      template: { slug: 'portionPrecision' },
+      properties: [
+        { template: { slug: 'sessionId' }, value: { value: multiSession } },
+        { template: { slug: 'sessionDate' }, value: { value: '2026-10-02' } },
+        { template: { slug: 'submittedAt' }, value: { value: `2026-10-02T09:0${index}:00.000Z` } },
+        { template: { slug: 'recipeId' }, value: { value: recipeId } },
+        { template: { slug: 'recipeName' }, value: { value: recipeId } },
+        { template: { slug: 'finalRecipeWeightGrams' }, value: { value: 1000 } },
+        {
+          template: { slug: 'recipeComposition' },
+          value: {
+            value: [{ ingredientId: 'carrot', ingredientName: 'Carrot', actualAmount: 500, unit: 'g' }],
+          },
+        },
+      ],
+    }));
+    setHash(`#/kitchen-day-tutor?actorId=user-1&sessionId=${encodeURIComponent(multiSession)}`);
+    render(<AppRouter />);
+    ingestInputCollectionsForTests({
+      kitchenSkillsTrainerInput: { activities: portions },
+      inputCollectionPari: { me: { id: 'chef-1', firstName: 'Chef', lastName: 'One' } },
+    });
+    await waitFor(() => {
+      expect(screen.getByTestId('kitchen-day-review-portionPrecision-form')).toBeInTheDocument();
+    });
+    await user.type(screen.getByTestId('kitchen-day-review-portionPrecision-time'), '2');
+    await user.type(screen.getByTestId('kitchen-day-review-portionPrecision-quality'), '3');
+    await user.click(screen.getByTestId('kitchen-day-tutor-recipe-tab-draft-b'));
+    await waitFor(() => {
+      expect(screen.getByTestId('kitchen-day-review-portionPrecision-time')).toHaveValue('');
+    });
+    await user.click(screen.getByTestId('kitchen-day-tutor-recipe-tab-draft-a'));
+    await waitFor(() => {
+      expect(screen.getByTestId('kitchen-day-review-portionPrecision-time')).toHaveValue('2');
+      expect(screen.getByTestId('kitchen-day-review-portionPrecision-quality')).toHaveValue('3');
+    });
   });
 });
