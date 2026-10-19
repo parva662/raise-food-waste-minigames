@@ -101,6 +101,11 @@ export interface KitchenSkillsReviewEntry {
   chefFeedback?: string;
   source: KitchenSkillsRecordSource;
   persistId?: string;
+  /**
+   * Set after a GameBus postMessage until the review is observed in INPUT_COLLECTIONS.
+   * Never treat awaiting rows as permanently saved for REVIEWED status.
+   */
+  awaitingPersist?: boolean;
 }
 
 /** One review slot per module — used for legacy session-level assessments only. */

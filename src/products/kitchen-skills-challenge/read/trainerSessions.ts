@@ -1,9 +1,12 @@
 import { getActivityTemplateReference } from '@/platform/gamebus/groupActivities';
 import {
   evidencedRecipeModules,
+  findConfirmedRecipeModuleReview,
   findRecipeModuleReview,
   hasDuplicateReviewIdentity,
   isLegacySessionReview,
+  isReviewPersistConfirmed,
+  recipeAssessmentStatus,
   recipeModulesAwaitingAssessment,
   reviewIdentityKey,
   unattributedEvidenceModules,
@@ -86,11 +89,12 @@ export function modulesWithEvidenceCount(session: KitchenSkillsTrainerSession): 
 
 export function modulesReviewedCount(session: KitchenSkillsTrainerSession): number {
   const recipeReviewed = evidencedRecipeModules(session).filter(
-    (pair) => findRecipeModuleReview(session, pair.recipeId, pair.module) !== null,
+    (pair) => findConfirmedRecipeModuleReview(session, pair.recipeId, pair.module) !== null,
   ).length;
-  const legacyReviewed = unattributedEvidenceModules(session).filter(
-    (module) => session.moduleReviews[module] !== null,
-  ).length;
+  const legacyReviewed = unattributedEvidenceModules(session).filter((module) => {
+    const review = session.moduleReviews[module];
+    return review !== null && isReviewPersistConfirmed(review);
+  }).length;
   return recipeReviewed + legacyReviewed;
 }
 
@@ -129,7 +133,7 @@ export function sessionPendingStatusPhrases(session: KitchenSkillsTrainerSession
   const phrases: string[] = [];
   for (const pair of evidencedRecipeModules(session)) {
     const label = KITCHEN_SKILLS_MODULE_SHORT_LABELS[pair.module];
-    if (findRecipeModuleReview(session, pair.recipeId, pair.module)) {
+    if (findConfirmedRecipeModuleReview(session, pair.recipeId, pair.module)) {
       phrases.push(`${label} ✓`);
     } else {
       phrases.push(`${label} needs review`);
@@ -137,7 +141,8 @@ export function sessionPendingStatusPhrases(session: KitchenSkillsTrainerSession
   }
   for (const module of unattributedEvidenceModules(session)) {
     const label = KITCHEN_SKILLS_MODULE_SHORT_LABELS[module];
-    if (session.moduleReviews[module]) phrases.push(`${label} ✓`);
+    const review = session.moduleReviews[module];
+    if (review && isReviewPersistConfirmed(review)) phrases.push(`${label} ✓`);
     else phrases.push(`${label} needs review`);
   }
   return phrases;
@@ -145,7 +150,7 @@ export function sessionPendingStatusPhrases(session: KitchenSkillsTrainerSession
 
 export function sessionReviewedScorePhrases(session: KitchenSkillsTrainerSession): string[] {
   const phrases = evidencedRecipeModules(session).flatMap((pair) => {
-    const review = findRecipeModuleReview(session, pair.recipeId, pair.module);
+    const review = findConfirmedRecipeModuleReview(session, pair.recipeId, pair.module);
     if (!review) return [];
     return [
       `${KITCHEN_SKILLS_MODULE_SHORT_LABELS[pair.module]} ${review.timeEfficiencyScore}/${review.preparationQualityScore}`,
@@ -153,7 +158,7 @@ export function sessionReviewedScorePhrases(session: KitchenSkillsTrainerSession
   });
   for (const module of unattributedEvidenceModules(session)) {
     const review = session.moduleReviews[module];
-    if (!review) continue;
+    if (!review || !isReviewPersistConfirmed(review)) continue;
     phrases.push(
       `${KITCHEN_SKILLS_MODULE_SHORT_LABELS[module]} ${review.timeEfficiencyScore}/${review.preparationQualityScore}`,
     );
@@ -374,4 +379,11 @@ export function findKitchenSkillsTrainerSession(
   );
 }
 
-export { reviewIdentityKey, findRecipeModuleReview, evidencedRecipeModules };
+export {
+  reviewIdentityKey,
+  findRecipeModuleReview,
+  findConfirmedRecipeModuleReview,
+  evidencedRecipeModules,
+  recipeAssessmentStatus,
+  isReviewPersistConfirmed,
+};

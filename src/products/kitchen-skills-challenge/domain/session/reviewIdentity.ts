@@ -103,6 +103,12 @@ export function evidencedRecipeModules(
   return pairs;
 }
 
+/** A review is confirmed only after GameBus hydration (or a non-embed local commit). */
+export function isReviewPersistConfirmed(review: KitchenSkillsReviewEntry): boolean {
+  if (review.awaitingPersist) return false;
+  return review.source === 'persisted' || Boolean(review.persistId);
+}
+
 export function findRecipeModuleReview(
   session: KitchenSkillsTrainerSession,
   recipeId: string,
@@ -118,6 +124,24 @@ export function findRecipeModuleReview(
         review.reviewedGame === module,
     ) ?? null
   );
+}
+
+export function findConfirmedRecipeModuleReview(
+  session: KitchenSkillsTrainerSession,
+  recipeId: string,
+  module: KitchenSkillsReviewedModule,
+): KitchenSkillsReviewEntry | null {
+  const review = findRecipeModuleReview(session, recipeId, module);
+  return review && isReviewPersistConfirmed(review) ? review : null;
+}
+
+export function findAwaitingRecipeModuleReview(
+  session: KitchenSkillsTrainerSession,
+  recipeId: string,
+  module: KitchenSkillsReviewedModule,
+): KitchenSkillsReviewEntry | null {
+  const review = findRecipeModuleReview(session, recipeId, module);
+  return review && !isReviewPersistConfirmed(review) ? review : null;
 }
 
 export function recipeDisplayName(
@@ -154,7 +178,7 @@ export function hasRecipeModuleReview(
   recipeId: string,
   module: KitchenSkillsReviewedModule,
 ): boolean {
-  return findRecipeModuleReview(session, recipeId, module) !== null;
+  return findConfirmedRecipeModuleReview(session, recipeId, module) !== null;
 }
 
 export function recipeModulesAwaitingAssessment(
@@ -165,13 +189,44 @@ export function recipeModulesAwaitingAssessment(
   );
 }
 
-/** Whether a review conflicts with an existing one for the same identity. */
+export type KitchenSkillsRecipeAssessmentStatus =
+  | 'needs_assessment'
+  | 'reviewed'
+  | 'no_evidence';
+
+/** Recipe REVIEWED only when every evidenced module for that recipe has a confirmed assessment. */
+export function recipeAssessmentStatus(
+  session: KitchenSkillsTrainerSession,
+  recipeId: string,
+): KitchenSkillsRecipeAssessmentStatus {
+  const rid = normalizeRecipeId(recipeId);
+  if (!rid) return 'no_evidence';
+  const pairs = evidencedRecipeModules(session).filter((pair) => pair.recipeId === rid);
+  if (pairs.length === 0) return 'no_evidence';
+  const awaiting = pairs.filter(
+    (pair) => findConfirmedRecipeModuleReview(session, pair.recipeId, pair.module) === null,
+  );
+  return awaiting.length === 0 ? 'reviewed' : 'needs_assessment';
+}
+
+/** Whether a review conflicts with an existing confirmed one for the same identity. */
 export function hasDuplicateReviewIdentity(
   reviews: readonly KitchenSkillsReviewEntry[],
   candidate: KitchenSkillsReviewEntry,
 ): boolean {
   const key = reviewIdentityKey(candidate);
-  return reviews.some((item) => reviewIdentityKey(item) === key);
+  return reviews.some(
+    (item) => reviewIdentityKey(item) === key && isReviewPersistConfirmed(item),
+  );
+}
+
+/** Any in-memory row (confirmed or awaiting) for the same identity. */
+export function findReviewByIdentity(
+  reviews: readonly KitchenSkillsReviewEntry[],
+  candidate: Pick<KitchenSkillsReviewEntry, 'sessionId' | 'recipeId' | 'reviewedGame'>,
+): KitchenSkillsReviewEntry | null {
+  const key = reviewIdentityKey(candidate);
+  return reviews.find((item) => reviewIdentityKey(item) === key) ?? null;
 }
 
 /**

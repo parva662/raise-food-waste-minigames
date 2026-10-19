@@ -66,10 +66,11 @@ export const kitchenSkillsTrainerTaskFixture: TaskData = {
       name: 'Waste practice review',
       providers: [],
       // recipeId is optional on the live template until all clients post it.
-      linkedProperties: WASTE_PRACTICE_REVIEW_REQUIRED_REFS.map((ref, index) => ({
+      // chefFeedback is optional; include it so posts with feedback stay linked.
+      linkedProperties: [...WASTE_PRACTICE_REVIEW_REQUIRED_REFS, 'chefFeedback'].map((ref, index) => ({
         order: index + 1,
         name: ref,
-        required: ref !== 'recipeId',
+        required: ref !== 'recipeId' && ref !== 'chefFeedback',
         ref,
       })),
     },
