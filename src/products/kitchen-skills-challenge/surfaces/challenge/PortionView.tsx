@@ -12,6 +12,7 @@ import {
   parseActualAmount,
   parseFinalRecipeWeightGrams,
 } from '@/products/kitchen-skills-challenge/domain/portion/validation';
+import { unfinishedKitchenSkillsRecipeId } from '@/products/kitchen-skills-challenge/domain/session/challengeGate';
 
 export function KitchenSkillsPortionView() {
   const {
@@ -21,6 +22,8 @@ export function KitchenSkillsPortionView() {
     resumeSavedRecipe,
     canStartAnotherRecipe,
     newRecipeBlockedReason,
+    activeRecipeId,
+    taskProgress,
   } = useReadyKitchenSkillsSession();
   const recipes = listRecipeReferences();
   const [recipeId, setRecipeId] = useState('');
@@ -138,9 +141,11 @@ export function KitchenSkillsPortionView() {
               className="kitchen-day-button kitchen-day-button--primary"
               data-testid="kitchen-day-return-to-saved-recipe"
               onClick={() => {
-                const unfinished =
-                  portionEntries.find((entry) => entry.recipeId) ?? portionEntries[0];
-                if (unfinished) resumeSavedRecipe(unfinished.recipeId);
+                const targetId =
+                  unfinishedKitchenSkillsRecipeId(taskProgress, activeRecipeId) ??
+                  activeRecipeId ??
+                  null;
+                if (targetId) resumeSavedRecipe(targetId);
               }}
             >
               Continue saved recipe

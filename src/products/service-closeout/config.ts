@@ -7,10 +7,11 @@ export const SERVICE_CLOSEOUT_CONFIG = {
   /** Upper bound for overproduction waste entry (grams). */
   maxWasteGrams: 1_000_000,
   /**
-   * RAISE test phase: when no exact-date chefForecast exists in INPUT_COLLECTIONS,
-   * show a synthetic read-only forecast. Set to false before production data collection.
+   * Synthetic read-only forecast when no exact-date chefForecast exists.
+   * Enabled only in Vite DEV / test. Production builds must never silently
+   * substitute synthetic forecasts for missing operational data.
    */
-  syntheticForecastFallbackEnabled: true,
+  syntheticForecastFallbackEnabled: import.meta.env.DEV,
 } as const;
 
 export type ServiceCloseoutConfig = typeof SERVICE_CLOSEOUT_CONFIG;
