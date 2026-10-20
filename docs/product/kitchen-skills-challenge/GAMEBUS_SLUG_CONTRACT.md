@@ -221,6 +221,8 @@ If GameBus cannot link `recipeId` as optional while keeping historical posts val
 5. Verify reload and tutor/student readbacks (including mixed legacy + recipe-specific histories).
 6. Only consider marking `recipeId` required after all applicable clients are updated and historical compatibility is verified.
 
+**Admin correction if tutor submit reports missing links:** on the trainer Custom Embed task’s `wastePracticeReview` activity template, ensure the existing Portion `recipeId` Property Template is linked (optional is enough). The client also accepts GameBus linked-property identifiers as `slug` or legacy `ref`. Without a `recipeId` link, new recipe-level assessments cannot be dispatched.
+
 ### Student Progress — do not attach a raw group Kitchen Skills feed
 
 Do **not** add `GET /api/groups/activities` (trainer-style Kitchen Skills templates) to the student Progress custom page. Even if the UI showed only medians, that payload would expose other participants’ raw activities, identities, reviews, and chef feedback in the participant browser.

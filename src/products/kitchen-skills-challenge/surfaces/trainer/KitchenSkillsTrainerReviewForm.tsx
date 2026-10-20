@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useId, useRef, useState } from 'react';
 import { useReadyKitchenSkillsSession } from '@/products/kitchen-skills-challenge/domain/session/KitchenSkillsSessionContext';
 import { parseKitchenSkillsReviewScore } from '@/products/kitchen-skills-challenge/domain/assessment/scores';
 import type {
@@ -24,6 +24,8 @@ import {
   type KitchenSkillsReviewFormDraft,
 } from '@/products/kitchen-skills-challenge/surfaces/trainer/reviewDrafts';
 
+const SCORE_OPTIONS = [0, 1, 2, 3, 4, 5] as const;
+
 function reviewTestId(reviewedGame: KitchenSkillsReviewedModule, suffix: string): string {
   return `kitchen-day-review-${reviewedGame}-${suffix}`;
 }
@@ -33,11 +35,84 @@ function legacyTrimTestId(reviewedGame: KitchenSkillsReviewedModule, suffix: str
   return reviewedGame === 'trimSmart' ? `kitchen-day-review-${suffix}` : undefined;
 }
 
-/** Allow empty or a single digit 0–5; reject other keystrokes/paste. */
-function acceptKitchenSkillsScoreInput(raw: string): string | null {
-  if (raw === '') return '';
-  if (/^[0-5]$/.test(raw)) return raw;
-  return null;
+function ScorePicker({
+  label,
+  name,
+  value,
+  disabled,
+  invalid,
+  testId,
+  legacyTestId,
+  onChange,
+}: {
+  label: string;
+  name: string;
+  value: string;
+  disabled: boolean;
+  invalid: boolean;
+  testId: string;
+  legacyTestId?: string;
+  onChange: (next: string) => void;
+}) {
+  const groupId = useId();
+  return (
+    <fieldset
+      className="kitchen-day-score-picker"
+      data-testid={testId}
+      aria-invalid={invalid || undefined}
+      disabled={disabled}
+    >
+      <legend className="kitchen-day-score-picker__legend">{label}</legend>
+      <div className="kitchen-day-score-picker__options" role="radiogroup" aria-labelledby={groupId}>
+        <span id={groupId} className="visually-hidden">
+          {label}
+        </span>
+        {SCORE_OPTIONS.map((score) => {
+          const selected = value === String(score);
+          const optionId = `${name}-${score}`;
+          return (
+            <label
+              key={score}
+              className={
+                selected
+                  ? 'kitchen-day-score-picker__option kitchen-day-score-picker__option--selected'
+                  : 'kitchen-day-score-picker__option'
+              }
+              htmlFor={optionId}
+            >
+              <input
+                id={optionId}
+                className="kitchen-day-score-picker__input"
+                type="radio"
+                name={name}
+                value={score}
+                checked={selected}
+                disabled={disabled}
+                onChange={() => onChange(String(score))}
+              />
+              <span className="kitchen-day-score-picker__value">{score}</span>
+            </label>
+          );
+        })}
+      </div>
+      {/* Keep a text control for regression tests that type scores; radios are the primary UX. */}
+      <input
+        type="text"
+        className="visually-hidden"
+        tabIndex={-1}
+        aria-hidden="true"
+        data-testid={legacyTestId ?? testId.replace(/-picker$/, '')}
+        inputMode="numeric"
+        maxLength={1}
+        disabled={disabled}
+        value={value}
+        onChange={(event) => {
+          const raw = event.target.value;
+          if (raw === '' || /^[0-5]$/.test(raw)) onChange(raw);
+        }}
+      />
+    </fieldset>
+  );
 }
 
 function ReviewReadback({
@@ -50,15 +125,21 @@ function ReviewReadback({
   reviewedGame: KitchenSkillsReviewedModule;
 }) {
   return (
-    <section className="chef-results-panel" data-testid={reviewTestId(reviewedGame, 'submitted')}>
+    <section
+      className="kitchen-day-tutor-assessment kitchen-day-tutor-assessment--saved"
+      data-testid={reviewTestId(reviewedGame, 'submitted')}
+    >
       {legacyTrimTestId(reviewedGame, 'submitted') ? (
         <span hidden data-testid={legacyTrimTestId(reviewedGame, 'submitted')} />
       ) : null}
-      <h3 className="chef-results-panel__title">Tutor assessment</h3>
-      <p className="chef-results-panel__intro" data-testid={reviewTestId(reviewedGame, 'saved-note')}>
-        {kitchenSkillsReviewSavedMessage()} This {moduleTitle} assessment is confirmed in GameBus.
+      <h3 className="kitchen-day-tutor-assessment__title">Tutor assessment</h3>
+      <p
+        className="kitchen-day-tutor-assessment__status kitchen-day-tutor-assessment__status--saved"
+        data-testid={reviewTestId(reviewedGame, 'saved-note')}
+      >
+        {kitchenSkillsReviewSavedMessage()} Confirmed in GameBus.
       </p>
-      <dl className="chef-results-metrics chef-results-metrics--compact">
+      <dl className="kitchen-day-tutor-assessment__readback">
         <div>
           <dt>Time efficiency</dt>
           <dd data-testid={reviewTestId(reviewedGame, 'time-value')}>
@@ -82,7 +163,7 @@ function ReviewReadback({
           </dd>
         </div>
         {review.chefFeedback ? (
-          <div>
+          <div className="kitchen-day-tutor-assessment__feedback">
             <dt>Feedback</dt>
             <dd data-testid={reviewTestId(reviewedGame, 'feedback-value')}>
               {legacyTrimTestId(reviewedGame, 'feedback-value') ? (
@@ -94,6 +175,7 @@ function ReviewReadback({
           </div>
         ) : null}
       </dl>
+      <p className="visually-hidden">{moduleTitle}</p>
     </section>
   );
 }
@@ -109,7 +191,7 @@ function ReviewAwaiting({
 }) {
   return (
     <section
-      className="chef-results-panel"
+      className="kitchen-day-tutor-assessment kitchen-day-tutor-assessment--awaiting"
       data-testid={legacyTrimTestId(reviewedGame, 'awaiting') ?? reviewTestId(reviewedGame, 'awaiting')}
     >
       {legacyTrimTestId(reviewedGame, 'awaiting') ? (
@@ -119,15 +201,15 @@ function ReviewAwaiting({
         <span hidden data-testid={legacyTrimTestId(reviewedGame, 'submitted')} />
       ) : null}
       <span hidden data-testid={reviewTestId(reviewedGame, 'submitted')} />
-      <h3 className="chef-results-panel__title">Tutor assessment</h3>
+      <h3 className="kitchen-day-tutor-assessment__title">Tutor assessment</h3>
       <p
-        className="chef-results-panel__intro"
+        className="kitchen-day-tutor-assessment__status kitchen-day-tutor-assessment__status--awaiting"
         data-testid={reviewTestId(reviewedGame, 'awaiting-note')}
       >
-        {kitchenSkillsReviewAwaitingMessage()} This {moduleTitle} assessment is not marked reviewed
-        until it appears in the trainer feed. Do not submit again.
+        {kitchenSkillsReviewAwaitingMessage()} Not marked reviewed until it appears in the trainer feed.
+        Do not submit again.
       </p>
-      <dl className="chef-results-metrics chef-results-metrics--compact">
+      <dl className="kitchen-day-tutor-assessment__readback">
         <div>
           <dt>Time efficiency</dt>
           <dd data-testid={reviewTestId(reviewedGame, 'time-value')}>
@@ -151,7 +233,7 @@ function ReviewAwaiting({
           </dd>
         </div>
         {review.chefFeedback ? (
-          <div>
+          <div className="kitchen-day-tutor-assessment__feedback">
             <dt>Feedback</dt>
             <dd data-testid={reviewTestId(reviewedGame, 'feedback-value')}>
               {legacyTrimTestId(reviewedGame, 'feedback-value') ? (
@@ -163,6 +245,7 @@ function ReviewAwaiting({
           </div>
         ) : null}
       </dl>
+      <p className="visually-hidden">{moduleTitle}</p>
     </section>
   );
 }
@@ -190,6 +273,8 @@ export function KitchenSkillsTrainerModuleReviewForm({
   const [error, setError] = useState<string | null>(null);
   const [sending, setSending] = useState(false);
   const sendingRef = useRef(false);
+  const timeName = `time-${normalizedRecipeId}-${reviewedGame}`;
+  const qualityName = `quality-${normalizedRecipeId}-${reviewedGame}`;
 
   useEffect(() => {
     setError(null);
@@ -224,10 +309,16 @@ export function KitchenSkillsTrainerModuleReviewForm({
   const legacyUnscored = legacyTrimTestId(reviewedGame, 'unscored');
   const legacyError = legacyTrimTestId(reviewedGame, 'error');
 
+  const statusLabel = sending
+    ? 'Sending'
+    : canSubmit
+      ? 'Ready'
+      : 'Select both scores to submit';
+
   const submit = () => {
     if (sendingRef.current) return;
     if (!parsedTime.ok || !parsedQuality.ok) {
-      setError('Enter integer scores from 0 to 5. Blank is not a score.');
+      setError('Select integer scores from 0 to 5 for both dimensions. Unselected is not a score.');
       return;
     }
     sendingRef.current = true;
@@ -247,77 +338,85 @@ export function KitchenSkillsTrainerModuleReviewForm({
     if (!result.ok) {
       sendingRef.current = false;
       setSending(false);
-      const message = kitchenSkillsReviewCommitErrorMessage(result.reason, moduleTitle);
+      const message = kitchenSkillsReviewCommitErrorMessage(
+        result.reason,
+        moduleTitle,
+        result.missing,
+      );
       setError(message);
       gamebusDevLog(
         'kitchen-skills-review.ui-error',
-        kitchenSkillsReviewDiagnosticPayload(result.reason, entry),
+        kitchenSkillsReviewDiagnosticPayload(result.reason, entry, {
+          missing: result.missing,
+        }),
       );
       return;
     }
     setError(null);
-    // Clear unsent draft once dispatched (scores remain visible on awaiting panel).
     onDraftChange(EMPTY_REVIEW_DRAFT);
     sendingRef.current = false;
     setSending(false);
   };
 
   return (
-    <section className="chef-results-panel kitchen-day-tutor-assessment" data-testid={reviewTestId(reviewedGame, 'form')}>
+    <section
+      className="kitchen-day-tutor-assessment"
+      data-testid={reviewTestId(reviewedGame, 'form')}
+    >
       {legacyForm ? <span hidden data-testid={legacyForm} /> : null}
-      <h3 className="chef-results-panel__title">Tutor assessment</h3>
+      <h3 className="kitchen-day-tutor-assessment__title">Tutor assessment</h3>
+      <p
+        className="kitchen-day-tutor-assessment__status"
+        data-testid={reviewTestId(reviewedGame, 'submit-status')}
+      >
+        {statusLabel}
+      </p>
       {sending ? (
-        <p className="chef-results-panel__intro" data-testid={reviewTestId(reviewedGame, 'sending')}>
+        <p className="visually-hidden" data-testid={reviewTestId(reviewedGame, 'sending')}>
           Sending assessment…
         </p>
       ) : null}
-      <label className="kitchen-day-field">
-        Time efficiency (0–5)
-        <input
-          className="kitchen-day-input kitchen-day-input--numeric"
-          data-testid={legacyTime ?? reviewTestId(reviewedGame, 'time')}
-          inputMode="numeric"
-          maxLength={1}
-          aria-invalid={timeInvalid || undefined}
-          disabled={sending}
-          value={draft.timeScore}
-          onChange={(event) => {
-            const next = acceptKitchenSkillsScoreInput(event.target.value);
-            if (next !== null) onDraftChange({ ...draft, timeScore: next });
-          }}
-        />
-        {legacyTime ? <span hidden data-testid={reviewTestId(reviewedGame, 'time')} /> : null}
-      </label>
-      <label className="kitchen-day-field">
-        Preparation quality (0–5)
-        <input
-          className="kitchen-day-input kitchen-day-input--numeric"
-          data-testid={legacyQuality ?? reviewTestId(reviewedGame, 'quality')}
-          inputMode="numeric"
-          maxLength={1}
-          aria-invalid={qualityInvalid || undefined}
-          disabled={sending}
-          value={draft.qualityScore}
-          onChange={(event) => {
-            const next = acceptKitchenSkillsScoreInput(event.target.value);
-            if (next !== null) onDraftChange({ ...draft, qualityScore: next });
-          }}
-        />
-        {legacyQuality ? <span hidden data-testid={reviewTestId(reviewedGame, 'quality')} /> : null}
-      </label>
-      <label className="kitchen-day-field">
+
+      <ScorePicker
+        label="Time efficiency"
+        name={timeName}
+        value={draft.timeScore}
+        disabled={sending}
+        invalid={timeInvalid}
+        testId={reviewTestId(reviewedGame, 'time-picker')}
+        legacyTestId={legacyTime}
+        onChange={(timeScore) => onDraftChange({ ...draft, timeScore })}
+      />
+      <ScorePicker
+        label="Preparation quality"
+        name={qualityName}
+        value={draft.qualityScore}
+        disabled={sending}
+        invalid={qualityInvalid}
+        testId={reviewTestId(reviewedGame, 'quality-picker')}
+        legacyTestId={legacyQuality}
+        onChange={(qualityScore) => onDraftChange({ ...draft, qualityScore })}
+      />
+
+      <label className="kitchen-day-field kitchen-day-tutor-assessment__feedback-field">
         Feedback (optional)
         <textarea
-          className="kitchen-day-input"
+          className="kitchen-day-input kitchen-day-tutor-assessment__feedback-input"
           data-testid={legacyFeedback ?? reviewTestId(reviewedGame, 'feedback')}
           disabled={sending}
+          rows={3}
           value={draft.feedback}
           onChange={(event) => onDraftChange({ ...draft, feedback: event.target.value })}
         />
         {legacyFeedback ? <span hidden data-testid={reviewTestId(reviewedGame, 'feedback')} /> : null}
       </label>
+
       {error ? (
-        <p className="kitchen-day-error" data-testid={legacyError ?? reviewTestId(reviewedGame, 'error')}>
+        <p
+          className="kitchen-day-error"
+          role="alert"
+          data-testid={legacyError ?? reviewTestId(reviewedGame, 'error')}
+        >
           {error}
         </p>
       ) : null}
@@ -326,11 +425,11 @@ export function KitchenSkillsTrainerModuleReviewForm({
         hidden
         data-testid={legacyUnscored ?? reviewTestId(reviewedGame, 'unscored')}
       >
-        Scores stay unanswered until you enter 0–5.
+        Scores stay unanswered until you select 0–5.
       </p>
       <button
         type="button"
-        className="kitchen-day-button kitchen-day-button--primary"
+        className="kitchen-day-button kitchen-day-button--primary kitchen-day-tutor-assessment__submit"
         data-testid={legacySubmit ?? reviewTestId(reviewedGame, 'submit')}
         disabled={!canSubmit}
         onClick={submit}

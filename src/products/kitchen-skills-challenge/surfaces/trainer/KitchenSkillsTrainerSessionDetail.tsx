@@ -8,12 +8,14 @@ import {
   KITCHEN_SKILLS_REVIEWED_MODULES,
 } from '@/products/kitchen-skills-challenge/domain/types';
 import {
+  countReviewedRecipes,
   isLegacySessionReview,
   listSessionRecipeIds,
   recipeAssessmentStatus,
   recipeDisplayName,
   recipeModuleHasEvidence,
   resolveEvidenceRecipeId,
+  type KitchenSkillsRecipeAssessmentStatus,
 } from '@/products/kitchen-skills-challenge/domain/session/reviewIdentity';
 import { formatSessionDate } from '@/products/kitchen-skills-challenge/format';
 import { SessionEvidence } from '@/products/kitchen-skills-challenge/surfaces/shared/SessionEvidence';
@@ -57,25 +59,40 @@ function entriesForRecipe<T extends { recipeId?: string }>(
   return entries.filter((entry) => resolveEvidenceRecipeId(session, entry.recipeId) === rid);
 }
 
-function recipeStatusLabel(status: ReturnType<typeof recipeAssessmentStatus>): string {
+function recipeStatusLabel(status: KitchenSkillsRecipeAssessmentStatus): string {
   switch (status) {
     case 'reviewed':
-      return 'REVIEWED';
+      return 'Reviewed';
+    case 'awaiting_confirmation':
+      return 'Awaiting GameBus confirmation';
     case 'needs_assessment':
-      return 'NEEDS ASSESSMENT';
+      return 'Needs assessment';
     case 'no_evidence':
-      return 'NO EVIDENCE';
+      return 'No evidence';
   }
 }
 
 function sessionStatusLabel(status: ReturnType<typeof sessionAssessmentStatus>): string {
   switch (status) {
     case 'reviewed':
-      return 'REVIEWED';
+      return 'Reviewed';
     case 'partially_reviewed':
-      return 'PARTIALLY REVIEWED';
+      return 'Partially reviewed';
     case 'needs_assessment':
-      return 'NEEDS ASSESSMENT';
+      return 'Needs assessment';
+  }
+}
+
+function recipeStatusClass(status: KitchenSkillsRecipeAssessmentStatus): string {
+  switch (status) {
+    case 'reviewed':
+      return 'kitchen-day-tutor-recipe-chip kitchen-day-tutor-recipe-chip--reviewed';
+    case 'awaiting_confirmation':
+      return 'kitchen-day-tutor-recipe-chip kitchen-day-tutor-recipe-chip--awaiting';
+    case 'needs_assessment':
+      return 'kitchen-day-tutor-recipe-chip kitchen-day-tutor-recipe-chip--needs';
+    case 'no_evidence':
+      return 'kitchen-day-tutor-recipe-chip';
   }
 }
 
@@ -146,6 +163,7 @@ export function KitchenSkillsTrainerSessionDetail({
   );
 
   const sessionStatus = sessionAssessmentStatus(selected);
+  const reviewedCounts = countReviewedRecipes(selected);
 
   // Trim/Rescue-only sessions without Portion: keep session-level module assessment UX.
   if (recipeIds.length === 0) {
@@ -157,14 +175,18 @@ export function KitchenSkillsTrainerSessionDetail({
     return (
       <div data-testid="kitchen-day-chef-selected" className="kitchen-day-tutor-session-detail">
         <header className="kitchen-day-tutor-session-detail__header">
-          <h2 className="kitchen-day-tutor-session-detail__title">
-            {selected.actorName} — {formatSessionDate(selected.sessionDate)}
-          </h2>
+          <p
+            className="kitchen-day-tutor-session-detail__meta"
+            data-testid="kitchen-day-tutor-session-meta"
+          >
+            <span>Student: {selected.actorName}</span>
+            <span>Session: {formatSessionDate(selected.sessionDate)}</span>
+          </p>
           <p
             className="kitchen-day-tutor-session-detail__session-status"
             data-testid="kitchen-day-tutor-session-status"
           >
-            Session: {sessionStatusLabel(sessionStatus)}
+            Session assessment: {sessionStatusLabel(sessionStatus)}
           </p>
         </header>
         <p className="kitchen-day-tutor-session-detail__lead" data-testid="kitchen-day-chef-readonly" hidden>
@@ -261,127 +283,137 @@ export function KitchenSkillsTrainerSessionDetail({
   return (
     <div data-testid="kitchen-day-chef-selected" className="kitchen-day-tutor-session-detail">
       <header className="kitchen-day-tutor-session-detail__header">
-        <h2 className="kitchen-day-tutor-session-detail__title">
-          {selected.actorName} — {formatSessionDate(selected.sessionDate)}
-        </h2>
+        <p
+          className="kitchen-day-tutor-session-detail__meta"
+          data-testid="kitchen-day-tutor-session-meta"
+        >
+          <span>Student: {selected.actorName}</span>
+          <span>Session: {formatSessionDate(selected.sessionDate)}</span>
+        </p>
         <p
           className="kitchen-day-tutor-session-detail__session-status"
           data-testid="kitchen-day-tutor-session-status"
         >
-          Session: {sessionStatusLabel(sessionStatus)}
+          Session assessment: {sessionStatusLabel(sessionStatus)}
+          {sessionHasUnsavedDraft ? (
+            <span
+              className="kitchen-day-tutor-unsaved-hint"
+              data-testid="kitchen-day-tutor-unsaved-hint"
+            >
+              {' '}
+              · Unsaved draft
+            </span>
+          ) : null}
         </p>
       </header>
       <p className="kitchen-day-tutor-session-detail__lead" data-testid="kitchen-day-chef-readonly" hidden>
         Student measurements are read-only.
       </p>
 
-      <div
-        className="kitchen-day-module-tabs kitchen-day-tutor-recipe-tabs"
-        role="tablist"
+      <section
+        className="kitchen-day-tutor-recipe-selector"
         aria-label="Recipes in this session"
         data-testid="kitchen-day-tutor-recipe-tabs"
       >
-        {recipeIds.map((id) => {
-          const selectedTab = id === recipeId;
-          const status = recipeAssessmentStatus(selected, id);
-          return (
-            <button
-              key={id}
-              type="button"
-              role="tab"
-              className={
-                selectedTab
-                  ? 'kitchen-day-module-tabs__tab kitchen-day-module-tabs__tab--active'
-                  : 'kitchen-day-module-tabs__tab'
-              }
-              aria-selected={selectedTab}
-              data-testid={`kitchen-day-tutor-recipe-tab-${id}`}
-              data-recipe-status={status}
-              onClick={() => {
-                setActiveRecipeId(id);
-                setActiveModule(defaultModuleForRecipe(selected, id));
-              }}
-            >
-              <span>{recipeDisplayName(selected, id)}</span>
-              <span
+        <p className="kitchen-day-tutor-recipe-selector__summary" data-testid="kitchen-day-tutor-recipe-summary">
+          Recipes — {reviewedCounts.reviewed} of {reviewedCounts.total} reviewed
+        </p>
+        <div className="kitchen-day-tutor-recipe-selector__list" role="tablist">
+          {recipeIds.map((id) => {
+            const selectedTab = id === recipeId;
+            const status = recipeAssessmentStatus(selected, id);
+            return (
+              <button
+                key={id}
+                type="button"
+                role="tab"
                 className={
-                  status === 'reviewed'
-                    ? 'kitchen-day-tutor-recipe-badge kitchen-day-tutor-recipe-badge--reviewed'
-                    : 'kitchen-day-tutor-recipe-badge kitchen-day-tutor-recipe-badge--needs'
+                  selectedTab
+                    ? 'kitchen-day-tutor-recipe-chip kitchen-day-tutor-recipe-chip--active'
+                    : recipeStatusClass(status)
                 }
+                aria-selected={selectedTab}
+                data-testid={`kitchen-day-tutor-recipe-tab-${id}`}
+                data-recipe-status={status}
+                onClick={() => {
+                  setActiveRecipeId(id);
+                  setActiveModule(defaultModuleForRecipe(selected, id));
+                }}
               >
-                {status === 'reviewed' ? 'Reviewed' : 'Needs assessment'}
-              </span>
-            </button>
-          );
-        })}
-      </div>
+                <span className="kitchen-day-tutor-recipe-chip__name">{recipeDisplayName(selected, id)}</span>
+                <span className="kitchen-day-tutor-recipe-chip__status">{recipeStatusLabel(status)}</span>
+              </button>
+            );
+          })}
+        </div>
+      </section>
 
-      <p
-        className="kitchen-day-tutor-session-detail__recipe-status"
-        data-testid="kitchen-day-tutor-active-recipe"
-      >
+      <p className="visually-hidden" data-testid="kitchen-day-tutor-active-recipe">
         {recipeName} — {recipeStatusLabel(recipeStatus)}
-        {sessionHasUnsavedDraft ? (
-          <span
-            className="kitchen-day-tutor-unsaved-hint"
-            data-testid="kitchen-day-tutor-unsaved-hint"
-          >
-            {' '}
-            · Unsaved assessment draft
-          </span>
-        ) : null}
       </p>
 
-      <div
-        className="kitchen-day-module-tabs"
-        role="tablist"
-        aria-label="Modules with evidence"
-        data-testid="kitchen-day-tutor-module-tabs"
-      >
-        {evidencedModulesForRecipe.map((module) => {
-          const selectedTab = moduleForPanel === module;
-          return (
-            <button
-              key={module}
-              type="button"
-              role="tab"
-              className={
-                selectedTab
-                  ? 'kitchen-day-module-tabs__tab kitchen-day-module-tabs__tab--active'
-                  : 'kitchen-day-module-tabs__tab'
-              }
-              aria-selected={selectedTab}
-              data-testid={`kitchen-day-tutor-module-tab-${module}`}
-              onClick={() => setActiveModule(module)}
-            >
-              {KITCHEN_SKILLS_MODULE_TITLES[module]}
-            </button>
-          );
-        })}
-      </div>
+      {evidencedModulesForRecipe.length > 1 ? (
+        <div
+          className="kitchen-day-module-tabs"
+          role="tablist"
+          aria-label="Modules with evidence"
+          data-testid="kitchen-day-tutor-module-tabs"
+        >
+          {evidencedModulesForRecipe.map((module) => {
+            const selectedTab = moduleForPanel === module;
+            return (
+              <button
+                key={module}
+                type="button"
+                role="tab"
+                className={
+                  selectedTab
+                    ? 'kitchen-day-module-tabs__tab kitchen-day-module-tabs__tab--active'
+                    : 'kitchen-day-module-tabs__tab'
+                }
+                aria-selected={selectedTab}
+                data-testid={`kitchen-day-tutor-module-tab-${module}`}
+                onClick={() => setActiveModule(module)}
+              >
+                {KITCHEN_SKILLS_MODULE_TITLES[module]}
+              </button>
+            );
+          })}
+        </div>
+      ) : (
+        <span hidden data-testid="kitchen-day-tutor-module-tabs" />
+      )}
 
-      <div role="tabpanel" data-testid={`kitchen-day-tutor-module-panel-${moduleForPanel}`}>
+      <div
+        role="tabpanel"
+        className="kitchen-day-tutor-workspace"
+        data-testid={`kitchen-day-tutor-module-panel-${moduleForPanel}`}
+      >
         {hasEvidence ? (
           <>
-            <SessionEvidence
-              trimEntries={moduleForPanel === 'trimSmart' ? trimForRecipe : []}
-              rescueEntries={moduleForPanel === 'rescueAndReuse' ? rescueForRecipe : []}
-              portionEntries={moduleForPanel === 'portionPrecision' ? portionForRecipe : []}
-              sessionPortionEntries={selected.portionEntries}
-              trimEntriesForRescueLookup={selected.trimEntries}
-              modules={[moduleForPanel]}
-              testIdPrefix="kitchen-day-chef"
-              collapsePortionTable
-            />
-            <KitchenSkillsTrainerModuleReviewForm
-              selected={selected}
-              recipeId={recipeId}
-              reviewedGame={moduleForPanel}
-              moduleTitle={moduleTitle}
-              draft={currentDraft}
-              onDraftChange={(next) => onDraftChange(currentDraftKey, next)}
-            />
+            <div className="kitchen-day-tutor-workspace__evidence">
+              <h3 className="kitchen-day-tutor-workspace__column-title">Recipe performance</h3>
+              <SessionEvidence
+                trimEntries={moduleForPanel === 'trimSmart' ? trimForRecipe : []}
+                rescueEntries={moduleForPanel === 'rescueAndReuse' ? rescueForRecipe : []}
+                portionEntries={moduleForPanel === 'portionPrecision' ? portionForRecipe : []}
+                sessionPortionEntries={selected.portionEntries}
+                trimEntriesForRescueLookup={selected.trimEntries}
+                modules={[moduleForPanel]}
+                testIdPrefix="kitchen-day-chef"
+                collapsePortionTable
+              />
+            </div>
+            <div className="kitchen-day-tutor-workspace__assessment">
+              <KitchenSkillsTrainerModuleReviewForm
+                selected={selected}
+                recipeId={recipeId}
+                reviewedGame={moduleForPanel}
+                moduleTitle={moduleTitle}
+                draft={currentDraft}
+                onDraftChange={(next) => onDraftChange(currentDraftKey, next)}
+              />
+            </div>
           </>
         ) : (
           <p className="chef-results-empty" data-testid={`kitchen-day-tutor-module-empty-${moduleForPanel}`}>

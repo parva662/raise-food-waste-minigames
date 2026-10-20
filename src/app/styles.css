@@ -5928,6 +5928,18 @@ ul {
   font-size: var(--font-size-sm);
 }
 
+.visually-hidden {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  padding: 0 !important;
+  margin: -1px !important;
+  overflow: hidden !important;
+  clip: rect(0, 0, 0, 0) !important;
+  white-space: nowrap !important;
+  border: 0 !important;
+}
+
 .kitchen-day-tutor-page {
   padding-top: 0;
 }
@@ -5979,6 +5991,7 @@ ul {
   flex: 0 0 auto;
   display: flex;
   align-items: center;
+  gap: 0.4rem;
 }
 
 .kitchen-day-tutor-staff-search {
@@ -6129,11 +6142,13 @@ ul {
   margin: 0 0 var(--spacing-sm);
 }
 
-.kitchen-day-tutor-session-detail__title {
-  margin: 0 0 var(--spacing-xs);
-  font-size: 1.2rem;
-  font-weight: 600;
-  color: var(--color-text);
+.kitchen-day-tutor-session-detail__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem 1rem;
+  margin: 0 0 0.25rem;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
 }
 
 .kitchen-day-tutor-session-detail__session-status,
@@ -6150,31 +6165,111 @@ ul {
   font-size: var(--font-size-sm);
 }
 
-.kitchen-day-tutor-recipe-tabs .kitchen-day-module-tabs__tab {
+.kitchen-day-tutor-recipe-selector {
+  margin: 0 0 var(--spacing-md);
+  padding: 0.65rem 0.75rem;
+  border: 1px solid var(--color-border-light);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+}
+
+.kitchen-day-tutor-recipe-selector__summary {
+  margin: 0 0 0.5rem;
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.kitchen-day-tutor-recipe-selector__list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.kitchen-day-tutor-recipe-chip {
   display: inline-flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: 0.15rem;
+  gap: 0.1rem;
+  max-width: 100%;
   min-height: 2.75rem;
+  padding: 0.4rem 0.7rem;
+  border: 1px solid var(--color-border-light);
+  border-radius: var(--radius-sm);
+  background: var(--color-bg, #fff);
+  text-align: left;
+  cursor: pointer;
+  color: var(--color-text);
 }
 
-.kitchen-day-tutor-recipe-badge {
+.kitchen-day-tutor-recipe-chip__name {
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+
+.kitchen-day-tutor-recipe-chip__status {
   font-size: 0.7rem;
   font-weight: 600;
   letter-spacing: 0.02em;
   text-transform: uppercase;
+  color: var(--color-text-secondary);
 }
 
-.kitchen-day-tutor-recipe-badge--reviewed {
+.kitchen-day-tutor-recipe-chip--active {
+  border-color: color-mix(in srgb, var(--color-primary) 45%, var(--color-border));
+  background: color-mix(in srgb, var(--color-primary-light) 70%, var(--color-surface));
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--color-primary) 25%, transparent);
+}
+
+.kitchen-day-tutor-recipe-chip--reviewed .kitchen-day-tutor-recipe-chip__status {
   color: var(--color-success-text, #0b6b3a);
 }
 
-.kitchen-day-tutor-recipe-badge--needs {
+.kitchen-day-tutor-recipe-chip--awaiting .kitchen-day-tutor-recipe-chip__status {
   color: var(--color-primary-dark);
 }
 
+.kitchen-day-tutor-recipe-chip--needs .kitchen-day-tutor-recipe-chip__status {
+  color: #8a5a08;
+}
+
+.kitchen-day-tutor-workspace {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(16rem, 0.9fr);
+  gap: var(--spacing-md);
+  align-items: start;
+}
+
+.kitchen-day-tutor-workspace__column-title {
+  margin: 0 0 0.5rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.kitchen-day-tutor-workspace__evidence,
+.kitchen-day-tutor-workspace__assessment {
+  min-width: 0;
+}
+
+.kitchen-day-tutor-workspace__evidence .kitchen-day-evidence-section__title {
+  font-size: 0.9rem;
+}
+
+.kitchen-day-tutor-workspace__evidence .kitchen-day-evidence-card {
+  padding: 0.65rem 0.75rem;
+}
+
+.kitchen-day-tutor-workspace__evidence .kitchen-day-facts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(7.5rem, 1fr));
+  gap: 0.4rem 0.75rem;
+}
+
 .kitchen-day-tutor-legacy {
-  margin-top: var(--spacing-lg);
+  margin-top: var(--spacing-md);
   padding: var(--spacing-sm) 0;
   border-top: 1px solid var(--color-border-light);
   font-size: var(--font-size-sm);
@@ -6188,12 +6283,146 @@ ul {
 }
 
 .kitchen-day-tutor-assessment {
-  margin-top: var(--spacing-sm);
+  margin: 0;
+  padding: 0.75rem 0.85rem;
+  border: 1px solid var(--color-border-light);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+}
+
+.kitchen-day-tutor-assessment__title {
+  margin: 0 0 0.35rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.kitchen-day-tutor-assessment__status {
+  margin: 0 0 0.75rem;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+}
+
+.kitchen-day-tutor-assessment__status--awaiting {
+  color: var(--color-primary-dark);
+  font-weight: 500;
+}
+
+.kitchen-day-tutor-assessment__status--saved {
+  color: var(--color-success-text, #0b6b3a);
+  font-weight: 500;
+}
+
+.kitchen-day-tutor-assessment__readback {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem 0.75rem;
+  margin: 0;
+}
+
+.kitchen-day-tutor-assessment__readback dt {
+  margin: 0;
+  font-size: 0.75rem;
+  color: var(--color-text-secondary);
+}
+
+.kitchen-day-tutor-assessment__readback dd {
+  margin: 0.1rem 0 0;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.kitchen-day-tutor-assessment__feedback {
+  grid-column: 1 / -1;
+}
+
+.kitchen-day-tutor-assessment__feedback dd {
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+  line-height: 1.35;
+}
+
+.kitchen-day-tutor-assessment__feedback-field {
+  margin-top: 0.75rem;
+}
+
+.kitchen-day-tutor-assessment__feedback-input {
+  min-height: 4.5rem;
+  resize: vertical;
+}
+
+.kitchen-day-tutor-assessment__submit {
+  width: 100%;
+  margin-top: 0.75rem;
+}
+
+.kitchen-day-score-picker {
+  margin: 0 0 0.75rem;
+  padding: 0;
+  border: 0;
+  min-width: 0;
+}
+
+.kitchen-day-score-picker__legend {
+  margin: 0 0 0.35rem;
+  padding: 0;
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.kitchen-day-score-picker__options {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 0.3rem;
+}
+
+.kitchen-day-score-picker__option {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 2.5rem;
+  border: 1px solid var(--color-border-light);
+  border-radius: var(--radius-sm);
+  background: var(--color-bg, #fff);
+  cursor: pointer;
+}
+
+.kitchen-day-score-picker__option--selected {
+  border-color: var(--color-primary);
+  background: color-mix(in srgb, var(--color-primary-light) 80%, var(--color-surface));
+  box-shadow: inset 0 0 0 1px var(--color-primary);
+}
+
+.kitchen-day-score-picker__input {
+  position: absolute;
+  opacity: 0;
+  width: 1px;
+  height: 1px;
+  pointer-events: none;
+}
+
+.kitchen-day-score-picker__value {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.kitchen-day-score-picker__option:focus-within {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 1px;
 }
 
 .kitchen-day-tutor-unsaved-hint {
   font-weight: 500;
   color: var(--color-primary-dark);
+}
+
+@media (max-width: 52rem) {
+  .kitchen-day-tutor-workspace {
+    grid-template-columns: 1fr;
+  }
 }
 
 .kitchen-day-module-tabs {

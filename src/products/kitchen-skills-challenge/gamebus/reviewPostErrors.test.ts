@@ -45,9 +45,45 @@ describe('wastePracticeReview linked property validation', () => {
     }
   });
 
+  it('accepts required links when GameBus exposes them as slug instead of legacy ref', () => {
+    const task = {
+      ...kitchenSkillsTrainerTaskFixture,
+      activityTemplates: kitchenSkillsTrainerTaskFixture.activityTemplates.map((template) => {
+        if (template.slug !== 'wastePracticeReview') return template;
+        return {
+          ...template,
+          linkedProperties: (template.linkedProperties ?? []).map((item, index) => ({
+            order: item.order ?? index + 1,
+            name: item.name ?? item.ref,
+            required: item.required,
+            slug: item.ref,
+          })),
+        };
+      }),
+    };
+    expect(validateWastePracticeReviewLinkedProperties(task, entry)).toEqual({ ok: true });
+  });
+
+  it('rejects when the wastePracticeReview activity template is missing', () => {
+    const task = {
+      ...kitchenSkillsTrainerTaskFixture,
+      activityTemplates: kitchenSkillsTrainerTaskFixture.activityTemplates.filter(
+        (template) => template.slug !== 'wastePracticeReview',
+      ),
+    };
+    const result = validateWastePracticeReviewLinkedProperties(task, entry);
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.reason).toBe('missing_task_template');
+    }
+  });
+
   it('describes client configuration failures without claiming a GameBus server rejection', () => {
-    expect(kitchenSkillsReviewCommitErrorMessage('unlinked_property:recipeId', 'Trim Smart')).toMatch(
-      /activity configuration is incomplete/i,
+    expect(
+      kitchenSkillsReviewCommitErrorMessage('unlinked_property:recipeId', 'Trim Smart', ['recipeId']),
+    ).toMatch(/required property links are missing on wastePracticeReview: recipeId/i);
+    expect(kitchenSkillsReviewCommitErrorMessage('missing_task_template', 'Trim Smart')).toMatch(
+      /wastePracticeReview activity template is missing/i,
     );
     expect(kitchenSkillsReviewCommitErrorMessage('already_dispatched', 'Portion Precision')).toMatch(
       /could not be verified/i,
