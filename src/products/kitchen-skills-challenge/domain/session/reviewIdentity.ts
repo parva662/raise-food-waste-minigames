@@ -191,6 +191,7 @@ export function recipeModulesAwaitingAssessment(
 
 export type KitchenSkillsRecipeAssessmentStatus =
   | 'needs_assessment'
+  | 'awaiting_confirmation'
   | 'reviewed'
   | 'no_evidence';
 
@@ -203,10 +204,24 @@ export function recipeAssessmentStatus(
   if (!rid) return 'no_evidence';
   const pairs = evidencedRecipeModules(session).filter((pair) => pair.recipeId === rid);
   if (pairs.length === 0) return 'no_evidence';
-  const awaiting = pairs.filter(
+  const unconfirmed = pairs.filter(
     (pair) => findConfirmedRecipeModuleReview(session, pair.recipeId, pair.module) === null,
   );
-  return awaiting.length === 0 ? 'reviewed' : 'needs_assessment';
+  if (unconfirmed.length === 0) return 'reviewed';
+  const awaitingDispatch = unconfirmed.some(
+    (pair) => findAwaitingRecipeModuleReview(session, pair.recipeId, pair.module) !== null,
+  );
+  return awaitingDispatch ? 'awaiting_confirmation' : 'needs_assessment';
+}
+
+/** Count of Portion (and other) recipes whose every evidenced module is confirmed. */
+export function countReviewedRecipes(session: KitchenSkillsTrainerSession): {
+  reviewed: number;
+  total: number;
+} {
+  const ids = listSessionRecipeIds(session);
+  const reviewed = ids.filter((id) => recipeAssessmentStatus(session, id) === 'reviewed').length;
+  return { reviewed, total: ids.length };
 }
 
 /** Whether a review conflicts with an existing confirmed one for the same identity. */

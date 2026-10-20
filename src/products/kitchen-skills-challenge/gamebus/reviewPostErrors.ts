@@ -1,3 +1,4 @@
+import { findActivityTemplate, resolveLinkedPropertyRefs } from '@/platform/gamebus/activityTemplate';
 import { selectActivityTemplate } from '@/platform/gamebus/selectActivityTemplate';
 import type { TaskData } from '@/platform/gamebus/types';
 import {
@@ -7,18 +8,14 @@ import {
 import type { KitchenSkillsReviewEntry } from '@/products/kitchen-skills-challenge/domain/types';
 
 function linkedPropertyRefs(task: TaskData, activitySlug: string): string[] {
-  const activity = (task.activityTemplates ?? []).find((item) => item.slug === activitySlug);
-  if (!activity?.linkedProperties?.length) return [];
-  const refs: string[] = [];
-  for (const item of activity.linkedProperties) {
-    const ref = typeof item.ref === 'string' ? item.ref.trim() : '';
-    if (ref) refs.push(ref);
-  }
-  return refs;
+  const activity = findActivityTemplate(task, activitySlug);
+  if (!activity) return [];
+  return resolveLinkedPropertyRefs(activity);
 }
 
 /**
  * Client-side TASK linked-property check before postMessage.
+ * Uses canonical GameBus linked-property readers (`slug` or legacy `ref`).
  * Does not invent selectedTaskOfMission — that field is not part of our outbound payload.
  */
 export function validateWastePracticeReviewLinkedProperties(
@@ -55,20 +52,30 @@ export function validateWastePracticeReviewLinkedProperties(
   return { ok: true };
 }
 
+function formatMissingSlugs(missing: readonly string[] | undefined): string {
+  if (!missing?.length) return '';
+  return missing.join(', ');
+}
+
 /**
  * Tutor-facing copy. Distinguishes client validation from unconfirmed dispatch.
  * GameBus does not document a reliable activity-rejection ACK to the iframe.
+ * Never claims GameBus rejected an activity when the client blocked before postMessage.
  */
 export function kitchenSkillsReviewCommitErrorMessage(
   reason: string,
   moduleTitle: string,
+  missing?: readonly string[],
 ): string {
   switch (reason) {
     case 'no_task':
       return 'Assessment cannot be submitted because the GameBus task is not available.';
     case 'missing_task_template':
-    case 'missing_property_links':
-      return 'Assessment cannot be submitted because the activity configuration is incomplete.';
+      return 'Assessment cannot be submitted because the wastePracticeReview activity template is missing from this task.';
+    case 'missing_property_links': {
+      const slugs = formatMissingSlugs(missing) || WASTE_PRACTICE_REVIEW_REQUIRED_REFS.join(', ');
+      return `Assessment cannot be submitted because wastePracticeReview has no linked property templates (expected: ${slugs}).`;
+    }
     case 'missing_student_actor':
       return 'Assessment cannot be submitted because the student session identity is missing.';
     case 'tutor_live_blocked':
@@ -80,7 +87,7 @@ export function kitchenSkillsReviewCommitErrorMessage(
     case 'submission_outcome_unknown':
       return 'The submission status could not be verified. Do not submit again until it has been checked in GameBus.';
     case 'invalid_scores':
-      return 'Enter integer scores from 0 to 5. Blank is not a score.';
+      return 'Select integer scores from 0 to 5 for both dimensions. Unselected is not a score.';
     case 'missing_recipe':
       return 'Assessment cannot be submitted because the recipe identity is missing.';
     case 'in_flight':
@@ -92,7 +99,9 @@ export function kitchenSkillsReviewCommitErrorMessage(
   }
 
   if (reason.startsWith('unlinked_property:')) {
-    return 'Assessment cannot be submitted because the activity configuration is incomplete.';
+    const fromReason = reason.slice('unlinked_property:'.length);
+    const slugs = formatMissingSlugs(missing) || fromReason;
+    return `Assessment cannot be submitted because required property links are missing on wastePracticeReview: ${slugs}.`;
   }
 
   return 'Assessment cannot be submitted. Check the configuration and try again.';

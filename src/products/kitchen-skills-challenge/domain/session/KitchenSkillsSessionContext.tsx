@@ -81,7 +81,7 @@ import {
 export type KitchenSkillsCommitResult =
   | { ok: true; mode: 'local' }
   | { ok: true; mode: 'posted_awaiting_persist' }
-  | { ok: false; reason: string; keepDraft: true };
+  | { ok: false; reason: string; keepDraft: true; missing?: string[] };
 
 interface KitchenSkillsSessionValue {
   status: 'initializing' | 'ready';
@@ -543,9 +543,16 @@ export function KitchenSkillsSessionProvider({
         // Definite pre-dispatch failure: attempt key was not recorded — retry is allowed.
         gamebusDevLog(
           'kitchen-skills-review.commit-failed',
-          kitchenSkillsReviewDiagnosticPayload(posted.reason, entry),
+          kitchenSkillsReviewDiagnosticPayload(posted.reason, entry, {
+            missing: posted.missing,
+          }),
         );
-        return { ok: false, reason: posted.reason, keepDraft: true };
+        return {
+          ok: false,
+          reason: posted.reason,
+          keepDraft: true,
+          ...(posted.missing?.length ? { missing: posted.missing } : {}),
+        };
       }
       markKitchenSkillsReviewDispatched(actorId, entry);
       setLocalReviews((current) => {

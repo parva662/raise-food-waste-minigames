@@ -828,7 +828,7 @@ describe('Kitchen Day module chef review', () => {
     await waitFor(() => {
       expect(screen.getByTestId('kitchen-day-tutor-recipe-tabs')).toBeInTheDocument();
     });
-    expect(screen.getByTestId('kitchen-day-tutor-session-status')).toHaveTextContent('NEEDS ASSESSMENT');
+    expect(screen.getByTestId('kitchen-day-tutor-session-status')).toHaveTextContent('Needs assessment');
 
     for (const recipeId of ['recipe-a', 'recipe-b', 'recipe-c']) {
       await user.click(screen.getByTestId(`kitchen-day-tutor-recipe-tab-${recipeId}`));
@@ -842,7 +842,9 @@ describe('Kitchen Day module chef review', () => {
         expect(screen.getByTestId('kitchen-day-review-portionPrecision-awaiting')).toBeInTheDocument();
       });
       // Awaiting must not flip the recipe to REVIEWED before GameBus hydration.
-      expect(screen.getByTestId('kitchen-day-tutor-active-recipe')).toHaveTextContent('NEEDS ASSESSMENT');
+      expect(screen.getByTestId('kitchen-day-tutor-active-recipe')).toHaveTextContent(
+        'Awaiting GameBus confirmation',
+      );
     }
 
     const reviewMessages = postMessage.mock.calls
@@ -887,12 +889,14 @@ describe('Kitchen Day module chef review', () => {
     });
 
     await waitFor(() => {
-      expect(screen.getByTestId('kitchen-day-tutor-session-status')).toHaveTextContent(/^Session: REVIEWED$/);
+      expect(screen.getByTestId('kitchen-day-tutor-session-status')).toHaveTextContent(
+        /Session assessment: Reviewed/,
+      );
     });
     for (const recipeId of ['recipe-a', 'recipe-b', 'recipe-c']) {
       await user.click(screen.getByTestId(`kitchen-day-tutor-recipe-tab-${recipeId}`));
       await waitFor(() => {
-        expect(screen.getByTestId('kitchen-day-tutor-active-recipe')).toHaveTextContent('REVIEWED');
+        expect(screen.getByTestId('kitchen-day-tutor-active-recipe')).toHaveTextContent('Reviewed');
         expect(screen.getByTestId('kitchen-day-review-portionPrecision-submitted')).toBeInTheDocument();
         expect(screen.queryByTestId('kitchen-day-review-portionPrecision-awaiting')).not.toBeInTheDocument();
       });
@@ -983,7 +987,7 @@ describe('Kitchen Day module chef review', () => {
     await user.click(screen.getByTestId('kitchen-day-review-submit'));
     await waitFor(() => {
       expect(screen.getByTestId('kitchen-day-review-error')).toHaveTextContent(
-        /activity configuration is incomplete/i,
+        /required property links are missing on wastePracticeReview: recipeId/i,
       );
     });
     expect(screen.getByTestId('kitchen-day-review-time')).toHaveValue('4');
@@ -1034,5 +1038,102 @@ describe('Kitchen Day module chef review', () => {
       expect(screen.getByTestId('kitchen-day-review-portionPrecision-time')).toHaveValue('2');
       expect(screen.getByTestId('kitchen-day-review-portionPrecision-quality')).toHaveValue('3');
     });
+  });
+
+  it('reproduces staff2 15 Oct two-recipe Portion assessment without cross-marking Reviewed', async () => {
+    const user = userEvent.setup();
+    vi.spyOn(detectEmbed, 'isGameBusEmbed').mockReturnValue(true);
+    const postMessage = vi.spyOn(window.parent, 'postMessage').mockImplementation(() => undefined);
+    ingestTaskForTests(kitchenSkillsTrainerTaskFixture);
+    const sessionId = 'kitchen-day:kitchen-day-task-1:staff2:2026-10-15';
+    const recipes = [
+      { id: 'broileri-linssikeitto', name: 'Broileri-linssikeitto M,G' },
+      { id: 'flow-mustamakkara', name: 'FLOW mustamakkara' },
+    ] as const;
+    const portions = recipes.map((recipe, index) => ({
+      id: `act-portion-${recipe.id}`,
+      actor: { id: 'staff2', name: 'staff2 staff' },
+      template: { slug: 'portionPrecision' },
+      properties: [
+        { template: { slug: 'sessionId' }, value: { value: sessionId } },
+        { template: { slug: 'sessionDate' }, value: { value: '2026-10-15' } },
+        { template: { slug: 'submittedAt' }, value: { value: `2026-10-15T10:0${index}:00.000Z` } },
+        { template: { slug: 'recipeId' }, value: { value: recipe.id } },
+        { template: { slug: 'recipeName' }, value: { value: recipe.name } },
+        { template: { slug: 'finalRecipeWeightGrams' }, value: { value: 1200 } },
+        {
+          template: { slug: 'recipeComposition' },
+          value: {
+            value: [{ ingredientId: 'onion', ingredientName: 'Onion', actualAmount: 200, unit: 'g' }],
+          },
+        },
+      ],
+    }));
+
+    setHash(`#/kitchen-day-tutor?actorId=staff2&sessionId=${encodeURIComponent(sessionId)}`);
+    render(<AppRouter />);
+    ingestInputCollectionsForTests({
+      kitchenSkillsTrainerInput: { activities: portions },
+      inputCollectionPari: { me: { id: 'chef-1', firstName: 'Chef', lastName: 'One' } },
+    });
+
+    await waitFor(() => {
+      expect(screen.getByTestId('kitchen-day-tutor-recipe-summary')).toHaveTextContent(
+        'Recipes — 0 of 2 reviewed',
+      );
+    });
+    expect(screen.getByTestId('kitchen-day-tutor-session-meta')).toHaveTextContent('staff2 staff');
+    expect(screen.getByTestId('kitchen-day-tutor-session-meta')).toHaveTextContent('15 October 2026');
+
+    await user.click(screen.getByTestId('kitchen-day-tutor-recipe-tab-broileri-linssikeitto'));
+    await user.click(document.getElementById('time-broileri-linssikeitto-portionPrecision-5')!);
+    await user.click(document.getElementById('quality-broileri-linssikeitto-portionPrecision-5')!);
+    await user.type(screen.getByTestId('kitchen-day-review-portionPrecision-feedback'), 'nn');
+    await user.click(screen.getByTestId('kitchen-day-review-portionPrecision-submit'));
+
+    await waitFor(() => {
+      expect(screen.getByTestId('kitchen-day-review-portionPrecision-awaiting')).toBeInTheDocument();
+    });
+    expect(screen.getByTestId('kitchen-day-tutor-recipe-tab-broileri-linssikeitto')).toHaveAttribute(
+      'data-recipe-status',
+      'awaiting_confirmation',
+    );
+    expect(screen.getByTestId('kitchen-day-tutor-recipe-tab-flow-mustamakkara')).toHaveAttribute(
+      'data-recipe-status',
+      'needs_assessment',
+    );
+    expect(screen.getByTestId('kitchen-day-tutor-recipe-summary')).toHaveTextContent(
+      'Recipes — 0 of 2 reviewed',
+    );
+
+    const reviewMessage = postMessage.mock.calls
+      .map((call) => call[0] as { type?: string; data?: { template?: string; properties?: { template: string; obj: { value: unknown } }[]; actors?: string[] } })
+      .find((payload) => payload?.type === 'SILENT_ACTIVITY' && payload.data?.template === 'wastePracticeReview');
+    expect(reviewMessage?.data?.actors).toEqual(['staff2']);
+    expect(
+      reviewMessage?.data?.properties?.find((property) => property.template === 'recipeId')?.obj.value,
+    ).toBe('broileri-linssikeitto');
+    expect(
+      reviewMessage?.data?.properties?.find((property) => property.template === 'chefFeedback')?.obj.value,
+    ).toBe('nn');
+  });
+
+  it('accepts explicit score 0 from the score picker', async () => {
+    const user = userEvent.setup();
+    setHash(`#/kitchen-day-tutor?actorId=user-1&sessionId=${encodeURIComponent(sessionOne)}`);
+    render(<AppRouter />);
+    ingestInputCollectionsForTests({
+      kitchenSkillsTrainerInput: { activities: baseActivities },
+      inputCollectionPari: { me: { id: 'chef-1', firstName: 'Chef', lastName: 'One' } },
+    });
+    await waitFor(() => {
+      expect(screen.getByTestId('kitchen-day-review-form')).toBeInTheDocument();
+    });
+    expect(screen.getByTestId('kitchen-day-review-time')).toHaveValue('');
+    await user.click(document.getElementById(`time-${baseRecipeId}-trimSmart-0`)!);
+    await user.click(document.getElementById(`quality-${baseRecipeId}-trimSmart-0`)!);
+    expect(screen.getByTestId('kitchen-day-review-time')).toHaveValue('0');
+    expect(screen.getByTestId('kitchen-day-review-quality')).toHaveValue('0');
+    expect(screen.getByTestId('kitchen-day-review-submit')).toBeEnabled();
   });
 });

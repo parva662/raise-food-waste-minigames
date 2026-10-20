@@ -96,7 +96,7 @@ describe('review persistence identity and status', () => {
     });
     expect(findConfirmedRecipeModuleReview(s, 'a', 'portionPrecision')).toBeNull();
     expect(findAwaitingRecipeModuleReview(s, 'a', 'portionPrecision')).toEqual(awaiting);
-    expect(recipeAssessmentStatus(s, 'a')).toBe('needs_assessment');
+    expect(recipeAssessmentStatus(s, 'a')).toBe('awaiting_confirmation');
     expect(sessionAssessmentStatus(s)).toBe('needs_assessment');
   });
 

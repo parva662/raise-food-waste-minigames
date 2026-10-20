@@ -24,7 +24,7 @@ import { gamebusDevLog } from '@/platform/gamebus/devLog';
 
 export type KitchenSkillsPostResult =
   | { ok: true; status: 'posted_awaiting_persist'; message: GameBusOutboundActivityMessage }
-  | { ok: false; reason: string };
+  | { ok: false; reason: string; missing?: string[] };
 
 const attemptedKeys = new Set<string>();
 let postInFlight = false;
@@ -134,7 +134,7 @@ export function tryPostKitchenSkillsReview(
       'kitchen-skills-review.unlinked-properties',
       kitchenSkillsReviewDiagnosticPayload(linked.reason, entry, { missing: linked.missing }),
     );
-    return { ok: false, reason: linked.reason };
+    return { ok: false, reason: linked.reason, missing: linked.missing };
   }
 
   return tryPostKitchenSkillsActivity(

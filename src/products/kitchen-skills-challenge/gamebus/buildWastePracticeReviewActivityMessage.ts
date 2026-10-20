@@ -1,3 +1,4 @@
+import { findActivityTemplate, resolveLinkedPropertyRefs } from '@/platform/gamebus/activityTemplate';
 import { selectWastePracticeReviewTemplate } from '@/products/kitchen-skills-challenge/gamebus/taskTemplates';
 import type { KitchenSkillsReviewEntry } from '@/products/kitchen-skills-challenge/domain/types';
 import type { SilentActivityMessage, TaskData } from '@/platform/gamebus/types';
@@ -7,13 +8,9 @@ import {
 } from '@/products/kitchen-skills-challenge/gamebus/mapWastePracticeReview';
 
 function linkedWastePracticeReviewRefs(task: TaskData): Set<string> {
-  const activity = (task.activityTemplates ?? []).find((item) => item.slug === 'wastePracticeReview');
-  const refs = new Set<string>();
-  for (const item of activity?.linkedProperties ?? []) {
-    const ref = typeof item.ref === 'string' ? item.ref.trim() : '';
-    if (ref) refs.add(ref);
-  }
-  return refs;
+  const activity = findActivityTemplate(task, 'wastePracticeReview');
+  if (!activity) return new Set();
+  return new Set(resolveLinkedPropertyRefs(activity));
 }
 
 export function buildWastePracticeReviewActivityMessage(

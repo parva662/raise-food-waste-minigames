@@ -163,16 +163,34 @@ function KitchenSkillsTrainerBody() {
     );
   }
 
+  const sessionSelected = Boolean(selectedSessionId && selected);
+
   return (
     <div className="chef-results-page kitchen-mgmt-page kitchen-day-tutor-page" data-testid="kitchen-day-tutor-page">
       <header className="kitchen-day-tutor-header kitchen-day-tutor-header--sticky" data-testid="kitchen-day-tutor-header">
         <div className="kitchen-day-tutor-header__main">
           <h1 className="kitchen-day-tutor-header__title">Kitchen Skills Trainer</h1>
-          <p className="kitchen-day-tutor-header__lead">
-            Review student evidence by module, then add a tutor assessment.
-          </p>
+          {sessionSelected && selected ? (
+            <p className="kitchen-day-tutor-header__lead" data-testid="kitchen-day-tutor-header-session">
+              {selected.actorName} · {formatSessionDate(selected.sessionDate)}
+            </p>
+          ) : (
+            <p className="kitchen-day-tutor-header__lead">
+              Review student evidence, then add a tutor assessment.
+            </p>
+          )}
         </div>
         <div className="kitchen-day-tutor-header__actions">
+          {sessionSelected && selected ? (
+            <a
+              href={kitchenDayTutorHashFor({ actorId: selected.actorId })}
+              className="kitchen-day-button kitchen-day-button--ghost"
+              data-testid="kitchen-day-tutor-back-staff"
+              onClick={guardNavigationClick}
+            >
+              Back
+            </a>
+          ) : null}
           <button
             type="button"
             className="kitchen-day-button kitchen-day-button--ghost"
@@ -185,23 +203,12 @@ function KitchenSkillsTrainerBody() {
       </header>
 
       {selectedSessionId && selected ? (
-        <>
-          <p className="kitchen-day-tutor-back">
-            <a
-              href={kitchenDayTutorHashFor({ actorId: selected.actorId })}
-              data-testid="kitchen-day-tutor-back-staff"
-              onClick={guardNavigationClick}
-            >
-              ← Back to {selected.actorName}
-            </a>
-          </p>
-          <KitchenSkillsTrainerSessionDetail
-            key={`${selected.actorId}:${selected.sessionId}`}
-            selected={selected}
-            drafts={reviewDrafts}
-            onDraftChange={updateReviewDraft}
-          />
-        </>
+        <KitchenSkillsTrainerSessionDetail
+          key={`${selected.actorId}:${selected.sessionId}`}
+          selected={selected}
+          drafts={reviewDrafts}
+          onDraftChange={updateReviewDraft}
+        />
       ) : selectedSessionId ? (
         <p className="chef-results-empty">That student session was not found.</p>
       ) : selectedActorId && selectedStaff ? (
