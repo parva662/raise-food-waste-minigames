@@ -17,6 +17,7 @@ import {
   formatDeltaPercentagePoints,
   formatDurationFromMinutes,
   formatGrams,
+  formatRecipeAmount,
   formatScore,
   formatWastePercent,
 } from '@/products/kitchen-skills-challenge/format';
@@ -77,10 +78,10 @@ function PortionCompositionTable({
               <tr key={line.ingredientId}>
                 <th scope="row">{line.ingredientName}</th>
                 <td data-testid={`${testIdPrefix}-portion-target-${entry.recipeId}-${line.ingredientId}`}>
-                  {required ? `${required.requiredAmount} ${required.unit}` : '—'}
+                  {required ? formatRecipeAmount(required.requiredAmount, required.unit) : '—'}
                 </td>
                 <td data-testid={`${testIdPrefix}-portion-actual-${entry.recipeId}-${line.ingredientId}`}>
-                  {line.actualAmount} {line.unit}
+                  {formatRecipeAmount(line.actualAmount, line.unit)}
                 </td>
                 <td data-testid={`${testIdPrefix}-portion-difference-${entry.recipeId}-${line.ingredientId}`}>
                   {required ? formatPortionDifference(required, line) : '—'}
@@ -234,6 +235,103 @@ export function SessionEvidence({
 
   return (
     <div className="kitchen-day-evidence" data-testid={`${testIdPrefix}-evidence`} data-readonly="true">
+      {visible.has('portionPrecision') ? (
+        <EvidenceSection
+          collapsible={collapsible}
+          title="Portion Precision"
+          hideTitle={hideSectionTitles}
+          testId={`${testIdPrefix}-portion-section`}
+        >
+          {portionEntries.length === 0 ? (
+            <p className="chef-results-empty">No recipes recorded yet.</p>
+          ) : (
+            <ul className="kitchen-day-evidence-list" data-testid={`${testIdPrefix}-portion-list`}>
+              {portionEntries.map((entry) => {
+                const recipe = getRecipeReference(entry.recipeId);
+                const metrics = buildPortionRecipeMetrics(entry, recipe);
+                return (
+                  <li
+                    key={`${entry.recipeId}-${entry.submittedAt}`}
+                    className="kitchen-day-evidence-card"
+                    data-testid={`${testIdPrefix}-portion-${entry.recipeId}`}
+                  >
+                    {hidePortionRecipeTitle ? null : (
+                      <h4 className="kitchen-day-evidence-card__title">{entry.recipeName}</h4>
+                    )}
+                    <dl className="kitchen-day-facts">
+                      <Fact
+                        label="Ingredient accuracy"
+                        value={formatMetricPercent(metrics.recipeIngredientAccuracyPercent)}
+                        testId={`${testIdPrefix}-portion-accuracy-${entry.recipeId}`}
+                      />
+                      <Fact
+                        label="Ingredient error"
+                        value={formatMetricPercent(metrics.recipeIngredientErrorPercent)}
+                      />
+                      <Fact
+                        label="Expected final weight"
+                        value={
+                          metrics.expectedFinalWeightGrams == null
+                            ? '—'
+                            : formatGrams(metrics.expectedFinalWeightGrams)
+                        }
+                        testId={`${testIdPrefix}-portion-expected-final-${entry.recipeId}`}
+                      />
+                      <Fact
+                        label="Recorded final weight"
+                        value={formatGrams(metrics.recordedFinalWeightGrams)}
+                      />
+                      <Fact
+                        label="Final-weight deviation"
+                        value={formatMetricPercent(metrics.finalWeightDeviationPercent)}
+                        testId={`${testIdPrefix}-portion-final-deviation-${entry.recipeId}`}
+                      />
+                    </dl>
+                    {metrics.expectedFinalWeightGrams != null ? (
+                      <p className="kitchen-day-evidence-note">
+                        Difference{' '}
+                        {formatFinalWeightDifference(
+                          metrics.recordedFinalWeightGrams,
+                          metrics.expectedFinalWeightGrams,
+                        )}
+                      </p>
+                    ) : null}
+                    {entry.recipeComposition.length > 0 ? (
+                      collapsePortionTable ? (
+                        <details
+                          className="kitchen-day-portion-details"
+                          data-testid={`${testIdPrefix}-portion-details-${entry.recipeId}`}
+                        >
+                          <summary>Show ingredient details</summary>
+                          <PortionCompositionTable
+                            entry={entry}
+                            recipe={recipe}
+                            testIdPrefix={testIdPrefix}
+                          />
+                        </details>
+                      ) : (
+                        <PortionCompositionTable
+                          entry={entry}
+                          recipe={recipe}
+                          testIdPrefix={testIdPrefix}
+                        />
+                      )
+                    ) : null}
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+          {reviews.portionPrecision ? (
+            <ModuleReviewReadback
+              review={reviews.portionPrecision}
+              testIdPrefix={testIdPrefix}
+              module="portionPrecision"
+            />
+          ) : null}
+        </EvidenceSection>
+      ) : null}
+
       {visible.has('trimSmart') ? (
         <EvidenceSection
           collapsible={collapsible}
@@ -360,102 +458,6 @@ export function SessionEvidence({
         </EvidenceSection>
       ) : null}
 
-      {visible.has('portionPrecision') ? (
-        <EvidenceSection
-          collapsible={collapsible}
-          title="Portion Precision"
-          hideTitle={hideSectionTitles}
-          testId={`${testIdPrefix}-portion-section`}
-        >
-          {portionEntries.length === 0 ? (
-            <p className="chef-results-empty">No recipes recorded yet.</p>
-          ) : (
-            <ul className="kitchen-day-evidence-list" data-testid={`${testIdPrefix}-portion-list`}>
-              {portionEntries.map((entry) => {
-                const recipe = getRecipeReference(entry.recipeId);
-                const metrics = buildPortionRecipeMetrics(entry, recipe);
-                return (
-                  <li
-                    key={`${entry.recipeId}-${entry.submittedAt}`}
-                    className="kitchen-day-evidence-card"
-                    data-testid={`${testIdPrefix}-portion-${entry.recipeId}`}
-                  >
-                    {hidePortionRecipeTitle ? null : (
-                      <h4 className="kitchen-day-evidence-card__title">{entry.recipeName}</h4>
-                    )}
-                    <dl className="kitchen-day-facts">
-                      <Fact
-                        label="Ingredient accuracy"
-                        value={formatMetricPercent(metrics.recipeIngredientAccuracyPercent)}
-                        testId={`${testIdPrefix}-portion-accuracy-${entry.recipeId}`}
-                      />
-                      <Fact
-                        label="Ingredient error"
-                        value={formatMetricPercent(metrics.recipeIngredientErrorPercent)}
-                      />
-                      <Fact
-                        label="Expected final weight"
-                        value={
-                          metrics.expectedFinalWeightGrams == null
-                            ? '—'
-                            : formatGrams(metrics.expectedFinalWeightGrams)
-                        }
-                        testId={`${testIdPrefix}-portion-expected-final-${entry.recipeId}`}
-                      />
-                      <Fact
-                        label="Recorded final weight"
-                        value={formatGrams(metrics.recordedFinalWeightGrams)}
-                      />
-                      <Fact
-                        label="Final-weight deviation"
-                        value={formatMetricPercent(metrics.finalWeightDeviationPercent)}
-                        testId={`${testIdPrefix}-portion-final-deviation-${entry.recipeId}`}
-                      />
-                    </dl>
-                    {metrics.expectedFinalWeightGrams != null ? (
-                      <p className="kitchen-day-evidence-note">
-                        Difference{' '}
-                        {formatFinalWeightDifference(
-                          metrics.recordedFinalWeightGrams,
-                          metrics.expectedFinalWeightGrams,
-                        )}
-                      </p>
-                    ) : null}
-                    {entry.recipeComposition.length > 0 ? (
-                      collapsePortionTable ? (
-                        <details
-                          className="kitchen-day-portion-details"
-                          data-testid={`${testIdPrefix}-portion-details-${entry.recipeId}`}
-                        >
-                          <summary>Show ingredient details</summary>
-                          <PortionCompositionTable
-                            entry={entry}
-                            recipe={recipe}
-                            testIdPrefix={testIdPrefix}
-                          />
-                        </details>
-                      ) : (
-                        <PortionCompositionTable
-                          entry={entry}
-                          recipe={recipe}
-                          testIdPrefix={testIdPrefix}
-                        />
-                      )
-                    ) : null}
-                  </li>
-                );
-              })}
-            </ul>
-          )}
-          {reviews.portionPrecision ? (
-            <ModuleReviewReadback
-              review={reviews.portionPrecision}
-              testIdPrefix={testIdPrefix}
-              module="portionPrecision"
-            />
-          ) : null}
-        </EvidenceSection>
-      ) : null}
     </div>
   );
 }

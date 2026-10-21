@@ -13,6 +13,19 @@ Feature: Portion Precision recipe measurement
     Given a kitchen day session is active for the student
     And required recipe amounts and the expected final weight are read from the current recipe reference keyed by recipe id
 
+  Rule: Mass fields accept grams or kilograms
+
+    Scenario: Kilogram entry is stored as canonical grams
+      When the student records 1.25 kilograms as an actual mass
+      Then the stored actual is 1250 grams
+      And no kilogram GameBus property is created
+
+    Scenario: Switching the unit does not rewrite the typed number
+      Given the student typed 1.25 in the mass field
+      When the student switches from grams to kilograms
+      Then the field still shows 1.25
+      And the canonical value becomes 1250 grams
+
   Rule: One activity is one prepared recipe
 
     Scenario: The activity is identified by the recipe

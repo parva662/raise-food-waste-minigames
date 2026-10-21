@@ -7,49 +7,62 @@ describe('Kitchen Skills Challenge session identity', () => {
     expect(getKitchenSkillsSessionDate(new Date('2026-09-14T20:59:59.000Z'))).toBe('2026-09-14');
   });
 
-  it('builds one standalone session id for local development', () => {
+  it('builds a standalone session id with the attempt suffix', () => {
     expect(
       buildKitchenSkillsSessionId({
         embedded: false,
         taskId: undefined,
         sessionDate: '2026-09-23',
+        attemptId: 'abc123',
       }),
-    ).toBe('kitchen-day:standalone:2026-09-23');
+    ).toBe('kitchen-day:standalone:2026-09-23:abc123');
   });
 
-  it('builds participant-specific embedded session ids from task, actor, and date', () => {
+  it('builds participant-specific embedded session ids from task, actor, date, and attempt', () => {
     expect(
       buildKitchenSkillsSessionId({
         embedded: true,
         taskId: 'task-9',
         actorId: 'student-a',
         sessionDate: '2026-09-23',
+        attemptId: 'first1',
       }),
-    ).toBe('kitchen-day:task-9:student-a:2026-09-23');
+    ).toBe('kitchen-day:task-9:student-a:2026-09-23:first1');
     expect(
       buildKitchenSkillsSessionId({
         embedded: true,
         taskId: 'task-9',
         actorId: 'student-b',
         sessionDate: '2026-09-23',
+        attemptId: 'first1',
       }),
-    ).toBe('kitchen-day:task-9:student-b:2026-09-23');
+    ).toBe('kitchen-day:task-9:student-b:2026-09-23:first1');
   });
 
-  it('keeps the same embedded session id for the same actor, task, and date', () => {
+  it('keeps the same embedded session id only when the attempt id is the same', () => {
     const first = buildKitchenSkillsSessionId({
       embedded: true,
       taskId: 'task-9',
       actorId: 'student-a',
       sessionDate: '2026-09-23',
+      attemptId: 'sameid1',
     });
     const second = buildKitchenSkillsSessionId({
       embedded: true,
       taskId: 'task-9',
       actorId: 'student-a',
       sessionDate: '2026-09-23',
+      attemptId: 'sameid1',
+    });
+    const otherAttempt = buildKitchenSkillsSessionId({
+      embedded: true,
+      taskId: 'task-9',
+      actorId: 'student-a',
+      sessionDate: '2026-09-23',
+      attemptId: 'otherid',
     });
     expect(first).toBe(second);
+    expect(otherAttempt).not.toBe(first);
   });
 
   it('refuses an embedded session without an authenticated actor', () => {
@@ -58,6 +71,7 @@ describe('Kitchen Skills Challenge session identity', () => {
         embedded: true,
         taskId: 'task-9',
         sessionDate: '2026-09-23',
+        attemptId: 'abc123',
       }),
     ).toThrow(/Authenticated GameBus participant id is required/);
   });

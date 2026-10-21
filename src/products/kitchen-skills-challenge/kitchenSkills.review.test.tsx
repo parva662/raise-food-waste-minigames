@@ -519,7 +519,7 @@ describe('Kitchen Day module chef review', () => {
       '2 sessions · 1 to assess · 0 awaiting · 1 reviewed',
     );
     const pendingRow = screen.getByTestId(`kitchen-day-chef-session-${portionOnlyPending}`);
-    expect(pendingRow).toHaveTextContent('1 recipe');
+    expect(pendingRow).toHaveTextContent('Hedelmät M,G');
     expect(pendingRow).toHaveTextContent('Portion');
     expect(pendingRow).not.toHaveTextContent(/Trim|Rescue/);
     expect(screen.getByTestId(`kitchen-day-tutor-session-counts-${portionOnlyPending}`)).toHaveTextContent(
@@ -806,7 +806,7 @@ describe('Kitchen Day module chef review', () => {
     });
     expect(screen.getByTestId('kitchen-day-chef-actual-removed-banaani')).toHaveTextContent('450 g (9.0%)');
     expect(screen.getByTestId('kitchen-day-chef-jamix-reference-banaani')).toHaveTextContent(
-      '37.0% (~1850 g for this starting amount)',
+      '37.0% (~1.85 kg for this starting amount)',
     );
     expect(screen.getByTestId('kitchen-day-chef-reference-delta-banaani')).toHaveTextContent(
       '28.0 percentage points below reference',

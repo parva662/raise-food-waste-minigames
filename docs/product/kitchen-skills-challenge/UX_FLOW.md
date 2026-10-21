@@ -9,7 +9,7 @@
 
 Working kitchen: wet hands, scale nearby, time pressure. Compact data-entry, units always visible, impossible values blocked at the input. Touch targets stay usable without turning each field into a large empty block. No internal IDs or debug copy.
 
-Layout checks: ~390 / ~768 / ~1200. Practice references for forms and accessibility are GOV.UK Design System and WCAG 2.2 — not a brand restyle.
+Layout checks: ~320 / ~390 / ~768 / ~1200. Practice references for forms and accessibility are GOV.UK Design System and WCAG 2.2 — not a brand restyle.
 
 ## 2. Pages
 
@@ -29,23 +29,42 @@ Tutor dashboard    #/kitchen-day-tutor      (separate left-menu page)
 
 ## 3. Continuous student challenge (same iframe)
 
-The student Kitchen Skills TASK stays open until **Finish challenge**.
+The student Kitchen Skills TASK stays open until **Finish challenge**. One attempt holds **exactly one** Portion recipe.
 
-1. **Portion Precision** — searchable recipe combobox that lists ordered recipes when opened (typing filters; touch scroll must not select — tap selects), every ingredient actual, final recipe weight, **Save recipe** (Portion measurements saved — not “recipe complete”). Posts `SILENT_ACTIVITY` (`portionPrecision`), keeps local state, navigates to `#/kitchen-day/trim`. The saved recipe becomes the session’s **active recipe**. A **new** Portion recipe may be saved only when every already-saved recipe satisfies its completion rules and there is no unfinished Trim/Reuse draft. Selecting an already saved recipe offers **Continue Trim Smart** (resume without a new Portion post). Does **not** send `EXIT`. Forward tabs stay locked until the first save; the student can still edit the form before saving.
-2. **Trim Smart** — **active** recipe stays visible. Searchable remaining unused ingredients of that recipe with `referenceWastePercent > 0` appear when the combobox opens; typing filters. New saves post `recipeId` with the entry. Then the existing steps (weight → technique → estimate → timed prepare → actual waste → **Save ingredient**), with **Back** to correct earlier values before save. After save, **Another ingredient** and **Record reuse** when there is reusable waste (Record reuse must open Reuse). A recipe with no eligible Trim ingredients shows that clearly. When the active recipe’s required practical work is done and every saved recipe is complete, show **Recipe complete** with **Start another recipe** (return to Portion, same `sessionId`, no EXIT) and **Finish challenge**. Grams only on the result — no waste % or Hävikki comparison. Does **not** send `EXIT`.
-3. **Reuse** — compact reusable grams + destination for the active recipe’s Trim waste; discarded remainder calculated. New saves post `recipeId`. The student can return to Trim to add another ingredient. **Save reuse** can open the finish summary when gates allow. Does **not** send `EXIT`.
-4. Summary shows compact Trim / Reuse / Portion headlines (grams, not waste %). Detail sections are collapsed. Portion’s ingredient table is behind **View recipe details**. **Add another ingredient** returns to Trim and hides Finish until that work is saved.
-5. **Finish challenge** is only on that summary when every saved recipe is complete and there is no unfinished Trim/Reuse work, and posts `{ type: 'EXIT' }` via `postKitchenSkillsChallengeExit`. That is the only EXIT in this flow.
+```text
+OPEN CHALLENGE
+       |
+       v
+PORTION PRECISION  (mandatory — select ONE recipe, measure, Save)
+       |
+       v
+OPTIONAL TRIM SMART  (zero or more ingredients of that recipe)
+       |
+       v
+OPTIONAL RESCUE & REUSE  (only when Trim waste exists)
+       |
+       v
+CHALLENGE SUMMARY  (evidenced modules only, order Portion → Trim → Rescue)
+       |
+       v
+FINISH CHALLENGE  → EXIT  → new open = new attempt
+```
 
-Do not send EXIT after Portion, Trim, Reuse, Start another recipe, or Add more ingredients. Tutor review posts one `SILENT_ACTIVITY` per recipe and evidenced module (`recipeId` + `reviewedGame`) with RAISE `actors` and keeps the tutor iframe open. Protocol details: [`../../contracts/GAMEBUS.md`](../../contracts/GAMEBUS.md) and TASK contract.
+1. **Portion Precision** — searchable recipe combobox (ordered options on open; typing filters; touch scroll must not select — tap selects). Mass fields use a compact **g / kg** selector next to the input (canonical storage remains grams; 1 kg = 1000 g). Volume units stay as recorded (dL / L). Every ingredient actual + final recipe weight → **Save recipe**. Posts `SILENT_ACTIVITY` (`portionPrecision`), navigates to Trim when the recipe has eligible ingredients. The saved recipe is the attempt’s only recipe. There is no “Start another recipe” and no second Portion save in this attempt. Does **not** send `EXIT`. Forward tabs stay locked until the first save.
+2. **Trim Smart** — optional. The selected recipe stays visible. Remaining unused ingredients of **that** recipe with `referenceWastePercent > 0` appear when the combobox opens. Starting weight, estimated waste, and actual waste use the same g/kg selector; calculations stay in grams (`0 ≤ estimate/actual ≤ starting weight`). Steps: ingredient → starting weight → technique → estimate → timed prepare → actual waste → **Save ingredient**. After save: compact recorded list (ingredient · actual waste · preparation duration) plus **Another ingredient** and **Record reuse** when there is reusable waste. A recipe with no eligible Trim ingredients is not a dead end — Finish stays available and no empty Trim activity is created. Does **not** send `EXIT`.
+3. **Rescue & Reuse** — optional, only when Trim waste exists. Compact reusable mass (g/kg) + **Preparation method and reuse destination** (`reuseDestination`; one free-text field; example: “Wash the peel, dry it, then use it in cake.”). Discarded remainder is calculated with clear spacing from the input. New saves post `recipeId`. The student can return to Trim to add another ingredient. Does **not** send `EXIT`.
+4. **Challenge complete** summary: recipe name; modules with recorded evidence only, in order Portion → Trim → Rescue. Trim lines show waste and duration (e.g. `Banaani` / `260 g waste · 1 min 24 sec`). Short destinations read `400 g to cake`; longer preparation text is not parsed for a destination — quantity + preview, full text in details. Primary action **Finish challenge**. Secondary **Keep working**. No “Start another recipe”.
+5. **Finish challenge** posts `{ type: 'EXIT' }` via `postKitchenSkillsChallengeExit`. That is the only EXIT. Unsaved Trim/Rescue drafts confirm before they are abandoned. After Finish, reopening the task is a **new** attempt with a new `sessionId`.
+
+Do not send EXIT after Portion, Trim, Reuse, Keep working, or Another ingredient. Tutor review posts one `SILENT_ACTIVITY` per evidenced module (`recipeId` + `reviewedGame`) with RAISE `actors` and keeps the tutor iframe open. Protocol details: [`../../contracts/GAMEBUS.md`](../../contracts/GAMEBUS.md) and TASK contract.
 
 ## 4. Module journeys (UI)
 
-**Trim Smart:** Choose a remaining recipe ingredient (searchable list shown on open) → starting weight → technique (ten fixed one-tap choices) → estimate → timed prepare → actual waste → **Save ingredient** → result with grams and **Another ingredient** or **Record reuse**. Back is available before save. No category step. No waste % or kitchen reference on the student result. Gram fields content-width; Continue/Save sticky on small screens. Timer copy never shows `idle` / `running` / `finished`.
+**Trim Smart:** Choose a remaining recipe ingredient (searchable list shown on open) → starting weight (g/kg) → technique (ten fixed one-tap choices) → estimate (g/kg) → timed prepare → actual waste (g/kg) → **Save ingredient** → compact result (waste + duration) and **Another ingredient** or **Record reuse**. Back is available before save. No category step. No waste % or kitchen reference on the student result. Timer copy never shows `idle` / `running` / `finished`.
 
-**Reuse:** Compact reusable grams + destination; discarded remainder calculated; then the challenge complete summary.
+**Reuse:** Compact reusable mass (g/kg) + preparation method and reuse destination; discarded remainder calculated with spacing from the control; then the challenge complete summary.
 
-**Portion Precision:** Searchable recipe combobox → Ingredient | Target | Actual | Result table → final weight → **Save recipe** → Trim Smart. Review / Progress / Tutor show ingredient accuracy and final-weight deviation as separate derived figures (not one combined score).
+**Portion Precision:** Searchable recipe combobox → Ingredient | Target | Actual | Result table with g/kg on mass actuals and final weight → **Save recipe** → Trim Smart (or Finish if the recipe has no eligible Trim ingredients). Review / Progress / Tutor show ingredient accuracy and final-weight deviation as separate derived figures (not one combined score). Summaries format masses above 1000 g as kg (1000 g stays grams; 1001 g → 1.001 kg).
 
 ## 5. Retrieval (product rules)
 

@@ -3,6 +3,7 @@ import {
   formatDeltaPercentagePoints,
   formatDurationFromMinutes,
   formatGrams,
+  formatRecipeAmount,
   formatReferenceDelta,
   formatWastePercent,
 } from '@/products/kitchen-skills-challenge/format';
@@ -30,9 +31,21 @@ describe('Kitchen Day numeric formatting', () => {
     expect(formatDeltaPercentagePoints(0.8, 'short')).toBe('0.8 pp above reference');
   });
 
-  it('formats weights without raw floating-point output', () => {
+  it('formats weights in grams until they pass 1000 g', () => {
+    expect(formatGrams(0)).toBe('0 g');
     expect(formatGrams(300)).toBe('300 g');
-    expect(formatGrams(1850)).toBe('1850 g');
+    expect(formatGrams(999)).toBe('999 g');
+    expect(formatGrams(1000)).toBe('1000 g');
+    expect(formatGrams(1001)).toBe('1.001 kg');
+    expect(formatGrams(1250)).toBe('1.25 kg');
+    expect(formatGrams(1850)).toBe('1.85 kg');
+    expect(formatGrams(2000)).toBe('2 kg');
     expect(String(formatGrams(17.647058823529413))).not.toContain('17.647058823529413');
+  });
+
+  it('leaves volume amounts in their recorded unit', () => {
+    expect(formatRecipeAmount(2.5, 'dL')).toBe('2.5 dL');
+    expect(formatRecipeAmount(1, 'L')).toBe('1 L');
+    expect(formatRecipeAmount(1250, 'g')).toBe('1.25 kg');
   });
 });

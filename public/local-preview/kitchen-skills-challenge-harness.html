@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Local preview: Kitchen Skills Challenge</title>
+    <style>
+      html, body { margin: 0; height: 100%; background: #1b2420; color: #e8eee9; font-family: system-ui, sans-serif; }
+      .banner { padding: 0.4rem 0.75rem; background: #24312b; border-bottom: 1px solid #3a4a42; font-size: 0.8rem; height: 1.4rem; overflow: hidden; white-space: nowrap; }
+      .banner strong { color: #b7e0c4; }
+      iframe { display: block; width: 100%; height: calc(100% - 2.25rem); border: 0; background: #fff; }
+    </style>
+  </head>
+  <body>
+    <div class="banner"><strong>LOCAL PREVIEW ONLY</strong> · synthetic GameBus TASK + empty self-feed. Posts are recorded, never fed back (no ACK) · <span id="posts">0 posts</span></div>
+    <iframe id="app" title="Kitchen Skills Challenge preview"></iframe>
+    <script type="module">
+      import { kitchenSkillsTaskFixture } from '/src/products/kitchen-skills-challenge/gamebus/kitchenSkillsTaskFixtures.ts';
+
+      const params = new URLSearchParams(location.search);
+      const route = params.get('route') ?? '/kitchen-day';
+      const actorId = params.get('actor') ?? 'student-1';
+
+      const inputCollections = {
+        kitchenGroupInputSelf: { activities: [] },
+        inputCollectionPari: { me: { id: actorId, firstName: 'S', lastName: 'One' } },
+      };
+
+      const frame = document.getElementById('app');
+      const posts = [];
+      window.__challengePosts = posts;
+      window.addEventListener('message', (event) => {
+        if (event.source !== frame.contentWindow) return;
+        const data = event.data;
+        if (data?.type === 'IFRAME_READY') {
+          frame.contentWindow.postMessage({ type: 'TASK', data: kitchenSkillsTaskFixture }, '*');
+          frame.contentWindow.postMessage({ type: 'INPUT_COLLECTIONS', data: inputCollections }, '*');
+        } else if (data?.type === 'SILENT_ACTIVITY' || data?.type === 'ACTIVITY' || data?.type === 'EXIT') {
+          posts.push(data);
+          document.getElementById('posts').textContent = `${posts.length} post(s) recorded, not persisted`;
+        }
+      });
+      frame.src = `/#${route}`;
+    </script>
+  </body>
+</html>

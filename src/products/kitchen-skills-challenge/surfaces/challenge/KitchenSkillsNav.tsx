@@ -11,17 +11,21 @@ const ITEMS: { section: Exclude<KitchenSkillsHashSection, 'review'>; label: stri
 export function KitchenSkillsNav({
   section,
   progress,
+  draftMessage = null,
 }: {
   section: KitchenSkillsHashSection;
   progress: KitchenSkillsTaskProgress;
+  /** Confirm prompt shown before leaving an unsaved measurement. */
+  draftMessage?: string | null;
 }) {
   return (
     <nav className="kitchen-day-activity__nav" data-testid="kitchen-day-nav" aria-label="Kitchen Skills Challenge">
       {ITEMS.map((item) => {
         const enabled = isKitchenSkillsNavEnabled(item.section, progress);
+        const active = item.section === section;
         const className = [
           'kitchen-day-activity__nav-link',
-          item.section === section ? 'kitchen-day-activity__nav-link--active' : '',
+          active ? 'kitchen-day-activity__nav-link--active' : '',
           enabled ? '' : 'kitchen-day-activity__nav-link--disabled',
         ]
           .filter(Boolean)
@@ -39,7 +43,17 @@ export function KitchenSkillsNav({
           );
         }
         return (
-          <a key={item.section} href={kitchenDayHashFor(item.section)} className={className} data-testid={item.testId}>
+          <a
+            key={item.section}
+            href={kitchenDayHashFor(item.section)}
+            className={className}
+            data-testid={item.testId}
+            aria-current={active ? 'page' : undefined}
+            onClick={(event) => {
+              if (active || !draftMessage) return;
+              if (!window.confirm(draftMessage)) event.preventDefault();
+            }}
+          >
             {item.label}
           </a>
         );

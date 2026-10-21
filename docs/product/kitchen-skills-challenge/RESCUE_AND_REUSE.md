@@ -7,9 +7,11 @@
 
 ## 1. Purpose
 
-After a Trim Smart entry records actual waste, the student records how much of **that ingredient's** waste can be reused and where.
+After a Trim Smart entry records actual waste, the student records how much of **that ingredient's** waste can be reused and how they would prepare / use it.
 
-Not a scored mini-game. The tutor may still submit a Rescue assessment when evidence exists for that recipe (`recipeId` + `reviewedGame: rescueAndReuse`); system metrics do not set those scores.
+Rescue is **optional**. It is offered only when Trim waste exists. Students are never required to create an empty Rescue activity to Finish.
+
+Not a scored mini-game. The tutor submits a Rescue assessment only when evidence exists for that recipe (`recipeId` + `reviewedGame: rescueAndReuse`); system metrics do not set those scores.
 
 ## 2. Connection
 
@@ -31,15 +33,17 @@ Exact stored properties: slug contract. Do **not** duplicate `ingredientName` or
 
 ## 3. Rules
 
-1. `reuseDestination` is free text.
+1. Keep **one** free-text GameBus property: `reuseDestination`. The field label is **Preparation method and reuse destination** (example: “Wash the peel, dry it, then use it in cake.”). Do **not** create `reuseMethod` or change the live GameBus configuration.
 2. No reuse status, later confirmation, inventory, or "was it used?" tracking.
-3. `reusableWasteGrams` is 0 … that Trim entry's `actualWasteGrams`.
+3. `reusableWasteGrams` is 0 … that Trim entry's `actualWasteGrams`. The reusable amount uses the same g/kg mass input as Portion / Trim; canonical storage stays grams.
 4. Each Trim ingredient under a given recipe may have at most one reuse suggestion.
 5. No reuse points; no automatic reuse tutor score.
+6. Discarded remainder is calculated (never stored) and shown with clear spacing from the reusable-amount control.
+7. Summaries: a short destination-only phrase may read `Appelsiini · 400 g to cake`. Longer preparation text is **not** parsed for a destination — show the reusable quantity, a concise preview, and the full submitted text in the detailed view.
 
 ## 4. Journey
 
-Complete Trim through actual waste → compact reuse form → see calculated discarded remainder → save (`SILENT_ACTIVITY`) → challenge complete summary. **Add more ingredients** returns to Trim. **Finish challenge** closes the kitchen day. Layout: [`../UI_STANDARD.md`](../UI_STANDARD.md).
+Complete Trim through actual waste → compact reuse form (reusable mass g/kg, preparation method and reuse destination, discarded remainder with spacing) → save (`SILENT_ACTIVITY`). The student can return to Trim for another ingredient. **Finish challenge** is available as soon as Portion is saved and is not gated on Rescue. Layout: [`../UI_STANDARD.md`](../UI_STANDARD.md).
 
 ## 5. Removed (historical naming)
 

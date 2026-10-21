@@ -91,12 +91,19 @@ Feature: Session Review, Student Progress, and tutor assessment
       And the review is not one judgement per ingredient
       And there is no overall session-level tutor score
 
-    Scenario: Two Portion recipes need two independent Portion assessments
-      Given the student recorded Portion Precision for recipe A and recipe B
+    Scenario: Two same-day attempts need independent assessments
+      Given the student recorded Portion Precision for recipe A in a morning attempt
+      And recorded Portion Precision for recipe B in an afternoon attempt on the same date
+      When the tutor submits a Portion Precision review for the morning attempt
+      Then the morning attempt Portion is reviewed
+      And the afternoon attempt still needs assessment
+      And the two attempts are not merged
+
+    Scenario: Historical multi-recipe sessions still need one Portion assessment per recipe
+      Given a historical session recorded Portion Precision for recipe A and recipe B
       When the tutor submits a Portion Precision review for recipe A
       Then recipe A Portion is reviewed
       And recipe B Portion still needs assessment
-      And the session status is Partially reviewed
 
   Rule: Session assessment status uses evidenced recipe-module pairs
 

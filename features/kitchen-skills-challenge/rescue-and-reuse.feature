@@ -51,8 +51,10 @@ Feature: Reuse suggestions connected to ingredient preparation
       And the discarded waste is never stored as a recorded fact
 
     Scenario: The destination is free text
-      When the student enters the reuse destination "Use in today's vegetable stock"
+      When the student enters the preparation method and reuse destination "Wash the peel, dry it, then use it in cake."
       Then the destination is accepted as free text
+      And it is stored in reuseDestination
+      And no reuseMethod property is created
 
     Scenario Outline: An incomplete reuse suggestion cannot be saved
       Given the student has filled every reuse field except "<missing field>"

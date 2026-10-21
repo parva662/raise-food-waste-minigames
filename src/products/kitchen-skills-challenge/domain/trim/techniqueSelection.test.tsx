@@ -81,6 +81,8 @@ describe('Trim Smart technique selection', () => {
     await user.type(screen.getByTestId('kitchen-day-reusable-waste'), '200');
     await user.type(screen.getByTestId('kitchen-day-reuse-destination'), 'Stock');
     await user.click(screen.getByTestId('kitchen-day-save-rescue'));
+    await user.click(screen.getByTestId('kitchen-day-open-finish-summary'));
+    await user.click(screen.getByText('Show details'));
     expect(screen.getByTestId('kitchen-day-finish-trim-banaani')).toHaveTextContent('Julienne');
   });
 });
