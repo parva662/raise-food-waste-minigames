@@ -9,6 +9,7 @@ import { kitchenSkillsTrainerTaskFixture } from '@/products/kitchen-skills-chall
 import { resetKitchenSkillsPostStateForTests } from '@/products/kitchen-skills-challenge/gamebus/postActivity';
 import {
   clearKitchenSkillsReviewDispatchMarkersForTests,
+  kitchenSkillsTrainerFeedFingerprint,
   markKitchenSkillsReviewDispatched,
 } from '@/products/kitchen-skills-challenge/gamebus/reviewDispatchMarker';
 
@@ -92,6 +93,23 @@ function feed(extra: unknown[] = []) {
     kitchenSkillsTrainerInput: { activities: [...evidence, confirmedTrimReview, ...extra] },
     inputCollectionPari: { me: { id: 'chef-1', firstName: 'Pari', lastName: 'Chef' } },
   };
+}
+
+function seedEarlierDispatch(feedFingerprintAtDispatch: string) {
+  markKitchenSkillsReviewDispatched(
+    'staff1',
+    {
+      sessionId,
+      sessionDate: '2026-10-20',
+      submittedAt: '2026-10-20T08:41:00.000Z',
+      recipeId,
+      reviewedGame: 'portionPrecision',
+      timeEfficiencyScore: 3,
+      preparationQualityScore: 4,
+      source: 'local',
+    },
+    feedFingerprintAtDispatch,
+  );
 }
 
 function setHash(hash: string) {
@@ -225,17 +243,9 @@ describe('Kitchen Skills trainer three-state assessment status', () => {
     vi.spyOn(detectEmbed, 'isGameBusEmbed').mockReturnValue(true);
     const postMessage = vi.spyOn(window.parent, 'postMessage').mockImplementation(() => undefined);
     const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(true);
-    // Dispatched in an earlier page load (well before this feed arrived) and still not in the feed.
-    markKitchenSkillsReviewDispatched('staff1', {
-      sessionId,
-      sessionDate: '2026-10-20',
-      submittedAt: '2026-10-20T08:41:00.000Z',
-      recipeId,
-      reviewedGame: 'portionPrecision',
-      timeEfficiencyScore: 3,
-      preparationQualityScore: 4,
-      source: 'local',
-    });
+    // Dispatched in an earlier page load against an older feed; the reopened feed is a new
+    // GameBus fetch (it now holds the Trim review) and still lacks the Portion assessment.
+    seedEarlierDispatch(kitchenSkillsTrainerFeedFingerprint(evidence));
     ingestTaskForTests(kitchenSkillsTrainerTaskFixture);
     setHash(`#/kitchen-day-tutor?actorId=staff1&sessionId=${encodeURIComponent(sessionId)}`);
     render(<AppRouter />);
@@ -262,6 +272,43 @@ describe('Kitchen Skills trainer three-state assessment status', () => {
     expect(reviewPosts(postMessage)).toHaveLength(0);
     await submitScores(user, 'portionPrecision');
     expect(reviewPosts(postMessage)).toHaveLength(1);
+    expect(screen.queryByTestId('kitchen-day-review-portionPrecision-reassess')).not.toBeInTheDocument();
+  });
+
+  it('does not unlock Assess again when the old feed snapshot is replayed after a reload', async () => {
+    const user = userEvent.setup();
+    vi.spyOn(detectEmbed, 'isGameBusEmbed').mockReturnValue(true);
+    seedEarlierDispatch(kitchenSkillsTrainerFeedFingerprint(feed().kitchenSkillsTrainerInput.activities));
+    ingestTaskForTests(kitchenSkillsTrainerTaskFixture);
+    setHash(`#/kitchen-day-tutor?actorId=staff1&sessionId=${encodeURIComponent(sessionId)}`);
+    render(<AppRouter />);
+    ingestInputCollectionsForTests(feed());
+
+    await user.click(await screen.findByTestId('kitchen-day-tutor-module-tab-portionPrecision'));
+    await waitFor(() => {
+      expect(screen.getByTestId('kitchen-day-review-portionPrecision-awaiting')).toBeInTheDocument();
+    });
+    expect(screen.queryByTestId('kitchen-day-review-portionPrecision-missing-after-refresh')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('kitchen-day-review-portionPrecision-reassess')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('kitchen-day-review-portionPrecision-submit')).not.toBeInTheDocument();
+  });
+
+  it('does not unlock Assess again when the same page receives the unchanged feed again later', async () => {
+    const user = userEvent.setup();
+    vi.spyOn(detectEmbed, 'isGameBusEmbed').mockReturnValue(true);
+    vi.spyOn(window.parent, 'postMessage').mockImplementation(() => undefined);
+    ingestTaskForTests(kitchenSkillsTrainerTaskFixture);
+    setHash(`#/kitchen-day-tutor?actorId=staff1&sessionId=${encodeURIComponent(sessionId)}`);
+    render(<AppRouter />);
+    ingestInputCollectionsForTests(feed());
+    await submitScores(user, 'portionPrecision');
+
+    const realNow = Date.now();
+    vi.spyOn(Date, 'now').mockReturnValue(realNow + 5 * 60_000);
+    ingestInputCollectionsForTests(feed());
+    await waitFor(() => {
+      expect(screen.getByTestId('kitchen-day-review-portionPrecision-awaiting')).toBeInTheDocument();
+    });
     expect(screen.queryByTestId('kitchen-day-review-portionPrecision-reassess')).not.toBeInTheDocument();
   });
 

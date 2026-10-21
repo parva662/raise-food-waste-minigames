@@ -5,10 +5,6 @@ import {
   recipeDisplayName,
   reviewIdentityKey,
 } from '@/products/kitchen-skills-challenge/domain/session/reviewIdentity';
-import {
-  KITCHEN_SKILLS_FEED_CONFIRMATION_GRACE_MS,
-  isAwaitingReviewMissingFromRefreshedFeed,
-} from '@/products/kitchen-skills-challenge/gamebus/reviewDispatchMarker';
 import { mergeKitchenSkillsRecords } from '@/products/kitchen-skills-challenge/read/kitchenSkillsReadModel';
 import {
   buildKitchenSkillsTrainerStaffSummaries,
@@ -235,22 +231,5 @@ describe('trainer assessment status (three states)', () => {
     expect(merged).toHaveLength(1);
     const s = session({ portionEntries: [portion('5')], reviews: merged });
     expect(sessionAssessmentStatus(s)).toBe('reviewed');
-  });
-
-  it('E: an awaiting review counts as missing only when the feed loaded well after the dispatch', () => {
-    const row = awaiting('5', 'portionPrecision');
-    const sentAt = Date.parse(row.submittedAt);
-    expect(isAwaitingReviewMissingFromRefreshedFeed(row, null)).toBe(false);
-    expect(isAwaitingReviewMissingFromRefreshedFeed(row, sentAt - 5_000)).toBe(false);
-    expect(isAwaitingReviewMissingFromRefreshedFeed(row, sentAt + 10_000)).toBe(false);
-    expect(
-      isAwaitingReviewMissingFromRefreshedFeed(row, sentAt + KITCHEN_SKILLS_FEED_CONFIRMATION_GRACE_MS + 1),
-    ).toBe(true);
-    expect(
-      isAwaitingReviewMissingFromRefreshedFeed(
-        confirmed('5', 'portionPrecision'),
-        sentAt + KITCHEN_SKILLS_FEED_CONFIRMATION_GRACE_MS + 1,
-      ),
-    ).toBe(false);
   });
 });

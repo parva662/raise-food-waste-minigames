@@ -18,7 +18,6 @@ import {
   kitchenSkillsReviewDiagnosticPayload,
   kitchenSkillsReviewSavedMessage,
 } from '@/products/kitchen-skills-challenge/gamebus/reviewPostErrors';
-import { isAwaitingReviewMissingFromRefreshedFeed } from '@/products/kitchen-skills-challenge/gamebus/reviewDispatchMarker';
 import { gamebusDevLog } from '@/platform/gamebus/devLog';
 import { formatOperationalTime } from '@/shared/time/dates';
 import {
@@ -220,8 +219,8 @@ function ReviewAwaiting({
   reviewedGame: KitchenSkillsReviewedModule;
   studentActorId: string;
 }) {
-  const { feedReceivedAt, discardUnconfirmedReview } = useReadyKitchenSkillsSession();
-  const missingAfterRefresh = isAwaitingReviewMissingFromRefreshedFeed(review, feedReceivedAt);
+  const { canReassessUnconfirmedReview, discardUnconfirmedReview } = useReadyKitchenSkillsSession();
+  const missingAfterRefresh = canReassessUnconfirmedReview(review, studentActorId);
   return (
     <section
       className="kitchen-day-tutor-assessment kitchen-day-tutor-assessment--awaiting"
