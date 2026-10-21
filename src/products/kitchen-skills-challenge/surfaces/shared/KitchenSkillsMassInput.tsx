@@ -29,7 +29,7 @@ export function KitchenSkillsMassInput({
   ariaLabel?: string;
   unitGroupLabel?: string;
 }) {
-  const [unit, setUnit] = useState<MassInputUnit>('g');
+  const [unit, setUnit] = useState<MassInputUnit>('kg');
   const [text, setText] = useState(value);
 
   useEffect(() => {

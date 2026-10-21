@@ -9,6 +9,7 @@ import {
   parseReusableWasteGrams,
   parseReuseDestination,
 } from '@/products/kitchen-skills-challenge/domain/reuse/validation';
+import { unsavedKitchenSkillsDraftMessage } from '@/products/kitchen-skills-challenge/domain/session/challengeGate';
 import { normalizeRecipeId } from '@/products/kitchen-skills-challenge/domain/session/ingredientUniqueness';
 
 export function KitchenSkillsReuseView() {
@@ -103,6 +104,11 @@ export function KitchenSkillsReuseView() {
         </p>
       ) : (
         <>
+          <p className="kitchen-day-card__copy" data-testid="kitchen-day-rescue-remaining">
+            {openTrim.length === 1
+              ? '1 ingredient still needs a reuse decision.'
+              : `${openTrim.length} ingredients still need a reuse decision.`}
+          </p>
           <div className="kitchen-day-reuse-meta">
             <label className="kitchen-day-field kitchen-day-field--compact">
               <span>Ingredient</span>
@@ -111,6 +117,10 @@ export function KitchenSkillsReuseView() {
                 data-testid="kitchen-day-rescue-ingredient"
                 value={ingredientId}
                 onChange={(event) => {
+                  const draftWarning = unsavedKitchenSkillsDraftMessage(taskProgress);
+                  if (drafting && draftWarning && !window.confirm(draftWarning)) {
+                    return;
+                  }
                   setIngredientId(event.target.value);
                   setReusableRaw('');
                   setDestination('');

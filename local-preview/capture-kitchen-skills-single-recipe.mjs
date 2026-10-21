@@ -77,41 +77,44 @@ async function selectOption(app, inputTestId, optionName) {
   await app.getByRole('option', { name: optionName }).click();
 }
 
+async function fillGrams(app, testId, value) {
+  await app.locator(tid(`${testId}-unit-g`)).click();
+  await app.locator(tid(testId)).fill(value);
+}
+
 async function fillHedelmat(app) {
   await app.locator(tid('kitchen-day-recipe-select')).waitFor();
   await selectOption(app, 'kitchen-day-recipe-select', 'Hedelmät M,G');
-  await app.locator(tid('kitchen-day-actual-banaani-unit-kg')).click();
   await app.locator(tid('kitchen-day-actual-banaani')).fill('1.5');
-  await app.locator(tid('kitchen-day-actual-omena')).fill('1200');
-  await app.locator(tid('kitchen-day-actual-viinirypale-tumma-kiveton')).fill('1000');
-  await app.locator(tid('kitchen-day-final-recipe-weight')).fill('3700');
+  await app.locator(tid('kitchen-day-actual-omena')).fill('1.2');
+  await app.locator(tid('kitchen-day-actual-viinirypale-tumma-kiveton')).fill('1');
+  await app.locator(tid('kitchen-day-final-recipe-weight')).fill('3.7');
 }
 
 async function fillMustamakkara(app) {
   await selectOption(app, 'kitchen-day-recipe-select', 'FLOW mustamakkara');
-  await app.locator(tid('kitchen-day-actual-tapola-gluteeniton')).fill('1974');
-  await app.locator(tid('kitchen-day-actual-kaskein-750-g-puolukka-pakaste')).fill('1316');
-  await app.locator(tid('kitchen-day-actual-deliverde-500g-rucola')).fill('263');
-  await app.locator(tid('kitchen-day-actual-elonen-iso-ruisvuoka-1000g')).fill('1316');
-  await app.locator(tid('kitchen-day-actual-coop-kidesokeri-1-kg')).fill('132');
-  await app.locator(tid('kitchen-day-final-recipe-weight')).fill('5000');
+  await fillGrams(app, 'kitchen-day-actual-tapola-gluteeniton', '1974');
+  await fillGrams(app, 'kitchen-day-actual-kaskein-750-g-puolukka-pakaste', '1316');
+  await fillGrams(app, 'kitchen-day-actual-deliverde-500g-rucola', '263');
+  await fillGrams(app, 'kitchen-day-actual-elonen-iso-ruisvuoka-1000g', '1316');
+  await fillGrams(app, 'kitchen-day-actual-coop-kidesokeri-1-kg', '132');
+  await fillGrams(app, 'kitchen-day-final-recipe-weight', '5000');
 }
 
 async function recordBanaaniTrim(app) {
   await selectOption(app, 'kitchen-day-ingredient-name', 'Banaani');
   await app.getByRole('button', { name: 'Continue' }).click();
   await app.locator(tid('kitchen-day-starting-weight')).fill('1.5');
-  await app.locator(tid('kitchen-day-starting-weight-unit-kg')).click();
   await app.locator(tid('kitchen-day-weight-continue')).click();
   await app.locator(tid('kitchen-day-technique-trimming')).click();
   await app.locator(tid('kitchen-day-technique-continue')).click();
-  await app.locator(tid('kitchen-day-estimated-waste')).fill('300');
+  await fillGrams(app, 'kitchen-day-estimated-waste', '300');
   await app.locator(tid('kitchen-day-estimate-continue')).click();
   await app.locator(tid('kitchen-day-start-preparation')).click();
   await sleep(400);
   await app.locator(tid('kitchen-day-finish-preparation')).click();
   await app.locator(tid('kitchen-day-timer-continue')).click();
-  await app.locator(tid('kitchen-day-actual-waste')).fill('260');
+  await fillGrams(app, 'kitchen-day-actual-waste', '260');
 }
 
 async function main() {
@@ -136,7 +139,7 @@ async function main() {
 
   await app.locator(tid('kitchen-day-continue-reuse')).click();
   await app.locator(tid('kitchen-day-rescue')).waitFor();
-  await app.locator(tid('kitchen-day-reusable-waste')).fill('200');
+  await fillGrams(app, 'kitchen-day-reusable-waste', '200');
   await app.locator(tid('kitchen-day-reuse-destination')).fill('Wash the peel, dry it, then use it in cake.');
   await shot(page, '04-rescue-form-desktop-1200');
 

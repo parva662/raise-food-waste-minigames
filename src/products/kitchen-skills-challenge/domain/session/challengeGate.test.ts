@@ -100,7 +100,7 @@ describe('Kitchen Skills one-recipe challenge gates', () => {
     expect(requiredKitchenSkillsSection(noEligible)).toBe('portion');
   });
 
-  it('unlocks Reuse after Trim waste and never requires Rescue to finish', () => {
+  it('unlocks Reuse after Trim waste and blocks Finish until that Rescue decision exists', () => {
     const afterTrim = buildKitchenSkillsTaskProgress({
       portionEntries: [portion],
       trimEntries: [trim],
@@ -109,7 +109,8 @@ describe('Kitchen Skills one-recipe challenge gates', () => {
       reuseInProgress: false,
     });
     expect(isKitchenSkillsNavEnabled('reuse', afterTrim)).toBe(true);
-    expect(canFinishKitchenSkillsChallenge(afterTrim)).toBe(true);
+    expect(canFinishKitchenSkillsChallenge(afterTrim)).toBe(false);
+    expect(requiredKitchenSkillsSection(afterTrim)).toBe('reuse');
     expect(afterTrim.remainingRescueIngredientIds).toEqual(['banaani']);
   });
 
@@ -131,7 +132,7 @@ describe('Kitchen Skills one-recipe challenge gates', () => {
     expect(unsavedKitchenSkillsDraftMessage(empty)).toBeNull();
   });
 
-  it('keeps Finish available while a draft is in progress — the UI must warn, not hide Finish', () => {
+  it('keeps Finish blocked while a positive-waste Trim still needs Rescue, even with a draft', () => {
     const drafting = buildKitchenSkillsTaskProgress({
       portionEntries: [portion],
       trimEntries: [trim],
@@ -139,7 +140,52 @@ describe('Kitchen Skills one-recipe challenge gates', () => {
       trimInProgress: true,
       reuseInProgress: false,
     });
-    expect(canFinishKitchenSkillsChallenge(drafting)).toBe(true);
+    expect(canFinishKitchenSkillsChallenge(drafting)).toBe(false);
+    expect(unsavedKitchenSkillsDraftMessage(drafting)).toMatch(/Trim Smart/);
+  });
+
+  it('lets Finish proceed after every positive-waste Trim has a Rescue decision', () => {
+    const bananaRescue: KitchenSkillsRescueEntry = {
+      sessionId: 's1',
+      sessionDate: '2026-09-23',
+      recipeId: '42',
+      ingredientId: 'banaani',
+      reusableWasteGrams: 200,
+      reuseDestination: 'Soup',
+      submittedAt: '2026-09-23T11:10:00.000Z',
+      source: 'local',
+    };
+    const appleTrim: KitchenSkillsTrimEntry = {
+      ...trim,
+      ingredientId: 'omena',
+      ingredientName: 'Omena',
+    };
+    const pendingSecond = buildKitchenSkillsTaskProgress({
+      portionEntries: [portion],
+      trimEntries: [trim, appleTrim],
+      rescueEntries: [bananaRescue],
+      trimInProgress: false,
+      reuseInProgress: false,
+    });
+    expect(pendingSecond.remainingRescueIngredientIds).toEqual(['omena']);
+    expect(canFinishKitchenSkillsChallenge(pendingSecond)).toBe(false);
+    const complete = buildKitchenSkillsTaskProgress({
+      portionEntries: [portion],
+      trimEntries: [trim, appleTrim],
+      rescueEntries: [
+        bananaRescue,
+        {
+          ...bananaRescue,
+          ingredientId: 'omena',
+          reusableWasteGrams: 0,
+          reuseDestination: 'Cannot be reused',
+        },
+      ],
+      trimInProgress: false,
+      reuseInProgress: false,
+    });
+    expect(complete.remainingRescueIngredientIds).toEqual([]);
+    expect(canFinishKitchenSkillsChallenge(complete)).toBe(true);
   });
 
   it('scopes Trim and Rescue to the attempt recipe', () => {

@@ -23,7 +23,7 @@
 - Same `ingredientId` once per recipe per student attempt. Trim / Reuse carry `recipeId` on new posts. Reuse joins `sessionId` + `recipeId` + `ingredientId` (no `sourceActivityId`).
 - Reuse stores only reusable amount + free-text destination (`reuseDestination`, labelled preparation method and reuse destination) (+ `recipeId` on new posts).
 - Analytics calculated on read — never stored as activity properties.
-- One Portion activity per **new** attempt; actuals in `recipeComposition`. Recipe targets come from the generated workbook extract, not a hand-maintained stub. Finish is available after Portion; Trim and Rescue are optional.
+- One Portion activity per **new** attempt; actuals in `recipeComposition`. Recipe targets come from the generated workbook extract, not a hand-maintained stub. Finish is available after Portion when every positive-waste Trim ingredient has a Rescue decision. Trim is optional until saved; empty modules are never required.
 - One tutor assessment per **evidenced module** (`reviewedGame`), not one score for the whole session. Historical multi-recipe sessions still assess each saved recipe.
 - Student challenge / Session Review / Progress: `kitchenGroupInputSelf.activities`. Trainer feedback: `kitchenSkillsTrainerInput.activities`. Do not attach raw group Kitchen Skills activities to student Progress; peer comparison waits for a privacy-safe aggregate. Keep `kitchenGroupInput` for forecast/closeout only.
 - Property names only from the slug contract.

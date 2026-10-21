@@ -31,7 +31,7 @@ import {
   getKitchenSkillsSessionDate,
 } from '@/products/kitchen-skills-challenge/domain/session/identity';
 import {
-  clearKitchenSkillsAttempt,
+  archiveFinishedKitchenSkillsAttempt,
   createKitchenSkillsAttemptId,
   guardKitchenSkillsAttempt,
   kitchenSkillsAttemptStorageKey,
@@ -718,14 +718,20 @@ export function KitchenSkillsSessionProvider({
 
   const finishChallenge = useCallback(() => {
     if (finished || allPortionEntries.length === 0) return;
+    const remainingRescue = trimEntries.filter(
+      (entry) =>
+        entry.actualWasteGrams > 0 &&
+        !rescueEntries.some((rescue) => rescue.ingredientId === entry.ingredientId),
+    );
+    if (remainingRescue.length > 0) return;
     const current = attemptRef.current;
     if (current?.storageKey && current.session.attemptId) {
-      clearKitchenSkillsAttempt(current.storageKey, current.session.attemptId);
+      archiveFinishedKitchenSkillsAttempt(current.storageKey, current.session.attemptId);
     }
     setFinished(true);
     setShowFinishSummary(false);
     postKitchenSkillsChallengeExit();
-  }, [finished, allPortionEntries.length]);
+  }, [finished, allPortionEntries.length, trimEntries, rescueEntries]);
 
   const commitReview = useCallback((entry: KitchenSkillsReviewEntry, studentActorId: string): KitchenSkillsCommitResult => {
     if (

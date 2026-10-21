@@ -1,60 +1,200 @@
-# APPROVED PRODUCT TARGET
-# Orchestration: docs/product/kitchen-skills-challenge/KITCHEN_SKILLS_CHALLENGE.md
-# Slugs: docs/product/kitchen-skills-challenge/GAMEBUS_SLUG_CONTRACT.md
-# CURRENT IMPLEMENTATION on main includes this product at #/kitchen-day.
-# Public hashes stay #/kitchen-day* for GameBus Custom Embed compatibility.
-#
-@kitchen-day @kitchen-skills-challenge @waste-challenges
-Feature: Kitchen Skills Challenge connected session
-  As a student or tutor in a practical kitchen
-  I want one kitchen-day session that holds preparation, reuse, and portioning records together
-  So that the work is reviewed as one day rather than as separate games
+# Acceptance target for PR #12; preserve legacy #/kitchen-day* routes and existing GameBus slugs.
+# One attempt has one Portion recipe; existing historical multi-recipe sessions remain readable.
+@kitchen-skills-challenge @kitchen-day
+Feature: One-recipe Kitchen Skills Challenge
+  As a student in the practical kitchen
+  I want one recorded recipe and its optional ingredient preparation in a distinct challenge attempt
+  So that my own work and my tutor's assessment can be attributed correctly
 
   Background:
-    Given a kitchen day session is active for the student
-    And the session has a session id and a Europe/Helsinki session date
+    Given a student is authenticated in GameBus
+    And the Kitchen Skills Challenge TASK and INPUT_COLLECTIONS are available
+    And the operational timezone is Europe/Helsinki
 
-  Rule: One unique attempt identity per challenge open
+  Rule: Each attempt has exactly one recipe and a stable identity
 
-    Scenario: Two students on the same task and date receive different session ids
-      Given two authenticated students share one Kitchen Day TASK on the same operational date
-      When each student locks an embedded session
-      Then their session ids are different
+    @critical @regression
+    Scenario: Portion is required before any other recorded module
+      Given the student has not saved Portion Precision
+      When the student attempts to enter Trim Smart, Rescue & Reuse, or Session Review
+      Then those modules cannot record a new activity
+      And the student is directed to Portion Precision
 
-    Scenario: The same student, task, and date stay stable during one attempt
-      Given an authenticated student already locked an embedded Kitchen Day attempt
-      When the TASK or authenticated-user payload refreshes
-      Then the locked session id and session date do not change
+    @release-gate @critical @regression
+    Scenario: A second Portion recipe cannot be submitted in one attempt
+      Given the student saved Portion Precision for recipe A
+      When the student returns to Portion Precision
+      Then recipe A is read-only
+      And there is no Start another recipe action
+      And a second portionPrecision activity cannot be posted for the attempt
 
-    Scenario: Two challenge opens on the same day are separate attempts
-      Given an authenticated student finished a Kitchen Day challenge
-      When the student opens the same TASK later on the same operational date
-      Then a new session id is used
-      And the new activities do not merge with the finished attempt
+    @critical @integration
+    Scenario: All recorded modules use one attempt identity
+      Given the student saved Portion Precision for recipe A
+      When the student saves Trim Smart for an ingredient of recipe A
+      And the student saves Rescue & Reuse for that ingredient
+      Then the three activities use the same sessionId and sessionDate
+      And Trim and Rescue contain recipeId for recipe A
+      And no module save posts EXIT
 
-    Scenario: Participant hydration cannot ingest another actor
-      Given group activities include another student's completed records
-      When the authenticated student hydrates their Kitchen Day
-      Then only records whose actor matches that student are shown
+    @release-gate @critical @integration
+    Scenario: Finishing and reopening on the same date creates a separate attempt
+      Given the student finished a challenge containing recipe A
+      When the same student opens the same TASK again on the same Helsinki date
+      And records recipe B
+      Then a new sessionId is used
+      And the new activity does not merge with the previous attempt
+      And the previous attempt remains separately visible in Progress and Tutor Feedback
 
-  Rule: One connected day, not three standalone games
+    @critical @integration
+    Scenario: Same recipe in two attempts does not collapse into one
+      Given the student finished a challenge containing recipe A
+      When the student opens a new attempt and saves recipe A again
+      Then the new portionPrecision activity has a different sessionId
+      And the two attempts are distinguishable by the Tutor
 
-    Scenario: Modules share the same session
-      When the student records a Portion Precision recipe
-      And records an ingredient preparation entry from that recipe
-      And records a reuse suggestion for that ingredient
-      Then all three records belong to the same kitchen day
-      And they are not treated as separate standalone games
+    @release-gate @critical @recovery
+    Scenario: An unfinished attempt resumes after a reload
+      Given the student dispatched Portion Precision for recipe A but did not finish
+      When the student reloads the same GameBus task
+      Then the original sessionId and sessionDate are restored
+      And recipe A is not posted again automatically
+      And an absent record in a stale GameBus feed is not treated as proof of failed persistence
 
-    Scenario: Multiple different ingredients are allowed
-      Given the student recorded an ingredient preparation entry for a recipe ingredient
-      When the student records an ingredient preparation entry for another unused recipe ingredient
-      Then both entries belong to the same kitchen day
+    @critical @recovery
+    Scenario: A replayed TASK or INPUT_COLLECTIONS does not create another attempt
+      Given the student is working in an unfinished attempt
+      When GameBus sends TASK or INPUT_COLLECTIONS again
+      Then the locked sessionId does not change
+      And no previously dispatched entry is automatically posted again
 
-    Scenario: The same ingredient is not recorded twice under the same recipe
-      Given the student recorded an ingredient preparation entry for a recipe ingredient
-      When the student tries to start another ingredient preparation entry for that same ingredient under the same recipe
-      Then a second preparation entry is not created for that recipe
+    @release-gate @critical @time
+    Scenario Outline: The active attempt does not change identity at the Helsinki midnight cutoff
+      Given an unfinished attempt was created at 23:59:59 Europe/Helsinki
+      When the same page is still open at <moment> Europe/Helsinki
+      Then the attempt keeps its original sessionId and sessionDate
+      And no module is automatically reposted
+
+      Examples:
+        | moment   |
+        | 23:59:59 |
+        | 00:00:00 |
+        | 00:00:01 |
+
+    @critical @time @recovery
+    Scenario: Reload just after midnight resumes a dispatched unfinished attempt
+      Given the student dispatched work before 00:00 Europe/Helsinki
+      And did not finish the attempt
+      When the student reloads the challenge at 00:00:01 Europe/Helsinki
+      Then the original attempt and operational session date remain in use
+      And the submitted work is not duplicated
+
+    @critical @time @recovery
+    Scenario: An empty previous-day attempt can be replaced after midnight
+      Given an unfinished challenge has no dispatched work
+      When the student opens the task on the next Helsinki operational date
+      Then a new attempt may start with the new sessionDate
+      And no activity is falsely attributed to the abandoned empty attempt
+
+    @critical @privacy
+    Scenario: One student's view does not hydrate another student's activities
+      Given INPUT_COLLECTIONS includes activities belonging to another student
+      When the student opens their own Progress
+      Then other students' raw activities and Tutor feedback are not disclosed
+
+  Rule: Unit selection is explicit throughout the challenge
+
+    @release-gate @critical @units
+    Scenario: All fresh mass fields default to kg and allow g entry without automatic conversion
+      Given the student opens the Portion Precision mass inputs
+      Then the mass inputs start with kg selected
+      When the student switches to Trim Smart and then Rescue & Reuse
+      Then each new mass input also defaults to kg
+      And the student can select g and enter an amount in grams
+      And switching the selected unit never silently converts the typed number
+      And persisted mass properties continue using canonical grams
+      And volume fields preserve their existing reference units
+
+  Rule: Trim is optional before it is started; Rescue records a decision for each positive-waste Trim entry
+
+    @release-gate @critical @journey
+    Scenario: Portion only is a valid complete attempt
+      Given the student saved Portion Precision
+      And no Trim Smart entry was recorded
+      When the student opens Review and finish
+      Then only Portion Precision appears as recorded evidence
+      And Finish challenge is available
+      And no empty Trim or Rescue activity is fabricated
+
+    @critical @journey
+    Scenario: No eligible Trim ingredients is not a dead end
+      Given the saved recipe has no ingredients with positive Hävikki reference
+      When the student reviews the attempt
+      Then the absence of Trim is explained
+      And the challenge can be finished without Trim or Rescue
+
+    @critical @journey
+    Scenario: Trim with no actual waste needs no Rescue activity
+      Given the student saved Portion Precision
+      And the student saved a Trim ingredient with 0 grams actual waste
+      When the student opens Review and finish
+      Then Trim evidence is present
+      And Rescue is not required for that ingredient
+      And no Rescue activity is invented
+
+    @release-gate @critical @journey
+    Scenario: Every trimmed ingredient with positive waste needs a Rescue decision
+      Given the student saved Portion Precision
+      And saved positive-waste Trim entries for carrots and potatoes
+      When the student records a Rescue decision for carrots only
+      Then potatoes remain to be addressed
+      And the student cannot finish the attempt as complete
+      And a clear link to the remaining Rescue decision is available
+      When the student records a 0-gram Rescue decision for potatoes with the explanation "Cannot be reused"
+      Then Review and finish can complete with both ingredients accounted for
+
+    @critical @journey
+    Scenario: Adding another Trim ingredient after a Rescue decision reopens pending Rescue work
+      Given the student completed Rescue decisions for all recorded positive-waste Trim ingredients
+      When the student records another positive-waste Trim ingredient
+      Then the new ingredient appears as requiring a Rescue decision
+      And existing Rescue entries remain saved and are not submitted again
+
+    @release-gate @critical @journey
+    Scenario: Unsaved draft must not disappear without confirmation
+      Given the student has entered an unsaved Trim or Rescue measurement
+      When the student attempts to navigate away or Finish
+      Then the student is warned that the measurement is unsaved
+      And cancelling the warning preserves the draft
+
+  Rule: Finishing closes the attempt without claiming unverified GameBus persistence
+
+    @critical @integration
+    Scenario: Only Finish challenge sends EXIT
+      Given the student saved the required Portion and any applicable Rescue decisions
+      When the student opens the challenge summary
+      Then no EXIT has been posted
+      When the student chooses Finish challenge
+      Then exactly one EXIT is posted for that interaction
+      And a subsequent task open creates a new attempt
+
+    @release-gate @critical @persistence
+    Scenario: Dispatched activities absent from a stale feed remain unconfirmed
+      Given a student module save was dispatched by SILENT_ACTIVITY
+      And the returned self-feed does not contain that activity
+      When the student opens the challenge summary
+      Then the save is not described as confirmed persistence
+      And the application does not silently repost the activity
+      And the user is warned if the save remains unconfirmed
+
+    @release-gate @critical @history
+    Scenario: Historical multi-recipe sessions remain readable
+      Given a historical session contains multiple Portion recipes under its old day-scoped sessionId
+      When a Tutor opens that historical session
+      Then its recipe-specific evidence and assessments remain readable
+      And the new one-recipe restriction does not rewrite or relabel historical records
+
+  Rule: Preserved established UI, uniqueness, and retrieval cases
 
     Scenario: The same ingredient id is allowed in a later attempt with a different recipe
       Given the student finished a challenge that recorded Trim for an ingredient under recipe A
@@ -64,96 +204,11 @@ Feature: Kitchen Skills Challenge connected session
       Then the two Trim entries belong to different session ids
       And each Trim entry keeps its own recipeId
 
-  Rule: Recipe first, then Trim from that recipe, then Reuse
-
-    Scenario: Kitchen Day opens on Portion Precision
-      When the student opens Kitchen Day
-      Then Portion Precision is shown first
-      And the recipe is chosen with the searchable recipe combobox
-      And opening the combobox shows the ordered recipes immediately
-      And typing filters that list
-      And every recipe ingredient actual and the final recipe weight are recorded before Save
-
-    Scenario: Forward navigation waits for prerequisites
-      Given the student has started Portion Precision and has not saved the recipe
-      When the student tries to open Trim Smart, Reuse, or Session Review
-      Then the student stays on Portion Precision
-
-    Scenario: The student can go back inside an unfinished task
-      Given the student is on a later Trim Smart step and has not saved the ingredient
-      When the student chooses Back
-      Then earlier Trim choices and values are still there to correct
-
-    Scenario: Backward navigation to completed sections is allowed
-      Given the student recorded a Portion Precision recipe
-      When the student is on Trim Smart
-      Then Portion Precision stays available
-      And Reuse stays locked until a Trim ingredient with reusable waste is saved
-
-    Scenario: After the recipe is saved, Trim uses that recipe's ingredients
-      Given the student recorded a Portion Precision recipe
-      Then Trim Smart is shown
-      And the selected recipe name stays visible
-      And opening the ingredient combobox shows that recipe's unused ingredients with Hävikki greater than 0
-      And ingredients with 0 percent Hävikki are not listed
-      And ingredients from other recipes are not listed
-      And typing filters that list
-      And already recorded recipe ingredients are not offered again
-      And Record reuse is not shown until a Trim ingredient with reusable waste is saved
-
-    Scenario: A second Portion recipe cannot be added to the same attempt
-      Given the student recorded a Portion Precision recipe
-      When the student returns to Portion Precision
-      Then Start another recipe is not shown
-      And a second recipe cannot be saved in this attempt
-      And Finish challenge is available
-
-    Scenario: A new attempt after Finish can record a different recipe
-      Given the student recorded a Portion Precision recipe
-      When the student chooses Finish challenge
-      And the student opens the challenge again
-      Then a new session id is used
-      And the student can record a different Portion Precision recipe
-
-    Scenario: Finish is available after Portion Precision without Trim or Rescue
-      Given the student recorded a Portion Precision recipe
-      Then Finish challenge is available
-      And no Trim or Reuse activity is required
-
-    Scenario: A recipe with no Trim Smart ingredients can still complete
-      Given the student recorded a Portion Precision recipe whose ingredients all have 0 percent Hävikki
-      And that recipe is the only saved recipe in the session
-      Then Trim Smart shows that there are no Trim Smart ingredients for this recipe
-      And Record reuse is not shown
-      And no Trim or Reuse activity is created
-      When the student chooses Finish challenge
-      Then Finish challenge is available
-
     Scenario: A started Trim ingredient must be finished before going forward
       Given the student has started an ingredient preparation entry
       When the ingredient has not been saved
       Then Add another ingredient is not shown
-      And the student cannot open Reuse or Session Review
       And leaving the unfinished measurement requires confirmation
-
-    Scenario: After a Trim ingredient is saved the student chooses the next step
-      Given the student saved an ingredient preparation entry with reusable waste
-      Then the student can record another unused recipe ingredient
-      And the student can continue to Reuse
-      When the student chooses Record reuse
-      Then Reuse is shown
-
-    Scenario: Saved Trim with no reusable waste does not open Reuse
-      Given the student saved an ingredient preparation entry with 0 grams actual waste
-      Then Record reuse is not shown
-      And Reuse stays locked
-
-    Scenario: Record reuse still works after every eligible recipe ingredient is recorded
-      Given the student saved a preparation entry for every eligible unused recipe ingredient
-      When the student returns to Trim Smart
-      Then the all-recorded empty state is shown
-      When the student chooses Record reuse
-      Then Reuse is shown
 
     Scenario: From Reuse the student can return to Trim
       Given the student has opened Reuse for a saved Trim ingredient
@@ -162,26 +217,10 @@ Feature: Kitchen Skills Challenge connected session
       And the student can open Trim Smart to add another ingredient
 
     Scenario: From the challenge summary the student can keep working
-      Given the student saved Portion Precision, at least one Trim ingredient, and Reuse
-      Then the challenge complete summary is shown
-      And Finish challenge is available
+      Given the student saved Portion Precision and any required Rescue decisions
       When the student chooses Keep working
       Then the summary closes
       And the student can open Trim Smart to add another ingredient
-      And unsaved Trim work must be confirmed before it is abandoned
-
-    Scenario: Finish challenge ends the attempt
-      Given the student saved Portion Precision
-      And there is no unfinished Trim or Reuse draft, or the student confirmed leaving it
-      Then the challenge complete summary is shown
-      And Finish challenge is available
-      And the student is not shown a waste percentage or kitchen Hävikki reference
-      And Start another recipe is not shown
-      When the student chooses Finish challenge
-      Then the kitchen day closes
-      And the next open is a new attempt
-
-  Rule: Kitchen Day activity is separate from progress and tutor pages
 
     Scenario: The activity page has practical modules only
       When the student opens Kitchen Day
@@ -193,21 +232,11 @@ Feature: Kitchen Skills Challenge connected session
       Then only the current session records are shown
       And the session identity is not shown as an internal id
 
-  Rule: Dashboards are read-only
-
     Scenario: Session Review does not change recorded facts
       Given the student has completed kitchen-day records
       When the student opens Session Review
       Then the records are shown
       And the student cannot edit submitted measurements there
-
-    Scenario: The Tutor dashboard does not change recorded facts
-      Given the student has completed kitchen-day records
-      When the tutor opens that student's kitchen day
-      Then the records are shown as evidence
-      And the tutor cannot edit the student's measurements
-
-  Rule: Retrieval uses the existing group activities path
 
     Scenario: Kitchen day records are loaded with existing group activities
       When a student or tutor opens a kitchen-day evidence surface

@@ -11,7 +11,10 @@ import {
   recordBanaanismoothiePortion,
   recordFlowMustamakkaraPortion,
   recordHedelmatPortion,
+  recordOmenaTrim,
+  recordRescueDecision,
   selectTrimIngredient,
+  typeMassGrams,
 } from '@/products/kitchen-skills-challenge/kitchenSkills.testSupport';
 
 function setHash(hash: string) {
@@ -78,7 +81,8 @@ describe('Kitchen Day connected flow', () => {
     expect(screen.getByTestId('kitchen-day-continue-reuse')).toBeInTheDocument();
     await user.click(screen.getByTestId('kitchen-day-continue-reuse'));
     expect(screen.getByTestId('kitchen-day-rescue-actual-waste')).toHaveTextContent('450 g');
-    await user.type(screen.getByTestId('kitchen-day-reusable-waste'), '200');
+    expect(screen.getByTestId('kitchen-day-reusable-waste-unit-kg')).toHaveAttribute('aria-pressed', 'true');
+    await typeMassGrams(user, 'kitchen-day-reusable-waste', '200');
     await user.type(screen.getByTestId('kitchen-day-reuse-destination'), 'Carrot soup tomorrow');
     expect(screen.getByTestId('kitchen-day-discarded-waste')).toHaveTextContent('250 g');
     const postMessage = vi.spyOn(window.parent, 'postMessage').mockImplementation(() => undefined);
@@ -108,16 +112,16 @@ describe('Kitchen Day connected flow', () => {
     await user.click(screen.getByRole('button', { name: 'Continue' }));
     expect(screen.queryByTestId('kitchen-day-add-another-ingredient')).not.toBeInTheDocument();
     expect(screen.getByTestId('kitchen-day-nav-reuse')).toHaveAttribute('aria-disabled', 'true');
-    await user.type(screen.getByTestId('kitchen-day-starting-weight'), '5000');
+    await typeMassGrams(user, 'kitchen-day-starting-weight', '5000');
     await user.click(screen.getByTestId('kitchen-day-weight-continue'));
     await user.click(screen.getByTestId('kitchen-day-technique-trimming'));
     await user.click(screen.getByTestId('kitchen-day-technique-continue'));
-    await user.type(screen.getByTestId('kitchen-day-estimated-waste'), '600');
+    await typeMassGrams(user, 'kitchen-day-estimated-waste', '600');
     await user.click(screen.getByTestId('kitchen-day-estimate-continue'));
     await user.click(screen.getByTestId('kitchen-day-start-preparation'));
     await user.click(screen.getByTestId('kitchen-day-finish-preparation'));
     await user.click(screen.getByTestId('kitchen-day-timer-continue'));
-    await user.type(screen.getByTestId('kitchen-day-actual-waste'), '450');
+    await typeMassGrams(user, 'kitchen-day-actual-waste', '450');
     expect(screen.queryByTestId('kitchen-day-add-another-ingredient')).not.toBeInTheDocument();
     await user.click(screen.getByTestId('kitchen-day-submit-trim'));
     await user.click(screen.getByTestId('kitchen-day-add-another-ingredient'));
@@ -156,12 +160,13 @@ describe('Kitchen Day connected flow', () => {
     await recordHedelmatPortion(user);
     await selectTrimIngredient(user, 'Banaani', 'Banaani');
     await user.click(screen.getByRole('button', { name: 'Continue' }));
-    await user.type(screen.getByTestId('kitchen-day-starting-weight'), '5000');
+    await typeMassGrams(user, 'kitchen-day-starting-weight', '5000');
     await user.click(screen.getByTestId('kitchen-day-trim-back'));
     expect(screen.getByTestId('kitchen-day-trim-step-ingredient')).toBeInTheDocument();
     expect(screen.getByTestId('kitchen-day-ingredient-name')).toHaveValue('Banaani');
     await user.click(screen.getByRole('button', { name: 'Continue' }));
-    expect(screen.getByTestId('kitchen-day-starting-weight')).toHaveValue('5000');
+    expect(screen.getByTestId('kitchen-day-starting-weight')).toHaveValue('5');
+    expect(screen.getByTestId('kitchen-day-starting-weight-unit-kg')).toHaveAttribute('aria-pressed', 'true');
   });
 
   it('opens recipe and ingredient comboboxes with ordered options before typing', async () => {
@@ -172,10 +177,11 @@ describe('Kitchen Day connected flow', () => {
     expect(screen.getByRole('option', { name: 'Hedelmät M,G' })).toBeInTheDocument();
     expect(screen.queryByText('Type to search recipes')).not.toBeInTheDocument();
     await user.click(screen.getByRole('option', { name: 'Hedelmät M,G' }));
-    await user.type(screen.getByTestId('kitchen-day-actual-banaani'), '1500');
-    await user.type(screen.getByTestId('kitchen-day-actual-omena'), '1200');
-    await user.type(screen.getByTestId('kitchen-day-actual-viinirypale-tumma-kiveton'), '1000');
-    await user.type(screen.getByTestId('kitchen-day-final-recipe-weight'), '3700');
+    expect(screen.getByTestId('kitchen-day-actual-banaani-unit-kg')).toHaveAttribute('aria-pressed', 'true');
+    await typeMassGrams(user, 'kitchen-day-actual-banaani', '1500');
+    await typeMassGrams(user, 'kitchen-day-actual-omena', '1200');
+    await typeMassGrams(user, 'kitchen-day-actual-viinirypale-tumma-kiveton', '1000');
+    await typeMassGrams(user, 'kitchen-day-final-recipe-weight', '3700');
     await user.click(screen.getByTestId('kitchen-day-submit-portion'));
     const ingredientInput = screen.getByTestId('kitchen-day-ingredient-name');
     expect(ingredientInput).toHaveAttribute('placeholder', 'Select ingredient…');
@@ -278,9 +284,7 @@ describe('Kitchen Day connected flow', () => {
     await recordHedelmatPortion(user);
     await recordBanaaniTrim(user);
     await user.click(screen.getByTestId('kitchen-day-continue-reuse'));
-    await user.type(screen.getByTestId('kitchen-day-reusable-waste'), '200');
-    await user.type(screen.getByTestId('kitchen-day-reuse-destination'), 'Stock');
-    await user.click(screen.getByTestId('kitchen-day-save-rescue'));
+    await recordRescueDecision(user, '200', 'Stock');
     await user.click(screen.getByTestId('kitchen-day-open-finish-summary'));
     expect(screen.getByTestId('kitchen-day-finish-challenge')).toBeInTheDocument();
     await user.click(screen.getByTestId('kitchen-day-finish-keep-working'));
@@ -325,14 +329,26 @@ describe('Kitchen Day one recipe per attempt', () => {
     expect(screen.getByTestId('kitchen-day-finish-challenge')).toBeInTheDocument();
   });
 
-  it('H: Finish is available after Portion and Trim without Rescue', async () => {
+  it('H: Finish is blocked after positive-waste Trim until Rescue is recorded', async () => {
     const user = userEvent.setup();
     render(<AppRouter />);
     await recordHedelmatPortion(user);
     await recordBanaaniTrim(user);
+    expect(screen.queryByTestId('kitchen-day-open-finish-summary')).not.toBeInTheDocument();
+    expect(screen.getByTestId('kitchen-day-pending-rescue-bar')).toBeInTheDocument();
+    expect(screen.getByTestId('kitchen-day-record-remaining-rescue')).toBeInTheDocument();
+    await user.click(screen.getByTestId('kitchen-day-record-remaining-rescue'));
+    expect(screen.getByTestId('kitchen-day-rescue')).toBeInTheDocument();
+    await typeMassGrams(user, 'kitchen-day-reusable-waste', '0');
+    await user.type(screen.getByTestId('kitchen-day-reuse-destination'), 'Cannot be reused; discard');
+    expect(screen.getByTestId('kitchen-day-discarded-waste')).toHaveTextContent('450 g');
+    await user.click(screen.getByTestId('kitchen-day-save-rescue'));
     await user.click(screen.getByTestId('kitchen-day-open-finish-summary'));
     expect(screen.getByTestId('kitchen-day-finish-trim')).toBeInTheDocument();
-    expect(screen.queryByTestId('kitchen-day-finish-rescue')).not.toBeInTheDocument();
+    expect(screen.getByTestId('kitchen-day-finish-rescue-summary-banaani')).toHaveTextContent('0 g reused');
+    expect(screen.getByTestId('kitchen-day-finish-rescue-summary-banaani')).toHaveTextContent(
+      'Cannot be reused; discard',
+    );
     expect(screen.getByTestId('kitchen-day-finish-challenge')).toBeInTheDocument();
   });
 
@@ -363,36 +379,84 @@ describe('Kitchen Day one recipe per attempt', () => {
     expect(screen.getByTestId('kitchen-day-trim-recipe')).toHaveTextContent('Banaanismoothie L, G');
   });
 
-  it('J: records multiple Trim ingredients for the one recipe', async () => {
+  it('J: records multiple Trim ingredients and requires a Rescue decision for each', async () => {
     const user = userEvent.setup();
     render(<AppRouter />);
     await recordHedelmatPortion(user);
     await recordBanaaniTrim(user);
     await user.click(screen.getByTestId('kitchen-day-add-another-ingredient'));
-    await selectTrimIngredient(user, 'Omena', 'Omena');
-    await completeTrimAfterIngredient(user, '200');
+    await recordOmenaTrim(user, '200');
+    expect(screen.queryByTestId('kitchen-day-open-finish-summary')).not.toBeInTheDocument();
+    expect(screen.getByTestId('kitchen-day-pending-rescue-copy')).toHaveTextContent(
+      'Record a reuse decision for each trimmed ingredient before finishing.',
+    );
+    await user.click(screen.getByTestId('kitchen-day-continue-reuse'));
+    expect(screen.getByTestId('kitchen-day-rescue-remaining')).toHaveTextContent(
+      '2 ingredients still need a reuse decision.',
+    );
+    await recordRescueDecision(user, '200', 'Use in soup');
+    expect(screen.queryByTestId('kitchen-day-finish-summary')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('kitchen-day-open-finish-summary')).not.toBeInTheDocument();
+    expect(screen.getByTestId('kitchen-day-rescue-ingredient')).toHaveDisplayValue('Omena');
+    await recordRescueDecision(user, '0', 'Cannot be reused; discard');
     await user.click(screen.getByTestId('kitchen-day-open-finish-summary'));
     expect(screen.getByTestId('kitchen-day-finish-trim-summary-banaani')).toHaveTextContent('450 g waste');
     expect(screen.getByTestId('kitchen-day-finish-trim-summary-omena')).toHaveTextContent('200 g waste');
-    expect(screen.queryByTestId('kitchen-day-finish-rescue')).not.toBeInTheDocument();
+    expect(screen.getByTestId('kitchen-day-finish-rescue-summary-banaani')).toHaveTextContent(
+      '200 g to Use in soup',
+    );
+    expect(screen.getByTestId('kitchen-day-finish-rescue-summary-omena')).toHaveTextContent('0 g reused');
+    expect(screen.getByTestId('kitchen-day-finish-rescue-summary-omena')).toHaveTextContent(
+      'Cannot be reused; discard',
+    );
     expect(screen.getByTestId('kitchen-day-finish-challenge')).toBeInTheDocument();
   });
 
-  it('K/N: g/kg selector converts mass without changing volume units', async () => {
+  it('K/N: mass fields default to kg, g is selectable, and the typed number is not auto-converted', async () => {
     const user = userEvent.setup();
     render(<AppRouter />);
     const recipeInput = screen.getByTestId('kitchen-day-recipe-select');
     await user.click(recipeInput);
     await user.type(recipeInput, 'Hedelmät M,G');
     await user.click(screen.getByRole('option', { name: 'Hedelmät M,G' }));
-    expect(screen.getByTestId('kitchen-day-actual-banaani-unit-g')).toBeInTheDocument();
+    expect(screen.getByTestId('kitchen-day-actual-banaani-unit-kg')).toHaveAttribute('aria-pressed', 'true');
+    await user.type(screen.getByTestId('kitchen-day-actual-banaani'), '1.25');
+    expect(screen.getByTestId('kitchen-day-actual-banaani')).toHaveValue('1.25');
+    await user.click(screen.getByTestId('kitchen-day-actual-banaani-unit-g'));
+    expect(screen.getByTestId('kitchen-day-actual-banaani')).toHaveValue('1.25');
     await user.click(screen.getByTestId('kitchen-day-actual-banaani-unit-kg'));
+    expect(screen.getByTestId('kitchen-day-actual-banaani')).toHaveValue('1.25');
+    await user.clear(screen.getByTestId('kitchen-day-actual-banaani'));
     await user.type(screen.getByTestId('kitchen-day-actual-banaani'), '1.5');
-    expect(screen.getByTestId('kitchen-day-actual-banaani')).toHaveValue('1.5');
-    await user.type(screen.getByTestId('kitchen-day-actual-omena'), '1200');
-    await user.type(screen.getByTestId('kitchen-day-actual-viinirypale-tumma-kiveton'), '1000');
-    await user.type(screen.getByTestId('kitchen-day-final-recipe-weight'), '3700');
+    await user.type(screen.getByTestId('kitchen-day-actual-omena'), '1.2');
+    await user.type(screen.getByTestId('kitchen-day-actual-viinirypale-tumma-kiveton'), '1');
+    await user.type(screen.getByTestId('kitchen-day-final-recipe-weight'), '3.7');
     await user.click(screen.getByTestId('kitchen-day-submit-portion'));
     expect(screen.getByTestId('kitchen-day-trim')).toBeInTheDocument();
+    await selectTrimIngredient(user, 'Banaani', 'Banaani');
+    await user.click(screen.getByRole('button', { name: 'Continue' }));
+    expect(screen.getByTestId('kitchen-day-starting-weight-unit-kg')).toHaveAttribute('aria-pressed', 'true');
+  });
+
+  it('reopens pending Rescue after another positive-waste Trim is saved', async () => {
+    const user = userEvent.setup();
+    render(<AppRouter />);
+    await recordHedelmatPortion(user);
+    await recordBanaaniTrim(user);
+    await user.click(screen.getByTestId('kitchen-day-continue-reuse'));
+    await recordRescueDecision(user, '200', 'Use in soup');
+    expect(screen.getByTestId('kitchen-day-open-finish-summary')).toBeInTheDocument();
+    await user.click(screen.getByTestId('kitchen-day-nav-trim'));
+    await selectTrimIngredient(user, 'Omena', 'Omena');
+    await completeTrimAfterIngredient(user, '200');
+    expect(screen.queryByTestId('kitchen-day-open-finish-summary')).not.toBeInTheDocument();
+    expect(screen.getByTestId('kitchen-day-pending-rescue-bar')).toBeInTheDocument();
+    await user.click(screen.getByTestId('kitchen-day-continue-reuse'));
+    expect(screen.getByTestId('kitchen-day-rescue-ingredient')).toHaveDisplayValue('Omena');
+    expect(screen.getByTestId('kitchen-day-rescue-rescue-summary-banaani')).toBeInTheDocument();
+    await recordRescueDecision(user, '0', 'Cannot be reused; discard');
+    await user.click(screen.getByTestId('kitchen-day-open-finish-summary'));
+    expect(screen.getByTestId('kitchen-day-finish-rescue-summary-banaani')).toBeInTheDocument();
+    expect(screen.getByTestId('kitchen-day-finish-rescue-summary-omena')).toBeInTheDocument();
   });
 });

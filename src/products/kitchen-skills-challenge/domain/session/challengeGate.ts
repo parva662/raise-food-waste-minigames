@@ -12,8 +12,9 @@ import type {
 } from '@/products/kitchen-skills-challenge/domain/types';
 
 /**
- * Progress of one challenge attempt. An attempt has exactly one recipe: Portion is required,
- * Trim (any number of that recipe's ingredients) and Rescue (only for trimmed waste) are optional.
+ * Progress of one challenge attempt. An attempt has exactly one recipe: Portion is required.
+ * Trim is optional until saved. Each saved Trim ingredient with positive actual waste needs one
+ * Rescue decision before Finish. Zero-waste Trim needs no Rescue.
  */
 export type KitchenSkillsTaskProgress = {
   portionComplete: boolean;
@@ -34,9 +35,9 @@ export function hasKitchenSkillsDraftWork(progress: KitchenSkillsTaskProgress): 
   return progress.trimInProgress || progress.reuseInProgress;
 }
 
-/** Finish is available as soon as Portion is saved; optional modules are never forced. */
+/** Finish requires Portion, plus a Rescue decision for every positive-waste Trim ingredient. */
 export function canFinishKitchenSkillsChallenge(progress: KitchenSkillsTaskProgress): boolean {
-  return progress.portionComplete;
+  return progress.portionComplete && progress.remainingRescueIngredientIds.length === 0;
 }
 
 /** Message for the confirm prompt before an unsaved measurement is abandoned (null = no draft). */
@@ -54,6 +55,7 @@ export function requiredKitchenSkillsSection(
   progress: KitchenSkillsTaskProgress,
 ): Exclude<KitchenSkillsHashSection, 'review'> {
   if (!progress.portionComplete) return 'portion';
+  if (progress.remainingRescueIngredientIds.length > 0) return 'reuse';
   return progress.hasEligibleTrimIngredients ? 'trim' : 'portion';
 }
 

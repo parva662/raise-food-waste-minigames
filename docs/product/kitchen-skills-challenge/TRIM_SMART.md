@@ -14,7 +14,7 @@ Estimate waste before preparation and measure actual waste after. Recipe-ingredi
 
 One `trimSmart` activity = one ingredient preparation entry for the attempt’s saved recipe. A student may record **multiple different eligible ingredients of that one recipe**. Uniqueness is `sessionId` + `recipeId` + `ingredientId`. Trim cannot start until Portion Precision has saved the attempt’s recipe; UI work is scoped to that recipe. Trim is **optional** — Finish is available without any Trim activity, including when the recipe has no eligible ingredients.
 
-Reuse (0..1) joins this entry by `sessionId` + `recipeId` + `ingredientId`. Historical sessions may still hold Trim under more than one Portion recipe; readers keep those associations.
+Reuse (0..1) joins this entry by `sessionId` + `recipeId` + `ingredientId`. A saved Trim entry with actual waste above 0 g requires that Rescue decision before Finish; 0 g actual waste does not. Historical sessions may still hold Trim under more than one Portion recipe; readers keep those associations.
 
 ## 3. LEGACY IMPLEMENTATION (v1 at `#/waste/trim-smart`)
 
@@ -24,7 +24,7 @@ Standalone route, no estimate step, no timer, no reference comparison. Posts `pr
 
 1. Choose a remaining unused recipe ingredient (`ingredientId` + name from the attempt’s saved Portion recipe) whose kitchen Hävikki (`referenceWastePercent`) is greater than 0. 0% lines are not offered. If the recipe has none, Trim shows that there are no Trim Smart ingredients and Finish remains available. New Trim posts include `recipeId`.
 2. Technique → live plural slug `trimTechniques` (ten locked one-tap values). Layout: [`../UI_STANDARD.md`](../UI_STANDARD.md).
-3. Starting weight, estimated waste, and actual waste use the same compact **g / kg** selector as Portion. Canonical storage and bounds stay in grams (`0 ≤ estimate/actual ≤ starting weight`). 1 kg = 1000 g. No kg properties.
+3. Starting weight, estimated waste, and actual waste use the same compact **g / kg** selector as Portion and **default to kg**. Canonical storage and bounds stay in grams (`0 ≤ estimate/actual ≤ starting weight`). Switching the unit keeps the typed number. 1 kg = 1000 g. No kg properties.
 4. Estimate → actual waste after timed preparation (`duration` from the existing timer — student does not type minutes; internal timer states are never shown).
 5. See recorded measurements with g/kg formatting (no waste % or Hävikki comparison on the student result). Challenge summary lists each ingredient compactly: name, actual waste, preparation duration (e.g. `Banaani` / `260 g waste · 1 min 24 sec`).
 6. **Save ingredient** posts `SILENT_ACTIVITY`. **Another ingredient** stays on Trim for another unused recipe ingredient. **Record reuse** opens Reuse when there is reusable waste. Empty Trim activities are never required to enable Finish.

@@ -5,6 +5,9 @@ describe('Kitchen Skills Challenge session identity', () => {
   it('uses Europe/Helsinki for sessionDate', () => {
     expect(getKitchenSkillsSessionDate(new Date('2026-09-14T21:30:00.000Z'))).toBe('2026-09-15');
     expect(getKitchenSkillsSessionDate(new Date('2026-09-14T20:59:59.000Z'))).toBe('2026-09-14');
+    expect(getKitchenSkillsSessionDate(new Date('2026-10-21T20:59:59.000Z'))).toBe('2026-10-21');
+    expect(getKitchenSkillsSessionDate(new Date('2026-10-21T21:00:00.000Z'))).toBe('2026-10-22');
+    expect(getKitchenSkillsSessionDate(new Date('2026-10-21T21:00:01.000Z'))).toBe('2026-10-22');
   });
 
   it('builds a standalone session id with the attempt suffix', () => {

@@ -23,7 +23,7 @@ Students record practical kitchen work on one operational day (Europe/Helsinki).
 
 ## 2. Product model
 
-**New attempts (approved 21 October 2026):** one challenge attempt = exactly one Portion Precision recipe. That recipe may have zero or more Trim Smart ingredient preparations, and Rescue & Reuse only where Trim waste exists. A second Portion recipe requires **Finish challenge** and a **new attempt**.
+**New attempts (approved 21 October 2026):** one challenge attempt = exactly one Portion Precision recipe. Trim is optional until a Trim activity is saved. Each saved Trim ingredient with **positive actual waste** needs exactly one Rescue decision before Finish (`0 g reusable` plus an explanation in `reuseDestination` is valid). Zero-waste Trim needs no Rescue. A second Portion recipe requires **Finish challenge** and a **new attempt**.
 
 **Historical compatibility:** older GameBus sessions may contain several Portion recipes under one day-scoped `sessionId`. Readers keep those sessions fully readable. They are not rewritten.
 
@@ -31,7 +31,7 @@ Students record practical kitchen work on one operational day (Europe/Helsinki).
 Kitchen Skills attempt (student actor + unique sessionId + sessionDate)
   ├── One recipe (portionPrecision) — required; once per attempt
   │     ├── Ingredient 1 (trimSmart) — optional; sessionId + recipeId + ingredientId
-  │     │     └── Reuse (rescueAndReuse) — optional; same key
+  │     │     └── Reuse (rescueAndReuse) — required when that Trim has waste > 0 g; same key
   │     └── Ingredient 2 (trimSmart) — optional; more ingredients of the SAME recipe
   ├── Session Review (current attempt only, read-only)
   ├── Student Progress (own history, separate page; same-day attempts stay separate)
@@ -48,9 +48,9 @@ Kitchen Skills attempt (student actor + unique sessionId + sessionDate)
 | `ingredientId` | Ingredient identity within a recipe; Trim / Reuse uniqueness is `sessionId` + `recipeId` + `ingredientId` |
 | Active recipe | The single saved Portion recipe of this attempt |
 
-**Uniqueness (new attempts):** one Portion recipe per `sessionId`. Multiple **different** Trim ingredients of that recipe are allowed. Same ingredient twice under one recipe is blocked. Finish is available as soon as Portion is saved. Trim and Rescue are optional; empty optional modules are never required. Unsaved Trim/Rescue drafts warn before they are abandoned.
+**Uniqueness (new attempts):** one Portion recipe per `sessionId`. Multiple **different** Trim ingredients of that recipe are allowed. Same ingredient twice under one recipe is blocked. Finish is available after Portion when no positive-waste Trim still lacks a Rescue decision. Empty Trim/Rescue activities are never fabricated. Unsaved Trim/Rescue drafts warn before they are abandoned. Fresh mass inputs default to **kg**; the student can select **g**. Switching the unit keeps the typed number and reinterprets it (canonical storage stays grams).
 
-**Attempt identity:** generated once when the challenge opens, stored in a non-authoritative local attempt record (`ks-attempt:v1:{taskId}:{actorId}`), and reused across reload / TASK replay / INPUT_COLLECTIONS until Finish. Finish clears the record and posts `{ type: 'EXIT' }`. Reopening after Finish starts a new `attemptId`. A successful `postMessage` is not GameBus persistence; recovered local rows stay unconfirmed until they appear in the self-feed. Local storage is never proof that GameBus stored the activity.
+**Attempt identity:** generated once when the challenge opens, stored in a non-authoritative local attempt record (`ks-attempt:v1:{taskId}:{actorId}`), and reused across reload / TASK replay / INPUT_COLLECTIONS until Finish. Finish archives dispatched local evidence (`ks-attempt-archive:v1:{sessionId}`), clears the active key, and posts `{ type: 'EXIT' }`. The archive is never auto-posted and is not GameBus proof. Reopening after Finish starts a new `attemptId`. A successful `postMessage` is not GameBus persistence; recovered local rows stay unconfirmed until they appear in the self-feed. Local storage is never proof that GameBus stored the activity.
 
 Exact stored properties: slug contract. Module intent: [`TRIM_SMART.md`](TRIM_SMART.md), [`RESCUE_AND_REUSE.md`](RESCUE_AND_REUSE.md), [`PORTION_PRECISION.md`](PORTION_PRECISION.md). Review / Progress / tutor: [`CHEF_REVIEW.md`](CHEF_REVIEW.md).
 

@@ -1,11 +1,13 @@
 /** @vitest-environment jsdom */
 import { afterEach, describe, expect, it } from 'vitest';
 import {
+  archiveFinishedKitchenSkillsAttempt,
   clearKitchenSkillsAttempt,
   createKitchenSkillsAttemptId,
   guardKitchenSkillsAttempt,
   hasDispatchedKitchenSkillsWork,
   kitchenSkillsAttemptStorageKey,
+  readArchivedKitchenSkillsAttempt,
   readKitchenSkillsAttempt,
   recordDispatchedKitchenSkillsEntry,
   resetKitchenSkillsAttemptStorageForTests,
@@ -123,6 +125,85 @@ describe('Kitchen Skills attempt record', () => {
     });
     expect(afterMidnight.record.attemptId).toBe('newdayid');
     expect(afterMidnight.record.sessionDate).toBe('2026-10-22');
+  });
+
+  it.each([
+    ['23:59:59', '2026-10-21T20:59:59.000Z', '2026-10-21'],
+    ['00:00:00', '2026-10-21T21:00:00.000Z', '2026-10-22'],
+    ['00:00:01', '2026-10-21T21:00:01.000Z', '2026-10-22'],
+  ] as const)(
+    'keeps a dispatched unfinished attempt at Helsinki %s without reposting',
+    (_label, iso, today) => {
+      const started = resolveKitchenSkillsAttempt({
+        key,
+        today: '2026-10-21',
+        now: new Date('2026-10-21T20:59:59.000Z'),
+        buildSessionId: buildId,
+        createAttemptId: () => 'lateid1',
+      });
+      recordDispatchedKitchenSkillsEntry(key, started.record.attemptId, {
+        module: 'portion',
+        value: {
+          sessionId: started.record.sessionId,
+          sessionDate: started.record.sessionDate,
+          submittedAt: '2026-10-21T20:59:59.000Z',
+          recipeId: '42',
+          recipeName: 'Hedelmät M,G',
+          recipeComposition: [],
+          finalRecipeWeightGrams: 3700,
+          source: 'local',
+        },
+      });
+      const resolved = resolveKitchenSkillsAttempt({
+        key,
+        today,
+        now: new Date(iso),
+        buildSessionId: buildId,
+        createAttemptId: () => 'newdayid',
+      });
+      expect(resolved.record.attemptId).toBe('lateid1');
+      expect(resolved.record.sessionDate).toBe('2026-10-21');
+      expect(resolved.record.sessionId).toBe(started.record.sessionId);
+      expect(hasDispatchedKitchenSkillsWork(resolved.record)).toBe(true);
+    },
+  );
+
+  it('archives dispatched Finish evidence without auto-reposting it on the next open', () => {
+    const first = resolveKitchenSkillsAttempt({
+      key,
+      today: '2026-10-21',
+      now: new Date('2026-10-21T07:00:00.000Z'),
+      buildSessionId: buildId,
+      createAttemptId: () => 'firstid1',
+    });
+    recordDispatchedKitchenSkillsEntry(key, first.record.attemptId, {
+      module: 'portion',
+      value: {
+        sessionId: first.record.sessionId,
+        sessionDate: first.record.sessionDate,
+        submittedAt: '2026-10-21T07:10:00.000Z',
+        recipeId: '42',
+        recipeName: 'Hedelmät M,G',
+        recipeComposition: [],
+        finalRecipeWeightGrams: 3700,
+        source: 'local',
+      },
+    });
+    archiveFinishedKitchenSkillsAttempt(key, first.record.attemptId);
+    expect(readKitchenSkillsAttempt(key)).toBeNull();
+    const archived = readArchivedKitchenSkillsAttempt(first.record.sessionId);
+    expect(archived?.portion?.recipeId).toBe('42');
+    const second = resolveKitchenSkillsAttempt({
+      key,
+      today: '2026-10-21',
+      now: new Date('2026-10-21T08:00:00.000Z'),
+      buildSessionId: buildId,
+      createAttemptId: () => 'secondid2',
+    });
+    expect(second.record.attemptId).toBe('secondid2');
+    expect(second.record.sessionId).not.toBe(first.record.sessionId);
+    expect(second.record.portion).toBeNull();
+    expect(readArchivedKitchenSkillsAttempt(first.record.sessionId)?.attemptId).toBe('firstid1');
   });
 
   it('treats another window Finish as a closed attempt', () => {

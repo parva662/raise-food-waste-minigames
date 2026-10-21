@@ -1,226 +1,176 @@
-# APPROVED PRODUCT TARGET
-# Product: docs/product/kitchen-skills-challenge/CHEF_REVIEW.md
-# Slugs: docs/product/kitchen-skills-challenge/GAMEBUS_SLUG_CONTRACT.md
-# Filename is historical. Product wording is Tutor / Tutor assessment.
-# GameBus activity slug remains wastePracticeReview.
-# Implemented on main.
-#
-@chef-review @waste-challenges @kitchen-day
-Feature: Session Review, Student Progress, and tutor assessment
-  As a student or tutor
-  I want one current-session review, one historical Progress page, and one qualitative tutor assessment per completed module
-  So that system performance stays separate from tutor judgement
+# Historical filename retained. UI wording Tutor / Tutor assessment; activity slug wastePracticeReview.
+@chef-review @tutor-feedback @kitchen-day
+Feature: Tutor assessment and student readbacks for one-recipe attempts
+  As a tutor
+  I want one reliable assessment per evidenced module for each student's attempt
+  So that confirmed results are not mistaken for unsaved or unrelated work
 
   Background:
-    Given a student completed a kitchen day containing carrot preparation with a reuse suggestion, onion preparation, and a Portion Precision record
-    And the tutor reviews that kitchen day at the end of the student's session
+    Given the GameBus Tutor uses kitchenSkillsTrainerInput rather than kitchenGroupInput
+    And historical day-scoped multi-recipe sessions are still readable
 
-  Rule: One evidence surface per student kitchen day
+  Rule: Tutor sees all recorded evidence without mixing attempts
 
-    Scenario: Completed records are visible together
-      When the tutor opens the student's kitchen day
-      Then the carrot entry, the onion entry, the carrot reuse suggestion, and the recipe entry are listed together
+    @release-gate @critical @integration
+    Scenario: Two same-day attempts remain separate
+      Given a student finished recipe A in a morning attempt
+      And finished recipe B in a later attempt on the same date
+      When the tutor opens the student's history
+      Then two separate attempt rows are shown
+      And each row has its own recorded evidence and assessment status
 
-    Scenario: Session Review shows the same current day
-      When the student opens Session Review
-      Then all of that student's completed records for the current kitchen day are listed
-      And the overview is read-only
+    @release-gate @critical @journey
+    Scenario: Multiple Trim and Rescue ingredient records need only one review per module
+      Given one attempt has Portion Precision
+      And recorded Trim for carrots and potatoes
+      And recorded Rescue decisions for carrots and potatoes
+      When the tutor opens that attempt
+      Then both Trim ingredient records are visible in the Trim module evidence
+      And both Rescue decisions are visible in Rescue evidence
+      And exactly one Trim assessment form and one Rescue assessment form are required for that recipe
+      And no separate tutor score is requested per ingredient
 
-    Scenario: Evidence stays read-only for the tutor
-      When the tutor opens the student's kitchen day
-      Then ingredient preparation, reuse, and Portion Precision records are shown as evidence
-      And the tutor cannot edit the student's measurements
+    @critical
+    Scenario: Tutor cannot edit student's saved measurement activities
+      When the tutor opens an attempt's evidence
+      Then the measurement records are read-only
+      And the tutor may enter qualitative scores separately
 
-    Scenario: Unfinished work is not completed evidence
-      Given the student has an unfinished ingredient preparation entry
-      When the tutor opens the student's kitchen day
-      Then the unfinished entry is not treated as completed evidence
+    @critical @history
+    Scenario: Historical multi-recipe selection remains available
+      Given an old session contains Portion recipe A and recipe B under the same sessionId
+      When the tutor opens the old session
+      Then the tutor can select recipe A or recipe B
+      And each evidenced recipe-module pair retains its own assessment identity
+      And legacy evidence without a defensible recipe link is not guessed
 
-  Rule: Student Progress is the student's own history
+  Rule: Only recorded modules are assessed
 
-    Scenario: Progress shows completed work before tutor review
-      Given the student completed Trim, Reuse, and Portion
-      And the tutor has not reviewed any module
+    @critical
+    Scenario: Portion-only attempt needs only one review
+      Given an attempt has a saved Portion activity and no Trim or Rescue activity
+      When the tutor opens the attempt
+      Then Portion requires assessment
+      And Trim and Rescue do not require assessment
+      And confirming the Portion review makes the attempt Reviewed
+
+    @critical
+    Scenario: Portion and Trim without Rescue evidence require two module reviews
+      Given the tutor feed contains Portion and Trim activities for an attempt
+      And no Rescue activity is present
+      When the tutor opens the attempt
+      Then Portion and Trim require independent assessments
+      And Rescue has no mandatory review slot without evidence
+
+    @critical
+    Scenario: Explicit zero-gram Rescue is evidence
+      Given a student saved a Rescue decision with 0 grams reusable and explanation "Cannot be reused"
+      When the tutor opens the attempt
+      Then the Rescue record is shown as evidence
+      And the Rescue module needs assessment
+
+  Rule: Review status depends on confirmed GameBus activities
+
+    @release-gate @critical @integration
+    Scenario: Dispatch alone is not Reviewed
+      Given a tutor entered valid scores for an evidenced module
+      When the tutor submits the wastePracticeReview SILENT_ACTIVITY
+      Then the module enters Awaiting confirmation
+      And it is not Reviewed until the appropriate persisted review appears in the trainer feed
+      And no automatic second assessment is posted
+
+    @critical @integration
+    Scenario: Confirmed persisted review is Reviewed
+      Given the trainer feed contains a persisted review with the correct student, sessionId, recipeId and reviewedGame
+      When the tutor reopens the task
+      Then that module shows Reviewed
+      And its recorded scores and feedback remain visible
+
+    @critical @regression
+    Scenario: One module's review does not confirm another
+      Given an attempt has evidenced Portion, Trim and Rescue modules
+      And only Portion and Trim reviews are confirmed
+      When the tutor opens the attempt
+      Then Rescue still requires assessment
+      And the attempt is not fully Reviewed
+
+    @critical @recovery
+    Scenario: A replayed trainer feed does not enable unsafe retry
+      Given a tutor dispatched an assessment while viewing a trainer feed
+      When the iframe reloads and GameBus replays exactly that feed
+      Then an Assess again action does not unlock on receipt time alone
+      And the dispatched review remains Awaiting confirmation
+
+    @critical @recovery
+    Scenario: An incomplete or delayed feed is not proof of rejection
+      Given a tutor has dispatched a review with no GameBus ACK
+      When that review is absent from a subsequently received feed
+      Then the application does not automatically repost the assessment
+      And no status claims the review was definitely rejected
+      And the possibility of a delayed or truncated feed remains documented
+
+    @critical
+    Scenario: The selected student and recipe determine review identity
+      Given two attempts exist for the same student and recipe
+      When the tutor submits a review for the first attempt's Trim module
+      Then the second attempt's Trim module remains independently assessable
+      And the review links to the correct actor, sessionId, recipeId and reviewedGame
+
+  Rule: Scores remain qualitative and separate from system metrics
+
+    Scenario Outline: Scores accept only the integer range zero through five
+      When the tutor enters <score> for Time efficiency or Preparation quality
+      Then the score is <result>
+
+      Examples:
+        | score | result   |
+        | 0     | accepted |
+        | 1     | accepted |
+        | 5     | accepted |
+        | 6     | rejected |
+        | -1    | rejected |
+        | 2.5   | rejected |
+
+    Scenario: Zero is a valid tutor score and not an unanswered input
+      Given the tutor has not yet selected Preparation quality
+      When the tutor selects 0
+      Then the value is a valid scored answer
+
+    Scenario: Feedback text is optional and stored independently of measured facts
+      When the tutor submits two valid scores without written feedback
+      Then the review is valid
+      And the student's measurement activities remain unchanged
+
+    Scenario: JAMIX and Portion-derived metrics do not set tutor scores
+      When the tutor examines calculated waste or ingredient-accuracy metrics
+      Then the metrics are shown as evidence rather than stored review scores
+      And no overall combined score or leaderboard is invented
+
+  Rule: Student Progress never exposes raw peer records
+
+    @critical @privacy
+    Scenario: Student Progress displays only authorized own records
+      Given the authenticated student's self activity feed is available
       When the student opens Progress
-      Then those completed records are listed
-      And tutor assessment is shown as not yet scored
+      Then only activities owned by the authenticated actor are shown
+      And Tutor group activities and identifiable peer data are not exposed
 
-  Rule: One tutor assessment per completed module
+    Scenario: Student results work before any tutor review exists
+      Given a student has saved Portion and Trim activities
+      And there is no persisted tutor assessment
+      When the student opens Progress
+      Then the completed measurements remain visible
+      And absent tutor scores are not fabricated
 
-    Scenario Outline: Time efficiency accepts 0 to 5
-      When the tutor gives the Trim Smart module a time efficiency score of <score>
-      Then the time efficiency score is accepted
-
-      Examples:
-        | score |
-        | 0     |
-        | 1     |
-        | 2     |
-        | 3     |
-        | 4     |
-        | 5     |
-
-    Scenario Outline: Preparation quality accepts 0 to 5
-      When the tutor gives the Trim Smart module a preparation quality score of <score>
-      Then the preparation quality score is accepted
-
-      Examples:
-        | score |
-        | 0     |
-        | 1     |
-        | 2     |
-        | 3     |
-        | 4     |
-        | 5     |
-
-    Scenario: Score zero is distinct from not yet scored
-      When the tutor has not scored preparation quality for a module
-      Then preparation quality is shown as not yet scored
-      When the tutor sets preparation quality to 0
-      Then preparation quality is scored as 0
-
-    Scenario: Tutor feedback is optional
-      When the tutor submits the two scores for a module without feedback
-      Then the module review is accepted
-
-    Scenario: One review covers one recipe and module only
-      Given the kitchen day has Trim Smart and Rescue & Reuse evidence for one recipe
-      When the tutor submits a Trim Smart review for that recipe
-      Then one review is recorded for that session, recipeId, and reviewedGame trimSmart
-      And Rescue & Reuse for that recipe remains open for assessment
-      And the review is not one judgement per ingredient
-      And there is no overall session-level tutor score
-
-    Scenario: Two same-day attempts need independent assessments
-      Given the student recorded Portion Precision for recipe A in a morning attempt
-      And recorded Portion Precision for recipe B in an afternoon attempt on the same date
-      When the tutor submits a Portion Precision review for the morning attempt
-      Then the morning attempt Portion is reviewed
-      And the afternoon attempt still needs assessment
-      And the two attempts are not merged
-
-    Scenario: Historical multi-recipe sessions still need one Portion assessment per recipe
-      Given a historical session recorded Portion Precision for recipe A and recipe B
-      When the tutor submits a Portion Precision review for recipe A
-      Then recipe A Portion is reviewed
-      And recipe B Portion still needs assessment
-
-  Rule: Session assessment status uses evidenced recipe-module pairs
-
-    Scenario: Portion-only session is Reviewed after the Portion assessment for that recipe
-      Given the student recorded Portion Precision only for one recipe
-      And Trim Smart and Rescue & Reuse have no participant evidence for that recipe
-      And the tutor submitted a Portion Precision review for that recipe
-      Then the session status is Reviewed
-      And Trim Smart and Rescue & Reuse do not require a review
-      And those modules do not appear as needs review
-      And they do not inflate the awaiting-assessment count
-
-    Scenario: Portion and Trim reviewed without Reuse evidence is Reviewed
-      Given the student recorded Portion Precision and Trim Smart for one recipe
-      And Rescue & Reuse has no participant evidence for that recipe
-      And the tutor reviewed Portion Precision and Trim Smart for that recipe
-      Then the session status is Reviewed
-
-    Scenario: One unreviewed module among recorded evidence is Partially reviewed
-      Given the student recorded Portion Precision, Trim Smart, and Rescue & Reuse
-      And one of those modules has no tutor review
-      Then the session status is Partially reviewed
-
-    Scenario: Unreviewed Portion-only evidence is Needs assessment
-      Given the student recorded Portion Precision only
-      And the tutor has not reviewed it
-      Then the session status is Needs assessment
-      And awaiting assessment is 1
-      And the session list does not say Trim needs review or Rescue needs review
-
-  Rule: System performance is not tutor scoring
-
-    Scenario: Trim actual vs JAMIX reference is calculated performance
-      Given the student recorded Trim for a recipe ingredient with a JAMIX Hävikki reference
-      When the tutor opens the student's kitchen day
-      Then Trim evidence shows starting weight, actual removed grams and percent, JAMIX reference percent and grams, and the difference in percentage points
-      And the difference uses above reference, below reference, or at reference
-      And the comparison does not call lower waste better
-      And Time efficiency and Preparation quality stay empty until the tutor enters them
-
-    Scenario: Missing historical recipe join is not guessed
-      Given a persisted Trim entry cannot be joined safely to a recipe-ingredient JAMIX reference
-      When the tutor opens that kitchen day
-      Then the Trim comparison shows Reference unavailable
-      And no seeded or name-inferred reference is used
-
-    Scenario: A 0 percent JAMIX reference is valid
-      Given the recipe-ingredient Hävikki reference is 0 percent
-      When the comparison is shown
-      Then 0 percent is used as the reference
-      And it is not treated as missing
+    Scenario: Missing kitchen reference stays visible as unavailable
+      Given a historical Trim row cannot be safely matched to its reference
+      When Progress calculates the kitchen comparison
+      Then the reference shows Reference unavailable
+      And the application does not infer it from ingredient names
 
     @pending
-    Scenario: Percentile messaging waits for an agreed sufficient-data rule
-      Given no agreed sufficient-data rule for percentile messaging is in force
-      When the comparison is shown
-      Then percentile or ranking messaging is not shown as a tutor assessment
-
-  Rule: Student Progress shows own JAMIX comparison and anonymous peer context
-
-    Scenario: Weighted Trim session comparison on Progress
-      Given a completed Trim session has two ingredients with different starting weights and JAMIX references
-      When the student opens Kitchen Skills Progress
-      Then the session actual trim percent is total removed grams over total starting grams
-      And the session reference percent is total expected reference grams over total starting grams
-      And the difference is shown in percentage points above, below, or at reference
-      And that comparison is visually separate from tutor scores
-      And the student Trim game does not show it
-
-    Scenario: Overview Trim card always shows kitchen reference beside actual trim
-      When the student opens Kitchen Skills Progress Overview
-      Then the Trim Smart card shows Actual trim
-      And the Trim Smart card shows Kitchen reference
-      And Waste rate is not shown
-      And Time efficiency and Preparation quality stay separate from the trim comparison
-
-    Scenario: Overview Trim card keeps the reference row when the join fails
-      Given a completed Trim session has no reconstructable recipe JAMIX join
-      When the student opens Kitchen Skills Progress Overview
-      Then the Trim Smart card shows Actual trim
-      And Kitchen reference is shown as Reference unavailable
-
-    @pending
-    Scenario: Anonymous peer Trim comparison uses deviation from each person's own JAMIX reference
-      Given a privacy-safe anonymous aggregate of peer Trim deltas is available
-      When the student opens Kitchen Skills Progress
-      Then the anonymous group median delta is shown
-      And the sample size is shown as Group median and peer count
-      And no peer name or actor id is shown
-      And there is no ranking or leaderboard
-
-    Scenario: Missing privacy-safe peer aggregate hides the statistic
-      When the student opens Kitchen Skills Progress
-      Then the peer comparison shows Not enough peer data yet
-
-    Scenario: Repeated submissions do not overweight one peer
-      Given one other participant submitted Trim more than once
-      When the anonymous median is calculated
-      Then only that participant's latest valid result is used
-
-    @pending
-    Scenario: Anonymous peer tutor scores are like-for-like module medians
-      Given a privacy-safe anonymous aggregate of peer tutor scores is available
-      When the student opens Kitchen Skills Progress
-      Then Time efficiency and Preparation quality are compared with the anonymous group median for Trim
-      And those medians are not a new overall score
-
-    Scenario: Progress never consumes raw peer activities
-      Given student Progress receives kitchenGroupInputSelf
-      And a raw GET /api/groups/activities Kitchen Skills collection is attached
-      When the student opens Kitchen Skills Progress
-      Then the peer comparison shows Not enough peer data yet
-      And no peer name, actor id, raw activity, review record, or chef feedback is shown
-      And kitchenSkillsTrainerInput is not used as a student feed
-
-  Rule: No competitive leaderboard
-
-    Scenario: The review surface does not rank students as a game leaderboard
-      When the tutor opens kitchen day reviews
-      Then the product does not present a competitive winner board as the review goal
+    Scenario: Anonymous peer comparisons wait for a verified privacy-safe aggregate
+      Given no approved privacy-safe group aggregate is available
+      When the student opens Progress
+      Then Not enough peer data yet is displayed
+      And no raw group feed is used for this feature

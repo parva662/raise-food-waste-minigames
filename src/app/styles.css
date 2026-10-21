@@ -5941,6 +5941,11 @@ ul {
   margin-top: var(--spacing-md);
 }
 
+.kitchen-day-finish-bar .kitchen-day-card__copy {
+  margin: 0 auto 0 0;
+  flex: 1 1 12rem;
+}
+
 .kitchen-day-finish-bar .kitchen-day-review-link {
   margin: 0 auto 0 0;
 }

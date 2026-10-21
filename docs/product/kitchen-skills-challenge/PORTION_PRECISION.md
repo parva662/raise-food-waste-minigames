@@ -45,7 +45,7 @@ Searchable recipe combobox (ordered options on open, typing filters; touch scrol
 
 **Save recipe** means Portion measurements are recorded. It does **not** mean Trim or Rescue must be completed. **New attempts record exactly one Portion recipe.** There is no “Start another recipe” and no resume-another-recipe picker. A student who wants a second recipe finishes this challenge and reopens it as a new attempt.
 
-Mass inputs (ingredient actuals and final prepared weight) offer a compact **g / kg** selector. The typed number does not change when the unit is toggled; the domain layer converts to canonical grams (`1 kg = 1000 g`) before validation, comparison, and GameBus mapping. Do **not** create kg properties. Volume units (dL / L) are unchanged and are never converted to mass. Summaries and readbacks format canonical grams: 999 g and 1000 g stay in grams; 1001 g → 1.001 kg; 1250 g → 1.25 kg; 2000 g → 2 kg.
+Mass inputs (ingredient actuals and final prepared weight) offer a compact **g / kg** selector and **default to kg**. The student can select **g** and type a number. The typed number does not change when the unit is toggled; the selected unit is used to interpret it as canonical grams (`1 kg = 1000 g`) before validation, comparison, and GameBus mapping. Do **not** create kg properties. Volume units (dL / L) are unchanged and are never converted to mass. Summaries and readbacks format canonical grams: 999 g and 1000 g stay in grams; 1001 g → 1.001 kg; 1250 g → 1.25 kg; 2000 g → 2 kg.
 
 EXIT only on Finish challenge. Layout: [`../UI_STANDARD.md`](../UI_STANDARD.md).
 

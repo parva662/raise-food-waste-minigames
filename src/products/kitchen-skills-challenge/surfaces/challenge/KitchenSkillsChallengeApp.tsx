@@ -131,7 +131,25 @@ function KitchenSkillsBody() {
       {visibleSection === 'reuse' ? <KitchenSkillsReuseView /> : null}
       {visibleSection === 'portion' ? <KitchenSkillsPortionView /> : null}
       {visibleSection === 'review' ? <SessionReviewView /> : null}
-      {canFinish && !closedElsewhere ? (
+      {taskProgress.remainingRescueIngredientIds.length > 0 && !closedElsewhere ? (
+        <div className="kitchen-day-finish-bar" data-testid="kitchen-day-pending-rescue-bar">
+          <p className="kitchen-day-card__copy" data-testid="kitchen-day-pending-rescue-copy">
+            Record a reuse decision for each trimmed ingredient before finishing.
+          </p>
+          {visibleSection !== 'reuse' ? (
+            <a
+              className="kitchen-day-review-link"
+              href="#/kitchen-day/reuse"
+              data-testid="kitchen-day-record-remaining-rescue"
+              onClick={(event) => {
+                if (!confirmLeavingKitchenSkillsDraft(draftMessage)) event.preventDefault();
+              }}
+            >
+              Record remaining reuse decisions
+            </a>
+          ) : null}
+        </div>
+      ) : canFinish && !closedElsewhere ? (
         <div className="kitchen-day-finish-bar" data-testid="kitchen-day-finish-bar">
           {reviewAllowed && visibleSection !== 'review' ? (
             <a

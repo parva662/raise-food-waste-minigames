@@ -28,6 +28,7 @@ export type KitchenSkillsAttemptGuard =
   | { status: 'unavailable' };
 
 const STORAGE_PREFIX = 'ks-attempt:v1:';
+const ARCHIVE_PREFIX = 'ks-attempt-archive:v1:';
 const ATTEMPT_ID_PATTERN = /^[a-z0-9]{6,32}$/;
 
 export function kitchenSkillsAttemptStorageKey(taskId: string, actorId: string): string {
@@ -109,6 +110,41 @@ export function clearKitchenSkillsAttempt(key: string, attemptId: string): void 
   }
 }
 
+/**
+ * Finish policy: keep a non-authoritative archive of dispatched work, then clear the active key
+ * so the next open is a new attempt. The archive is never auto-posted and is not GameBus proof.
+ */
+export function archiveFinishedKitchenSkillsAttempt(key: string, attemptId: string): void {
+  const store = storage();
+  const record = readKitchenSkillsAttempt(key);
+  if (!store || !record || record.attemptId !== attemptId) {
+    clearKitchenSkillsAttempt(key, attemptId);
+    return;
+  }
+  try {
+    if (hasDispatchedKitchenSkillsWork(record)) {
+      store.setItem(`${ARCHIVE_PREFIX}${record.sessionId}`, JSON.stringify(record));
+    }
+  } catch {
+    // Keep the active record rather than lose the only local dispatch evidence.
+    return;
+  }
+  clearKitchenSkillsAttempt(key, attemptId);
+}
+
+export function readArchivedKitchenSkillsAttempt(sessionId: string): KitchenSkillsAttemptRecord | null {
+  const store = storage();
+  if (!store) return null;
+  try {
+    const raw = store.getItem(`${ARCHIVE_PREFIX}${sessionId}`);
+    if (!raw) return null;
+    const parsed: unknown = JSON.parse(raw);
+    return isRecord(parsed) ? parsed : null;
+  } catch {
+    return null;
+  }
+}
+
 export function hasDispatchedKitchenSkillsWork(record: KitchenSkillsAttemptRecord): boolean {
   return record.portion !== null || record.trim.length > 0 || record.rescue.length > 0;
 }
@@ -119,7 +155,7 @@ export function resetKitchenSkillsAttemptStorageForTests(): void {
   const keys: string[] = [];
   for (let index = 0; index < store.length; index += 1) {
     const key = store.key(index);
-    if (key?.startsWith(STORAGE_PREFIX)) keys.push(key);
+    if (key?.startsWith(STORAGE_PREFIX) || key?.startsWith(ARCHIVE_PREFIX)) keys.push(key);
   }
   for (const key of keys) store.removeItem(key);
 }

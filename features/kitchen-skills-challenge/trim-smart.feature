@@ -1,187 +1,150 @@
-# APPROVED PRODUCT TARGET
-# Product: docs/product/kitchen-skills-challenge/TRIM_SMART.md
-# Slugs: docs/product/kitchen-skills-challenge/GAMEBUS_SLUG_CONTRACT.md
-# CURRENT IMPLEMENTATION: Kitchen Skills Trim at #/kitchen-day/trim uses remaining ingredients from the saved Portion recipe.
-# Public hash #/kitchen-day remains the Kitchen Day landing (Portion Precision).
-#
-@trim-smart @waste-challenges @kitchen-day
-Feature: Ingredient preparation in a kitchen day
-  As a student working in the practical kitchen
-  I want to estimate waste before preparation and measure actual waste after
-  So that I can see how I compare to kitchen reference data
+# Acceptance target for PR #12; keep the existing ten techniques and reference-data semantics.
+@trim-smart @kitchen-day
+Feature: Prepare multiple ingredients from the one saved recipe
+  As a student
+  I want to measure preparation time and waste for eligible recipe ingredients
+  So that my Trim results can be reviewed without losing individual ingredients
 
   Background:
-    Given a kitchen day session is active for the student
-    And the student has recorded a Portion Precision recipe for this session
-    And the ingredient preparation module is part of that session
+    Given the student saved one Portion Precision recipe in the current attempt
+    And only ingredients of that recipe are eligible for this Trim module
 
-  Rule: One entry is one ingredient preparation task
+  Rule: Trim is optional until an ingredient is recorded
 
-    Scenario: Trim starts with the ingredient, not a category
-      When the student opens ingredient preparation
-      Then the first step is choosing a recipe ingredient
-      And only unused recipe ingredients with Hävikki greater than 0 are offered
-      And no ingredient category is shown or required
-      And free-text ingredient names are not used
+    @critical
+    Scenario: A recipe with no eligible ingredients can finish
+      Given every ingredient of the recipe has zero percent reference Hävikki
+      When the student opens the challenge
+      Then Trim is not required
+      And Rescue is not required
+      And no empty Trim or Rescue activity is created
 
-    Scenario: A recipe with no eligible Trim ingredients is not a dead end
-      Given every recipe ingredient has 0 percent Hävikki
-      Then Trim Smart shows that there are no Trim Smart ingredients for this recipe
-      And it does not say ingredients were already recorded
-      And Record reuse is not shown
-      And no Trim or Reuse activity is created
-      And the student can complete the challenge
+    @critical
+    Scenario: No Trim chosen means Portion-only completion
+      Given the student has saved Portion Precision
+      And has not started a Trim ingredient
+      When the student opens Review and finish
+      Then no Trim activity is invented
+      And Finish challenge is available
 
-    Scenario: Remaining eligible ingredients stay available
-      Given unused recipe ingredients have Hävikki greater than 0
-      Then those ingredients are offered in the ingredient picker
-      And ingredients with 0 percent Hävikki are not offered
+  Rule: Select eligible and unused ingredients only
 
-    Scenario: All eligible ingredients can be genuinely recorded
-      Given every eligible unused recipe ingredient already has a preparation entry
-      Then Trim Smart shows that those ingredients are already recorded
-      And Record reuse is shown only when a recorded entry has reusable waste
+    @critical
+    Scenario: Ingredient picker excludes recorded, unrelated and zero-reference ingredients
+      Given the selected recipe contains both eligible and ineligible ingredients
+      When the student opens the Trim ingredient picker
+      Then only unused ingredients of that recipe with positive reference Hävikki are offered
+      And no ingredient category field is required
+      And no ingredient from a different recipe is offered
 
-    Scenario: A valid ingredient setup can continue
-      When the student selects a recipe ingredient
-      And enters a starting weight of 5000 grams
-      Then the ingredient setup is valid
-      And the student can continue to technique selection
+    @release-gate @critical @regression
+    Scenario: Save two different Trim ingredients in one attempt
+      Given carrots and potatoes are eligible for Trim
+      When the student records and saves carrots
+      And chooses Another ingredient
+      And records and saves potatoes
+      Then two distinct trimSmart activities are dispatched
+      And both carry the same sessionId and recipeId
+      And each carries its own ingredientId, waste quantities and duration
+      And both appear in the challenge summary and Tutor evidence
 
-    Scenario Outline: Invalid starting weight is blocked
-      Given the student has entered a valid name
-      When the student enters <weight> as the starting weight
-      Then the student cannot continue
-      And a starting-weight validation message is shown
+    @critical @regression
+    Scenario: The same ingredient cannot be saved twice in one attempt
+      Given carrots were already saved in Trim Smart
+      When the student attempts to record carrots again
+      Then no second trimSmart activity is dispatched for carrots
 
-      Examples:
-        | weight |
-        | blank  |
-        | 0      |
-        | -1     |
+  Rule: Preparation measurements and timer are validated
 
-    Scenario: A technique is required
-      Given the student has a valid ingredient setup
-      When no technique has been selected
-      Then the student cannot continue to the estimate step
-
-    Scenario: A technique can be recorded
-      Given the student has a valid ingredient setup
-      When the student selects a preparation technique
-      Then that technique is recorded for the entry
-
-  Rule: Estimate before timed preparation
-
-    Scenario: A valid estimate is accepted
-      Given the starting weight is 5000 grams
-      When the student enters an estimated waste of 600 grams
-      Then the estimate is accepted
-      And the student can start timed preparation
-
-    Scenario: Zero estimated waste is allowed
-      Given the starting weight is 5000 grams
-      When the student enters an estimated waste of 0 grams
-      Then the estimate is accepted
-
-    Scenario Outline: Invalid estimates are blocked
-      Given the starting weight is 5000 grams
-      When the student enters an estimated waste of <estimate>
-      Then the estimate is rejected
+    @critical
+    Scenario Outline: Starting weight must be positive
+      When the student enters <weight> grams as starting weight
+      Then the starting-weight field is <result>
 
       Examples:
-        | estimate |
-        | blank    |
-        | -1       |
-        | 5001     |
+        | weight | result   |
+        | 0      | rejected |
+        | -1     | rejected |
+        | 5000   | accepted |
 
-    Scenario: Duration comes from timed preparation
-      Given the student has entered a valid estimated waste
-      When the student starts preparation
-      And later finishes preparation
-      Then a preparation duration is recorded
-      And the student is not asked to type the duration in minutes
-
-  Rule: Actual waste after preparation
-
-    Scenario: Actual waste is recorded without showing a waste percentage
-      Given the starting weight is 5000 grams
-      And the student has finished preparation
-      When the student enters an actual waste of 450 grams
-      Then the actual waste is accepted
-      And the calculated waste percentage is 9 percent internally
-      And the waste percentage is not stored as a recorded fact
-      And the student is not shown a waste percentage or kitchen Hävikki reference
-
-    Scenario: Zero actual waste is allowed
-      Given the starting weight is 5000 grams
-      When the student enters an actual waste of 0 grams
-      Then the actual waste is accepted
-
-    Scenario Outline: Invalid actual waste is blocked
-      Given the starting weight is 5000 grams
-      When the student enters an actual waste of <actual>
-      Then the actual waste is rejected
+    Scenario Outline: Estimate and actual waste must not exceed starting mass
+      Given starting weight is 5000 grams
+      When the student enters <waste> grams of estimated or actual waste
+      Then that waste value is <result>
 
       Examples:
-        | actual |
-        | blank  |
-        | -1     |
-        | 5001   |
+        | waste | result   |
+        | 0     | accepted |
+        | 5000  | accepted |
+        | 5001  | rejected |
+        | -1    | rejected |
 
-  Rule: System comparison is not student-facing
+    @release-gate @critical
+    Scenario: Preparation duration is collected by the timer
+      Given the student has selected a valid technique and estimated waste
+      When the student starts and stops timed preparation
+      And records actual waste
+      And saves the ingredient
+      Then the recorded duration is associated with that ingredient
+      And the student did not type a duration manually
+      And that duration appears alongside the ingredient's waste in the challenge summary
 
-    Scenario: Recipe-ingredient Hävikki is internal chef/progress data
-      Given the recipe ingredient has a kitchen Hävikki reference of 0 percent or more
-      When the student finishes measuring actual waste
-      Then the student is not shown the kitchen reference or a comparison
-      And that reference stays attached to the specific recipe ingredient
-      And the comparison is not stored on the entry
-      And the comparison is not a tutor assessment
+    @critical
+    Scenario: Mass input supports kilograms but posts canonical grams
+      Given the student selected kilograms
+      When the student records 5 kg starting mass and 0.45 kg actual waste
+      Then the trimSmart entry stores 5000 grams starting mass and 450 grams actual waste
+      And the preparation technique uses an existing allowed enum value
 
-    Scenario: Later comparison uses accumulated Trim Smart data when available
-      Given accumulated kitchen-day Trim Smart data exists for a recipe ingredient
-      When chef feedback or progress is calculated
-      Then the system can compare actual trim against that recipe ingredient's Hävikki reference
-      And the comparison is calculated on read and never stored
+    Scenario: A student may return to an earlier unsaved step
+      Given the student has entered a starting weight but not saved the ingredient
+      When the student chooses Back
+      Then the ingredient selection is preserved
+      And earlier entered values remain correctable
 
-    Scenario: Missing history still keeps a 0 percent recipe Hävikki
-      Given the recipe ingredient Hävikki reference is 0 percent
-      When chef feedback is calculated
-      Then 0 percent is treated as a valid reference, not as missing
+  Rule: Mass input units are explicit and default to kilograms
+
+    @release-gate @critical @units
+    Scenario: Trim fresh mass fields start in kilograms
+      Given the student opens a new Trim Smart measurement
+      Then starting weight, estimated waste, and actual waste mass fields default to kg
+      When the student selects g for a mass field and enters 450
+      Then the entered value is interpreted as 450 grams
+      And the saved canonical amount is 450 grams
+      And switching units does not automatically convert any typed number
+
+  Rule: Positive recorded waste is followed by an explicit Rescue decision
+
+    @critical @journey
+    Scenario: Zero Trim waste does not need Rescue
+      Given a Trim ingredient was saved with zero grams actual waste
+      Then Rescue is not required for that ingredient
+
+    @critical @journey
+    Scenario: Positive Trim waste requires an eventual Rescue decision
+      Given a Trim ingredient was saved with positive actual waste
+      When the student tries to finish without a Rescue decision for that ingredient
+      Then Finish cannot be completed
+      And the student can record 0 grams reusable with an explanation if nothing can be rescued
+
+  Rule: Reference comparisons are derived, not student-facing or stored
+
+    Scenario: JAMIX comparison is only on authorized results surfaces
+      Given a recipe ingredient has a Hävikki reference
+      When the student saves a Trim ingredient
+      Then the student Trim screen does not show the waste percentage or reference delta
+      And neither the percentage nor the reference difference is posted as an activity property
+      When the tutor or student Progress reads the saved Trim entry
+      Then actual waste percentage and reference delta may be derived for that recipe ingredient
+
+    Scenario: A zero percent Hävikki reference is valid reference data
+      Given a historical recipe ingredient has a zero percent Hävikki reference
+      When an authorized results surface calculates a comparison
+      Then zero percent is not treated as a missing reference
+      And a missing ingredient-to-recipe join is never guessed
 
     @pending
-    Scenario: Percentile messaging waits for an agreed sufficient-data rule
-      Given no agreed sufficient-data rule for percentile messaging is in force
-      When the comparison is shown
-      Then the system shows the reference or average comparison
-      And the system does not show percentile or ranking messaging
-
-  Rule: Session uniqueness
-
-    Scenario: A second different ingredient is allowed
-      Given the student has recorded an ingredient preparation entry for one recipe ingredient
-      When the student records an ingredient preparation entry for another unused recipe ingredient
-      Then both entries belong to the same kitchen day
-      And each entry keeps its own measurements
-
-    Scenario: The same ingredient is not recorded twice under the same recipe
-      Given the student has recorded an ingredient preparation entry for one recipe ingredient
-      When the student tries to record another ingredient preparation entry for that same ingredient under the same recipe
-      Then a second preparation entry is not created for that recipe
-      And that ingredient is not offered in the active recipe ingredient list
-
-    Scenario: New Trim posts include recipeId
-      When the student saves an ingredient preparation entry for the active recipe
-      Then the trimSmart activity stores the recipeId with the session id and ingredient id
-
-    Scenario: Add more ingredients stays on Trim
-      Given the student has finished measuring actual waste for one recipe ingredient
-      And the student has saved that ingredient
-      When the student chooses Another ingredient
-      Then Trim stays open for another unused recipe ingredient
-
-    Scenario: The student can go back before saving
-      Given the student is on the starting weight step
-      When the student chooses Back
-      Then the ingredient choice is still selected
-      And the student can correct it before saving
+    Scenario: Percentile comparison remains disabled
+      Given no sufficient-data percentile rule is approved
+      When results are shown
+      Then no percentile or competitive ranking is displayed
