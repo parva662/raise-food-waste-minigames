@@ -206,11 +206,21 @@ describe('Kitchen Day student and chef dashboards', () => {
       expect(screen.getByTestId('kitchen-day-chef-selected')).toBeInTheDocument();
     });
     expect(screen.getByTestId('kitchen-day-chef-readonly')).toBeInTheDocument();
+    // Trainer module order is Portion → Trim → Rescue.
+    expect(
+      [...screen.getByTestId('kitchen-day-tutor-module-tabs').querySelectorAll('[role="tab"]')].map((tab) =>
+        tab.getAttribute('data-testid'),
+      ),
+    ).toEqual([
+      'kitchen-day-tutor-module-tab-portionPrecision',
+      'kitchen-day-tutor-module-tab-trimSmart',
+      'kitchen-day-tutor-module-tab-rescueAndReuse',
+    ]);
+    expect(screen.getByTestId('kitchen-day-chef-portion-mayonnaise')).toBeInTheDocument();
+    await user.click(screen.getByTestId('kitchen-day-tutor-module-tab-trimSmart'));
     expect(screen.getByTestId('kitchen-day-chef-trim-carrot')).toBeInTheDocument();
     await user.click(screen.getByTestId('kitchen-day-tutor-module-tab-rescueAndReuse'));
     expect(screen.getByTestId('kitchen-day-chef-rescue-carrot')).toBeInTheDocument();
-    await user.click(screen.getByTestId('kitchen-day-tutor-module-tab-portionPrecision'));
-    expect(screen.getByTestId('kitchen-day-chef-portion-mayonnaise')).toBeInTheDocument();
     expect(screen.queryByTestId('kitchen-day-chef-trim-onion')).not.toBeInTheDocument();
     expect(screen.queryByTestId('kitchen-day-chef-trim-unfinished')).not.toBeInTheDocument();
   });

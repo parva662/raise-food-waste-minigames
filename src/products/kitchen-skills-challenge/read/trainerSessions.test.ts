@@ -6,9 +6,10 @@ import {
   classifyKitchenSkillsTrainerFeed,
   modulesAwaitingAssessmentCount,
   partitionTrainerSessionsByAssessment,
+  sessionAssessmentCounts,
+  sessionAssessmentSlots,
   sessionAssessmentStatus,
-  sessionPendingStatusPhrases,
-  sessionReviewedScorePhrases,
+  sessionRecordedModuleLabels,
 } from '@/products/kitchen-skills-challenge/read/trainerSessions';
 import type { KitchenSkillsReviewedModule } from '@/products/kitchen-skills-challenge/domain/types';
 
@@ -179,7 +180,9 @@ describe('Kitchen Day chef session grouping', () => {
     const staff = buildKitchenSkillsTrainerStaffSummaries(sessions);
     expect(staff.map((row) => row.actorId)).toEqual(['user-2', 'user-1']);
     expect(staff[0]?.modulesAwaitingAssessment).toBe(2);
+    expect(staff[0]?.sessionsNeedingAssessment).toBe(1);
     expect(staff[1]?.modulesAwaitingAssessment).toBe(0);
+    expect(staff[1]?.sessionsReviewed).toBe(1);
   });
 
   it('attaches a module review to the matching module only', () => {
@@ -293,11 +296,19 @@ describe('Kitchen Day chef session grouping', () => {
     ]);
 
     expect(sessionAssessmentStatus(sessions.find((s) => s.sessionId === pendingOnly)!)).toBe('needs_assessment');
-    expect(sessionAssessmentStatus(sessions.find((s) => s.sessionId === partial)!)).toBe('partially_reviewed');
+    // Any evidenced module without a submission keeps the session in NEEDS ASSESSMENT.
+    expect(sessionAssessmentStatus(sessions.find((s) => s.sessionId === partial)!)).toBe('needs_assessment');
+    expect(sessionAssessmentCounts(sessions.find((s) => s.sessionId === partial)!)).toEqual({
+      recorded: 2,
+      confirmed: 1,
+      awaiting: 0,
+      outstanding: 1,
+    });
     expect(sessionAssessmentStatus(sessions.find((s) => s.sessionId === complete)!)).toBe('reviewed');
     expect(sessionAssessmentStatus(sessions.find((s) => s.sessionId === trimOnlyReviewed)!)).toBe('reviewed');
 
     const partitioned = partitionTrainerSessionsByAssessment(sessions);
+    expect(partitioned.awaitingConfirmation).toEqual([]);
     expect(partitioned.needsAssessment.map((s) => s.sessionId).sort()).toEqual([partial, pendingOnly].sort());
     expect(partitioned.reviewed.map((s) => s.sessionId).sort()).toEqual([complete, trimOnlyReviewed].sort());
     expect(modulesAwaitingAssessmentCount(sessions.find((s) => s.sessionId === trimOnlyReviewed)!)).toBe(0);
@@ -341,26 +352,27 @@ describe('Kitchen Day chef session grouping', () => {
     const reviewedPortionOnly = sessions.find((session) => session.sessionId === portionOnly)!;
     expect(sessionAssessmentStatus(reviewedPortionOnly)).toBe('reviewed');
     expect(modulesAwaitingAssessmentCount(reviewedPortionOnly)).toBe(0);
-    expect(sessionPendingStatusPhrases(reviewedPortionOnly).join(' ')).not.toMatch(/Trim needs review|Rescue needs review/);
-    expect(sessionReviewedScorePhrases(reviewedPortionOnly)).toEqual(['Portion 4/3']);
+    // Modules without evidence never become requirements.
+    expect(sessionRecordedModuleLabels(reviewedPortionOnly)).toEqual(['Portion']);
 
     const reviewedPortionTrim = sessions.find((session) => session.sessionId === portionTrim)!;
     expect(sessionAssessmentStatus(reviewedPortionTrim)).toBe('reviewed');
     expect(modulesAwaitingAssessmentCount(reviewedPortionTrim)).toBe(0);
-    expect(sessionPendingStatusPhrases(reviewedPortionTrim).join(' ')).not.toMatch(/Rescue needs review/);
+    expect(sessionRecordedModuleLabels(reviewedPortionTrim)).toEqual(['Portion', 'Trim']);
 
     const partial = sessions.find((session) => session.sessionId === allThreePartial)!;
-    expect(sessionAssessmentStatus(partial)).toBe('partially_reviewed');
+    expect(sessionAssessmentStatus(partial)).toBe('needs_assessment');
     expect(modulesAwaitingAssessmentCount(partial)).toBe(1);
-    expect(sessionPendingStatusPhrases(partial)).toContain('Rescue needs review');
-    expect(sessionPendingStatusPhrases(partial)).not.toContain('Trim needs review');
+    expect(sessionAssessmentSlots(partial).map((slot) => [slot.module, slot.state])).toEqual([
+      ['portionPrecision', 'reviewed'],
+      ['trimSmart', 'reviewed'],
+      ['rescueAndReuse', 'needs_assessment'],
+    ]);
 
     const unreviewed = sessions.find((session) => session.sessionId === portionUnreviewed)!;
     expect(sessionAssessmentStatus(unreviewed)).toBe('needs_assessment');
     expect(modulesAwaitingAssessmentCount(unreviewed)).toBe(1);
-    expect(sessionPendingStatusPhrases(unreviewed)).toEqual(['Portion needs review']);
-    expect(sessionPendingStatusPhrases(unreviewed)).not.toContain('Trim needs review');
-    expect(sessionPendingStatusPhrases(unreviewed)).not.toContain('Rescue needs review');
+    expect(sessionRecordedModuleLabels(unreviewed)).toEqual(['Portion']);
 
     const staff = buildKitchenSkillsTrainerStaffSummaries(sessions);
     expect(staff[0]?.modulesAwaitingAssessment).toBe(2);

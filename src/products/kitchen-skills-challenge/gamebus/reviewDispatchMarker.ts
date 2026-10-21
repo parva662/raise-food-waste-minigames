@@ -120,6 +120,24 @@ export function readKitchenSkillsReviewDispatchMarker(
   }
 }
 
+/** GameBus normally stores a silent activity within seconds; allow generous slack. */
+export const KITCHEN_SKILLS_FEED_CONFIRMATION_GRACE_MS = 60_000;
+
+/**
+ * True when an unconfirmed assessment was dispatched well before the trainer feed now loaded
+ * (the task was reopened after the post) and the feed still does not contain it.
+ * Only then is a deliberate, tutor-confirmed re-assessment reasonable.
+ */
+export function isAwaitingReviewMissingFromRefreshedFeed(
+  review: Pick<KitchenSkillsReviewEntry, 'awaitingPersist' | 'submittedAt'>,
+  feedReceivedAtMs: number | null,
+): boolean {
+  if (!review.awaitingPersist || feedReceivedAtMs == null) return false;
+  const submittedMs = Date.parse(review.submittedAt);
+  if (!Number.isFinite(submittedMs)) return false;
+  return submittedMs + KITCHEN_SKILLS_FEED_CONFIRMATION_GRACE_MS < feedReceivedAtMs;
+}
+
 /** Build awaiting local rows from markers for tutor sessions (reload recovery). */
 export function awaitingReviewsFromDispatchMarkers(
   sessions: readonly { actorId: string; sessionId: string }[],

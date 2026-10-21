@@ -138,5 +138,9 @@ export interface KitchenSkillsTrainerStaffSummary {
   sessions: KitchenSkillsTrainerSession[];
   sessionCount: number;
   latestSessionDate: string;
+  /** Evidenced modules with no tutor submission yet. */
   modulesAwaitingAssessment: number;
+  sessionsNeedingAssessment: number;
+  sessionsAwaitingConfirmation: number;
+  sessionsReviewed: number;
 }

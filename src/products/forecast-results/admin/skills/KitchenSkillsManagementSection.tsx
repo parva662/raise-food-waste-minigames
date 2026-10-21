@@ -7,6 +7,7 @@ import {
   assessmentStatusLabel,
   filterSessionsByDateRange,
   formatMeanScoreOutOfFive,
+  managementSessionStatus,
   recordedModulesLabel,
   summarizeFilteredKitchenSkillsSessions,
   type KitchenSkillsAssessmentRow,
@@ -15,10 +16,7 @@ import {
   KITCHEN_SKILLS_MODULE_TITLES,
   KITCHEN_SKILLS_REVIEWED_MODULES,
 } from '@/products/forecast-results/admin/skills/buildKitchenSkillsManagementSummary';
-import {
-  moduleHasEvidence,
-  sessionAssessmentStatus,
-} from '@/products/kitchen-skills-challenge/read/trainerSessions';
+import { moduleHasEvidence } from '@/products/kitchen-skills-challenge/read/trainerSessions';
 
 type SkillsTab = 'overview' | 'participants' | 'sessions' | 'assessments';
 
@@ -361,11 +359,7 @@ function SkillsSessions({ sessions }: { sessions: readonly KitchenSkillsTrainerS
           return false;
         }
         if (moduleFilter !== 'all' && !moduleHasEvidence(session, moduleFilter)) return false;
-        const status = sessionAssessmentStatus(session);
-        if (statusFilter === 'awaiting' && status !== 'needs_assessment') return false;
-        if (statusFilter === 'partial' && status !== 'partially_reviewed') return false;
-        if (statusFilter === 'reviewed' && status !== 'reviewed') return false;
-        return true;
+        return statusFilter === 'all' || managementSessionStatus(session) === statusFilter;
       });
   }, [moduleFilter, query, sessions, statusFilter]);
 

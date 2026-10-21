@@ -6,10 +6,12 @@ import {
   hasDuplicateReviewIdentity,
   isLegacySessionReview,
   isReviewPersistConfirmed,
+  listSessionRecipeIds,
   recipeAssessmentStatus,
-  recipeModulesAwaitingAssessment,
+  recipeModuleAssessmentState,
   reviewIdentityKey,
   unattributedEvidenceModules,
+  type KitchenSkillsModuleAssessmentState,
 } from '@/products/kitchen-skills-challenge/domain/session/reviewIdentity';
 import type {
   KitchenSkillsReviewedModule,
@@ -81,46 +83,105 @@ export function latestModuleReview(
   return [...reviews].sort((left, right) => right.submittedAt.localeCompare(left.submittedAt))[0];
 }
 
+/** Trainer presentation order only; GameBus slugs and student flow order are unchanged. */
+export const KITCHEN_SKILLS_TRAINER_MODULE_ORDER: readonly KitchenSkillsReviewedModule[] = [
+  'portionPrecision',
+  'trimSmart',
+  'rescueAndReuse',
+];
+
+export function sortModulesForTrainer(
+  modules: readonly KitchenSkillsReviewedModule[],
+): KitchenSkillsReviewedModule[] {
+  return KITCHEN_SKILLS_TRAINER_MODULE_ORDER.filter((module) => modules.includes(module));
+}
+
+export type KitchenSkillsAssessmentSlot = {
+  /** Null for legacy evidence that cannot be attributed to a recipe. */
+  recipeId: string | null;
+  module: KitchenSkillsReviewedModule;
+  state: KitchenSkillsModuleAssessmentState;
+};
+
+/** Every assessment the session requires, recipe by recipe in trainer module order. */
+export function sessionAssessmentSlots(
+  session: KitchenSkillsTrainerSession,
+): KitchenSkillsAssessmentSlot[] {
+  const pairs = evidencedRecipeModules(session);
+  const slots: KitchenSkillsAssessmentSlot[] = [];
+  for (const recipeId of listSessionRecipeIds(session)) {
+    const modules = sortModulesForTrainer(
+      pairs.filter((pair) => pair.recipeId === recipeId).map((pair) => pair.module),
+    );
+    for (const module of modules) {
+      slots.push({
+        recipeId,
+        module,
+        state: recipeModuleAssessmentState(session, recipeId, module),
+      });
+    }
+  }
+  for (const module of sortModulesForTrainer(unattributedEvidenceModules(session))) {
+    const review = session.moduleReviews[module];
+    slots.push({
+      recipeId: null,
+      module,
+      state: !review
+        ? 'needs_assessment'
+        : isReviewPersistConfirmed(review)
+          ? 'reviewed'
+          : 'awaiting_confirmation',
+    });
+  }
+  return slots;
+}
+
+export type KitchenSkillsSessionAssessmentCounts = {
+  recorded: number;
+  confirmed: number;
+  awaiting: number;
+  outstanding: number;
+};
+
+export function sessionAssessmentCounts(
+  session: KitchenSkillsTrainerSession,
+): KitchenSkillsSessionAssessmentCounts {
+  const slots = sessionAssessmentSlots(session);
+  return {
+    recorded: slots.length,
+    confirmed: slots.filter((slot) => slot.state === 'reviewed').length,
+    awaiting: slots.filter((slot) => slot.state === 'awaiting_confirmation').length,
+    outstanding: slots.filter((slot) => slot.state === 'needs_assessment').length,
+  };
+}
+
 export function modulesWithEvidenceCount(session: KitchenSkillsTrainerSession): number {
-  return (
-    evidencedRecipeModules(session).length + unattributedEvidenceModules(session).length
-  );
+  return sessionAssessmentCounts(session).recorded;
 }
 
 export function modulesReviewedCount(session: KitchenSkillsTrainerSession): number {
-  const recipeReviewed = evidencedRecipeModules(session).filter(
-    (pair) => findConfirmedRecipeModuleReview(session, pair.recipeId, pair.module) !== null,
-  ).length;
-  const legacyReviewed = unattributedEvidenceModules(session).filter((module) => {
-    const review = session.moduleReviews[module];
-    return review !== null && isReviewPersistConfirmed(review);
-  }).length;
-  return recipeReviewed + legacyReviewed;
+  return sessionAssessmentCounts(session).confirmed;
 }
 
+/** Evidenced modules with no tutor submission at all (awaiting-confirmation ones excluded). */
 export function modulesAwaitingAssessmentCount(session: KitchenSkillsTrainerSession): number {
-  const recipeAwaiting = recipeModulesAwaitingAssessment(session).length;
-  const legacyAwaiting = unattributedEvidenceModules(session).filter(
-    (module) => session.moduleReviews[module] === null,
-  ).length;
-  return recipeAwaiting + legacyAwaiting;
+  return sessionAssessmentCounts(session).outstanding;
 }
 
-/** Assessment state from evidenced recipe-module pairs (plus unattributed legacy modules). */
-export type KitchenSkillsSessionAssessmentStatus =
-  | 'needs_assessment'
-  | 'partially_reviewed'
-  | 'reviewed';
+/**
+ * NEEDS ASSESSMENT while any evidenced module has no submission;
+ * AWAITING CONFIRMATION when everything is submitted but not all is in the feed;
+ * REVIEWED only when every evidenced module is confirmed.
+ */
+export type KitchenSkillsSessionAssessmentStatus = KitchenSkillsModuleAssessmentState;
 
 export function sessionAssessmentStatus(
   session: KitchenSkillsTrainerSession,
 ): KitchenSkillsSessionAssessmentStatus {
-  const evidenceCount = modulesWithEvidenceCount(session);
-  const reviewedCount = modulesReviewedCount(session);
-  const awaiting = modulesAwaitingAssessmentCount(session);
-  if (evidenceCount === 0 || awaiting === evidenceCount) return 'needs_assessment';
-  if (awaiting === 0 && reviewedCount === evidenceCount) return 'reviewed';
-  return 'partially_reviewed';
+  const counts = sessionAssessmentCounts(session);
+  if (counts.recorded === 0 || counts.outstanding > 0) return 'needs_assessment';
+  if (counts.awaiting > 0) return 'awaiting_confirmation';
+  return 'reviewed';
 }
 
 export const KITCHEN_SKILLS_MODULE_SHORT_LABELS: Record<KitchenSkillsReviewedModule, string> = {
@@ -129,41 +190,18 @@ export const KITCHEN_SKILLS_MODULE_SHORT_LABELS: Record<KitchenSkillsReviewedMod
   portionPrecision: 'Portion',
 };
 
-export function sessionPendingStatusPhrases(session: KitchenSkillsTrainerSession): string[] {
-  const phrases: string[] = [];
-  for (const pair of evidencedRecipeModules(session)) {
-    const label = KITCHEN_SKILLS_MODULE_SHORT_LABELS[pair.module];
-    if (findConfirmedRecipeModuleReview(session, pair.recipeId, pair.module)) {
-      phrases.push(`${label} ✓`);
-    } else {
-      phrases.push(`${label} needs review`);
-    }
-  }
-  for (const module of unattributedEvidenceModules(session)) {
-    const label = KITCHEN_SKILLS_MODULE_SHORT_LABELS[module];
-    const review = session.moduleReviews[module];
-    if (review && isReviewPersistConfirmed(review)) phrases.push(`${label} ✓`);
-    else phrases.push(`${label} needs review`);
-  }
-  return phrases;
-}
+export const KITCHEN_SKILLS_ASSESSMENT_STATE_LABELS: Record<KitchenSkillsModuleAssessmentState, string> = {
+  needs_assessment: 'Needs assessment',
+  awaiting_confirmation: 'Awaiting confirmation',
+  reviewed: 'Reviewed',
+};
 
-export function sessionReviewedScorePhrases(session: KitchenSkillsTrainerSession): string[] {
-  const phrases = evidencedRecipeModules(session).flatMap((pair) => {
-    const review = findConfirmedRecipeModuleReview(session, pair.recipeId, pair.module);
-    if (!review) return [];
-    return [
-      `${KITCHEN_SKILLS_MODULE_SHORT_LABELS[pair.module]} ${review.timeEfficiencyScore}/${review.preparationQualityScore}`,
-    ];
-  });
-  for (const module of unattributedEvidenceModules(session)) {
-    const review = session.moduleReviews[module];
-    if (!review || !isReviewPersistConfirmed(review)) continue;
-    phrases.push(
-      `${KITCHEN_SKILLS_MODULE_SHORT_LABELS[module]} ${review.timeEfficiencyScore}/${review.preparationQualityScore}`,
-    );
-  }
-  return phrases;
+/** Recorded modules for a session row, e.g. "Portion · Trim · Rescue". */
+export function sessionRecordedModuleLabels(session: KitchenSkillsTrainerSession): string[] {
+  const modules = new Set(sessionAssessmentSlots(session).map((slot) => slot.module));
+  return sortModulesForTrainer([...modules]).map(
+    (module) => KITCHEN_SKILLS_MODULE_SHORT_LABELS[module],
+  );
 }
 
 export function isSessionAwaitingAssessment(session: KitchenSkillsTrainerSession): boolean {
@@ -174,15 +212,19 @@ export function partitionTrainerSessionsByAssessment(
   sessions: readonly KitchenSkillsTrainerSession[],
 ): {
   needsAssessment: KitchenSkillsTrainerSession[];
+  awaitingConfirmation: KitchenSkillsTrainerSession[];
   reviewed: KitchenSkillsTrainerSession[];
 } {
   const needsAssessment: KitchenSkillsTrainerSession[] = [];
+  const awaitingConfirmation: KitchenSkillsTrainerSession[] = [];
   const reviewed: KitchenSkillsTrainerSession[] = [];
   for (const session of sessions) {
-    if (sessionAssessmentStatus(session) === 'reviewed') reviewed.push(session);
+    const status = sessionAssessmentStatus(session);
+    if (status === 'reviewed') reviewed.push(session);
+    else if (status === 'awaiting_confirmation') awaitingConfirmation.push(session);
     else needsAssessment.push(session);
   }
-  return { needsAssessment, reviewed };
+  return { needsAssessment, awaitingConfirmation, reviewed };
 }
 
 export function attachModuleReviewToMatchingSessions(
@@ -338,29 +380,39 @@ export function buildKitchenSkillsTrainerStaffSummaries(
   const byActor = new Map<string, KitchenSkillsTrainerStaffSummary>();
 
   for (const session of sessions) {
-    const existing = byActor.get(session.actorId);
-    if (existing) {
-      existing.sessions.push(session);
-      existing.sessionCount += 1;
-      if (session.sessionDate.localeCompare(existing.latestSessionDate) > 0) {
-        existing.latestSessionDate = session.sessionDate;
-      }
-      existing.modulesAwaitingAssessment += modulesAwaitingAssessmentCount(session);
-      continue;
+    const status = sessionAssessmentStatus(session);
+    let summary = byActor.get(session.actorId);
+    if (!summary) {
+      summary = {
+        actorId: session.actorId,
+        actorName: session.actorName,
+        sessions: [],
+        sessionCount: 0,
+        latestSessionDate: session.sessionDate,
+        modulesAwaitingAssessment: 0,
+        sessionsNeedingAssessment: 0,
+        sessionsAwaitingConfirmation: 0,
+        sessionsReviewed: 0,
+      };
+      byActor.set(session.actorId, summary);
     }
-    byActor.set(session.actorId, {
-      actorId: session.actorId,
-      actorName: session.actorName,
-      sessions: [session],
-      sessionCount: 1,
-      latestSessionDate: session.sessionDate,
-      modulesAwaitingAssessment: modulesAwaitingAssessmentCount(session),
-    });
+    summary.sessions.push(session);
+    summary.sessionCount += 1;
+    if (session.sessionDate.localeCompare(summary.latestSessionDate) > 0) {
+      summary.latestSessionDate = session.sessionDate;
+    }
+    summary.modulesAwaitingAssessment += modulesAwaitingAssessmentCount(session);
+    if (status === 'needs_assessment') summary.sessionsNeedingAssessment += 1;
+    else if (status === 'awaiting_confirmation') summary.sessionsAwaitingConfirmation += 1;
+    else summary.sessionsReviewed += 1;
   }
 
   return [...byActor.values()].sort((left, right) => {
-    if (left.modulesAwaitingAssessment !== right.modulesAwaitingAssessment) {
-      return right.modulesAwaitingAssessment - left.modulesAwaitingAssessment;
+    if (left.sessionsNeedingAssessment !== right.sessionsNeedingAssessment) {
+      return right.sessionsNeedingAssessment - left.sessionsNeedingAssessment;
+    }
+    if (left.sessionsAwaitingConfirmation !== right.sessionsAwaitingConfirmation) {
+      return right.sessionsAwaitingConfirmation - left.sessionsAwaitingConfirmation;
     }
     return left.actorName.localeCompare(right.actorName);
   });

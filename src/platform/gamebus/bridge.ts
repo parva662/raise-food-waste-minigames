@@ -26,6 +26,7 @@ type InputCollectionsListener = (data: GameBusInputCollectionsPayload | null) =>
 
 let taskData: TaskData | null = null;
 let inputCollectionsData: GameBusInputCollectionsPayload | null = null;
+let inputCollectionsReceivedAt: number | null = null;
 let menuItemData: Record<string, unknown> | null = null;
 /** Custom Page init complete (MENU_ITEM and/or INPUT_COLLECTIONS). Survives subscriber cleanup. */
 let pageHandshakeComplete = false;
@@ -157,6 +158,7 @@ function acceptMenuItemFromParent(data: Record<string, unknown>): void {
 
 function acceptInputCollectionsFromParent(data: GameBusInputCollectionsPayload): void {
   inputCollectionsData = data;
+  inputCollectionsReceivedAt = Date.now();
   const keys = [...getInputCollectionKeys(data)];
   gamebusDevLog('INPUT_COLLECTIONS received', {
     collectionKeys: keys,
@@ -347,6 +349,14 @@ export function getGameBusInputCollections(): GameBusInputCollectionsPayload | n
   return inputCollectionsData;
 }
 
+/**
+ * When the current INPUT_COLLECTIONS arrived (epoch ms). GameBus fetches the collections
+ * when the task is opened and does not resend them after a SILENT_ACTIVITY.
+ */
+export function getGameBusInputCollectionsReceivedAt(): number | null {
+  return inputCollectionsReceivedAt;
+}
+
 export function getGameBusMenuItem(): Record<string, unknown> | null {
   return menuItemData;
 }
@@ -471,6 +481,7 @@ export function resetGameBusBridgeForTests(): void {
   activeHandshakeSubscribers = 0;
   taskData = null;
   inputCollectionsData = null;
+  inputCollectionsReceivedAt = null;
   menuItemData = null;
   pageHandshakeComplete = false;
   hasPostedActivity = false;

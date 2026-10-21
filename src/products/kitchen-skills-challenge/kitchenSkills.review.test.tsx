@@ -65,6 +65,21 @@ function setHash(hash: string) {
   window.dispatchEvent(new HashChangeEvent('hashchange'));
 }
 
+/** Trainer opens Portion first (Portion → Trim → Rescue); legacy Trim assertions switch tabs. */
+async function openTrimTab(user: ReturnType<typeof userEvent.setup>) {
+  await waitFor(() => {
+    expect(screen.getByTestId('kitchen-day-tutor-module-tab-trimSmart')).toBeInTheDocument();
+  });
+  await user.click(screen.getByTestId('kitchen-day-tutor-module-tab-trimSmart'));
+}
+
+async function openTrimAssessment(user: ReturnType<typeof userEvent.setup>) {
+  await openTrimTab(user);
+  await waitFor(() => {
+    expect(screen.getByTestId('kitchen-day-review-form')).toBeInTheDocument();
+  });
+}
+
 function selfOnlyTrimActivity() {
   return {
     id: 'act-trim-self-only',
@@ -151,9 +166,7 @@ describe('Kitchen Day module chef review', () => {
       kitchenSkillsTrainerInput: { activities: baseActivities },
       inputCollectionPari: { me: { id: 'chef-1', firstName: 'Chef', lastName: 'One' } },
     });
-    await waitFor(() => {
-      expect(screen.getByTestId('kitchen-day-review-form')).toBeInTheDocument();
-    });
+    await openTrimAssessment(user);
     expect(screen.getByTestId('kitchen-day-review-unscored')).toBeInTheDocument();
     expect(screen.getByTestId('kitchen-day-chef-jamix-reference-carrot')).toHaveTextContent(
       'Reference unavailable',
@@ -212,9 +225,7 @@ describe('Kitchen Day module chef review', () => {
       },
       inputCollectionPari: { me: { id: 'chef-1', firstName: 'Chef', lastName: 'One' } },
     });
-    await waitFor(() => {
-      expect(screen.getByTestId('kitchen-day-review-form')).toBeInTheDocument();
-    });
+    await openTrimAssessment(user);
     await user.type(screen.getByTestId('kitchen-day-review-time'), '4');
     await user.type(screen.getByTestId('kitchen-day-review-quality'), '5');
     expect(screen.getByTestId('kitchen-day-review-time')).toHaveValue('4');
@@ -243,9 +254,7 @@ describe('Kitchen Day module chef review', () => {
       kitchenSkillsTrainerInput: { activities: baseActivities },
       inputCollectionPari: { me: { id: 'chef-1', firstName: 'Chef', lastName: 'One' } },
     });
-    await waitFor(() => {
-      expect(screen.getByTestId('kitchen-day-review-form')).toBeInTheDocument();
-    });
+    await openTrimAssessment(user);
     await user.type(screen.getByTestId('kitchen-day-review-time'), '4');
     await user.click(screen.getByTestId('kitchen-day-tutor-close'));
     expect(confirmSpy).toHaveBeenCalled();
@@ -395,15 +404,22 @@ describe('Kitchen Day module chef review', () => {
     });
 
     await waitFor(() => {
-      expect(screen.getByTestId('kitchen-day-tutor-session-tab-needs')).toHaveTextContent('Needs assessment (2)');
+      expect(screen.getByTestId('kitchen-day-tutor-session-tab-needs')).toHaveTextContent('To assess (2)');
     });
+    expect(screen.getByTestId('kitchen-day-tutor-session-tab-awaiting')).toHaveTextContent(
+      'Awaiting confirmation (0)',
+    );
     expect(screen.getByTestId('kitchen-day-tutor-session-tab-reviewed')).toHaveTextContent('Reviewed (1)');
     expect(screen.getByTestId(`kitchen-day-chef-session-${pendingSession}`)).toBeInTheDocument();
     expect(screen.getByTestId(`kitchen-day-chef-session-${partialSession}`)).toBeInTheDocument();
     expect(screen.queryByTestId(`kitchen-day-chef-session-${reviewedSession}`)).not.toBeInTheDocument();
     expect(screen.getByTestId(`kitchen-day-tutor-session-status-${partialSession}`)).toHaveTextContent(
-      'Partially reviewed',
+      'Needs assessment',
     );
+    expect(screen.getByTestId(`kitchen-day-tutor-session-counts-${partialSession}`)).toHaveTextContent(
+      '1 confirmed · 0 awaiting · 1 to assess',
+    );
+    expect(screen.queryByText(/needs review|✓/)).not.toBeInTheDocument();
 
     const needsLinks = screen.getAllByTestId(/kitchen-day-chef-session-/);
     expect(needsLinks[0]).toHaveAttribute(
@@ -416,10 +432,10 @@ describe('Kitchen Day module chef review', () => {
       expect(screen.getByTestId(`kitchen-day-chef-session-${reviewedSession}`)).toBeInTheDocument();
     });
     expect(screen.queryByTestId(`kitchen-day-chef-session-${pendingSession}`)).not.toBeInTheDocument();
-    expect(screen.getByTestId(`kitchen-day-tutor-session-scores-${reviewedSession}`)).toHaveTextContent('Trim 2/4');
-    expect(screen.getByTestId(`kitchen-day-tutor-session-feedback-${reviewedSession}`)).toHaveTextContent(
-      'Steady pacing on celery.',
+    expect(screen.getByTestId(`kitchen-day-tutor-session-counts-${reviewedSession}`)).toHaveTextContent(
+      '1 confirmed · 0 awaiting · 0 to assess',
     );
+    expect(screen.getByTestId(`kitchen-day-tutor-session-status-${reviewedSession}`)).toHaveTextContent('Reviewed');
     expect(screen.getByTestId('kitchen-day-tutor-close')).toBeInTheDocument();
   });
 
@@ -490,17 +506,25 @@ describe('Kitchen Day module chef review', () => {
     });
 
     await waitFor(() => {
-      expect(screen.getByTestId('kitchen-day-tutor-staff-user-1')).toHaveTextContent('1 awaiting');
+      expect(screen.getByTestId('kitchen-day-tutor-staff-user-1')).toHaveAttribute(
+        'aria-label',
+        'Student One: 2 sessions · 1 to assess · 0 awaiting · 1 reviewed',
+      );
     });
-    expect(screen.getByTestId('kitchen-day-tutor-staff-user-1')).not.toHaveTextContent('3 awaiting');
     await user.click(screen.getByTestId('kitchen-day-tutor-staff-user-1'));
     await waitFor(() => {
-      expect(screen.getByTestId('kitchen-day-tutor-session-tab-needs')).toHaveTextContent('Needs assessment (1)');
+      expect(screen.getByTestId('kitchen-day-tutor-session-tab-needs')).toHaveTextContent('To assess (1)');
     });
-    expect(screen.getByTestId('kitchen-day-tutor-staff-session-count')).toHaveTextContent('1 awaiting assessment');
-    expect(screen.getByTestId('kitchen-day-tutor-staff-session-count')).not.toHaveTextContent('3 awaiting');
-    expect(screen.getByTestId(`kitchen-day-chef-session-${portionOnlyPending}`)).toHaveTextContent('Portion needs review');
-    expect(screen.queryByText(/Trim needs review|Rescue needs review/i)).not.toBeInTheDocument();
+    expect(screen.getByTestId('kitchen-day-tutor-staff-session-count')).toHaveTextContent(
+      '2 sessions · 1 to assess · 0 awaiting · 1 reviewed',
+    );
+    const pendingRow = screen.getByTestId(`kitchen-day-chef-session-${portionOnlyPending}`);
+    expect(pendingRow).toHaveTextContent('1 recipe');
+    expect(pendingRow).toHaveTextContent('Portion');
+    expect(pendingRow).not.toHaveTextContent(/Trim|Rescue/);
+    expect(screen.getByTestId(`kitchen-day-tutor-session-counts-${portionOnlyPending}`)).toHaveTextContent(
+      '0 confirmed · 0 awaiting · 1 to assess',
+    );
     expect(screen.queryByText(/not applicable/i)).not.toBeInTheDocument();
 
     await user.click(screen.getByTestId('kitchen-day-tutor-session-tab-reviewed'));
@@ -510,13 +534,13 @@ describe('Kitchen Day module chef review', () => {
     expect(screen.getByTestId(`kitchen-day-tutor-session-status-${portionOnlyReviewed}`)).toHaveTextContent(
       'Reviewed',
     );
-    expect(screen.getByTestId(`kitchen-day-tutor-session-scores-${portionOnlyReviewed}`)).toHaveTextContent(
-      'Portion 4/5',
+    expect(screen.getByTestId(`kitchen-day-tutor-session-counts-${portionOnlyReviewed}`)).toHaveTextContent(
+      '1 confirmed · 0 awaiting · 0 to assess',
     );
-    expect(screen.queryByText(/Trim needs review|Rescue needs review/i)).not.toBeInTheDocument();
   });
 
   it('shows an existing review read-only instead of creating another', async () => {
+    const user = userEvent.setup();
     setHash(`#/kitchen-day-tutor?sessionId=${encodeURIComponent(sessionOne)}`);
     render(<AppRouter />);
     ingestInputCollectionsForTests({
@@ -552,6 +576,15 @@ describe('Kitchen Day module chef review', () => {
       },
       inputCollectionPari: { me: { id: 'chef-1', firstName: 'Chef', lastName: 'One' } },
     });
+    // Portion still needs assessment, so the workspace opens there first.
+    await waitFor(() => {
+      expect(screen.getByTestId('kitchen-day-review-portionPrecision-form')).toBeInTheDocument();
+    });
+    expect(screen.getByTestId('kitchen-day-tutor-module-tab-trimSmart')).toHaveAttribute(
+      'data-module-status',
+      'reviewed',
+    );
+    await openTrimTab(user);
     await waitFor(() => {
       expect(screen.getByTestId('kitchen-day-review-submitted')).toBeInTheDocument();
     });
@@ -609,6 +642,7 @@ describe('Kitchen Day module chef review', () => {
       },
       inputCollectionPari: { me: { id: 'chef-1', firstName: 'Chef', lastName: 'One' } },
     });
+    await openTrimTab(user);
     await waitFor(() => {
       expect(screen.getByTestId('kitchen-day-review-submitted')).toBeInTheDocument();
     });
@@ -654,9 +688,7 @@ describe('Kitchen Day module chef review', () => {
       },
       inputCollectionPari: { me: { id: 'chef-1', firstName: 'Chef', lastName: 'One' } },
     });
-    await waitFor(() => {
-      expect(screen.getByTestId('kitchen-day-review-form')).toBeInTheDocument();
-    });
+    await openTrimAssessment(user);
     await user.type(screen.getByTestId('kitchen-day-review-time'), '4');
     await user.type(screen.getByTestId('kitchen-day-review-quality'), '5');
     await user.type(screen.getByTestId('kitchen-day-review-feedback'), 'Steady work.');
@@ -712,9 +744,7 @@ describe('Kitchen Day module chef review', () => {
       expect(screen.getByTestId(`kitchen-day-chef-session-${sessionTwo}`)).toBeInTheDocument();
     });
     await user.click(screen.getByTestId(`kitchen-day-chef-session-${sessionTwo}`));
-    await waitFor(() => {
-      expect(screen.getByTestId('kitchen-day-review-form')).toBeInTheDocument();
-    });
+    await openTrimAssessment(user);
   });
 
   it('shows Trim actual vs JAMIX without filling tutor scores', async () => {
@@ -770,6 +800,7 @@ describe('Kitchen Day module chef review', () => {
       },
       inputCollectionPari: { me: { id: 'chef-1', firstName: 'Chef', lastName: 'One' } },
     });
+    await openTrimTab(user);
     await waitFor(() => {
       expect(screen.getByTestId('kitchen-day-chef-trim-banaani')).toBeInTheDocument();
     });
@@ -842,10 +873,15 @@ describe('Kitchen Day module chef review', () => {
         expect(screen.getByTestId('kitchen-day-review-portionPrecision-awaiting')).toBeInTheDocument();
       });
       // Awaiting must not flip the recipe to REVIEWED before GameBus hydration.
-      expect(screen.getByTestId('kitchen-day-tutor-active-recipe')).toHaveTextContent(
-        'Awaiting GameBus confirmation',
+      expect(screen.getByTestId(`kitchen-day-tutor-recipe-tab-${recipeId}`)).toHaveAttribute(
+        'data-recipe-status',
+        'awaiting_confirmation',
       );
     }
+    expect(screen.getByTestId('kitchen-day-tutor-session-status')).toHaveTextContent('Awaiting confirmation');
+    expect(screen.getByTestId('kitchen-day-tutor-session-counts')).toHaveTextContent(
+      '0 confirmed · 3 awaiting confirmation · 0 outstanding',
+    );
 
     const reviewMessages = postMessage.mock.calls
       .map((call) => call[0])
@@ -889,14 +925,15 @@ describe('Kitchen Day module chef review', () => {
     });
 
     await waitFor(() => {
-      expect(screen.getByTestId('kitchen-day-tutor-session-status')).toHaveTextContent(
-        /Session assessment: Reviewed/,
-      );
+      expect(screen.getByTestId('kitchen-day-tutor-session-status')).toHaveTextContent('Reviewed');
     });
     for (const recipeId of ['recipe-a', 'recipe-b', 'recipe-c']) {
       await user.click(screen.getByTestId(`kitchen-day-tutor-recipe-tab-${recipeId}`));
       await waitFor(() => {
-        expect(screen.getByTestId('kitchen-day-tutor-active-recipe')).toHaveTextContent('Reviewed');
+        expect(screen.getByTestId(`kitchen-day-tutor-recipe-tab-${recipeId}`)).toHaveAttribute(
+          'data-recipe-status',
+          'reviewed',
+        );
         expect(screen.getByTestId('kitchen-day-review-portionPrecision-submitted')).toBeInTheDocument();
         expect(screen.queryByTestId('kitchen-day-review-portionPrecision-awaiting')).not.toBeInTheDocument();
       });
@@ -914,9 +951,7 @@ describe('Kitchen Day module chef review', () => {
       kitchenSkillsTrainerInput: { activities: baseActivities },
       inputCollectionPari: { me: { id: 'chef-1', firstName: 'Chef', lastName: 'One' } },
     });
-    await waitFor(() => {
-      expect(screen.getByTestId('kitchen-day-review-form')).toBeInTheDocument();
-    });
+    await openTrimAssessment(user);
     await user.type(screen.getByTestId('kitchen-day-review-time'), '4');
     await user.type(screen.getByTestId('kitchen-day-review-quality'), '5');
     await user.click(screen.getByTestId('kitchen-day-review-submit'));
@@ -941,9 +976,7 @@ describe('Kitchen Day module chef review', () => {
       kitchenSkillsTrainerInput: { activities: baseActivities },
       inputCollectionPari: { me: { id: 'chef-1', firstName: 'Chef', lastName: 'One' } },
     });
-    await waitFor(() => {
-      expect(screen.getByTestId('kitchen-day-review-form')).toBeInTheDocument();
-    });
+    await openTrimAssessment(user);
     await user.type(screen.getByTestId('kitchen-day-review-time'), '3');
     await user.click(screen.getByTestId('kitchen-day-tutor-module-tab-portionPrecision'));
     await waitFor(() => {
@@ -979,9 +1012,7 @@ describe('Kitchen Day module chef review', () => {
       kitchenSkillsTrainerInput: { activities: baseActivities },
       inputCollectionPari: { me: { id: 'chef-1', firstName: 'Chef', lastName: 'One' } },
     });
-    await waitFor(() => {
-      expect(screen.getByTestId('kitchen-day-review-form')).toBeInTheDocument();
-    });
+    await openTrimAssessment(user);
     await user.type(screen.getByTestId('kitchen-day-review-time'), '4');
     await user.type(screen.getByTestId('kitchen-day-review-quality'), '5');
     await user.click(screen.getByTestId('kitchen-day-review-submit'));
@@ -1079,11 +1110,13 @@ describe('Kitchen Day module chef review', () => {
 
     await waitFor(() => {
       expect(screen.getByTestId('kitchen-day-tutor-recipe-summary')).toHaveTextContent(
-        'Recipes — 0 of 2 reviewed',
+        '2 recipes · 0 of 2 reviewed',
       );
     });
-    expect(screen.getByTestId('kitchen-day-tutor-session-meta')).toHaveTextContent('staff2 staff');
-    expect(screen.getByTestId('kitchen-day-tutor-session-meta')).toHaveTextContent('15 October 2026');
+    // Identity lives in the header only.
+    expect(screen.getByTestId('kitchen-day-tutor-header-session')).toHaveTextContent('staff2 staff');
+    expect(screen.getByTestId('kitchen-day-tutor-header-session')).toHaveTextContent('15 October 2026');
+    expect(screen.queryByTestId('kitchen-day-tutor-session-meta')).not.toBeInTheDocument();
 
     await user.click(screen.getByTestId('kitchen-day-tutor-recipe-tab-broileri-linssikeitto'));
     await user.click(document.getElementById('time-broileri-linssikeitto-portionPrecision-5')!);
@@ -1103,7 +1136,7 @@ describe('Kitchen Day module chef review', () => {
       'needs_assessment',
     );
     expect(screen.getByTestId('kitchen-day-tutor-recipe-summary')).toHaveTextContent(
-      'Recipes — 0 of 2 reviewed',
+      '2 recipes · 0 of 2 reviewed',
     );
 
     const reviewMessage = postMessage.mock.calls
@@ -1126,9 +1159,7 @@ describe('Kitchen Day module chef review', () => {
       kitchenSkillsTrainerInput: { activities: baseActivities },
       inputCollectionPari: { me: { id: 'chef-1', firstName: 'Chef', lastName: 'One' } },
     });
-    await waitFor(() => {
-      expect(screen.getByTestId('kitchen-day-review-form')).toBeInTheDocument();
-    });
+    await openTrimAssessment(user);
     expect(screen.getByTestId('kitchen-day-review-time')).toHaveValue('');
     await user.click(document.getElementById(`time-${baseRecipeId}-trimSmart-0`)!);
     await user.click(document.getElementById(`quality-${baseRecipeId}-trimSmart-0`)!);
