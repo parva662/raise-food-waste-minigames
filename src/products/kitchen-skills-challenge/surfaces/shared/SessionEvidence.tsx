@@ -100,18 +100,24 @@ function PortionCompositionTable({
 function EvidenceSection({
   collapsible,
   title,
+  hideTitle = false,
   testId,
   children,
 }: {
   collapsible: boolean;
   title: string;
+  hideTitle?: boolean;
   testId: string;
   children: ReactNode;
 }) {
   if (!collapsible) {
     return (
-      <section className="kitchen-day-evidence-section" data-testid={testId}>
-        <h3 className="kitchen-day-evidence-section__title">{title}</h3>
+      <section
+        className="kitchen-day-evidence-section"
+        data-testid={testId}
+        aria-label={hideTitle ? title : undefined}
+      >
+        {hideTitle ? null : <h3 className="kitchen-day-evidence-section__title">{title}</h3>}
         {children}
       </section>
     );
@@ -199,6 +205,8 @@ export function SessionEvidence({
   collapsePortionTable = false,
   showWasteAnalytics = true,
   sessionPortionEntries,
+  hideSectionTitles = false,
+  hidePortionRecipeTitle = false,
 }: {
   trimEntries: readonly KitchenSkillsTrimEntry[];
   rescueEntries: readonly KitchenSkillsRescueEntry[];
@@ -214,6 +222,10 @@ export function SessionEvidence({
   showWasteAnalytics?: boolean;
   /** Portion records for the same session, used to join Trim ingredients to JAMIX. */
   sessionPortionEntries?: readonly KitchenSkillsPortionEntry[];
+  /** For hosts that already name the module (e.g. trainer module tabs). */
+  hideSectionTitles?: boolean;
+  /** For hosts that already name the recipe. */
+  hidePortionRecipeTitle?: boolean;
 }) {
   const visible = new Set(modules);
   const portionForTrimJoin = sessionPortionEntries ?? portionEntries;
@@ -223,7 +235,12 @@ export function SessionEvidence({
   return (
     <div className="kitchen-day-evidence" data-testid={`${testIdPrefix}-evidence`} data-readonly="true">
       {visible.has('trimSmart') ? (
-        <EvidenceSection collapsible={collapsible} title="Trim Smart" testId={`${testIdPrefix}-trim-section`}>
+        <EvidenceSection
+          collapsible={collapsible}
+          title="Trim Smart"
+          hideTitle={hideSectionTitles}
+          testId={`${testIdPrefix}-trim-section`}
+        >
           {trimEntries.length === 0 ? (
             <p className="chef-results-empty">No completed preparation yet.</p>
           ) : (
@@ -293,7 +310,12 @@ export function SessionEvidence({
       ) : null}
 
       {visible.has('rescueAndReuse') ? (
-        <EvidenceSection collapsible={collapsible} title="Rescue & Reuse" testId={`${testIdPrefix}-rescue-section`}>
+        <EvidenceSection
+          collapsible={collapsible}
+          title="Rescue & Reuse"
+          hideTitle={hideSectionTitles}
+          testId={`${testIdPrefix}-rescue-section`}
+        >
           {rescueEntries.length === 0 ? (
             <p className="chef-results-empty">No reuse suggestions yet.</p>
           ) : (
@@ -339,7 +361,12 @@ export function SessionEvidence({
       ) : null}
 
       {visible.has('portionPrecision') ? (
-        <EvidenceSection collapsible={collapsible} title="Portion Precision" testId={`${testIdPrefix}-portion-section`}>
+        <EvidenceSection
+          collapsible={collapsible}
+          title="Portion Precision"
+          hideTitle={hideSectionTitles}
+          testId={`${testIdPrefix}-portion-section`}
+        >
           {portionEntries.length === 0 ? (
             <p className="chef-results-empty">No recipes recorded yet.</p>
           ) : (
@@ -353,7 +380,9 @@ export function SessionEvidence({
                     className="kitchen-day-evidence-card"
                     data-testid={`${testIdPrefix}-portion-${entry.recipeId}`}
                   >
-                    <h4 className="kitchen-day-evidence-card__title">{entry.recipeName}</h4>
+                    {hidePortionRecipeTitle ? null : (
+                      <h4 className="kitchen-day-evidence-card__title">{entry.recipeName}</h4>
+                    )}
                     <dl className="kitchen-day-facts">
                       <Fact
                         label="Ingredient accuracy"

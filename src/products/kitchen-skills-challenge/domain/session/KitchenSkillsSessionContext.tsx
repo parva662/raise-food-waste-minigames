@@ -10,6 +10,7 @@ import {
 import { isGameBusEmbed } from '@/platform/gamebus/detectEmbed';
 import {
   getGameBusInputCollections,
+  getGameBusInputCollectionsReceivedAt,
   getGameBusTask,
   startGameBusHandshake,
   subscribeGameBusInputCollections,
@@ -34,6 +35,7 @@ import {
 } from '@/products/kitchen-skills-challenge/read/kitchenSkillsReadModel';
 import type { KitchenSkillsTrainerSession } from '@/products/kitchen-skills-challenge/domain/types';
 import {
+  clearKitchenSkillsPostAttempt,
   hasKitchenSkillsPostAttempt,
   kitchenSkillsReviewAttemptKey,
   tryPostKitchenSkillsPortion,
@@ -47,6 +49,8 @@ import {
   awaitingReviewsFromDispatchMarkers,
   clearKitchenSkillsReviewDispatchMarker,
   hasKitchenSkillsReviewDispatchMarker,
+  isAwaitingReviewMissingFromRefreshedFeed,
+  kitchenSkillsTrainerFeedFingerprint,
   markKitchenSkillsReviewDispatched,
 } from '@/products/kitchen-skills-challenge/gamebus/reviewDispatchMarker';
 import type {
@@ -100,6 +104,19 @@ interface KitchenSkillsSessionValue {
   commitRescueEntry: (entry: KitchenSkillsRescueEntry) => KitchenSkillsCommitResult;
   commitPortionEntry: (entry: KitchenSkillsPortionEntry) => KitchenSkillsCommitResult;
   commitReview: (entry: KitchenSkillsReviewEntry, studentActorId: string) => KitchenSkillsCommitResult;
+  /**
+   * True when a genuinely later GameBus feed (not the snapshot seen at dispatch) still lacks this
+   * unconfirmed assessment for the student's session.
+   */
+  canReassessUnconfirmedReview: (entry: KitchenSkillsReviewEntry, studentActorId: string) => boolean;
+  /**
+   * Drop an unconfirmed assessment that a refreshed feed still lacks, so the tutor can assess
+   * again. Refuses unless `canReassessUnconfirmedReview` holds.
+   */
+  discardUnconfirmedReview: (
+    entry: KitchenSkillsReviewEntry,
+    studentActorId: string,
+  ) => boolean;
   findTrimByIngredientId: (
     ingredientId: string,
     recipeId?: string | null,
@@ -154,6 +171,8 @@ function readPersistedForSession(sessionId: string): {
   portionEntries: KitchenSkillsPortionEntry[];
   reviews: KitchenSkillsReviewEntry[];
   groupSessions: KitchenSkillsTrainerSession[];
+  feedReceivedAt: number | null;
+  feedFingerprint: string | null;
 } {
   const payload = getGameBusInputCollections();
   const trainerActivities = extractGroupActivities(getRawKitchenSkillsTrainerActivitiesInput(payload));
@@ -171,6 +190,8 @@ function readPersistedForSession(sessionId: string): {
       ...reviewsFromActivities(trainerActivities),
     ]),
     groupSessions: buildKitchenSkillsTrainerSessions(trainerActivities),
+    feedReceivedAt: payload ? getGameBusInputCollectionsReceivedAt() : null,
+    feedFingerprint: payload ? kitchenSkillsTrainerFeedFingerprint(trainerActivities) : null,
   };
 }
 
@@ -220,8 +241,11 @@ export function KitchenSkillsSessionProvider({
       portionEntries: [] as KitchenSkillsPortionEntry[],
       reviews: [] as KitchenSkillsReviewEntry[],
       groupSessions: [] as KitchenSkillsTrainerSession[],
+      feedReceivedAt: null as number | null,
+      feedFingerprint: null as string | null,
     },
   );
+  const [markerVersion, setMarkerVersion] = useState(0);
 
   useEffect(() => {
     if (!embedded) return;
@@ -287,7 +311,9 @@ export function KitchenSkillsSessionProvider({
           sessionId: session.sessionId,
         })),
       ),
-    [persisted.groupSessions],
+    // markerVersion: re-read sessionStorage after a deliberate discard.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [persisted.groupSessions, markerVersion],
   );
 
   const reviews = useMemo(
@@ -554,7 +580,7 @@ export function KitchenSkillsSessionProvider({
           ...(posted.missing?.length ? { missing: posted.missing } : {}),
         };
       }
-      markKitchenSkillsReviewDispatched(actorId, entry);
+      markKitchenSkillsReviewDispatched(actorId, entry, persisted.feedFingerprint);
       setLocalReviews((current) => {
         const withoutIdentity = current.filter(
           (item) => reviewIdentityKey(item) !== reviewIdentityKey(entry),
@@ -581,7 +607,44 @@ export function KitchenSkillsSessionProvider({
           ],
     );
     return { ok: true, mode: 'local' };
-  }, [reviews]);
+  }, [reviews, persisted.feedFingerprint]);
+
+  const canReassessUnconfirmedReview = useCallback(
+    (entry: KitchenSkillsReviewEntry, studentActorId: string): boolean => {
+      const actorId = studentActorId.trim();
+      const existing = findReviewByIdentity(reviews, entry);
+      if (!actorId || !existing || isReviewPersistConfirmed(existing)) return false;
+      return isAwaitingReviewMissingFromRefreshedFeed(existing, actorId, {
+        receivedAtMs: persisted.feedReceivedAt,
+        fingerprint: persisted.feedFingerprint,
+        sessionInFeed: persisted.groupSessions.some(
+          (session) => session.actorId === actorId && session.sessionId === existing.sessionId,
+        ),
+      });
+    },
+    [reviews, persisted.feedReceivedAt, persisted.feedFingerprint, persisted.groupSessions],
+  );
+
+  const discardUnconfirmedReview = useCallback(
+    (entry: KitchenSkillsReviewEntry, studentActorId: string): boolean => {
+      if (!canReassessUnconfirmedReview(entry, studentActorId)) return false;
+      const existing = findReviewByIdentity(reviews, entry);
+      if (!existing) return false;
+      const actorId = studentActorId.trim();
+      clearKitchenSkillsReviewDispatchMarker(actorId, existing);
+      clearKitchenSkillsPostAttempt(kitchenSkillsReviewAttemptKey(existing));
+      setLocalReviews((current) =>
+        current.filter((item) => reviewIdentityKey(item) !== reviewIdentityKey(existing)),
+      );
+      setMarkerVersion((version) => version + 1);
+      gamebusDevLog(
+        'kitchen-skills-review.discarded-unconfirmed',
+        kitchenSkillsReviewDiagnosticPayload('missing_after_feed_refresh', existing),
+      );
+      return true;
+    },
+    [reviews, canReassessUnconfirmedReview],
+  );
 
   const findTrimByIngredientId = useCallback(
     (ingredientId: string, recipeId?: string | null) => {
@@ -667,6 +730,8 @@ export function KitchenSkillsSessionProvider({
       commitRescueEntry,
       commitPortionEntry,
       commitReview,
+      canReassessUnconfirmedReview,
+      discardUnconfirmedReview,
       findTrimByIngredientId,
       findRescueByIngredientId,
       findReviewBySessionAndModule,
@@ -699,6 +764,8 @@ export function KitchenSkillsSessionProvider({
       commitRescueEntry,
       commitPortionEntry,
       commitReview,
+      canReassessUnconfirmedReview,
+      discardUnconfirmedReview,
       findTrimByIngredientId,
       findRescueByIngredientId,
       findReviewBySessionAndModule,

@@ -107,7 +107,7 @@ describe('review persistence identity and status', () => {
     });
     expect(recipeAssessmentStatus(s, 'a')).toBe('reviewed');
     expect(recipeAssessmentStatus(s, 'b')).toBe('needs_assessment');
-    expect(sessionAssessmentStatus(s)).toBe('partially_reviewed');
+    expect(sessionAssessmentStatus(s)).toBe('needs_assessment');
   });
 
   it('keeps three distinct Portion reviews after hydration', () => {

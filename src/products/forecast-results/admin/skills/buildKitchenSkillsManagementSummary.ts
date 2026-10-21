@@ -11,6 +11,7 @@ import {
   moduleHasEvidence,
   modulesAwaitingAssessmentCount,
   modulesReviewedCount,
+  sessionAssessmentCounts,
   sessionAssessmentStatus,
 } from '@/products/kitchen-skills-challenge/read/trainerSessions';
 
@@ -204,10 +205,22 @@ export function recordedModulesLabel(session: KitchenSkillsTrainerSession): stri
     .join(', ');
 }
 
-export function assessmentStatusLabel(session: KitchenSkillsTrainerSession): string {
+/** Management view of a session: the feed-only data never has unconfirmed local submissions. */
+export type KitchenSkillsManagementSessionStatus = 'awaiting' | 'partial' | 'reviewed';
+
+export function managementSessionStatus(
+  session: KitchenSkillsTrainerSession,
+): KitchenSkillsManagementSessionStatus {
   const status = sessionAssessmentStatus(session);
+  if (status === 'reviewed') return 'reviewed';
+  const counts = sessionAssessmentCounts(session);
+  return counts.confirmed + counts.awaiting > 0 ? 'partial' : 'awaiting';
+}
+
+export function assessmentStatusLabel(session: KitchenSkillsTrainerSession): string {
+  const status = managementSessionStatus(session);
   if (status === 'reviewed') return 'Reviewed';
-  if (status === 'partially_reviewed') return 'Partially reviewed';
+  if (status === 'partial') return 'Partially reviewed';
   return 'Awaiting assessment';
 }
 

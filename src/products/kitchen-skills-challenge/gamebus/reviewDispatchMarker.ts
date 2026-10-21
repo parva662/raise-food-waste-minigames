@@ -17,7 +17,31 @@ export type KitchenSkillsReviewDispatchMarker = {
   timeEfficiencyScore: number;
   preparationQualityScore: number;
   chefFeedback?: string;
+  /** Fingerprint of the trainer feed the tutor was looking at when the assessment was sent. */
+  feedFingerprintAtDispatch?: string;
 };
+
+/**
+ * Order-independent fingerprint of the trainer feed (activity ids). GameBus may replay a cached
+ * INPUT_COLLECTIONS payload to a reloaded iframe, so receipt time alone does not prove a new fetch.
+ */
+export function kitchenSkillsTrainerFeedFingerprint(activities: readonly unknown[]): string {
+  const ids = activities
+    .map((activity) =>
+      activity && typeof activity === 'object' ? (activity as { id?: unknown }).id : undefined,
+    )
+    .filter((id): id is string | number => typeof id === 'string' || typeof id === 'number')
+    .map(String)
+    .sort();
+  let hash = 5381;
+  for (const id of ids) {
+    for (let index = 0; index < id.length; index += 1) {
+      hash = ((hash * 33) ^ id.charCodeAt(index)) >>> 0;
+    }
+    hash = ((hash * 33) ^ 44) >>> 0;
+  }
+  return `${ids.length}:${hash.toString(36)}`;
+}
 
 function storageKey(actorId: string, entry: {
   sessionId: string;
@@ -49,6 +73,7 @@ function canUseSessionStorage(): boolean {
 export function markKitchenSkillsReviewDispatched(
   actorId: string,
   entry: KitchenSkillsReviewEntry,
+  feedFingerprintAtDispatch?: string | null,
 ): void {
   const key = storageKey(actorId, entry);
   const recipeId = normalizeRecipeId(entry.recipeId ?? '');
@@ -63,6 +88,7 @@ export function markKitchenSkillsReviewDispatched(
     timeEfficiencyScore: entry.timeEfficiencyScore,
     preparationQualityScore: entry.preparationQualityScore,
     ...(entry.chefFeedback?.trim() ? { chefFeedback: entry.chefFeedback.trim() } : {}),
+    ...(feedFingerprintAtDispatch ? { feedFingerprintAtDispatch } : {}),
   };
   try {
     sessionStorage.setItem(key, JSON.stringify(marker));
@@ -118,6 +144,52 @@ export function readKitchenSkillsReviewDispatchMarker(
   } catch {
     return null;
   }
+}
+
+/** GameBus normally stores a silent activity within seconds; allow generous slack. */
+export const KITCHEN_SKILLS_FEED_CONFIRMATION_GRACE_MS = 60_000;
+
+export type KitchenSkillsTrainerFeedState = {
+  receivedAtMs: number | null;
+  fingerprint: string | null;
+  /** The feed contains this student's evidence for the review's session. */
+  sessionInFeed: boolean;
+};
+
+/**
+ * True only when an unconfirmed assessment is missing from a genuinely later GameBus feed:
+ * this tab dispatched it (marker with the same student + session + recipe + module), the
+ * current feed differs from the feed seen at dispatch (not a replayed snapshot), still contains
+ * the student's session, arrived more than the grace period after sending, and lacks the review
+ * (`awaitingPersist`). Only then is a deliberate, tutor-confirmed re-assessment reasonable.
+ * A delayed or incomplete GameBus feed can still satisfy this, so a duplicate stays possible.
+ */
+export function isAwaitingReviewMissingFromRefreshedFeed(
+  review: Pick<
+    KitchenSkillsReviewEntry,
+    'awaitingPersist' | 'submittedAt' | 'sessionId' | 'recipeId' | 'reviewedGame'
+  >,
+  studentActorId: string,
+  feed: KitchenSkillsTrainerFeedState,
+): boolean {
+  if (!review.awaitingPersist || feed.receivedAtMs == null || !feed.fingerprint) return false;
+  if (!feed.sessionInFeed) return false;
+  const marker = readKitchenSkillsReviewDispatchMarker(studentActorId, review);
+  if (
+    !marker ||
+    marker.actorId !== studentActorId.trim() ||
+    marker.sessionId !== review.sessionId ||
+    marker.reviewedGame !== review.reviewedGame ||
+    marker.recipeId !== normalizeRecipeId(review.recipeId ?? '')
+  ) {
+    return false;
+  }
+  if (!marker.feedFingerprintAtDispatch || marker.feedFingerprintAtDispatch === feed.fingerprint) {
+    return false;
+  }
+  const submittedMs = Date.parse(review.submittedAt);
+  if (!Number.isFinite(submittedMs)) return false;
+  return submittedMs + KITCHEN_SKILLS_FEED_CONFIRMATION_GRACE_MS < feed.receivedAtMs;
 }
 
 /** Build awaiting local rows from markers for tutor sessions (reload recovery). */

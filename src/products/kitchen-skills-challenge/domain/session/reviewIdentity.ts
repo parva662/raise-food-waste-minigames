@@ -1,3 +1,4 @@
+import { getRecipeReference } from '@/products/kitchen-skills-challenge/domain/portion/recipes';
 import { normalizeRecipeId } from '@/products/kitchen-skills-challenge/domain/session/ingredientUniqueness';
 import type {
   KitchenSkillsReviewEntry,
@@ -25,7 +26,8 @@ export type EvidencedRecipeModule = {
   module: KitchenSkillsReviewedModule;
 };
 
-export function listSessionRecipeIds(session: KitchenSkillsTrainerSession): string[] {
+/** Recipes with saved Portion evidence, in feed order. */
+export function listPortionRecipeIds(session: KitchenSkillsTrainerSession): string[] {
   const ids: string[] = [];
   const seen = new Set<string>();
   for (const portion of session.portionEntries) {
@@ -33,6 +35,21 @@ export function listSessionRecipeIds(session: KitchenSkillsTrainerSession): stri
     if (!rid || seen.has(rid)) continue;
     seen.add(rid);
     ids.push(rid);
+  }
+  return ids;
+}
+
+/**
+ * Every recipe that carries assessable evidence: Portion recipes first, then recipes
+ * that only have Trim/Rescue rows with an explicit recipeId (must stay reachable in the UI).
+ */
+export function listSessionRecipeIds(session: KitchenSkillsTrainerSession): string[] {
+  const ids = listPortionRecipeIds(session);
+  const seen = new Set(ids);
+  for (const pair of evidencedRecipeModules(session)) {
+    if (seen.has(pair.recipeId)) continue;
+    seen.add(pair.recipeId);
+    ids.push(pair.recipeId);
   }
   return ids;
 }
@@ -47,7 +64,7 @@ export function resolveEvidenceRecipeId(
 ): string | null {
   const rid = normalizeRecipeId(entryRecipeId ?? '');
   if (rid) return rid;
-  const ids = listSessionRecipeIds(session);
+  const ids = listPortionRecipeIds(session);
   return ids.length === 1 ? ids[0]! : null;
 }
 
@@ -152,7 +169,8 @@ export function recipeDisplayName(
   const portion = session.portionEntries.find(
     (entry) => normalizeRecipeId(entry.recipeId) === rid,
   );
-  return portion?.recipeName ?? rid ?? recipeId;
+  if (portion?.recipeName) return portion.recipeName;
+  return (rid ? getRecipeReference(rid)?.recipeName : null) ?? rid ?? recipeId;
 }
 
 export function reviewsForRecipe(
@@ -195,7 +213,26 @@ export type KitchenSkillsRecipeAssessmentStatus =
   | 'reviewed'
   | 'no_evidence';
 
-/** Recipe REVIEWED only when every evidenced module for that recipe has a confirmed assessment. */
+/** Per evidenced recipe-module pair: nothing submitted, submitted but not in the feed, or confirmed. */
+export type KitchenSkillsModuleAssessmentState =
+  | 'needs_assessment'
+  | 'awaiting_confirmation'
+  | 'reviewed';
+
+export function recipeModuleAssessmentState(
+  session: KitchenSkillsTrainerSession,
+  recipeId: string,
+  module: KitchenSkillsReviewedModule,
+): KitchenSkillsModuleAssessmentState {
+  const review = findRecipeModuleReview(session, recipeId, module);
+  if (!review) return 'needs_assessment';
+  return isReviewPersistConfirmed(review) ? 'reviewed' : 'awaiting_confirmation';
+}
+
+/**
+ * Recipe REVIEWED only when every evidenced module is confirmed.
+ * Any module with no submission keeps the recipe in NEEDS ASSESSMENT.
+ */
 export function recipeAssessmentStatus(
   session: KitchenSkillsTrainerSession,
   recipeId: string,
@@ -204,14 +241,10 @@ export function recipeAssessmentStatus(
   if (!rid) return 'no_evidence';
   const pairs = evidencedRecipeModules(session).filter((pair) => pair.recipeId === rid);
   if (pairs.length === 0) return 'no_evidence';
-  const unconfirmed = pairs.filter(
-    (pair) => findConfirmedRecipeModuleReview(session, pair.recipeId, pair.module) === null,
-  );
-  if (unconfirmed.length === 0) return 'reviewed';
-  const awaitingDispatch = unconfirmed.some(
-    (pair) => findAwaitingRecipeModuleReview(session, pair.recipeId, pair.module) !== null,
-  );
-  return awaitingDispatch ? 'awaiting_confirmation' : 'needs_assessment';
+  const states = pairs.map((pair) => recipeModuleAssessmentState(session, pair.recipeId, pair.module));
+  if (states.includes('needs_assessment')) return 'needs_assessment';
+  if (states.includes('awaiting_confirmation')) return 'awaiting_confirmation';
+  return 'reviewed';
 }
 
 /** Count of Portion (and other) recipes whose every evidenced module is confirmed. */

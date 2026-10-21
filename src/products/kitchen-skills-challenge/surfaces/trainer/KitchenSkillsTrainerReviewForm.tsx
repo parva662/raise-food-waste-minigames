@@ -19,12 +19,17 @@ import {
   kitchenSkillsReviewSavedMessage,
 } from '@/products/kitchen-skills-challenge/gamebus/reviewPostErrors';
 import { gamebusDevLog } from '@/platform/gamebus/devLog';
+import { formatOperationalTime } from '@/shared/time/dates';
 import {
   EMPTY_REVIEW_DRAFT,
   type KitchenSkillsReviewFormDraft,
 } from '@/products/kitchen-skills-challenge/surfaces/trainer/reviewDrafts';
+import { TrainerStatusChip } from '@/products/kitchen-skills-challenge/surfaces/trainer/TrainerStatusChip';
 
 const SCORE_OPTIONS = [0, 1, 2, 3, 4, 5] as const;
+
+const REASSESS_CONFIRM =
+  'GameBus did not return this assessment after the task was reopened. Submitting again can create a duplicate if GameBus saved it late. Assess again?';
 
 function reviewTestId(reviewedGame: KitchenSkillsReviewedModule, suffix: string): string {
   return `kitchen-day-review-${reviewedGame}-${suffix}`;
@@ -62,7 +67,9 @@ function ScorePicker({
       aria-invalid={invalid || undefined}
       disabled={disabled}
     >
-      <legend className="kitchen-day-score-picker__legend">{label}</legend>
+      <legend className="kitchen-day-score-picker__legend">
+        {label} <span className="kitchen-day-score-picker__scale">0–5</span>
+      </legend>
       <div className="kitchen-day-score-picker__options" role="radiogroup" aria-labelledby={groupId}>
         <span id={groupId} className="visually-hidden">
           {label}
@@ -115,6 +122,63 @@ function ScorePicker({
   );
 }
 
+function SubmittedValues({
+  review,
+  reviewedGame,
+}: {
+  review: KitchenSkillsReviewEntry;
+  reviewedGame: KitchenSkillsReviewedModule;
+}) {
+  const scoreValue = (suffix: 'time-value' | 'quality-value', score: number) => {
+    const legacy = legacyTrimTestId(reviewedGame, suffix);
+    return legacy ? <span data-testid={legacy}>{score}</span> : score;
+  };
+  const legacyFeedback = legacyTrimTestId(reviewedGame, 'feedback-value');
+  return (
+    <dl className="kitchen-day-tutor-assessment__readback">
+      <div>
+        <dt>Time efficiency</dt>
+        <dd data-testid={reviewTestId(reviewedGame, 'time-value')}>
+          {scoreValue('time-value', review.timeEfficiencyScore)}
+          <span className="kitchen-day-tutor-assessment__out-of">/5</span>
+        </dd>
+      </div>
+      <div>
+        <dt>Preparation quality</dt>
+        <dd data-testid={reviewTestId(reviewedGame, 'quality-value')}>
+          {scoreValue('quality-value', review.preparationQualityScore)}
+          <span className="kitchen-day-tutor-assessment__out-of">/5</span>
+        </dd>
+      </div>
+      {review.chefFeedback ? (
+        <div className="kitchen-day-tutor-assessment__feedback">
+          <dt>Feedback</dt>
+          <dd data-testid={reviewTestId(reviewedGame, 'feedback-value')}>
+            {legacyFeedback ? <span data-testid={legacyFeedback}>{review.chefFeedback}</span> : review.chefFeedback}
+          </dd>
+        </div>
+      ) : null}
+    </dl>
+  );
+}
+
+function AssessmentHeader({
+  state,
+  moduleTitle,
+}: {
+  state: 'needs_assessment' | 'awaiting_confirmation' | 'reviewed';
+  moduleTitle: string;
+}) {
+  return (
+    <div className="kitchen-day-tutor-assessment__header">
+      <h3 className="kitchen-day-tutor-assessment__title">
+        Tutor assessment<span className="visually-hidden"> — {moduleTitle}</span>
+      </h3>
+      <TrainerStatusChip state={state} />
+    </div>
+  );
+}
+
 function ReviewReadback({
   review,
   moduleTitle,
@@ -132,50 +196,14 @@ function ReviewReadback({
       {legacyTrimTestId(reviewedGame, 'submitted') ? (
         <span hidden data-testid={legacyTrimTestId(reviewedGame, 'submitted')} />
       ) : null}
-      <h3 className="kitchen-day-tutor-assessment__title">Tutor assessment</h3>
+      <AssessmentHeader state="reviewed" moduleTitle={moduleTitle} />
+      <SubmittedValues review={review} reviewedGame={reviewedGame} />
       <p
         className="kitchen-day-tutor-assessment__status kitchen-day-tutor-assessment__status--saved"
         data-testid={reviewTestId(reviewedGame, 'saved-note')}
       >
         {kitchenSkillsReviewSavedMessage()} Confirmed in GameBus.
       </p>
-      <dl className="kitchen-day-tutor-assessment__readback">
-        <div>
-          <dt>Time efficiency</dt>
-          <dd data-testid={reviewTestId(reviewedGame, 'time-value')}>
-            {legacyTrimTestId(reviewedGame, 'time-value') ? (
-              <span data-testid={legacyTrimTestId(reviewedGame, 'time-value')}>{review.timeEfficiencyScore}</span>
-            ) : (
-              review.timeEfficiencyScore
-            )}
-          </dd>
-        </div>
-        <div>
-          <dt>Preparation quality</dt>
-          <dd data-testid={reviewTestId(reviewedGame, 'quality-value')}>
-            {legacyTrimTestId(reviewedGame, 'quality-value') ? (
-              <span data-testid={legacyTrimTestId(reviewedGame, 'quality-value')}>
-                {review.preparationQualityScore}
-              </span>
-            ) : (
-              review.preparationQualityScore
-            )}
-          </dd>
-        </div>
-        {review.chefFeedback ? (
-          <div className="kitchen-day-tutor-assessment__feedback">
-            <dt>Feedback</dt>
-            <dd data-testid={reviewTestId(reviewedGame, 'feedback-value')}>
-              {legacyTrimTestId(reviewedGame, 'feedback-value') ? (
-                <span data-testid={legacyTrimTestId(reviewedGame, 'feedback-value')}>{review.chefFeedback}</span>
-              ) : (
-                review.chefFeedback
-              )}
-            </dd>
-          </div>
-        ) : null}
-      </dl>
-      <p className="visually-hidden">{moduleTitle}</p>
     </section>
   );
 }
@@ -184,11 +212,15 @@ function ReviewAwaiting({
   review,
   moduleTitle,
   reviewedGame,
+  studentActorId,
 }: {
   review: KitchenSkillsReviewEntry;
   moduleTitle: string;
   reviewedGame: KitchenSkillsReviewedModule;
+  studentActorId: string;
 }) {
+  const { canReassessUnconfirmedReview, discardUnconfirmedReview } = useReadyKitchenSkillsSession();
+  const missingAfterRefresh = canReassessUnconfirmedReview(review, studentActorId);
   return (
     <section
       className="kitchen-day-tutor-assessment kitchen-day-tutor-assessment--awaiting"
@@ -201,51 +233,35 @@ function ReviewAwaiting({
         <span hidden data-testid={legacyTrimTestId(reviewedGame, 'submitted')} />
       ) : null}
       <span hidden data-testid={reviewTestId(reviewedGame, 'submitted')} />
-      <h3 className="kitchen-day-tutor-assessment__title">Tutor assessment</h3>
-      <p
-        className="kitchen-day-tutor-assessment__status kitchen-day-tutor-assessment__status--awaiting"
-        data-testid={reviewTestId(reviewedGame, 'awaiting-note')}
-      >
-        {kitchenSkillsReviewAwaitingMessage()} Not marked reviewed until it appears in the trainer feed.
-        Do not submit again.
-      </p>
-      <dl className="kitchen-day-tutor-assessment__readback">
-        <div>
-          <dt>Time efficiency</dt>
-          <dd data-testid={reviewTestId(reviewedGame, 'time-value')}>
-            {legacyTrimTestId(reviewedGame, 'time-value') ? (
-              <span data-testid={legacyTrimTestId(reviewedGame, 'time-value')}>{review.timeEfficiencyScore}</span>
-            ) : (
-              review.timeEfficiencyScore
-            )}
-          </dd>
+      <AssessmentHeader state="awaiting_confirmation" moduleTitle={moduleTitle} />
+      <SubmittedValues review={review} reviewedGame={reviewedGame} />
+      {missingAfterRefresh ? (
+        <div className="kitchen-day-tutor-assessment__notice" data-testid={reviewTestId(reviewedGame, 'missing-after-refresh')}>
+          <p className="kitchen-day-tutor-assessment__status kitchen-day-tutor-assessment__status--warning">
+            Sent at {formatOperationalTime(review.submittedAt)}, but not in the GameBus trainer feed loaded
+            after that. GameBus may not have saved it.
+          </p>
+          <button
+            type="button"
+            className="kitchen-day-button kitchen-day-button--ghost kitchen-day-tutor-assessment__reassess"
+            data-testid={reviewTestId(reviewedGame, 'reassess')}
+            onClick={() => {
+              if (!window.confirm(REASSESS_CONFIRM)) return;
+              discardUnconfirmedReview(review, studentActorId);
+            }}
+          >
+            Assess again
+          </button>
         </div>
-        <div>
-          <dt>Preparation quality</dt>
-          <dd data-testid={reviewTestId(reviewedGame, 'quality-value')}>
-            {legacyTrimTestId(reviewedGame, 'quality-value') ? (
-              <span data-testid={legacyTrimTestId(reviewedGame, 'quality-value')}>
-                {review.preparationQualityScore}
-              </span>
-            ) : (
-              review.preparationQualityScore
-            )}
-          </dd>
-        </div>
-        {review.chefFeedback ? (
-          <div className="kitchen-day-tutor-assessment__feedback">
-            <dt>Feedback</dt>
-            <dd data-testid={reviewTestId(reviewedGame, 'feedback-value')}>
-              {legacyTrimTestId(reviewedGame, 'feedback-value') ? (
-                <span data-testid={legacyTrimTestId(reviewedGame, 'feedback-value')}>{review.chefFeedback}</span>
-              ) : (
-                review.chefFeedback
-              )}
-            </dd>
-          </div>
-        ) : null}
-      </dl>
-      <p className="visually-hidden">{moduleTitle}</p>
+      ) : (
+        <p
+          className="kitchen-day-tutor-assessment__status kitchen-day-tutor-assessment__status--awaiting"
+          data-testid={reviewTestId(reviewedGame, 'awaiting-note')}
+        >
+          {kitchenSkillsReviewAwaitingMessage()} GameBus refreshes this list only when the task is opened —
+          close and reopen it to check. Do not submit again.
+        </p>
+      )}
     </section>
   );
 }
@@ -292,7 +308,12 @@ export function KitchenSkillsTrainerModuleReviewForm({
 
   if (awaiting) {
     return (
-      <ReviewAwaiting review={awaiting} moduleTitle={moduleTitle} reviewedGame={reviewedGame} />
+      <ReviewAwaiting
+        review={awaiting}
+        moduleTitle={moduleTitle}
+        reviewedGame={reviewedGame}
+        studentActorId={selected.actorId}
+      />
     );
   }
 
@@ -312,7 +333,7 @@ export function KitchenSkillsTrainerModuleReviewForm({
   const statusLabel = sending
     ? 'Sending'
     : canSubmit
-      ? 'Ready'
+      ? ''
       : 'Select both scores to submit';
 
   const submit = () => {
@@ -364,18 +385,7 @@ export function KitchenSkillsTrainerModuleReviewForm({
       data-testid={reviewTestId(reviewedGame, 'form')}
     >
       {legacyForm ? <span hidden data-testid={legacyForm} /> : null}
-      <h3 className="kitchen-day-tutor-assessment__title">Tutor assessment</h3>
-      <p
-        className="kitchen-day-tutor-assessment__status"
-        data-testid={reviewTestId(reviewedGame, 'submit-status')}
-      >
-        {statusLabel}
-      </p>
-      {sending ? (
-        <p className="visually-hidden" data-testid={reviewTestId(reviewedGame, 'sending')}>
-          Sending assessment…
-        </p>
-      ) : null}
+      <AssessmentHeader state="needs_assessment" moduleTitle={moduleTitle} />
 
       <ScorePicker
         label="Time efficiency"
@@ -427,15 +437,29 @@ export function KitchenSkillsTrainerModuleReviewForm({
       >
         Scores stay unanswered until you select 0–5.
       </p>
-      <button
-        type="button"
-        className="kitchen-day-button kitchen-day-button--primary kitchen-day-tutor-assessment__submit"
-        data-testid={legacySubmit ?? reviewTestId(reviewedGame, 'submit')}
-        disabled={!canSubmit}
-        onClick={submit}
-      >
-        {sending ? 'Sending…' : 'Submit assessment'}
-      </button>
+      <div className="kitchen-day-tutor-assessment__actions">
+        <p
+          className="kitchen-day-tutor-assessment__status kitchen-day-tutor-assessment__status--inline"
+          data-testid={reviewTestId(reviewedGame, 'submit-status')}
+          aria-live="polite"
+        >
+          {statusLabel}
+        </p>
+        {sending ? (
+          <p className="visually-hidden" data-testid={reviewTestId(reviewedGame, 'sending')}>
+            Sending assessment…
+          </p>
+        ) : null}
+        <button
+          type="button"
+          className="kitchen-day-button kitchen-day-button--primary kitchen-day-tutor-assessment__submit"
+          data-testid={legacySubmit ?? reviewTestId(reviewedGame, 'submit')}
+          disabled={!canSubmit}
+          onClick={submit}
+        >
+          {sending ? 'Sending…' : 'Submit assessment'}
+        </button>
+      </div>
       {legacySubmit ? (
         <span hidden data-testid={reviewTestId(reviewedGame, 'submit')} />
       ) : null}
