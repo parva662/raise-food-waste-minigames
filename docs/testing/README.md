@@ -30,3 +30,5 @@ Traceability from the approved Gherkin to Vitest coverage:
 Traceability from the approved Gherkin to Vitest coverage:
 
 [`KITCHEN_SKILLS_CHALLENGE_ACCEPTANCE_COVERAGE.md`](KITCHEN_SKILLS_CHALLENGE_ACCEPTANCE_COVERAGE.md)
+
+`@release-gate` mapping and remaining evidence notes: [`KITCHEN_SKILLS_CRITICAL_COVERAGE.md`](KITCHEN_SKILLS_CRITICAL_COVERAGE.md)

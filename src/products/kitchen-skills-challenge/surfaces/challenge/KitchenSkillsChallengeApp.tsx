@@ -4,11 +4,15 @@ import { KitchenSkillsSessionProvider, useKitchenSkillsSession } from '@/product
 import { KitchenSkillsPortionView } from '@/products/kitchen-skills-challenge/surfaces/challenge/PortionView';
 import { KitchenSkillsReuseView } from '@/products/kitchen-skills-challenge/surfaces/challenge/ReuseView';
 import { goToKitchenDaySection, parseKitchenDaySection } from '@/app/routes';
-import { isKitchenSkillsNavEnabled } from '@/products/kitchen-skills-challenge/domain/session/challengeGate';
+import {
+  isKitchenSkillsNavEnabled,
+  unsavedKitchenSkillsDraftMessage,
+} from '@/products/kitchen-skills-challenge/domain/session/challengeGate';
 import { SessionReviewView } from '@/products/kitchen-skills-challenge/surfaces/challenge/SessionReviewView';
 import { KitchenSkillsTrimView } from '@/products/kitchen-skills-challenge/surfaces/challenge/TrimView';
 import { KitchenSkillsFinishSummary } from '@/products/kitchen-skills-challenge/surfaces/challenge/KitchenSkillsFinishSummary';
 import { formatSessionDate } from '@/products/kitchen-skills-challenge/format';
+import { getKitchenSkillsSessionDate } from '@/products/kitchen-skills-challenge/domain/session/identity';
 
 function KitchenSkillsInitializing() {
   return (
@@ -23,9 +27,55 @@ function KitchenSkillsInitializing() {
   );
 }
 
+/** Ask before an unsaved Trim or Rescue measurement is abandoned. */
+export function confirmLeavingKitchenSkillsDraft(message: string | null): boolean {
+  if (!message) return true;
+  return window.confirm(message);
+}
+
+function KitchenSkillsHeader({ sessionDate, recipeName }: { sessionDate: string; recipeName?: string }) {
+  return (
+    <header className="kitchen-mgmt-header">
+      <div className="kitchen-mgmt-header__main">
+        <p className="game-status-header__eyebrow">Practical kitchen</p>
+        <h1 className="kitchen-mgmt-header__title">Kitchen Skills Challenge</h1>
+        <p className="kitchen-mgmt-header__lead" data-testid="kitchen-day-header-session">
+          {recipeName ? `${recipeName} · ` : ''}
+          {formatSessionDate(sessionDate)}
+        </p>
+      </div>
+    </header>
+  );
+}
+
+function KitchenSkillsFinished({ sessionDate, recipeName }: { sessionDate: string; recipeName?: string }) {
+  return (
+    <div className="kitchen-mgmt-page kitchen-day-activity" data-testid="kitchen-day-page">
+      <KitchenSkillsHeader sessionDate={sessionDate} recipeName={recipeName} />
+      <section className="kitchen-day-card" data-testid="kitchen-day-finished">
+        <h2 className="kitchen-day-card__title">Challenge finished</h2>
+        <p className="kitchen-day-card__copy">
+          You can close this window. Opening the challenge again starts a new attempt.
+        </p>
+      </section>
+    </div>
+  );
+}
+
 function KitchenSkillsBody() {
-  const { session, showFinishSummary, taskProgress, requiredSection, reviewAllowed } =
-    useKitchenSkillsSession();
+  const {
+    session,
+    showFinishSummary,
+    taskProgress,
+    requiredSection,
+    reviewAllowed,
+    canFinish,
+    finished,
+    closedElsewhere,
+    resumed,
+    activePortionEntry,
+    openFinishSummary,
+  } = useKitchenSkillsSession();
   const [section, setSection] = useState(() => parseKitchenDaySection());
 
   useEffect(() => {
@@ -45,6 +95,9 @@ function KitchenSkillsBody() {
   }, [section, requiredSection, reviewAllowed, taskProgress]);
 
   if (!session) return <KitchenSkillsInitializing />;
+  if (finished) {
+    return <KitchenSkillsFinished sessionDate={session.sessionDate} recipeName={activePortionEntry?.recipeName} />;
+  }
 
   const visibleSection =
     section === 'review'
@@ -54,27 +107,73 @@ function KitchenSkillsBody() {
       : isKitchenSkillsNavEnabled(section, taskProgress)
         ? section
         : requiredSection;
+  const draftMessage = unsavedKitchenSkillsDraftMessage(taskProgress);
+  const fromEarlierDate = session.sessionDate !== getKitchenSkillsSessionDate();
 
   return (
     <div className="kitchen-mgmt-page kitchen-day-activity" data-testid="kitchen-day-page">
-      <header className="kitchen-mgmt-header">
-        <div className="kitchen-mgmt-header__main">
-          <p className="game-status-header__eyebrow">Practical kitchen</p>
-          <h1 className="kitchen-mgmt-header__title">Kitchen Skills Challenge</h1>
-          <p className="kitchen-mgmt-header__lead" data-testid="kitchen-day-header-session">
-            {formatSessionDate(session.sessionDate)}
-          </p>
-        </div>
-      </header>
-      <KitchenSkillsNav section={visibleSection} progress={taskProgress} />
+      <KitchenSkillsHeader sessionDate={session.sessionDate} recipeName={activePortionEntry?.recipeName} />
+      {closedElsewhere ? (
+        <p className="kitchen-day-error" role="alert" data-testid="kitchen-day-closed-elsewhere">
+          This challenge was finished or restarted in another window. Close this window and open
+          the challenge again.
+        </p>
+      ) : null}
+      {resumed && !closedElsewhere ? (
+        <p className="kitchen-day-card__copy kitchen-day-resumed-note" data-testid="kitchen-day-resumed">
+          {fromEarlierDate
+            ? `Unfinished challenge from ${formatSessionDate(session.sessionDate)}. Finish it to start a new one.`
+            : 'Continuing your unfinished challenge.'}
+        </p>
+      ) : null}
+      <KitchenSkillsNav section={visibleSection} progress={taskProgress} draftMessage={draftMessage} />
       {visibleSection === 'trim' ? <KitchenSkillsTrimView /> : null}
       {visibleSection === 'reuse' ? <KitchenSkillsReuseView /> : null}
       {visibleSection === 'portion' ? <KitchenSkillsPortionView /> : null}
       {visibleSection === 'review' ? <SessionReviewView /> : null}
-      {reviewAllowed && visibleSection !== 'review' ? (
-        <a className="kitchen-day-review-link" href="#/kitchen-day/review" data-testid="kitchen-day-nav-review">
-          Session review
-        </a>
+      {taskProgress.remainingRescueIngredientIds.length > 0 && !closedElsewhere ? (
+        <div className="kitchen-day-finish-bar" data-testid="kitchen-day-pending-rescue-bar">
+          <p className="kitchen-day-card__copy" data-testid="kitchen-day-pending-rescue-copy">
+            Record a reuse decision for each trimmed ingredient before finishing.
+          </p>
+          {visibleSection !== 'reuse' ? (
+            <a
+              className="kitchen-day-review-link"
+              href="#/kitchen-day/reuse"
+              data-testid="kitchen-day-record-remaining-rescue"
+              onClick={(event) => {
+                if (!confirmLeavingKitchenSkillsDraft(draftMessage)) event.preventDefault();
+              }}
+            >
+              Record remaining reuse decisions
+            </a>
+          ) : null}
+        </div>
+      ) : canFinish && !closedElsewhere ? (
+        <div className="kitchen-day-finish-bar" data-testid="kitchen-day-finish-bar">
+          {reviewAllowed && visibleSection !== 'review' ? (
+            <a
+              className="kitchen-day-review-link"
+              href="#/kitchen-day/review"
+              data-testid="kitchen-day-nav-review"
+              onClick={(event) => {
+                if (!confirmLeavingKitchenSkillsDraft(draftMessage)) event.preventDefault();
+              }}
+            >
+              Session review
+            </a>
+          ) : null}
+          <button
+            type="button"
+            className="kitchen-day-button kitchen-day-button--primary"
+            data-testid="kitchen-day-open-finish-summary"
+            onClick={() => {
+              if (confirmLeavingKitchenSkillsDraft(draftMessage)) openFinishSummary();
+            }}
+          >
+            Review and finish
+          </button>
+        </div>
       ) : null}
       {showFinishSummary ? <KitchenSkillsFinishSummary /> : null}
     </div>
@@ -91,7 +190,7 @@ function KitchenSkillsGate() {
 
 export function KitchenSkillsChallengeApp({ now }: { now?: Date } = {}) {
   return (
-    <KitchenSkillsSessionProvider now={now}>
+    <KitchenSkillsSessionProvider now={now} trackAttempt>
       <KitchenSkillsGate />
     </KitchenSkillsSessionProvider>
   );

@@ -23,30 +23,34 @@ Students record practical kitchen work on one operational day (Europe/Helsinki).
 
 ## 2. Product model
 
+**New attempts (approved 21 October 2026):** one challenge attempt = exactly one Portion Precision recipe. Trim is optional until a Trim activity is saved. Each saved Trim ingredient with **positive actual waste** needs exactly one Rescue decision before Finish (`0 g reusable` plus an explanation in `reuseDestination` is valid). Zero-waste Trim needs no Rescue. A second Portion recipe requires **Finish challenge** and a **new attempt**.
+
+**Historical compatibility:** older GameBus sessions may contain several Portion recipes under one day-scoped `sessionId`. Readers keep those sessions fully readable. They are not rewritten.
+
 ```text
-Kitchen Skills session (student actor + sessionId + sessionDate)
-  ├── Recipe A (portionPrecision) — once per recipeId
-  │     ├── Ingredient 1 (trimSmart) — sessionId + recipeId + ingredientId
-  │     │     └── Reuse (rescueAndReuse) — same key
-  │     └── Ingredient 2 (trimSmart)
-  ├── Recipe B (portionPrecision)
-  │     └── …
-  ├── Session Review (current session only, read-only)
-  ├── Student Progress (own history, separate page)
-  └── Tutor assessment per recipe + evidenced module             → wastePracticeReview
+Kitchen Skills attempt (student actor + unique sessionId + sessionDate)
+  ├── One recipe (portionPrecision) — required; once per attempt
+  │     ├── Ingredient 1 (trimSmart) — optional; sessionId + recipeId + ingredientId
+  │     │     └── Reuse (rescueAndReuse) — required when that Trim has waste > 0 g; same key
+  │     └── Ingredient 2 (trimSmart) — optional; more ingredients of the SAME recipe
+  ├── Session Review (current attempt only, read-only)
+  ├── Student Progress (own history, separate page; same-day attempts stay separate)
+  └── Tutor assessment per evidenced module                     → wastePracticeReview
       (sessionId + recipeId + reviewedGame)
 ```
 
 | Identifier | Role |
 |------------|------|
 | GameBus actor | The student |
-| `sessionId` | Opaque key for one student session (`kitchen-day:…` prefix in embed) |
-| `sessionDate` | Europe/Helsinki operational date |
-| `recipeId` | Recipe identity from the dataset; one Portion activity per `sessionId` + `recipeId`; carried on new Trim / Reuse posts |
+| `sessionId` | Opaque key for **one challenge attempt**. New embedded posts: `kitchen-day:{taskId}:{actorId}:{sessionDate}:{attemptId}`. Historical rows may omit `:{attemptId}`. Readers group by the full string and never parse it. Internal IDs are not shown in the UI. |
+| `sessionDate` | Europe/Helsinki operational date of the attempt (an unfinished attempt that crosses midnight keeps its original date) |
+| `recipeId` | Recipe identity from the dataset; **new** attempts post exactly one Portion activity; carried on new Trim / Reuse posts |
 | `ingredientId` | Ingredient identity within a recipe; Trim / Reuse uniqueness is `sessionId` + `recipeId` + `ingredientId` |
-| Active recipe | Latest successful Portion save, or an explicitly resumed saved recipe; Trim / Reuse UI and active-recipe gates use it |
+| Active recipe | The single saved Portion recipe of this attempt |
 
-**Uniqueness:** Portion once per recipe per session. Same `ingredientId` allowed under different recipes. Same ingredient twice under one recipe is blocked. Finish requires every saved recipe to satisfy its own Trim / Reuse rules (eligible Trim skip when none; Reuse when that recipe has reusable waste).
+**Uniqueness (new attempts):** one Portion recipe per `sessionId`. Multiple **different** Trim ingredients of that recipe are allowed. Same ingredient twice under one recipe is blocked. Finish is available after Portion when no positive-waste Trim still lacks a Rescue decision. Empty Trim/Rescue activities are never fabricated. Unsaved Trim/Rescue drafts warn before they are abandoned. Fresh mass inputs default to **kg**; the student can select **g**. Switching the unit keeps the typed number and reinterprets it (canonical storage stays grams).
+
+**Attempt identity:** generated once when the challenge opens, stored in a non-authoritative local attempt record (`ks-attempt:v1:{taskId}:{actorId}`), and reused across reload / TASK replay / INPUT_COLLECTIONS until Finish. Finish archives dispatched local evidence (`ks-attempt-archive:v1:{sessionId}`), clears the active key, and then posts `{ type: 'EXIT' }`. If that local archive/clear fails, Finish does not send EXIT, does not mark the attempt finished, and keeps the active record so reload can resume it. The archive is never auto-posted and is not GameBus proof. Reopening after a successful Finish starts a new `attemptId`. A successful `postMessage` is not GameBus persistence; recovered local rows stay unconfirmed until they appear in the self-feed. Local storage is never proof that GameBus stored the activity.
 
 Exact stored properties: slug contract. Module intent: [`TRIM_SMART.md`](TRIM_SMART.md), [`RESCUE_AND_REUSE.md`](RESCUE_AND_REUSE.md), [`PORTION_PRECISION.md`](PORTION_PRECISION.md). Review / Progress / tutor: [`CHEF_REVIEW.md`](CHEF_REVIEW.md).
 
@@ -68,7 +72,8 @@ Each generated recipe ingredient keeps its source `Hävikki` as `referenceWasteP
 ## 5. Non-goals
 
 - Three independent standalone games
-- Same ingredient twice under the same recipe in one student's session
+- A second Portion recipe inside the same challenge attempt
+- Same ingredient twice under the same recipe in one student's attempt
 - `sourceActivityId` / `preparationEntryId`
 - Reuse status / later confirmation
 - One Portion activity per ingredient line

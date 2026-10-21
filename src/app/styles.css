@@ -1625,7 +1625,55 @@ ul {
 }
 
 .kitchen-day-finish-dialog__header .chef-zero-dialog__title {
-  margin-bottom: var(--spacing-md);
+  margin-bottom: 0.15rem;
+}
+
+.kitchen-day-finish-dialog__recipe {
+  margin: 0 0 var(--spacing-md);
+  font-weight: 600;
+  color: var(--color-text-secondary);
+}
+
+.kitchen-day-finish-module {
+  padding: var(--spacing-sm) 0;
+  border-top: 1px solid var(--color-border);
+}
+
+.kitchen-day-finish-module:first-child {
+  border-top: 0;
+  padding-top: 0;
+}
+
+.kitchen-day-finish-module__title {
+  margin: 0 0 var(--spacing-xs);
+  font-size: var(--font-size-xs);
+  font-weight: 700;
+  color: var(--color-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.kitchen-day-finish-module__line {
+  margin: 0;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.kitchen-day-finish-details {
+  margin: var(--spacing-sm) 0 var(--spacing-md);
+}
+
+.kitchen-day-finish-details > summary {
+  cursor: pointer;
+  font-weight: 600;
+  color: var(--color-primary);
+  min-height: 2.75rem;
+  display: flex;
+  align-items: center;
+}
+
+.kitchen-day-finish-details .kitchen-day-evidence {
+  margin-top: var(--spacing-sm);
 }
 
 .kitchen-day-finish-overview {
@@ -5745,6 +5793,171 @@ ul {
   line-height: 1.4;
 }
 
+.kitchen-day-field__hint {
+  font-size: var(--font-size-xs);
+  font-weight: 500;
+  color: var(--color-text-secondary);
+}
+
+.kitchen-day-reuse-discarded {
+  display: flex;
+  align-items: baseline;
+  gap: var(--spacing-xs);
+  margin: 0 0 var(--spacing-sm);
+  color: var(--color-text-secondary);
+  font-weight: 600;
+}
+
+.kitchen-day-reuse-discarded strong {
+  color: var(--color-text);
+}
+
+.kitchen-day-mass-input {
+  display: inline-flex;
+  align-items: stretch;
+  width: 12rem;
+  max-width: 100%;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  overflow: hidden;
+}
+
+.kitchen-day-mass-input .kitchen-day-input {
+  min-height: 2.75rem;
+  padding: var(--spacing-xs) var(--spacing-sm);
+}
+
+.kitchen-day-mass-input:focus-within {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 1px;
+}
+
+.kitchen-day-unit-toggle {
+  display: inline-flex;
+  flex: 0 0 auto;
+  border-left: 1px solid var(--color-border);
+  background: var(--color-bg);
+}
+
+.kitchen-day-unit-toggle__option {
+  min-width: 2.5rem;
+  min-height: 2.75rem;
+  padding: 0 var(--spacing-xs);
+  border: 0;
+  background: transparent;
+  color: var(--color-text-secondary);
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.kitchen-day-unit-toggle__option + .kitchen-day-unit-toggle__option {
+  border-left: 1px solid var(--color-border);
+}
+
+.kitchen-day-unit-toggle__option--active {
+  background: var(--color-primary);
+  color: #fff;
+}
+
+.kitchen-day-unit-toggle__option:focus-visible {
+  outline: 2px solid var(--color-primary-dark);
+  outline-offset: -2px;
+}
+
+.kitchen-day-summary-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: var(--spacing-xs);
+}
+
+.kitchen-day-summary-list__item {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.15rem var(--spacing-md);
+  padding: var(--spacing-xs) 0;
+  border-bottom: 1px solid var(--color-border);
+  min-width: 0;
+}
+
+.kitchen-day-summary-list__item:last-child {
+  border-bottom: 0;
+}
+
+.kitchen-day-summary-list__name {
+  font-weight: 700;
+  color: var(--color-text);
+  overflow-wrap: anywhere;
+}
+
+.kitchen-day-summary-list__detail {
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  overflow-wrap: anywhere;
+}
+
+.kitchen-day-summary-list__preview {
+  font-weight: 500;
+  font-style: italic;
+}
+
+.kitchen-day-trim-saved {
+  margin-top: var(--spacing-md);
+  padding-top: var(--spacing-sm);
+  border-top: 1px solid var(--color-border);
+}
+
+.kitchen-day-trim-saved__title {
+  margin: 0 0 var(--spacing-xs);
+  font-size: var(--font-size-sm);
+  font-weight: 700;
+  color: var(--color-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.kitchen-day-portion-saved {
+  display: grid;
+  gap: var(--spacing-sm);
+}
+
+.kitchen-day-portion-saved .kitchen-day-success,
+.kitchen-day-portion-saved .kitchen-day-card__copy {
+  margin: 0;
+}
+
+.kitchen-day-finish-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--spacing-sm) var(--spacing-md);
+  margin-top: var(--spacing-md);
+}
+
+.kitchen-day-finish-bar .kitchen-day-card__copy {
+  margin: 0 auto 0 0;
+  flex: 1 1 12rem;
+}
+
+.kitchen-day-finish-bar .kitchen-day-review-link {
+  margin: 0 auto 0 0;
+}
+
+.kitchen-day-finish-bar .kitchen-day-button {
+  min-height: 2.75rem;
+}
+
+.kitchen-day-resumed-note {
+  margin: 0 0 var(--spacing-sm);
+}
+
 .kitchen-day-metric-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(8.5rem, 1fr));
@@ -5818,7 +6031,7 @@ ul {
 }
 
 .kitchen-day-portion-entry__actual {
-  width: 10.5rem;
+  width: 12.5rem;
 }
 
 .kitchen-day-portion-entry__result {
@@ -7590,6 +7803,23 @@ ul {
 
   .kitchen-day-portion-entry__target::before {
     content: 'Target ';
+  }
+}
+
+@media (max-width: 360px) {
+  .kitchen-day-portion-entry tbody tr {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .kitchen-day-portion-entry__target,
+  .kitchen-day-portion-entry__actual {
+    grid-column: 1 / -1;
+    justify-self: stretch;
+    width: 100%;
+  }
+
+  .kitchen-day-portion-entry__actual .kitchen-day-mass-input {
+    width: 100%;
   }
 }
 

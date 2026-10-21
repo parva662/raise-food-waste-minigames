@@ -108,7 +108,8 @@ export function tryPostKitchenSkillsPortion(entry: KitchenSkillsPortionEntry): K
   return tryPostKitchenSkillsActivity(
     getGameBusTask(),
     (task) => buildPortionPrecisionActivityMessage(task, entry),
-    `portion:${entry.sessionId}:${entry.recipeId}`,
+    // One Portion recipe per attempt: a second recipe in the same sessionId is a duplicate.
+    `portion:${entry.sessionId}`,
     canPostKitchenSkillsStudentActivity(),
     KITCHEN_SKILLS_STUDENT_LIVE_BLOCK_REASON,
   );

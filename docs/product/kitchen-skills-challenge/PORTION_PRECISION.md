@@ -41,11 +41,19 @@ These two recipe metrics stay separate. There is **no** automatic combined score
 
 ## 5. Journey
 
-Searchable recipe combobox (ordered options on open, typing filters; touch scroll must not select) → compact Ingredient | Target | Actual | Result table → final recipe weight → **Save recipe** (one `SILENT_ACTIVITY`) → Trim Smart for that **active** recipe. **Save recipe** means Portion measurements are recorded; it does **not** mean the recipe’s practical Trim/Reuse work is complete. Each `recipeId` may be saved only once per session. A **different** recipe may be saved only when every already-saved recipe satisfies its completion rules and there is no unfinished Trim/Reuse draft. Select an already saved recipe and **Continue Trim Smart** to resume without posting another Portion activity. EXIT only on Finish challenge. Layout: [`../UI_STANDARD.md`](../UI_STANDARD.md).
+Searchable recipe combobox (ordered options on open, typing filters; touch scroll must not select) → compact Ingredient | Target | Actual | Result table → final recipe weight → **Save recipe** (one `SILENT_ACTIVITY`) → Trim Smart for that recipe when it has eligible ingredients, otherwise Finish is already available.
+
+**Save recipe** means Portion measurements are recorded. It does **not** mean Trim or Rescue must be completed. **New attempts record exactly one Portion recipe.** There is no “Start another recipe” and no resume-another-recipe picker. A student who wants a second recipe finishes this challenge and reopens it as a new attempt.
+
+Mass inputs (ingredient actuals and final prepared weight) offer a compact **g / kg** selector and **default to kg**. The student can select **g** and type a number. The typed number does not change when the unit is toggled; the selected unit is used to interpret it as canonical grams (`1 kg = 1000 g`) before validation, comparison, and GameBus mapping. Do **not** create kg properties. Volume units (dL / L) are unchanged and are never converted to mass. Summaries and readbacks format canonical grams: 999 g and 1000 g stay in grams; 1001 g → 1.001 kg; 1250 g → 1.25 kg; 2000 g → 2 kg.
+
+EXIT only on Finish challenge. Layout: [`../UI_STANDARD.md`](../UI_STANDARD.md).
+
+Historical GameBus sessions may still contain several Portion recipes under one `sessionId`. Those rows stay readable; new posts do not add a second recipe to an attempt.
 
 ## 6. Tutor assessment
 
-Evidence only. The tutor enters time / quality scores for `reviewedGame: portionPrecision` **per recipe** (`recipeId`). See [`CHEF_REVIEW.md`](CHEF_REVIEW.md).
+Evidence only. The tutor enters time / quality scores for `reviewedGame: portionPrecision` for that attempt’s recipe (`recipeId`). Historical multi-recipe sessions still need one Portion assessment per saved recipe. See [`CHEF_REVIEW.md`](CHEF_REVIEW.md).
 
 ## 7. GameBus admin / deprecated names
 

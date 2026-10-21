@@ -49,8 +49,12 @@ export function SessionReviewView() {
       ? reviewsAsModuleMap(sessionReviews)
       : emptyModuleReviews();
   const missing: string[] = [];
-  if (trimEntries.length === 0) missing.push('Trim Smart');
   if (portionEntries.length === 0) missing.push('Portion Precision');
+  const evidencedModules = [
+    'portionPrecision',
+    ...(trimEntries.length > 0 ? (['trimSmart'] as const) : []),
+    ...(rescueEntries.length > 0 ? (['rescueAndReuse'] as const) : []),
+  ] as const;
 
   const recipeIds = listSessionRecipeIds({
     portionEntries,
@@ -69,7 +73,7 @@ export function SessionReviewView() {
       <header className="kitchen-day-review-header">
         <h2 className="kitchen-day-card__title">Session review</h2>
         <p className="kitchen-day-card__copy">
-          This challenge session only. Submitted measurements cannot be edited here.
+          This challenge attempt only. Submitted measurements cannot be edited here.
         </p>
         <p data-testid="kitchen-day-session-meta">{formatSessionDate(session.sessionDate)}</p>
         {missing.length > 0 ? (
@@ -95,6 +99,7 @@ export function SessionReviewView() {
         rescueEntries={rescueEntries}
         portionEntries={portionEntries}
         moduleReviews={moduleReviews}
+        modules={evidencedModules}
         collapsePortionTable
         showWasteAnalytics={false}
       />

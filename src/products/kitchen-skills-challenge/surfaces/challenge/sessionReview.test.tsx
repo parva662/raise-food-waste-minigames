@@ -101,8 +101,8 @@ describe('Session review presentation', () => {
 
     expect(evidence).toHaveClass('kitchen-day-evidence');
     expect(evidence).not.toHaveClass('chef-results-metrics');
+    expect(following(portion, trim)).toBe(true);
     expect(following(trim, rescue)).toBe(true);
-    expect(following(rescue, portion)).toBe(true);
     expect(following(tutor, rescue)).toBe(true);
     expect(tutor).toHaveClass('kitchen-day-evidence-section--assessment');
     expect(trim).toContainElement(tutor);
@@ -128,10 +128,10 @@ describe('Session review presentation', () => {
     expect(screen.getByTestId('kitchen-day-rescue-potato').textContent).toMatch(/Soup/);
 
     expect(screen.getByTestId('kitchen-day-portion-accuracy-1')).toHaveTextContent('96.3%');
-    expect(screen.getByTestId('kitchen-day-portion-expected-final-1')).toHaveTextContent('13500 g');
+    expect(screen.getByTestId('kitchen-day-portion-expected-final-1')).toHaveTextContent('13.5 kg');
     expect(screen.getByTestId('kitchen-day-portion-final-deviation-1')).toHaveTextContent('3.0%');
-    expect(screen.getByTestId('kitchen-day-portion-target-1-ankka-rintafilee')).toHaveTextContent('11250 g');
-    expect(screen.getByTestId('kitchen-day-portion-actual-1-ankka-rintafilee')).toHaveTextContent('11250 g');
+    expect(screen.getByTestId('kitchen-day-portion-target-1-ankka-rintafilee')).toHaveTextContent('11.25 kg');
+    expect(screen.getByTestId('kitchen-day-portion-actual-1-ankka-rintafilee')).toHaveTextContent('11.25 kg');
     expect(screen.getByTestId('kitchen-day-deviation-1-ankka-rintafilee')).toHaveTextContent('Exact');
     expect(screen.getByTestId('kitchen-day-portion-difference-1-rosmariini-tuore-100g')).toHaveTextContent('45 g over');
     expect(screen.getByTestId('kitchen-day-deviation-1-rosmariini-tuore-100g')).toHaveTextContent('10.0% over');
@@ -250,8 +250,8 @@ describe('Session review presentation', () => {
       </KitchenSkillsSessionProvider>,
     );
     expect(screen.getByTestId('kitchen-day-review-status')).toHaveTextContent('Still to complete');
-    expect(screen.getByTestId('kitchen-day-review-status')).toHaveTextContent('Trim Smart');
     expect(screen.getByTestId('kitchen-day-review-status')).toHaveTextContent('Portion Precision');
+    expect(screen.getByTestId('kitchen-day-review-status')).not.toHaveTextContent('Trim Smart');
     expect(screen.queryByText(/All required modules/)).not.toBeInTheDocument();
   });
 

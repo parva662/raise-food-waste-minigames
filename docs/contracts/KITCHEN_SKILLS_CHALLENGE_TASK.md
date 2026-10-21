@@ -15,11 +15,11 @@
 
 The iframe receives **one** `TASK` (later TASK messages are ignored by `src/platform/gamebus/bridge.ts`).
 
-Student Trim / Reuse / Portion each post **`SILENT_ACTIVITY`** with the same activity `data` as before (`template`, `start`, `end`, `properties`). That matches GameBus custom-task behaviour: silent posts store `/api/me/activities` and **do not close** the task dialog. After each successful silent post the SPA keeps the entry in local session state and continues Portion → Trim → Reuse → summary. **Add more ingredients** keeps the iframe open. **Finish challenge** then posts `{ type: 'EXIT' }` (`src/platform/gamebus/exit.ts`). Official protocol: [`GAMEBUS.md`](GAMEBUS.md).
+Student Trim / Reuse / Portion each post **`SILENT_ACTIVITY`** with the same activity `data` as before (`template`, `start`, `end`, `properties`). That matches GameBus custom-task behaviour: silent posts store `/api/me/activities` and **do not close** the task dialog. After each successful silent post the SPA keeps the entry in local session state and continues Portion → optional Trim → optional Reuse → summary. **Another ingredient** keeps the iframe open. **Finish challenge** then posts `{ type: 'EXIT' }` (`src/platform/gamebus/exit.ts`). Official protocol: [`GAMEBUS.md`](GAMEBUS.md). A successful `postMessage` is not GameBus persistence confirmation.
 
 Tutor `wastePracticeReview` posts **`SILENT_ACTIVITY`** with review properties including required `reviewedGame` and `recipeId` (on new clients) plus `actors: [selectedStudentActorId]`. Do **not** add a `studentId` property. One tutor assessment per recipe and evidenced module within a Kitchen Skills session (`sessionId` + `recipeId` + `reviewedGame`). After submit the tutor iframe stays open so the chef can review another student, recipe, or module.
 
-Do **not** split Kitchen Day into three embeds. Embedded `sessionId` is one student + one Kitchen Day: `kitchen-day:<taskId>:<actorId>:<sessionDate>`. Do not persist actor id as a Kitchen Day activity property.
+Do **not** split Kitchen Day into three embeds. Embedded `sessionId` is one student + **one challenge attempt**: `kitchen-day:<taskId>:<actorId>:<sessionDate>:<attemptId>`. Historical activities may omit `:<attemptId>`. Do not persist actor id as a Kitchen Day activity property. The attempt id is not a new GameBus property.
 
 `wastePracticeReview` stays on the tutor TASK. It is not required on the student Kitchen Day TASK. Review posts validate that template on the current TASK before building the silent activity. Trainer listing uses dedicated `kitchenSkillsTrainerInput.activities`. GameBus request:
 
@@ -35,7 +35,7 @@ Do not reuse `kitchenGroupInput` (that collection is `chefForecast` / `wasteMeas
 
 ## Client rules
 
-- Embedded Kitchen Day waits for a valid TASK **and** `inputCollectionPari.me`, then locks `sessionId` / `sessionDate` once. Later TASK or INPUT_COLLECTIONS refreshes cannot replace them.
+- Embedded Kitchen Day waits for a valid TASK **and** `inputCollectionPari.me`, then locks `sessionId` / `sessionDate` / attempt id once. Later TASK or INPUT_COLLECTIONS refreshes cannot replace them. Finish clears the local attempt record so the next open is a new `sessionId`. An empty stale attempt after Helsinki midnight is replaced; dispatched unfinished work resumes with the original date. Persistence failures must not reset local state or mint a new id.
 - Embedded student hydration uses `getRawKitchenSelfActivitiesInput` scoped by the locked `sessionId`. Student Progress uses the same feed but keeps only activities whose `activity.actor.id` equals authenticated `inputCollectionPari.me.id` (fail closed when identity is missing).
 - Embedded trainer listing and persisted tutor reviews use `getRawKitchenSkillsTrainerActivitiesInput`. Do not read `kitchenGroupInput` on Kitchen Skills trainer.
 - Builders call `selectKitchenSkillsActivityTemplate(task, slug)` and fail if any of the three templates is missing.

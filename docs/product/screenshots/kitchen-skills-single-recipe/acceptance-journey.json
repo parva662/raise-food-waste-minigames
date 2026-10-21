@@ -1,0 +1,95 @@
+{
+  "harness": "http://localhost:5180/local-preview/kitchen-skills-challenge-harness.html",
+  "actorPrefix": "accept-journey-*",
+  "liveGameBusPersistence": false,
+  "checks": [
+    {
+      "name": "kg default on Portion mass field",
+      "ok": true,
+      "detail": "true"
+    },
+    {
+      "name": "g is selectable on Portion mass field",
+      "ok": true,
+      "detail": "true"
+    },
+    {
+      "name": "kg remains selected after toggling back",
+      "ok": true,
+      "detail": "true"
+    },
+    {
+      "name": "Portion recipe saved and Trim opened",
+      "ok": true,
+      "detail": "Hedelmät M,G"
+    },
+    {
+      "name": "Trim recorded for two eligible ingredients",
+      "ok": true,
+      "detail": "Banaani 450 g, Omena 200 g"
+    },
+    {
+      "name": "Rescue starts with two pending ingredients",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "Rescue remaining count drops to one after A",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "Ingredient B remains available after Rescue A",
+      "ok": true,
+      "detail": "omena"
+    },
+    {
+      "name": "Finish stays blocked after Rescue A only",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "Pending Rescue bar remains after Rescue A",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "Finish summary includes Rescue A",
+      "ok": true,
+      "detail": "Banaani200 g to Use in soup"
+    },
+    {
+      "name": "Finish summary includes Rescue B 0 g reusable",
+      "ok": true,
+      "detail": "Omena0 g reused · “Cannot be reused; discard”"
+    },
+    {
+      "name": "EXIT dispatched after Finish",
+      "ok": true,
+      "detail": "1"
+    },
+    {
+      "name": "Harness recorded Portion, two Trim, and two Rescue posts",
+      "ok": true,
+      "detail": "portionPrecision, trimSmart, trimSmart, rescueAndReuse, rescueAndReuse"
+    },
+    {
+      "name": "Reopen after Finish is a new attempt (recipe select, not resumed)",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "Harness posts are not live GameBus persistence",
+      "ok": true,
+      "detail": "synthetic TASK + empty self-feed; no ACK"
+    }
+  ],
+  "passed": true,
+  "screenshots": [
+    "12-acceptance-portion-kg-g-desktop-1200.png",
+    "13-acceptance-rescue-after-a-desktop-1200.png",
+    "14-acceptance-finish-both-rescue-desktop-1200.png",
+    "15-acceptance-finished-desktop-1200.png",
+    "16-acceptance-reopen-new-attempt-desktop-1200.png"
+  ]
+}

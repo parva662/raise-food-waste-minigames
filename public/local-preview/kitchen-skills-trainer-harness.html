@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Local preview: Kitchen Skills Trainer</title>
+    <style>
+      html, body { margin: 0; height: 100%; background: #1b2420; color: #e8eee9; font-family: system-ui, sans-serif; }
+      .banner { padding: 0.4rem 0.75rem; background: #24312b; border-bottom: 1px solid #3a4a42; font-size: 0.8rem; height: 1.4rem; overflow: hidden; white-space: nowrap; }
+      .banner strong { color: #b7e0c4; }
+      iframe { display: block; width: 100%; height: calc(100% - 2.25rem); border: 0; background: #fff; }
+    </style>
+  </head>
+  <body>
+    <div class="banner"><strong>LOCAL PREVIEW ONLY</strong> · synthetic GameBus TASK + INPUT_COLLECTIONS. Posts are recorded, never fed back (no ACK) · <span id="posts">0 posts</span></div>
+    <iframe id="app" title="Kitchen Skills Trainer preview"></iframe>
+    <script type="module">
+      import { kitchenSkillsTrainerTaskFixture } from '/src/products/kitchen-skills-challenge/gamebus/kitchenSkillsTaskFixtures.ts';
+      import { getRecipeReference } from '/src/products/kitchen-skills-challenge/domain/portion/recipes.ts';
+
+      const params = new URLSearchParams(location.search);
+      const route = params.get('route') ?? '/kitchen-day-tutor';
+      const prop = (slug, value) => ({ template: { slug, name: slug }, value: { value } });
+      let seq = 0;
+
+      function sid(actorId, date, attempt) {
+        return attempt
+          ? `kitchen-day:task:${actorId}:${date}:${attempt}`
+          : `kitchen-day:task:${actorId}:${date}`;
+      }
+      function at(date, hhmmss) { return `${date}T${hhmmss}.000Z`; }
+
+      function portion(actor, date, recipeId, time, drift, attempt) {
+        const factors = Array.isArray(drift) ? drift : [1.04, 0.97, 1.1];
+        const ref = getRecipeReference(recipeId);
+        const lines = ref.lines.slice(0, 6).map((line, i) => ({
+          ingredientId: line.ingredientId,
+          ingredientName: line.ingredientName,
+          actualAmount: Math.round(line.requiredAmount * factors[i % factors.length]),
+          unit: line.unit,
+        }));
+        return {
+          id: `a${++seq}`, actor, template: { slug: 'portionPrecision' },
+          properties: [
+            prop('sessionId', sid(actor.id, date, attempt)), prop('sessionDate', date), prop('submittedAt', at(date, time)),
+            prop('recipeId', recipeId), prop('recipeName', ref.recipeName),
+            prop('finalRecipeWeightGrams', Math.round(ref.expectedFinalWeightGrams * 1.03)),
+            prop('recipeComposition', lines),
+          ],
+        };
+      }
+      function trim(actor, date, recipeId, time, lineIndex = 0, technique = 'peeling', attempt) {
+        const line = getRecipeReference(recipeId).lines[lineIndex];
+        return {
+          id: `a${++seq}`, actor, template: { slug: 'trimSmart' },
+          properties: [
+            prop('sessionId', sid(actor.id, date, attempt)), prop('sessionDate', date), prop('submittedAt', at(date, time)),
+            prop('recipeId', recipeId), prop('ingredientId', line.ingredientId), prop('ingredientName', line.ingredientName),
+            prop('ingredientWeightGrams', Math.round(line.requiredAmount * 1.2)), prop('trimTechniques', technique),
+            prop('estimatedWasteGrams', Math.round(line.requiredAmount * 0.15)),
+            prop('actualWasteGrams', Math.round(line.requiredAmount * 0.19)),
+            { template: { slug: 'duration' }, obj: { value: 6, unit: 'minutes' } },
+          ],
+        };
+      }
+      function rescue(actor, date, recipeId, time, lineIndex = 0, grams = 120, destination = 'Smoothie base for staff lunch', attempt) {
+        const line = getRecipeReference(recipeId).lines[lineIndex];
+        return {
+          id: `a${++seq}`, actor, template: { slug: 'rescueAndReuse' },
+          properties: [
+            prop('sessionId', sid(actor.id, date, attempt)), prop('sessionDate', date), prop('submittedAt', at(date, time)),
+            prop('recipeId', recipeId), prop('ingredientId', line.ingredientId),
+            prop('reusableWasteGrams', grams), prop('reuseDestination', destination),
+          ],
+        };
+      }
+      function review(actor, date, recipeId, module, time, t, q, feedback, attempt) {
+        return {
+          id: `a${++seq}`, actor, template: { slug: 'wastePracticeReview' },
+          properties: [
+            prop('sessionId', sid(actor.id, date, attempt)), prop('sessionDate', date), prop('submittedAt', at(date, time)),
+            prop('recipeId', recipeId), prop('reviewedGame', module),
+            prop('timeEfficiencyScore', t), prop('preparationQualityScore', q),
+            ...(feedback ? [prop('chefFeedback', feedback)] : []),
+          ],
+        };
+      }
+
+      const staff1 = { id: 'staff1', name: 'Aino Virtanen' };
+      const staff2 = { id: 'staff2', name: 'Mikko Korhonen' };
+      const staff3 = { id: 'staff3', name: 'Sara Nieminen' };
+      const staff4 = { id: 'staff4', name: 'Jonne Lehtinen' };
+      const staff5 = { id: 'staff5', name: 'Emilia Saarinen' };
+
+      const activities = [
+        // staff1 · 20 Oct: the reported case. Trim confirmed; Portion + Rescue still to assess.
+        portion(staff1, '2026-10-20', '5', '08:37:45'),
+        trim(staff1, '2026-10-20', '5', '08:38:03'),
+        rescue(staff1, '2026-10-20', '5', '08:38:13'),
+        review(staff1, '2026-10-20', '5', 'trimSmart', '08:40:22', 2, 4, 'Clean peel, but slow — batch the bananas next time.'),
+        // staff1 · 14 Oct: fully reviewed.
+        portion(staff1, '2026-10-14', '2', '09:12:10'),
+        trim(staff1, '2026-10-14', '2', '09:20:44', 1, 'dice'),
+        rescue(staff1, '2026-10-14', '2', '09:24:02', 1, 80, 'Stock for tomorrow'),
+        review(staff1, '2026-10-14', '2', 'portionPrecision', '10:01:00', 4, 4, 'Weights within tolerance.'),
+        review(staff1, '2026-10-14', '2', 'trimSmart', '10:02:00', 3, 5),
+        review(staff1, '2026-10-14', '2', 'rescueAndReuse', '10:03:00', 4, 4, 'Good reuse idea.'),
+        // staff2 · 20 Oct: two recipes, nothing reviewed yet.
+        portion(staff2, '2026-10-20', '5', '08:05:00'),
+        trim(staff2, '2026-10-20', '5', '08:10:00'),
+        portion(staff2, '2026-10-20', '2', '09:05:00', [0.92, 1.0, 1.06]),
+        trim(staff2, '2026-10-20', '2', '09:11:00', 1, 'dice'),
+        rescue(staff2, '2026-10-20', '2', '09:15:00', 1, 60, 'Soup garnish'),
+        // staff3 · 19 Oct: Portion only.
+        portion(staff3, '2026-10-19', '5', '11:00:00'),
+        // staff4 · 18 Oct: fully reviewed single recipe.
+        portion(staff4, '2026-10-18', '2', '07:45:00'),
+        review(staff4, '2026-10-18', '2', 'portionPrecision', '08:30:00', 5, 4),
+        // staff5 · 21 Oct: two separate attempts, same student, same day.
+        portion(staff5, '2026-10-21', '5', '08:05:00', undefined, 'mornid01'),
+        portion(staff5, '2026-10-21', '2', '11:20:00', undefined, 'aftnid02'),
+        trim(staff5, '2026-10-21', '2', '11:28:00', 1, 'dice', 'aftnid02'),
+        rescue(staff5, '2026-10-21', '2', '11:32:00', 1, 80, 'Stock for tomorrow', 'aftnid02'),
+      ];
+
+      const inputCollections = {
+        kitchenSkillsTrainerInput: { activities },
+        inputCollectionPari: { me: { id: 'chef-1', firstName: 'Pari', lastName: 'Chef' } },
+      };
+
+      const frame = document.getElementById('app');
+      const posts = [];
+      window.__trainerPosts = posts;
+      window.addEventListener('message', (event) => {
+        if (event.source !== frame.contentWindow) return;
+        const data = event.data;
+        if (data?.type === 'IFRAME_READY') {
+          frame.contentWindow.postMessage({ type: 'TASK', data: kitchenSkillsTrainerTaskFixture }, '*');
+          frame.contentWindow.postMessage({ type: 'INPUT_COLLECTIONS', data: inputCollections }, '*');
+        } else if (data?.type === 'SILENT_ACTIVITY' || data?.type === 'ACTIVITY') {
+          posts.push(data);
+          document.getElementById('posts').textContent = `${posts.length} post(s) recorded, not persisted`;
+        }
+      });
+      frame.src = `/#${route}`;
+    </script>
+  </body>
+</html>

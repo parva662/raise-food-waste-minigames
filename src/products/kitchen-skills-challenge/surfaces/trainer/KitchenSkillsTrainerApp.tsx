@@ -12,7 +12,7 @@ import {
   sessionAssessmentStatus,
   sessionRecordedModuleLabels,
 } from '@/products/kitchen-skills-challenge/read/trainerSessions';
-import { listSessionRecipeIds } from '@/products/kitchen-skills-challenge/domain/session/reviewIdentity';
+import { listSessionRecipeIds, recipeDisplayName } from '@/products/kitchen-skills-challenge/domain/session/reviewIdentity';
 import type {
   KitchenSkillsTrainerSession,
   KitchenSkillsTrainerStaffSummary,
@@ -411,7 +411,14 @@ function SessionRow({ session }: { session: KitchenSkillsTrainerSession }) {
   const status = sessionAssessmentStatus(session);
   const counts = sessionAssessmentCounts(session);
   const earliest = earliestSubmittedAt(session);
-  const recipeCount = listSessionRecipeIds(session).length;
+  const recipeIds = listSessionRecipeIds(session);
+  const recipeCount = recipeIds.length;
+  const recipeLabel =
+    recipeCount === 1
+      ? recipeDisplayName(session, recipeIds[0]!)
+      : recipeCount > 0
+        ? plural(recipeCount, 'recipe')
+        : 'No recipe id';
   const modules = sessionRecordedModuleLabels(session);
   return (
     <a
@@ -424,7 +431,7 @@ function SessionRow({ session }: { session: KitchenSkillsTrainerSession }) {
         {earliest ? <span className="kitchen-day-tutor-row__time">{formatOperationalTime(earliest)}</span> : null}
       </span>
       <span className="kitchen-day-tutor-row__what">
-        <span>{recipeCount > 0 ? plural(recipeCount, 'recipe') : 'No recipe id'}</span>
+        <span>{recipeLabel}</span>
         <span className="kitchen-day-tutor-row__modules">{modules.join(' · ')}</span>
       </span>
       <span

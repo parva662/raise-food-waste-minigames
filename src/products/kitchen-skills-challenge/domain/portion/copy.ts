@@ -1,4 +1,4 @@
-import { formatGrams, formatWastePercent } from '@/products/kitchen-skills-challenge/format';
+import { formatGrams, formatRecipeAmount, formatWastePercent } from '@/products/kitchen-skills-challenge/format';
 import type { RecipeCompositionLine } from '@/products/kitchen-skills-challenge/domain/types';
 import type { RecipeReferenceLine } from '@/products/kitchen-skills-challenge/domain/portion/recipes';
 import { evaluatePortionLine } from '@/products/kitchen-skills-challenge/domain/portion/deviations';
@@ -26,7 +26,7 @@ export function formatPortionDifference(
   const outcome = evaluatePortionLine(required, actual);
   if (outcome === 'exact match') return 'Exact';
   const difference = Math.abs(actual.actualAmount - required.requiredAmount);
-  const amount = formatGrams(difference).replace(' g', ` ${actual.unit}`);
+  const amount = formatRecipeAmount(Math.round(difference * 10) / 10, actual.unit);
   return outcome === 'over-measure' ? `${amount} over` : `${amount} under`;
 }
 
