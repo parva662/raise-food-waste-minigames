@@ -18,6 +18,7 @@ export function KitchenSkillsFinishSummary() {
     unconfirmedSaveCount,
     closeFinishSummary,
     finishChallenge,
+    finishArchiveError,
   } = useReadyKitchenSkillsSession();
   if (!activePortionEntry) return null;
   const metrics = buildPortionRecipeMetrics(activePortionEntry, getRecipeReference(activePortionEntry.recipeId));
@@ -73,6 +74,11 @@ export function KitchenSkillsFinishSummary() {
               {unconfirmedSaveCount === 1
                 ? '1 save was sent to GameBus and is not yet visible in your GameBus history.'
                 : `${unconfirmedSaveCount} saves were sent to GameBus and are not yet visible in your GameBus history.`}
+            </p>
+          ) : null}
+          {finishArchiveError ? (
+            <p className="kitchen-day-error" role="alert" data-testid="kitchen-day-finish-archive-error">
+              {finishArchiveError}
             </p>
           ) : null}
           <details className="kitchen-day-finish-details" data-testid="kitchen-day-finish-details">

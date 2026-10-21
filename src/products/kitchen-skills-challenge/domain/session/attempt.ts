@@ -113,23 +113,27 @@ export function clearKitchenSkillsAttempt(key: string, attemptId: string): void 
 /**
  * Finish policy: keep a non-authoritative archive of dispatched work, then clear the active key
  * so the next open is a new attempt. The archive is never auto-posted and is not GameBus proof.
+ *
+ * Returns false when local storage cannot complete that hand-off. Callers must not send EXIT or
+ * mark the attempt finished in that case: the active record remains the recovery source.
  */
-export function archiveFinishedKitchenSkillsAttempt(key: string, attemptId: string): void {
+export function archiveFinishedKitchenSkillsAttempt(key: string, attemptId: string): boolean {
   const store = storage();
   const record = readKitchenSkillsAttempt(key);
-  if (!store || !record || record.attemptId !== attemptId) {
-    clearKitchenSkillsAttempt(key, attemptId);
-    return;
+  if (!record || record.attemptId !== attemptId) {
+    return true;
   }
+  if (!store) return false;
   try {
     if (hasDispatchedKitchenSkillsWork(record)) {
       store.setItem(`${ARCHIVE_PREFIX}${record.sessionId}`, JSON.stringify(record));
     }
+    store.removeItem(key);
   } catch {
-    // Keep the active record rather than lose the only local dispatch evidence.
-    return;
+    return false;
   }
-  clearKitchenSkillsAttempt(key, attemptId);
+  const leftover = readKitchenSkillsAttempt(key);
+  return !(leftover && leftover.attemptId === attemptId);
 }
 
 export function readArchivedKitchenSkillsAttempt(sessionId: string): KitchenSkillsAttemptRecord | null {

@@ -1,5 +1,5 @@
 /** @vitest-environment jsdom */
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
   archiveFinishedKitchenSkillsAttempt,
   clearKitchenSkillsAttempt,
@@ -28,6 +28,7 @@ function buildId(attemptId: string, sessionDate: string) {
 }
 
 afterEach(() => {
+  vi.restoreAllMocks();
   resetKitchenSkillsAttemptStorageForTests();
 });
 
@@ -189,7 +190,7 @@ describe('Kitchen Skills attempt record', () => {
         source: 'local',
       },
     });
-    archiveFinishedKitchenSkillsAttempt(key, first.record.attemptId);
+    expect(archiveFinishedKitchenSkillsAttempt(key, first.record.attemptId)).toBe(true);
     expect(readKitchenSkillsAttempt(key)).toBeNull();
     const archived = readArchivedKitchenSkillsAttempt(first.record.sessionId);
     expect(archived?.portion?.recipeId).toBe('42');
@@ -204,6 +205,128 @@ describe('Kitchen Skills attempt record', () => {
     expect(second.record.sessionId).not.toBe(first.record.sessionId);
     expect(second.record.portion).toBeNull();
     expect(readArchivedKitchenSkillsAttempt(first.record.sessionId)?.attemptId).toBe('firstid1');
+  });
+
+  it('does not clear the active attempt when archive storage throws', () => {
+    const first = resolveKitchenSkillsAttempt({
+      key,
+      today: '2026-10-21',
+      now: new Date('2026-10-21T07:00:00.000Z'),
+      buildSessionId: buildId,
+      createAttemptId: () => 'failarch',
+    });
+    recordDispatchedKitchenSkillsEntry(key, first.record.attemptId, {
+      module: 'portion',
+      value: {
+        sessionId: first.record.sessionId,
+        sessionDate: first.record.sessionDate,
+        submittedAt: '2026-10-21T07:10:00.000Z',
+        recipeId: '42',
+        recipeName: 'Hedelmät M,G',
+        recipeComposition: [],
+        finalRecipeWeightGrams: 3700,
+        source: 'local',
+      },
+    });
+    const original = Storage.prototype.setItem;
+    vi.spyOn(Storage.prototype, 'setItem').mockImplementation(function (this: Storage, name, value) {
+      if (String(name).startsWith('ks-attempt-archive:v1:')) {
+        throw new DOMException('The quota has been exceeded.', 'QuotaExceededError');
+      }
+      return original.call(this, name, value);
+    });
+    expect(archiveFinishedKitchenSkillsAttempt(key, first.record.attemptId)).toBe(false);
+    expect(readKitchenSkillsAttempt(key)?.attemptId).toBe('failarch');
+    expect(readArchivedKitchenSkillsAttempt(first.record.sessionId)).toBeNull();
+    vi.restoreAllMocks();
+    const resumed = resolveKitchenSkillsAttempt({
+      key,
+      today: '2026-10-21',
+      now: new Date('2026-10-21T08:00:00.000Z'),
+      buildSessionId: buildId,
+      createAttemptId: () => 'should-not-use',
+    });
+    expect(resumed.record.attemptId).toBe('failarch');
+    expect(resumed.resumed).toBe(true);
+  });
+
+  it('retries Finish archive after a previous storage failure', () => {
+    const first = resolveKitchenSkillsAttempt({
+      key,
+      today: '2026-10-21',
+      now: new Date('2026-10-21T07:00:00.000Z'),
+      buildSessionId: buildId,
+      createAttemptId: () => 'retryid1',
+    });
+    recordDispatchedKitchenSkillsEntry(key, first.record.attemptId, {
+      module: 'portion',
+      value: {
+        sessionId: first.record.sessionId,
+        sessionDate: first.record.sessionDate,
+        submittedAt: '2026-10-21T07:10:00.000Z',
+        recipeId: '42',
+        recipeName: 'Hedelmät M,G',
+        recipeComposition: [],
+        finalRecipeWeightGrams: 3700,
+        source: 'local',
+      },
+    });
+    const original = Storage.prototype.setItem;
+    vi.spyOn(Storage.prototype, 'setItem').mockImplementation(function (this: Storage, name, value) {
+      if (String(name).startsWith('ks-attempt-archive:v1:')) {
+        throw new DOMException('The quota has been exceeded.', 'QuotaExceededError');
+      }
+      return original.call(this, name, value);
+    });
+    expect(archiveFinishedKitchenSkillsAttempt(key, first.record.attemptId)).toBe(false);
+    vi.restoreAllMocks();
+    expect(archiveFinishedKitchenSkillsAttempt(key, first.record.attemptId)).toBe(true);
+    expect(readKitchenSkillsAttempt(key)).toBeNull();
+    expect(readArchivedKitchenSkillsAttempt(first.record.sessionId)?.attemptId).toBe('retryid1');
+    const second = resolveKitchenSkillsAttempt({
+      key,
+      today: '2026-10-21',
+      now: new Date('2026-10-21T08:00:00.000Z'),
+      buildSessionId: buildId,
+      createAttemptId: () => 'newopen1',
+    });
+    expect(second.record.attemptId).toBe('newopen1');
+    expect(readArchivedKitchenSkillsAttempt(first.record.sessionId)?.attemptId).toBe('retryid1');
+  });
+
+  it('does not close Finish when clearing the active attempt throws', () => {
+    const first = resolveKitchenSkillsAttempt({
+      key,
+      today: '2026-10-21',
+      now: new Date('2026-10-21T07:00:00.000Z'),
+      buildSessionId: buildId,
+      createAttemptId: () => 'clearfail',
+    });
+    recordDispatchedKitchenSkillsEntry(key, first.record.attemptId, {
+      module: 'portion',
+      value: {
+        sessionId: first.record.sessionId,
+        sessionDate: first.record.sessionDate,
+        submittedAt: '2026-10-21T07:10:00.000Z',
+        recipeId: '42',
+        recipeName: 'Hedelmät M,G',
+        recipeComposition: [],
+        finalRecipeWeightGrams: 3700,
+        source: 'local',
+      },
+    });
+    const original = Storage.prototype.removeItem;
+    vi.spyOn(Storage.prototype, 'removeItem').mockImplementation(function (this: Storage, name) {
+      if (String(name) === key) {
+        throw new DOMException('The quota has been exceeded.', 'QuotaExceededError');
+      }
+      return original.call(this, name);
+    });
+    expect(archiveFinishedKitchenSkillsAttempt(key, first.record.attemptId)).toBe(false);
+    expect(readKitchenSkillsAttempt(key)?.attemptId).toBe('clearfail');
+    vi.restoreAllMocks();
+    expect(archiveFinishedKitchenSkillsAttempt(key, first.record.attemptId)).toBe(true);
+    expect(readKitchenSkillsAttempt(key)).toBeNull();
   });
 
   it('treats another window Finish as a closed attempt', () => {

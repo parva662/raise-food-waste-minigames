@@ -160,8 +160,10 @@ interface KitchenSkillsSessionValue {
   addAnotherIngredient: () => void;
   openFinishSummary: () => void;
   closeFinishSummary: () => void;
-  /** Ends the attempt: clears the browser attempt record and sends EXIT once. */
+  /** Ends the attempt: archives then clears the browser attempt record and sends EXIT once. */
   finishChallenge: () => void;
+  /** Set when Finish could not archive/clear local recovery storage; EXIT was not sent. */
+  finishArchiveError: string | null;
 }
 
 type KitchenSkillsAttemptState = {
@@ -374,6 +376,7 @@ export function KitchenSkillsSessionProvider({
   const [localReviews, setLocalReviews] = useState<KitchenSkillsReviewEntry[]>([]);
   const [showFinishSummary, setShowFinishSummary] = useState(false);
   const [finished, setFinished] = useState(false);
+  const [finishArchiveError, setFinishArchiveError] = useState<string | null>(null);
   const [closedElsewhere, setClosedElsewhere] = useState(false);
   const [trimInProgress, setTrimInProgress] = useState(false);
   const [reuseInProgress, setReuseInProgress] = useState(false);
@@ -726,8 +729,18 @@ export function KitchenSkillsSessionProvider({
     if (remainingRescue.length > 0) return;
     const current = attemptRef.current;
     if (current?.storageKey && current.session.attemptId) {
-      archiveFinishedKitchenSkillsAttempt(current.storageKey, current.session.attemptId);
+      const archived = archiveFinishedKitchenSkillsAttempt(
+        current.storageKey,
+        current.session.attemptId,
+      );
+      if (!archived) {
+        setFinishArchiveError(
+          'This challenge could not be closed because local recovery storage failed. Try Finish challenge again. Your recorded work is still here.',
+        );
+        return;
+      }
     }
+    setFinishArchiveError(null);
     setFinished(true);
     setShowFinishSummary(false);
     postKitchenSkillsChallengeExit();
@@ -947,6 +960,7 @@ export function KitchenSkillsSessionProvider({
       openFinishSummary,
       closeFinishSummary,
       finishChallenge,
+      finishArchiveError,
     }),
     [
       session,
@@ -981,6 +995,7 @@ export function KitchenSkillsSessionProvider({
       openFinishSummary,
       closeFinishSummary,
       finishChallenge,
+      finishArchiveError,
     ],
   );
 

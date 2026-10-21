@@ -17,7 +17,11 @@ import {
   recordOmenaTrim,
   recordRescueDecision,
 } from '@/products/kitchen-skills-challenge/kitchenSkills.testSupport';
-import { readKitchenSkillsAttempt, kitchenSkillsAttemptStorageKey } from '@/products/kitchen-skills-challenge/domain/session/attempt';
+import {
+  kitchenSkillsAttemptStorageKey,
+  readKitchenSkillsAttempt,
+  resetKitchenSkillsAttemptStorageForTests,
+} from '@/products/kitchen-skills-challenge/domain/session/attempt';
 
 const me = { inputCollectionPari: { me: { id: 'student-1', firstName: 'S', lastName: 'One' } } };
 
@@ -61,6 +65,7 @@ describe('Kitchen Skills attempt identity', () => {
     cleanup();
     resetGameBusBridgeForTests();
     resetKitchenSkillsPostStateForTests();
+    resetKitchenSkillsAttemptStorageForTests();
     setHash('');
     vi.restoreAllMocks();
   });
@@ -199,5 +204,90 @@ describe('Kitchen Skills attempt identity', () => {
     await recordRescueDecision(user, '0', 'Cannot be reused; discard');
     expect(posts(spy, 'rescueAndReuse')).toHaveLength(1);
     expect(propertyFrom(posts(spy, 'rescueAndReuse')[0]!, 'ingredientId')).toBe('omena');
+  });
+
+  it('does not send EXIT when Finish archive storage fails, then retries after storage recovers', async () => {
+    const user = userEvent.setup();
+    vi.spyOn(detectEmbed, 'isGameBusEmbed').mockReturnValue(true);
+    const spy = vi.spyOn(window.parent, 'postMessage').mockImplementation(() => undefined);
+    ingestTaskForTests(kitchenSkillsTaskFixture);
+    setHash('#/kitchen-day');
+    render(<AppRouter />);
+    ingestInputCollectionsForTests({ ...me, kitchenGroupInputSelf: { activities: [] } });
+    await screen.findByTestId('kitchen-day-portion');
+    await recordHedelmatPortion(user);
+    await user.click(screen.getByTestId('kitchen-day-open-finish-summary'));
+    const key = kitchenSkillsAttemptStorageKey(kitchenSkillsTaskFixture.id, 'student-1');
+    expect(readKitchenSkillsAttempt(key)?.portion?.recipeName).toBe('Hedelmät M,G');
+
+    const original = Storage.prototype.setItem;
+    const archiveSpy = vi.spyOn(Storage.prototype, 'setItem').mockImplementation(function (
+      this: Storage,
+      name,
+      value,
+    ) {
+      if (String(name).startsWith('ks-attempt-archive:v1:')) {
+        throw new DOMException('The quota has been exceeded.', 'QuotaExceededError');
+      }
+      return original.call(this, name, value);
+    });
+
+    await user.click(screen.getByTestId('kitchen-day-finish-challenge'));
+    expect(screen.getByTestId('kitchen-day-finish-summary')).toBeInTheDocument();
+    expect(screen.getByTestId('kitchen-day-finish-archive-error')).toHaveTextContent(
+      'local recovery storage failed',
+    );
+    expect(screen.queryByTestId('kitchen-day-finished')).not.toBeInTheDocument();
+    expect(spy.mock.calls.some((call) => (call[0] as { type?: string }).type === 'EXIT')).toBe(false);
+    expect(readKitchenSkillsAttempt(key)?.portion?.recipeName).toBe('Hedelmät M,G');
+
+    archiveSpy.mockRestore();
+    await user.click(screen.getByTestId('kitchen-day-finish-challenge'));
+    expect(spy).toHaveBeenCalledWith({ type: 'EXIT' }, '*');
+    expect(screen.getByTestId('kitchen-day-finished')).toBeInTheDocument();
+    expect(readKitchenSkillsAttempt(key)).toBeNull();
+  });
+
+  it('reload after a failed Finish archive resumes the same attempt without EXIT', async () => {
+    const user = userEvent.setup();
+    vi.spyOn(detectEmbed, 'isGameBusEmbed').mockReturnValue(true);
+    const spy = vi.spyOn(window.parent, 'postMessage').mockImplementation(() => undefined);
+    ingestTaskForTests(kitchenSkillsTaskFixture);
+    setHash('#/kitchen-day');
+    render(<AppRouter />);
+    ingestInputCollectionsForTests({ ...me, kitchenGroupInputSelf: { activities: [] } });
+    await screen.findByTestId('kitchen-day-portion');
+    await recordHedelmatPortion(user);
+    await user.click(screen.getByTestId('kitchen-day-open-finish-summary'));
+
+    const original = Storage.prototype.setItem;
+    vi.spyOn(Storage.prototype, 'setItem').mockImplementation(function (this: Storage, name, value) {
+      if (String(name).startsWith('ks-attempt-archive:v1:')) {
+        throw new DOMException('The quota has been exceeded.', 'QuotaExceededError');
+      }
+      return original.call(this, name, value);
+    });
+    await user.click(screen.getByTestId('kitchen-day-finish-challenge'));
+    expect(screen.getByTestId('kitchen-day-finish-archive-error')).toBeInTheDocument();
+    expect(spy.mock.calls.some((call) => (call[0] as { type?: string }).type === 'EXIT')).toBe(false);
+    const stored = readKitchenSkillsAttempt(
+      kitchenSkillsAttemptStorageKey(kitchenSkillsTaskFixture.id, 'student-1'),
+    );
+    expect(stored?.portion?.recipeName).toBe('Hedelmät M,G');
+
+    cleanup();
+    resetGameBusBridgeForTests();
+    resetKitchenSkillsPostStateForTests();
+    vi.restoreAllMocks();
+    vi.spyOn(detectEmbed, 'isGameBusEmbed').mockReturnValue(true);
+    spy.mockClear();
+    ingestTaskForTests(kitchenSkillsTaskFixture);
+    setHash('#/kitchen-day');
+    render(<AppRouter />);
+    ingestInputCollectionsForTests({ ...me, kitchenGroupInputSelf: { activities: [] } });
+    await screen.findByTestId('kitchen-day-portion-saved-card');
+    expect(screen.getByTestId('kitchen-day-resumed')).toBeInTheDocument();
+    expect(posts(spy, 'portionPrecision')).toHaveLength(0);
+    expect(spy.mock.calls.some((call) => (call[0] as { type?: string }).type === 'EXIT')).toBe(false);
   });
 });
