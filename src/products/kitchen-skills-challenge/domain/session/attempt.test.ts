@@ -329,6 +329,49 @@ describe('Kitchen Skills attempt record', () => {
     expect(readKitchenSkillsAttempt(key)).toBeNull();
   });
 
+  it('does not authorize Finish when the active attempt is missing, unavailable, or replaced', () => {
+    expect(archiveFinishedKitchenSkillsAttempt(key, 'noid01')).toBe(false);
+    expect(readKitchenSkillsAttempt(key)).toBeNull();
+
+    const first = resolveKitchenSkillsAttempt({
+      key,
+      today: '2026-10-21',
+      now: new Date('2026-10-21T07:00:00.000Z'),
+      buildSessionId: buildId,
+      createAttemptId: () => 'oldid01',
+    });
+    recordDispatchedKitchenSkillsEntry(key, first.record.attemptId, {
+      module: 'portion',
+      value: {
+        sessionId: first.record.sessionId,
+        sessionDate: first.record.sessionDate,
+        submittedAt: '2026-10-21T07:10:00.000Z',
+        recipeId: '42',
+        recipeName: 'Hedelmät M,G',
+        recipeComposition: [],
+        finalRecipeWeightGrams: 3700,
+        source: 'local',
+      },
+    });
+    clearKitchenSkillsAttempt(key, first.record.attemptId);
+    const second = resolveKitchenSkillsAttempt({
+      key,
+      today: '2026-10-21',
+      now: new Date('2026-10-21T08:00:00.000Z'),
+      buildSessionId: buildId,
+      createAttemptId: () => 'newid01',
+    });
+    expect(archiveFinishedKitchenSkillsAttempt(key, first.record.attemptId)).toBe(false);
+    expect(readKitchenSkillsAttempt(key)?.attemptId).toBe('newid01');
+    expect(readArchivedKitchenSkillsAttempt(first.record.sessionId)).toBeNull();
+    expect(readArchivedKitchenSkillsAttempt(second.record.sessionId)).toBeNull();
+
+    vi.spyOn(Storage.prototype, 'getItem').mockImplementation(() => {
+      throw new DOMException('The operation is insecure.', 'SecurityError');
+    });
+    expect(archiveFinishedKitchenSkillsAttempt(key, second.record.attemptId)).toBe(false);
+  });
+
   it('treats another window Finish as a closed attempt', () => {
     const started = resolveKitchenSkillsAttempt({
       key,

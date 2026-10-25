@@ -22,7 +22,7 @@ Gherkin is specification only. Each `@release-gate` scenario maps to a passing V
 | Tutor status is feed-confirmed, not postMessage-confirmed | `chef-review.feature` | `kitchenSkills.trainerStatus.test.tsx`; `read/trainerAssessmentStatus.test.ts` | PASS |
 | Historical multi-recipe and unattributed rows | `kitchen-skills-challenge.feature` / `chef-review.feature` | existing trainer / read-model tests | PASS |
 | Finish with unconfirmed GameBus save | `kitchen-skills-challenge.feature` | `kitchenSkills.attempt.identity.test.tsx` `F` (unconfirmed warning); `attempt.test.ts` `archives dispatched Finish evidence without auto-reposting it on the next open` | PASS (archive is local-only, never auto-posted) |
-| Finish archive failure does not EXIT or close the attempt | `kitchen-skills-challenge.feature` | `attempt.test.ts` quota / removeItem failure / retry / reopen; `kitchenSkills.attempt.identity.test.tsx` no EXIT on archive failure, resume after reload, retry then EXIT | PASS |
+| Finish archive failure does not EXIT or close the attempt | `kitchen-skills-challenge.feature` | `attempt.test.ts` quota / removeItem failure / retry / reopen; missing, unavailable, or replaced active record does not authorize archive success; `kitchenSkills.attempt.identity.test.tsx` no EXIT on archive failure, resume after reload, retry then EXIT | PASS |
 | Cross-tab active attempt and Finish behavior | `kitchen-skills-challenge.feature` | `attempt.test.ts` `treats another window Finish as a closed attempt` | PASS (localStorage guard; not a live two-tab GameBus race) |
 | Student Progress actor privacy | `chef-review.feature` | Progress / read-model actor fail-closed tests | PASS |
 
