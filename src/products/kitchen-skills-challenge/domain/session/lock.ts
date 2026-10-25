@@ -7,18 +7,22 @@ export function ensureKitchenSkillsLockedSession(
     embedded: boolean;
     taskId: string | undefined;
     actorId?: string | undefined;
+    attemptId: string;
     now?: Date;
+    /** Resumed attempts keep the date they started on. */
+    sessionDate?: string;
   },
 ): KitchenSkillsLockedSession {
   if (existing) {
     return existing;
   }
-  const sessionDate = getKitchenSkillsSessionDate(options.now);
+  const sessionDate = options.sessionDate ?? getKitchenSkillsSessionDate(options.now);
   const sessionId = buildKitchenSkillsSessionId({
     embedded: options.embedded,
     taskId: options.taskId,
     actorId: options.actorId,
     sessionDate,
+    attemptId: options.attemptId,
   });
-  return { sessionId, sessionDate };
+  return { sessionId, sessionDate, attemptId: options.attemptId };
 }

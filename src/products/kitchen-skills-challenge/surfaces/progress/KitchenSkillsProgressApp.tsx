@@ -4,6 +4,7 @@ import {
   formatSessionDate,
   formatWastePercent,
 } from '@/products/kitchen-skills-challenge/format';
+import { formatOperationalTime } from '@/shared/time/dates';
 import { compareTrimSessionFromPortion } from '@/products/kitchen-skills-challenge/domain/trim/objectiveComparison';
 import type { TrimSessionObjectiveComparison } from '@/products/kitchen-skills-challenge/domain/trim/objectiveComparison';
 import {
@@ -280,6 +281,23 @@ function moduleReviewsForSession(
   return legacy ? [legacy] : [];
 }
 
+function sessionStartedAt(session: KitchenSkillsTrainerSession): string | null {
+  const stamps = [
+    ...session.portionEntries.map((entry) => entry.submittedAt),
+    ...session.trimEntries.map((entry) => entry.submittedAt),
+    ...session.rescueEntries.map((entry) => entry.submittedAt),
+  ].filter(Boolean);
+  if (stamps.length === 0) return null;
+  return [...stamps].sort((left, right) => left.localeCompare(right))[0] ?? null;
+}
+
+function sessionDateLabel(session: KitchenSkillsTrainerSession): string {
+  const time = sessionStartedAt(session);
+  return time
+    ? `${formatSessionDate(session.sessionDate)} · ${formatOperationalTime(time)}`
+    : formatSessionDate(session.sessionDate);
+}
+
 function ModuleSessionCard({
   session,
   module,
@@ -298,7 +316,7 @@ function ModuleSessionCard({
   return (
     <details className="kitchen-day-progress-session-card" data-testid={`kitchen-day-progress-session-${module}-${session.sessionId}`}>
       <summary>
-        <span className="kitchen-day-progress-session-card__date">{formatSessionDate(session.sessionDate)}</span>
+        <span className="kitchen-day-progress-session-card__date">{sessionDateLabel(session)}</span>
         <span className="kitchen-day-progress-session-card__metrics">
           {metrics.length > 0 ? metrics.join(' · ') : 'Evidence recorded'}
         </span>
@@ -376,7 +394,7 @@ function ModuleHistoryRow({
       data-testid={`kitchen-day-progress-history-row-${module}-${session.sessionId}`}
     >
       <summary>
-        <span className="kitchen-day-progress-history-row__date">{formatSessionDate(session.sessionDate)}</span>
+        <span className="kitchen-day-progress-history-row__date">{sessionDateLabel(session)}</span>
         <span className="kitchen-day-progress-history-row__metrics">
           {metrics.length > 0 ? metrics.join(' · ') : 'Evidence recorded'}
         </span>

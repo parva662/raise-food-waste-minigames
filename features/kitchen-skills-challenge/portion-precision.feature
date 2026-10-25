@@ -1,150 +1,140 @@
-# APPROVED PRODUCT TARGET
-# Product: docs/product/kitchen-skills-challenge/PORTION_PRECISION.md
-# Slugs: docs/product/kitchen-skills-challenge/GAMEBUS_SLUG_CONTRACT.md
-# CURRENT IMPLEMENTATION on main at #/kitchen-day.
-#
-@portion-precision @waste-challenges @kitchen-day
-Feature: Portion Precision recipe measurement
-  As a student preparing a recipe during a kitchen day
-  I want to record the actual amount used for each recipe ingredient and the final recipe weight
-  So that the tutor can see measurement mistakes and what I produced
+# Acceptance target for PR #12; preserve existing GameBus portionPrecision property contract.
+@portion-precision @kitchen-day
+Feature: Record exactly one recipe in Portion Precision per attempt
+  As a student
+  I want to capture a recipe's actual ingredient quantities and final weight once
+  So that performance can be calculated and linked to optional Trim and Rescue work
 
   Background:
-    Given a kitchen day session is active for the student
-    And required recipe amounts and the expected final weight are read from the current recipe reference keyed by recipe id
+    Given a Kitchen Skills attempt is open
+    And recipe targets and expected final weight come from the recipe reference
 
-  Rule: One activity is one prepared recipe
+  Rule: Save one recipe with all measured lines
 
-    Scenario: The activity is identified by the recipe
-      When the student selects a recipe/component
-      Then one portionPrecision activity is created for that recipe
-      And every measured ingredient is stored inside recipeComposition of that same activity
-      And that recipe is the only Portion Precision recipe for the kitchen day
+    @release-gate @critical @journey
+    Scenario: Save the only Portion recipe for an attempt
+      When the student selects a recipe from the searchable recipe selector
+      And enters every ingredient's actual amount
+      And enters the final prepared recipe weight
+      And saves Portion Precision
+      Then exactly one portionPrecision activity is dispatched
+      And recipeComposition holds every actual ingredient line
+      And the entry is linked to the current sessionId and recipeId
+      And the student may continue to Trim or Review and finish
+      And no EXIT is posted during Save
 
-    Scenario: Save continues to Trim Smart
-      When the student records every recipe ingredient actual and the final recipe weight
-      And submits the activity
-      Then Trim Smart is shown
-      And the challenge complete summary is not shown yet
+    @critical @regression
+    Scenario: A second Portion record is blocked until a new attempt starts
+      Given the student saved recipe A in this attempt
+      When the student returns to Portion Precision
+      Then recipe A is read-only
+      And the student cannot submit recipe B under the same sessionId
+      And Start another recipe is not shown
 
-    Scenario: Ingredient identity is nested, not top-level
-      When the student submits the recipe activity
-      Then the activity does not post a top-level ingredient id, name, or category
+    @critical @regression
+    Scenario: Empty final weight blocks submission
+      Given actual amounts were entered for all recipe ingredients
+      When the student leaves final recipe weight blank
+      Then the Portion activity cannot be submitted
 
-  Rule: Required amounts come from the recipe reference
+    @critical
+    Scenario: Source targets are immutable and are not submitted as measurements
+      When the student opens a recipe
+      Then each ingredient target and its original unit are visible and read-only
+      And required target amounts are retrieved from the recipe reference
+      And only actual amounts are stored in recipeComposition
+      And no top-level ingredientId, ingredientName, ingredientCategory, or actualAmount property is posted
 
-    Scenario: Required quantities are shown as given
-      When the student opens a recipe/component
-      Then each required ingredient is shown with its required quantity and unit
-      And the student cannot edit the required quantity
+  Rule: Mass may be entered in grams or kilograms without changing canonical storage
 
-    Scenario: Required amounts are not stored on the activity
-      When the comparison is shown
-      Then the required amount is read from the recipe dataset
-      And the actual amount is read from recipeComposition
-
-  Rule: Actual amounts live in recipeComposition
-
-    Scenario: A complete composition is one property
-      Given a recipe line requires 1000 grams of yogurt
-      When the student records 1000 grams as the actual amount used for yogurt
-      And records actual amounts for the remaining recipe ingredients
-      Then recipeComposition contains ingredient id, name, actual amount, and unit for yogurt
-      And actualAmount is not a separate GameBus property
-      And the yogurt line is an exact match against the recipe reference
-
-    Scenario Outline: Any deviation is a deviation
-      Given the recipe requires 100 grams of lemon juice
-      When the student records <actual> grams as the actual amount used
-      Then the line is evaluated as "<outcome>"
-      And no tolerance range is applied
+    @critical
+    Scenario Outline: Kilogram input maps to grams
+      When the student records <entered> kg as a mass amount
+      Then the canonical value is <grams> g
+      And no kilogram GameBus property is posted
 
       Examples:
-        | actual | outcome       |
+        | entered | grams   |
+        | 1.25    | 1250    |
+        | 2       | 2000    |
+        | 1.0005  | 1000.5  |
+
+    @release-gate @critical @units
+    Scenario: Kilograms are selected by default for a fresh mass input
+      Given the student opens a new Portion Precision mass field
+      Then the unit selected by default is kg
+      When the student enters 1.25
+      Then the field shows 1.25 kg
+      And the canonical value is 1250 grams
+
+    @release-gate @critical @units
+    Scenario: Student can select grams and type a grams amount
+      Given the student opens a new Portion Precision mass field with kg selected
+      When the student selects g
+      And enters 500
+      Then the field shows 500 g
+      And the canonical value is 500 grams
+
+    @critical @units
+    Scenario: Changing a unit selection does not automatically convert the typed number
+      Given the student has entered 1.25 while kg is selected
+      When the student selects g
+      Then the field still displays 1.25
+      And the selected unit is g
+      And the canonical value is 1.25 grams
+      When the student selects kg again
+      Then the field still displays 1.25
+      And the canonical value is 1250 grams
+      And no quantity-preserving conversion is performed
+
+    @critical
+    Scenario: Volume units stay unchanged
+      Given a recipe line has a volume-based unit
+      When the student records its actual quantity
+      Then the volume unit is preserved in recipeComposition
+      And the application does not infer mass from volume without density data
+
+    Scenario Outline: Mass summary formatting is accurate
+      Given a persisted mass of <grams> grams
+      When the student or tutor views the summary
+      Then it is displayed as "<label>"
+
+      Examples:
+        | grams | label    |
+        | 999   | 999 g    |
+        | 1000  | 1000 g   |
+        | 1001  | 1.001 kg |
+        | 1250  | 1.25 kg  |
+        | 2000  | 2 kg     |
+
+  Rule: Calculations are derived and separate from tutor judgement
+
+    Scenario Outline: An actual that differs from its target has no tolerance band
+      Given a recipe ingredient requires 100 grams
+      When the student records <actual> grams
+      Then the result is "<result>"
+
+      Examples:
+        | actual | result        |
         | 100    | exact match   |
         | 120    | over-measure  |
         | 99     | under-measure |
 
-  Rule: Final recipe weight is required
+    Scenario: Ingredient accuracy is weighted by target mass
+      Given a high-mass ingredient is slightly different from its target
+      And a tiny ingredient differs by a large percentage
+      When recipe ingredient accuracy is calculated
+      Then total absolute gram difference is divided by total target grams
+      And each ingredient does not receive equal weight
 
-    Scenario: Submission is blocked without a final recipe weight
-      Given the student has entered the actual amounts for all recipe ingredients
-      When the student has not entered a final recipe weight
-      Then the Portion Precision activity cannot be submitted
+    Scenario: Final weight deviation uses the recipe reference
+      Given the recipe expected final weight is 1850 grams
+      When the student records 1890 grams final weight
+      Then the final-weight difference is 40 grams over
+      And the final-weight deviation is displayed separately from ingredient accuracy
+      And neither figure is posted as a GameBus activity property
 
-    Scenario: The final recipe weight is part of the kitchen day
-      Given the student has completed all recipe ingredient lines
-      When the student enters a final recipe weight of 1850 grams
-      And submits the activity
-      Then the final recipe weight of 1850 grams is part of the kitchen day record
-
-  Rule: Same kitchen day as preparation
-
-    Scenario: Session Review shows portioning alongside preparation
-      Given the student recorded an ingredient preparation entry for "Lemon"
-      And submitted a Portion Precision activity for a recipe/component
-      When the student opens Session Review
-      Then both records are visible for the same kitchen day
-
-  Rule: Ingredient deviation is a percentage of the required amount
-
-    Scenario Outline: The line shows how far the actual amount is from the target
-      Given the recipe requires 100 grams of lemon juice
-      When the student records <actual> grams as the actual amount used
-      Then the ingredient deviation is shown as "<copy>"
-      And the absolute gram difference remains visible
-
-      Examples:
-        | actual | copy        |
-        | 100    | Exact       |
-        | 110    | 10.0% over  |
-        | 75     | 25.0% under |
-
-  Rule: Whole-recipe ingredient accuracy is weighted by target mass
-
-    Scenario: All ingredients match
-      Given every ingredient actual matches its target
-      Then ingredient accuracy is 100.0%
-      And ingredient error is 0.0%
-
-    Scenario: A small ingredient does not dominate the recipe result
-      Given a high-mass ingredient is slightly off
-      And a tiny ingredient is far off
-      Then ingredient error uses the total absolute gram difference divided by the total target mass
-      And the tiny ingredient does not receive equal influence
-
-  Rule: Final-weight deviation uses the recipe reference
-
-    Scenario: Expected final weight comes from the recipe reference
-      When the comparison is shown
-      Then the expected final weight is the recipe reference value
-      And it is not inferred from the sum of ingredient targets
-
-    Scenario Outline: Final-weight deviation is shown separately from ingredient accuracy
-      Given the recipe reference expected final weight is 1850 grams
-      When the student records a final recipe weight of <actual> grams
-      Then the final-weight difference is "<difference>"
-      And the final-weight deviation is "<deviation>"
-      And ingredient accuracy remains a separate figure
-
-      Examples:
-        | actual | difference  | deviation |
-        | 1850   | Exact       | 0.0%      |
-        | 1890   | 40 g over   | 2.2%      |
-        | 1810   | 40 g under  | 2.2%      |
-
-  Rule: Metrics are derived, not stored
-
-    Scenario: Derived figures are not part of the posted activity
-      When the student submits a Portion Precision activity
-      Then the activity stores only the recorded recipe composition and final recipe weight
-      And ingredient accuracy is calculated later from those records and the current recipe reference
-      And final-weight deviation is calculated later from the recorded final weight and the current recipe reference
-
-  Rule: Tutor judgement is not automatic
-
-    Scenario: System metrics do not set tutor scores
-      When a tutor opens the student evidence
-      Then ingredient accuracy and final-weight deviation are visible
-      And time efficiency and preparation quality are still entered by the tutor
-      And no automatic tutor score is created
+    Scenario: Tutor scores are not automatically derived
+      When the tutor opens a submitted Portion Precision activity
+      Then the derived measurement metrics are visible as evidence
+      And Time efficiency and Preparation quality remain for the tutor to enter

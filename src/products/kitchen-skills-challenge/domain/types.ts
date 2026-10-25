@@ -3,6 +3,8 @@ export type KitchenSkillsRecordSource = 'local' | 'persisted';
 export interface KitchenSkillsLockedSession {
   sessionId: string;
   sessionDate: string;
+  /** Attempt suffix of `sessionId`; never displayed. */
+  attemptId?: string;
 }
 
 export const TRIM_TECHNIQUES = [

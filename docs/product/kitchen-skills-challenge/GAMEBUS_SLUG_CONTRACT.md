@@ -9,7 +9,7 @@ Product name: **Kitchen Skills Challenge**. Public hashes and the session id pre
 Exact activity + property **slugs** for client mappers. Not a product brief.
 Payload shape: each property posts `{ "value": … }` (plus `unit` where the schema requires it, e.g. `duration`).
 
-`sessionId` is an opaque application identity. In the embedded Kitchen Skills Challenge task it is generated deterministically as `kitchen-day:<taskId>:<actorId>:<sessionDate>` from the TASK, authenticated `inputCollectionPari.me`, and the locked Helsinki session date. It uniquely identifies one student Kitchen Skills session. Do **not** add `studentId` / `participantId` / actor id as Kitchen Skills activity properties.
+`sessionId` is an opaque application identity. **New** embedded challenge attempts generate `kitchen-day:<taskId>:<actorId>:<sessionDate>:<attemptId>` from the TASK, authenticated `inputCollectionPari.me`, the locked Helsinki session date, and a unique attempt id that stays stable until Finish. Standalone: `kitchen-day:standalone:<sessionDate>:<attemptId>`. Two challenge opens on the same operational day are two `sessionId`s. Historical rows may use the day-scoped form without `:<attemptId>`; readers group by the full string and never parse it. Do **not** add `studentId` / `participantId` / actor id as Kitchen Skills activity properties. Do **not** introduce a new GameBus property for the attempt id.
 
 **Rule:** no Kitchen Skills Challenge code, spec, or Gherkin may use a property name that is not listed here as a locked slug.
 
@@ -52,7 +52,7 @@ Live `trimTechniques` enum: `peeling`, `trimming`, `julienne`, `batonnet`, `minc
 
 `ingredientCategory` is **not** part of Kitchen Skills Challenge. Unlink/remove it from the Kitchen Skills `trimSmart` activity template in GameBus admin. Do not change unrelated GameBus properties.
 
-**Multi-recipe sessions:** a Kitchen Skills session may contain multiple `portionPrecision` activities (each `recipeId` once). Trim Smart UI uses an in-app **active recipe** (latest successful Portion save, or an explicitly resumed saved recipe; restored on reload by latest `submittedAt`). New Trim posts carry `recipeId`. JAMIX joins prefer that explicit `recipeId`; legacy Trim rows without `recipeId` infer a recipe only when exactly one saved Portion recipe contains the Trim `ingredientId`; otherwise reference comparison is unavailable.
+**New attempts:** one `portionPrecision` per `sessionId`. Multiple Trim ingredients of that recipe remain allowed. **Historical multi-recipe sessions** may still contain several `portionPrecision` activities (each `recipeId` once); readers keep them. New Trim posts carry `recipeId`. JAMIX joins prefer that explicit `recipeId`; legacy Trim rows without `recipeId` infer a recipe only when exactly one saved Portion recipe contains the Trim `ingredientId`; otherwise reference comparison is unavailable.
 
 ---
 
@@ -119,7 +119,7 @@ This activity does **not** use `ingredientCategory`.
 
 The GameBus activity slug remains `wastePracticeReview`. The product UI wording is Tutor assessment.
 
-One tutor assessment per recipe and evidenced module within a Kitchen Skills session (`sessionId` + `recipeId` + `reviewedGame`), not one judgement per ingredient and not one review for the whole module across recipes. Example: three Portion recipes in one session require three independent Portion assessments.
+One tutor assessment per recipe and evidenced module within a Kitchen Skills session (`sessionId` + `recipeId` + `reviewedGame`), not one judgement per ingredient. **New attempts** have one recipe, so at most three module assessments. Historical sessions with several Portion recipes still need one Portion assessment per saved recipe.
 
 | Slug | Required | Notes |
 |------|----------|-------|

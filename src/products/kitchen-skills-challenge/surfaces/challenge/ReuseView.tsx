@@ -2,12 +2,14 @@ import { useEffect, useMemo, useState } from 'react';
 import { discardedWasteGrams } from '@/products/kitchen-skills-challenge/domain/trim/derived';
 import { formatGrams } from '@/products/kitchen-skills-challenge/format';
 import { useReadyKitchenSkillsSession } from '@/products/kitchen-skills-challenge/domain/session/KitchenSkillsSessionContext';
-import { KitchenSkillsGramsInput } from '@/products/kitchen-skills-challenge/surfaces/shared/KitchenSkillsGramsInput';
+import { KitchenSkillsMassInput } from '@/products/kitchen-skills-challenge/surfaces/shared/KitchenSkillsMassInput';
+import { RescueSummaryList } from '@/products/kitchen-skills-challenge/surfaces/shared/AttemptModuleLists';
 import {
   canSaveRescueSuggestion,
   parseReusableWasteGrams,
   parseReuseDestination,
 } from '@/products/kitchen-skills-challenge/domain/reuse/validation';
+import { unsavedKitchenSkillsDraftMessage } from '@/products/kitchen-skills-challenge/domain/session/challengeGate';
 import { normalizeRecipeId } from '@/products/kitchen-skills-challenge/domain/session/ingredientUniqueness';
 
 export function KitchenSkillsReuseView() {
@@ -15,55 +17,48 @@ export function KitchenSkillsReuseView() {
     session,
     activeRecipeId,
     trimEntries,
-    findRescueByIngredientId,
+    rescueEntries,
     commitRescueEntry,
     setReuseInProgress,
+    taskProgress,
+    closedElsewhere,
   } = useReadyKitchenSkillsSession();
-  const active = normalizeRecipeId(activeRecipeId);
-  const completedTrim = trimEntries.filter(
-    (entry) =>
-      entry.actualWasteGrams > 0 &&
-      (!active || normalizeRecipeId(entry.recipeId) === active),
+  const completedTrim = useMemo(
+    () => trimEntries.filter((entry) => entry.actualWasteGrams > 0),
+    [trimEntries],
   );
-  const [ingredientId, setIngredientId] = useState(completedTrim[0]?.ingredientId ?? '');
+  const openIngredientIds = taskProgress.remainingRescueIngredientIds;
+  const openTrim = completedTrim.filter((entry) => openIngredientIds.includes(entry.ingredientId));
+  const [ingredientId, setIngredientId] = useState(openTrim[0]?.ingredientId ?? '');
   const [reusableRaw, setReusableRaw] = useState('');
   const [destination, setDestination] = useState('');
-  const [saved, setSaved] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
   useEffect(() => {
-    setIngredientId(completedTrim[0]?.ingredientId ?? '');
-    setReusableRaw('');
-    setDestination('');
-    setSaved(false);
-    // Reset when the active recipe changes; completedTrim[0] updates with that scope.
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- intentional recipe-scope reset
-  }, [activeRecipeId]);
+    if (!ingredientId || !openIngredientIds.includes(ingredientId)) {
+      setIngredientId(openIngredientIds[0] ?? '');
+    }
+  }, [ingredientId, openIngredientIds]);
 
-  const trim = useMemo(
-    () => completedTrim.find((entry) => entry.ingredientId === ingredientId),
-    [completedTrim, ingredientId],
-  );
-  const existing = ingredientId
-    ? findRescueByIngredientId(ingredientId, trim?.recipeId ?? activeRecipeId)
-    : undefined;
+  const trim = completedTrim.find((entry) => entry.ingredientId === ingredientId);
   const reusable = trim
     ? parseReusableWasteGrams(reusableRaw, trim.actualWasteGrams)
     : { ok: false as const, issue: 'invalid' as const };
   const dest = parseReuseDestination(destination);
   const discarded =
     trim && reusable.ok ? discardedWasteGrams(trim.actualWasteGrams, reusable.value) : null;
-  const complete = Boolean(saved || existing);
+  const drafting = reusableRaw !== '' || destination.trim() !== '';
 
   useEffect(() => {
-    setReuseInProgress(completedTrim.length > 0 && !complete);
+    setReuseInProgress(drafting);
     return () => setReuseInProgress(false);
-  }, [complete, completedTrim.length, setReuseInProgress]);
+  }, [drafting, setReuseInProgress]);
 
   function save() {
-    if (!trim || !reusable.ok || !dest.ok || existing) return;
+    if (!trim || !reusable.ok || !dest.ok) return;
     const recipeId = normalizeRecipeId(trim.recipeId ?? activeRecipeId);
     if (!recipeId) return;
-    const entry = {
+    const result = commitRescueEntry({
       sessionId: session.sessionId,
       sessionDate: session.sessionDate,
       recipeId,
@@ -71,16 +66,27 @@ export function KitchenSkillsReuseView() {
       reusableWasteGrams: reusable.value,
       reuseDestination: dest.value,
       submittedAt: new Date().toISOString(),
-    };
-    const result = commitRescueEntry({ ...entry, source: 'local' });
-    if (!result.ok) return;
-    setSaved(true);
+      source: 'local',
+    });
+    if (!result.ok) {
+      setSubmitError(
+        result.reason === 'attempt_closed'
+          ? 'This challenge was finished or restarted in another window.'
+          : result.reason === 'duplicate_rescue'
+            ? 'Rescue & Reuse is already recorded for this ingredient.'
+            : 'This reuse entry could not be saved.',
+      );
+      return;
+    }
+    setSubmitError(null);
+    setReusableRaw('');
+    setDestination('');
   }
 
   if (completedTrim.length === 0) {
     return (
       <section className="kitchen-day-card" data-testid="kitchen-day-rescue">
-        <h2 className="kitchen-day-card__title">Reuse</h2>
+        <h2 className="kitchen-day-card__title">Rescue &amp; Reuse</h2>
         <p className="kitchen-day-card__copy" data-testid="kitchen-day-rescue-empty">
           Record an ingredient preparation entry with actual waste first.
         </p>
@@ -90,83 +96,91 @@ export function KitchenSkillsReuseView() {
 
   return (
     <section className="kitchen-day-card" data-testid="kitchen-day-rescue">
-      <h2 className="kitchen-day-card__title">Reuse suggestion</h2>
-      <div className="kitchen-day-reuse-meta">
-        <label className="kitchen-day-field kitchen-day-field--compact">
-          <span>Ingredient</span>
-          <select
-            className="kitchen-day-input"
-            data-testid="kitchen-day-rescue-ingredient"
-            value={ingredientId}
-            onChange={(event) => {
-              setIngredientId(event.target.value);
-              setReusableRaw('');
-              setDestination('');
-              setSaved(false);
-            }}
-            disabled={complete}
-          >
-            {completedTrim.map((entry) => (
-              <option
-                key={`${entry.recipeId ?? 'legacy'}:${entry.ingredientId}`}
-                value={entry.ingredientId}
-              >
-                {entry.ingredientName}
-              </option>
-            ))}
-          </select>
-        </label>
+      <h2 className="kitchen-day-card__title">Rescue &amp; Reuse</h2>
 
-        {trim ? (
-          <p className="kitchen-day-reuse-waste" data-testid="kitchen-day-rescue-actual-waste">
-            Actual waste {formatGrams(trim.actualWasteGrams)}
-          </p>
-        ) : null}
-      </div>
-
-      {complete && existing ? (
-        <div className="kitchen-day-success" data-testid="kitchen-day-rescue-saved">
-          <p>Reuse suggestion saved for this ingredient.</p>
-          <p>Reusable {formatGrams(existing.reusableWasteGrams)}</p>
-          <p>Destination {existing.reuseDestination}</p>
-          {trim ? (
-            <p data-testid="kitchen-day-discarded-waste">
-              Discarded {formatGrams(discardedWasteGrams(trim.actualWasteGrams, existing.reusableWasteGrams))}
-            </p>
-          ) : null}
-        </div>
+      {openTrim.length === 0 ? (
+        <p className="kitchen-day-success" data-testid="kitchen-day-rescue-saved">
+          Rescue &amp; Reuse is recorded for every trimmed ingredient.
+        </p>
       ) : (
         <>
+          <p className="kitchen-day-card__copy" data-testid="kitchen-day-rescue-remaining">
+            {openTrim.length === 1
+              ? '1 ingredient still needs a reuse decision.'
+              : `${openTrim.length} ingredients still need a reuse decision.`}
+          </p>
+          <div className="kitchen-day-reuse-meta">
+            <label className="kitchen-day-field kitchen-day-field--compact">
+              <span>Ingredient</span>
+              <select
+                className="kitchen-day-input"
+                data-testid="kitchen-day-rescue-ingredient"
+                value={ingredientId}
+                onChange={(event) => {
+                  const draftWarning = unsavedKitchenSkillsDraftMessage(taskProgress);
+                  if (drafting && draftWarning && !window.confirm(draftWarning)) {
+                    return;
+                  }
+                  setIngredientId(event.target.value);
+                  setReusableRaw('');
+                  setDestination('');
+                  setSubmitError(null);
+                }}
+              >
+                {openTrim.map((entry) => (
+                  <option key={`${entry.recipeId ?? 'legacy'}:${entry.ingredientId}`} value={entry.ingredientId}>
+                    {entry.ingredientName}
+                  </option>
+                ))}
+              </select>
+            </label>
+            {trim ? (
+              <p className="kitchen-day-reuse-waste" data-testid="kitchen-day-rescue-actual-waste">
+                Actual waste {formatGrams(trim.actualWasteGrams)}
+              </p>
+            ) : null}
+          </div>
+
           <label className="kitchen-day-field kitchen-day-field--compact">
             <span>Reusable amount</span>
-            <div className="kitchen-day-input-row kitchen-day-input-row--grams">
-              <KitchenSkillsGramsInput
-                testId="kitchen-day-reusable-waste"
-                value={reusableRaw}
-                onChange={setReusableRaw}
-              />
-              <span className="kitchen-day-unit">g</span>
-            </div>
+            <KitchenSkillsMassInput
+              testId="kitchen-day-reusable-waste"
+              unitGroupLabel="Reusable amount unit"
+              value={reusableRaw}
+              onChange={setReusableRaw}
+            />
           </label>
           {!reusable.ok && reusableRaw !== '' ? (
             <p className="kitchen-day-error" data-testid="kitchen-day-reusable-error">
               Reusable amount must be 0 g up to the actual waste.
             </p>
           ) : null}
+          {discarded != null ? (
+            <p className="kitchen-day-reuse-discarded" data-testid="kitchen-day-discarded-waste">
+              <span>Discarded</span> <strong>{formatGrams(discarded)}</strong>
+            </p>
+          ) : null}
 
           <label className="kitchen-day-field kitchen-day-field--compact">
-            <span>Reuse destination</span>
+            <span>Preparation method and reuse destination</span>
             <textarea
               className="kitchen-day-input kitchen-day-input--destination"
               data-testid="kitchen-day-reuse-destination"
+              aria-describedby="kitchen-day-reuse-destination-hint"
+              placeholder="Wash the peel, dry it, then use it in cake."
               value={destination}
               onChange={(event) => setDestination(event.target.value)}
-              rows={2}
+              rows={3}
             />
+            <small id="kitchen-day-reuse-destination-hint" className="kitchen-day-field__hint">
+              Example: Wash the peel, dry it, then use it in cake.
+            </small>
           </label>
 
-          {discarded != null ? (
-            <p data-testid="kitchen-day-discarded-waste">Discarded {formatGrams(discarded)}</p>
+          {submitError ? (
+            <p className="kitchen-day-error" data-testid="kitchen-day-rescue-error">
+              {submitError}
+            </p>
           ) : null}
 
           <div className="kitchen-day-form-actions kitchen-day-form-actions--sticky">
@@ -175,6 +189,7 @@ export function KitchenSkillsReuseView() {
               className="kitchen-day-button kitchen-day-button--primary"
               data-testid="kitchen-day-save-rescue"
               disabled={
+                closedElsewhere ||
                 !trim ||
                 !canSaveRescueSuggestion({
                   reusableRaw,
@@ -189,6 +204,15 @@ export function KitchenSkillsReuseView() {
           </div>
         </>
       )}
+
+      {rescueEntries.length > 0 ? (
+        <section className="kitchen-day-trim-saved" aria-labelledby="kitchen-day-rescue-saved-title">
+          <h3 id="kitchen-day-rescue-saved-title" className="kitchen-day-trim-saved__title">
+            Saved reuse
+          </h3>
+          <RescueSummaryList entries={rescueEntries} trimEntries={trimEntries} testIdPrefix="kitchen-day-rescue" />
+        </section>
+      ) : null}
     </section>
   );
 }

@@ -7,7 +7,9 @@ import { TRIM_TECHNIQUES } from '@/products/kitchen-skills-challenge/domain/type
 import { TRIM_TECHNIQUE_LABELS } from '@/products/kitchen-skills-challenge/domain/trim/techniques';
 import {
   recordHedelmatPortion,
+  recordRescueDecision,
   selectTrimIngredient,
+  typeMassGrams,
 } from '@/products/kitchen-skills-challenge/kitchenSkills.testSupport';
 
 function setHash(hash: string) {
@@ -19,7 +21,7 @@ async function openTechniqueStep(user: ReturnType<typeof userEvent.setup>) {
   await recordHedelmatPortion(user);
   await selectTrimIngredient(user, 'Banaani', 'Banaani');
   await user.click(screen.getByRole('button', { name: 'Continue' }));
-  await user.type(screen.getByTestId('kitchen-day-starting-weight'), '5000');
+  await typeMassGrams(user, 'kitchen-day-starting-weight', '5000');
   await user.click(screen.getByTestId('kitchen-day-weight-continue'));
 }
 
@@ -70,17 +72,17 @@ describe('Trim Smart technique selection', () => {
 
     await user.click(screen.getByTestId('kitchen-day-technique-continue'));
     expect(screen.getByTestId('kitchen-day-trim-step-estimate')).toBeInTheDocument();
-    await user.type(screen.getByTestId('kitchen-day-estimated-waste'), '600');
+    await typeMassGrams(user, 'kitchen-day-estimated-waste', '600');
     await user.click(screen.getByTestId('kitchen-day-estimate-continue'));
     await user.click(screen.getByTestId('kitchen-day-start-preparation'));
     await user.click(screen.getByTestId('kitchen-day-finish-preparation'));
     await user.click(screen.getByTestId('kitchen-day-timer-continue'));
-    await user.type(screen.getByTestId('kitchen-day-actual-waste'), '450');
+    await typeMassGrams(user, 'kitchen-day-actual-waste', '450');
     await user.click(screen.getByTestId('kitchen-day-submit-trim'));
     await user.click(screen.getByTestId('kitchen-day-continue-reuse'));
-    await user.type(screen.getByTestId('kitchen-day-reusable-waste'), '200');
-    await user.type(screen.getByTestId('kitchen-day-reuse-destination'), 'Stock');
-    await user.click(screen.getByTestId('kitchen-day-save-rescue'));
+    await recordRescueDecision(user, '200', 'Stock');
+    await user.click(screen.getByTestId('kitchen-day-open-finish-summary'));
+    await user.click(screen.getByText('Show details'));
     expect(screen.getByTestId('kitchen-day-finish-trim-banaani')).toHaveTextContent('Julienne');
   });
 });

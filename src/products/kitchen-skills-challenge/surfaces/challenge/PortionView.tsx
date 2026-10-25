@@ -1,61 +1,106 @@
 import { useMemo, useState } from 'react';
 import { goToKitchenDaySection } from '@/app/routes';
 import { useReadyKitchenSkillsSession } from '@/products/kitchen-skills-challenge/domain/session/KitchenSkillsSessionContext';
-import { formatPortionDeviation } from '@/products/kitchen-skills-challenge/domain/portion/copy';
+import { formatMetricPercent, formatPortionDeviation } from '@/products/kitchen-skills-challenge/domain/portion/copy';
 import { evaluatePortionLine } from '@/products/kitchen-skills-challenge/domain/portion/deviations';
+import { buildPortionRecipeMetrics } from '@/products/kitchen-skills-challenge/domain/portion/metrics';
 import { getRecipeReference, listRecipeReferences } from '@/products/kitchen-skills-challenge/domain/portion/recipes';
+import { eligibleRecipeIngredientsForTrim } from '@/products/kitchen-skills-challenge/domain/session/sessionRecipe';
 import { KitchenSkillsRecipeCombobox } from '@/products/kitchen-skills-challenge/surfaces/challenge/KitchenSkillsRecipeCombobox';
 import { KitchenSkillsGramsInput } from '@/products/kitchen-skills-challenge/surfaces/shared/KitchenSkillsGramsInput';
+import { KitchenSkillsMassInput } from '@/products/kitchen-skills-challenge/surfaces/shared/KitchenSkillsMassInput';
+import { formatGrams, formatRecipeAmount } from '@/products/kitchen-skills-challenge/format';
 import {
   buildRecipeComposition,
   canSubmitPortion,
   parseActualAmount,
   parseFinalRecipeWeightGrams,
 } from '@/products/kitchen-skills-challenge/domain/portion/validation';
-import { unfinishedKitchenSkillsRecipeId } from '@/products/kitchen-skills-challenge/domain/session/challengeGate';
+import type { KitchenSkillsPortionEntry } from '@/products/kitchen-skills-challenge/domain/types';
+
+function portionErrorMessage(reason: string): string {
+  if (reason === 'portion_already_saved') {
+    return 'This challenge already has a recipe. Finish the challenge to start a new one.';
+  }
+  if (reason === 'attempt_closed') {
+    return 'This challenge was finished or restarted in another window.';
+  }
+  return 'This recipe could not be saved.';
+}
+
+function SavedPortion({ entry }: { entry: KitchenSkillsPortionEntry }) {
+  const recipe = getRecipeReference(entry.recipeId);
+  const metrics = buildPortionRecipeMetrics(entry, recipe);
+  const hasTrimIngredients = recipe ? eligibleRecipeIngredientsForTrim(recipe).length > 0 : false;
+  return (
+    <div className="kitchen-day-portion-saved" data-testid="kitchen-day-portion-saved-card">
+      <p className="kitchen-day-success" data-testid="kitchen-day-portion-saved">
+        {entry.recipeName} saved.
+      </p>
+      <dl className="kitchen-day-facts">
+        <div className="kitchen-day-fact">
+          <dt>Ingredient accuracy</dt>
+          <dd data-testid="kitchen-day-portion-saved-accuracy">
+            {formatMetricPercent(metrics.recipeIngredientAccuracyPercent)}
+          </dd>
+        </div>
+        <div className="kitchen-day-fact">
+          <dt>Final weight</dt>
+          <dd data-testid="kitchen-day-portion-saved-final-weight">
+            {formatGrams(metrics.recordedFinalWeightGrams)}
+          </dd>
+        </div>
+      </dl>
+      <p className="kitchen-day-card__copy">
+        {hasTrimIngredients
+          ? 'Trim Smart and Rescue & Reuse are optional. You can finish the challenge now.'
+          : 'This recipe has no Trim Smart ingredients. You can finish the challenge now.'}
+      </p>
+      {hasTrimIngredients ? (
+        <div className="kitchen-day-form-actions">
+          <button
+            type="button"
+            className="kitchen-day-button kitchen-day-button--secondary"
+            data-testid="kitchen-day-continue-trim"
+            onClick={() => goToKitchenDaySection('trim')}
+          >
+            Continue to Trim Smart
+          </button>
+        </div>
+      ) : null}
+    </div>
+  );
+}
 
 export function KitchenSkillsPortionView() {
-  const {
-    session,
-    portionEntries,
-    commitPortionEntry,
-    resumeSavedRecipe,
-    canStartAnotherRecipe,
-    newRecipeBlockedReason,
-    activeRecipeId,
-    taskProgress,
-  } = useReadyKitchenSkillsSession();
+  const { session, activePortionEntry, commitPortionEntry, closedElsewhere } =
+    useReadyKitchenSkillsSession();
   const recipes = listRecipeReferences();
   const [recipeId, setRecipeId] = useState('');
   const [actuals, setActuals] = useState<Record<string, string>>({});
   const [finalWeightRaw, setFinalWeightRaw] = useState('');
-  const [savedName, setSavedName] = useState<string | null>(null);
   const [submitError, setSubmitError] = useState<string | null>(null);
-  const [pickerKey, setPickerKey] = useState(0);
   const recipeOptions = useMemo(
     () => recipes.map((item) => ({ id: item.recipeId, label: item.recipeName })),
     [recipes],
   );
-  const savedRecipeIds = useMemo(
-    () => new Set(portionEntries.map((entry) => entry.recipeId)),
-    [portionEntries],
-  );
 
   const recipe = useMemo(() => (recipeId ? getRecipeReference(recipeId) : null), [recipeId]);
-  const alreadySaved = Boolean(recipeId && savedRecipeIds.has(recipeId));
   const composition = recipe ? buildRecipeComposition(recipe, actuals) : null;
   const finalWeight = parseFinalRecipeWeightGrams(finalWeightRaw);
 
+  if (activePortionEntry) {
+    return (
+      <section className="kitchen-day-card" data-testid="kitchen-day-portion">
+        <h2 className="kitchen-day-card__title">Portion Precision</h2>
+        <SavedPortion entry={activePortionEntry} />
+      </section>
+    );
+  }
+
   function submit() {
-    if (!recipe || !composition || !finalWeight.ok || alreadySaved) return;
-    if (!canStartAnotherRecipe && portionEntries.length > 0) {
-      setSubmitError(
-        newRecipeBlockedReason ??
-          'Finish the current recipe before starting another recipe.',
-      );
-      return;
-    }
-    const entry = {
+    if (!recipe || !composition || !finalWeight.ok) return;
+    const result = commitPortionEntry({
       sessionId: session.sessionId,
       sessionDate: session.sessionDate,
       submittedAt: new Date().toISOString(),
@@ -63,39 +108,23 @@ export function KitchenSkillsPortionView() {
       recipeName: recipe.recipeName,
       recipeComposition: composition,
       finalRecipeWeightGrams: finalWeight.value,
-    };
-    const result = commitPortionEntry({ ...entry, source: 'local' });
+      source: 'local',
+    });
     if (!result.ok) {
-      setSubmitError(
-        result.reason === 'duplicate_recipe'
-          ? 'This recipe is already recorded for this kitchen day.'
-          : result.reason === 'unfinished_recipe'
-            ? (newRecipeBlockedReason ??
-              'Finish the current recipe before starting another recipe.')
-            : 'This recipe could not be saved.',
-      );
+      setSubmitError(portionErrorMessage(result.reason));
       return;
     }
     setSubmitError(null);
-    setSavedName(recipe.recipeName);
-    setRecipeId('');
-    setActuals({});
-    setFinalWeightRaw('');
-    setPickerKey((current) => current + 1);
-    goToKitchenDaySection('trim');
+    if (eligibleRecipeIngredientsForTrim(recipe).length > 0) {
+      goToKitchenDaySection('trim');
+    }
   }
 
   function handleRecipeChange(nextRecipeId: string) {
     setRecipeId(nextRecipeId);
     setActuals({});
     setFinalWeightRaw('');
-    setSavedName(null);
     setSubmitError(null);
-  }
-
-  function continueSavedRecipe() {
-    if (!recipeId) return;
-    resumeSavedRecipe(recipeId);
   }
 
   return (
@@ -103,58 +132,10 @@ export function KitchenSkillsPortionView() {
       <h2 className="kitchen-day-card__title">Portion Precision</h2>
       <label className="kitchen-day-field">
         <span>Recipe</span>
-        <KitchenSkillsRecipeCombobox
-          key={pickerKey}
-          options={recipeOptions}
-          value={recipeId}
-          onChange={handleRecipeChange}
-        />
+        <KitchenSkillsRecipeCombobox options={recipeOptions} value={recipeId} onChange={handleRecipeChange} />
       </label>
 
-      {recipe && alreadySaved ? (
-        <div data-testid={`kitchen-day-recipe-${recipe.recipeId}`}>
-          <p className="kitchen-day-card__copy" data-testid="kitchen-day-portion-already-saved">
-            {recipe.recipeName} is already recorded for this kitchen day.
-          </p>
-          <div className="kitchen-day-form-actions kitchen-day-form-actions--sticky">
-            <button
-              type="button"
-              className="kitchen-day-button kitchen-day-button--primary"
-              data-testid="kitchen-day-resume-saved-recipe"
-              onClick={continueSavedRecipe}
-            >
-              Continue Trim Smart
-            </button>
-          </div>
-        </div>
-      ) : null}
-
-      {recipe && !alreadySaved && !canStartAnotherRecipe && portionEntries.length > 0 ? (
-        <div data-testid="kitchen-day-new-recipe-blocked">
-          <p className="kitchen-day-error" data-testid="kitchen-day-new-recipe-blocked-reason">
-            {newRecipeBlockedReason ??
-              'Finish the current recipe before starting another recipe.'}
-          </p>
-          <div className="kitchen-day-form-actions kitchen-day-form-actions--sticky">
-            <button
-              type="button"
-              className="kitchen-day-button kitchen-day-button--primary"
-              data-testid="kitchen-day-return-to-saved-recipe"
-              onClick={() => {
-                const targetId =
-                  unfinishedKitchenSkillsRecipeId(taskProgress, activeRecipeId) ??
-                  activeRecipeId ??
-                  null;
-                if (targetId) resumeSavedRecipe(targetId);
-              }}
-            >
-              Continue saved recipe
-            </button>
-          </div>
-        </div>
-      ) : null}
-
-      {recipe && !alreadySaved && (canStartAnotherRecipe || portionEntries.length === 0) ? (
+      {recipe ? (
         <div data-testid={`kitchen-day-recipe-${recipe.recipeId}`}>
           <div className="kitchen-day-portion-entry-wrap">
             <table className="kitchen-day-portion-entry" aria-label="Recipe ingredients">
@@ -169,25 +150,19 @@ export function KitchenSkillsPortionView() {
               <tbody>
                 {recipe.lines.map((line) => {
                   const actual = parseActualAmount(actuals[line.ingredientId] ?? '');
-                  const outcome =
-                    actual.ok
-                      ? evaluatePortionLine(line, {
-                          ingredientId: line.ingredientId,
-                          ingredientName: line.ingredientName,
-                          actualAmount: actual.value,
-                          unit: line.unit,
-                        })
-                      : null;
-                  const copy =
-                    actual.ok
-                      ? formatPortionDeviation(line, {
-                          ingredientId: line.ingredientId,
-                          ingredientName: line.ingredientName,
-                          actualAmount: actual.value,
-                          unit: line.unit,
-                        })
-                      : null;
+                  const actualLine = actual.ok
+                    ? {
+                        ingredientId: line.ingredientId,
+                        ingredientName: line.ingredientName,
+                        actualAmount: actual.value,
+                        unit: line.unit,
+                      }
+                    : null;
+                  const outcome = actualLine ? evaluatePortionLine(line, actualLine) : null;
+                  const copy = actualLine ? formatPortionDeviation(line, actualLine) : null;
                   const inputId = `kitchen-day-actual-input-${line.ingredientId}`;
+                  const setActual = (next: string) =>
+                    setActuals((current) => ({ ...current, [line.ingredientId]: next }));
                   return (
                     <tr
                       key={line.ingredientId}
@@ -201,26 +176,31 @@ export function KitchenSkillsPortionView() {
                         className="kitchen-day-portion-entry__target"
                         data-testid={`kitchen-day-required-${line.ingredientId}`}
                       >
-                        {line.requiredAmount} {line.unit}
+                        {formatRecipeAmount(line.requiredAmount, line.unit)}
                       </td>
                       <td className="kitchen-day-portion-entry__actual">
                         <label className="kitchen-day-sr-only" htmlFor={inputId}>
                           Actual {line.ingredientName}
                         </label>
-                        <div className="kitchen-day-input-row kitchen-day-input-row--grams">
-                          <KitchenSkillsGramsInput
+                        {line.unit === 'g' ? (
+                          <KitchenSkillsMassInput
                             id={inputId}
                             testId={`kitchen-day-actual-${line.ingredientId}`}
+                            unitGroupLabel={`Unit for ${line.ingredientName}`}
                             value={actuals[line.ingredientId] ?? ''}
-                            onChange={(next) =>
-                              setActuals((current) => ({
-                                ...current,
-                                [line.ingredientId]: next,
-                              }))
-                            }
+                            onChange={setActual}
                           />
-                          <span className="kitchen-day-unit">{line.unit}</span>
-                        </div>
+                        ) : (
+                          <div className="kitchen-day-input-row kitchen-day-input-row--grams">
+                            <KitchenSkillsGramsInput
+                              id={inputId}
+                              testId={`kitchen-day-actual-${line.ingredientId}`}
+                              value={actuals[line.ingredientId] ?? ''}
+                              onChange={setActual}
+                            />
+                            <span className="kitchen-day-unit">{line.unit}</span>
+                          </div>
+                        )}
                       </td>
                       <td
                         className="kitchen-day-portion-entry__result"
@@ -238,20 +218,17 @@ export function KitchenSkillsPortionView() {
 
           <div className="kitchen-day-portion-footer">
             <p className="kitchen-day-portion-footer__expected" data-testid="kitchen-day-expected-final-weight">
-              Expected final weight: {recipe.expectedFinalWeightGrams} g
+              Expected final weight: {formatGrams(recipe.expectedFinalWeightGrams)}
             </p>
 
             <label className="kitchen-day-field kitchen-day-field--compact">
               <span>Final recipe weight</span>
-              <div className="kitchen-day-input-row kitchen-day-input-row--grams">
-                <KitchenSkillsGramsInput
-                  testId="kitchen-day-final-recipe-weight"
-                  ariaLabel="Final recipe weight"
-                  value={finalWeightRaw}
-                  onChange={setFinalWeightRaw}
-                />
-                <span className="kitchen-day-unit">g</span>
-              </div>
+              <KitchenSkillsMassInput
+                testId="kitchen-day-final-recipe-weight"
+                ariaLabel="Final recipe weight"
+                value={finalWeightRaw}
+                onChange={setFinalWeightRaw}
+              />
             </label>
 
             <div className="kitchen-day-form-actions kitchen-day-form-actions--sticky">
@@ -260,6 +237,7 @@ export function KitchenSkillsPortionView() {
                 className="kitchen-day-button kitchen-day-button--primary"
                 data-testid="kitchen-day-submit-portion"
                 disabled={
+                  closedElsewhere ||
                   !canSubmitPortion({
                     recipe,
                     actualsByIngredientId: actuals,
@@ -275,11 +253,6 @@ export function KitchenSkillsPortionView() {
         </div>
       ) : null}
 
-      {savedName ? (
-        <p className="kitchen-day-success" data-testid="kitchen-day-portion-saved">
-          {savedName} recorded for this kitchen day.
-        </p>
-      ) : null}
       {submitError ? (
         <p className="kitchen-day-error" data-testid="kitchen-day-portion-error">
           {submitError}

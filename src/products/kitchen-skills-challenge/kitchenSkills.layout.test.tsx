@@ -30,8 +30,7 @@ describe('Kitchen Skills compact data-entry layout', () => {
     await recordHedelmatPortion(user);
     await selectTrimIngredient(user, 'Banaani', 'Banaani');
     await user.click(screen.getByRole('button', { name: 'Continue' }));
-    const gramRow = screen.getByTestId('kitchen-day-starting-weight').closest('.kitchen-day-input-row');
-    expect(gramRow).toHaveClass('kitchen-day-input-row--grams');
+    expect(screen.getByTestId('kitchen-day-starting-weight').closest('.kitchen-day-mass-input')).toBeTruthy();
     expect(screen.getByTestId('kitchen-day-weight-continue').closest('.kitchen-day-form-actions--sticky')).toBeTruthy();
   });
 
@@ -43,10 +42,8 @@ describe('Kitchen Skills compact data-entry layout', () => {
     await user.click(screen.getByTestId('kitchen-day-continue-reuse'));
     expect(screen.getByTestId('kitchen-day-rescue-ingredient').closest('.kitchen-day-reuse-meta')).toBeTruthy();
     expect(screen.getByTestId('kitchen-day-rescue-actual-waste').closest('.kitchen-day-reuse-meta')).toBeTruthy();
-    expect(screen.getByTestId('kitchen-day-reusable-waste').closest('.kitchen-day-input-row')).toHaveClass(
-      'kitchen-day-input-row--grams',
-    );
-    expect(screen.getByTestId('kitchen-day-reuse-destination')).toHaveAttribute('rows', '2');
+    expect(screen.getByTestId('kitchen-day-reusable-waste').closest('.kitchen-day-mass-input')).toBeTruthy();
+    expect(screen.getByTestId('kitchen-day-reuse-destination')).toHaveAttribute('rows', '3');
     expect(screen.getByTestId('kitchen-day-save-rescue').closest('.kitchen-day-form-actions--sticky')).toBeTruthy();
   });
 
@@ -68,14 +65,10 @@ describe('Kitchen Skills compact data-entry layout', () => {
     const line = screen.getByTestId('kitchen-day-recipe-line-ankka-rintafilee');
     expect(line.tagName).toBe('TR');
     expect(line.querySelector('.kitchen-day-field')).toBeNull();
-    expect(screen.getByTestId('kitchen-day-actual-ankka-rintafilee').closest('.kitchen-day-input-row')).toHaveClass(
-      'kitchen-day-input-row--grams',
-    );
-    expect(screen.getByTestId('kitchen-day-required-ankka-rintafilee')).toHaveTextContent('11250 g');
+    expect(screen.getByTestId('kitchen-day-actual-ankka-rintafilee').closest('.kitchen-day-mass-input')).toBeTruthy();
+    expect(screen.getByTestId('kitchen-day-required-ankka-rintafilee')).toHaveTextContent('11.25 kg');
     expect(screen.getByTestId('kitchen-day-deviation-ankka-rintafilee')).toHaveTextContent('—');
-    expect(screen.getByTestId('kitchen-day-final-recipe-weight').closest('.kitchen-day-input-row')).toHaveClass(
-      'kitchen-day-input-row--grams',
-    );
+    expect(screen.getByTestId('kitchen-day-final-recipe-weight').closest('.kitchen-day-mass-input')).toBeTruthy();
     expect(screen.getByTestId('kitchen-day-submit-portion').closest('.kitchen-day-form-actions--sticky')).toBeTruthy();
   });
 });

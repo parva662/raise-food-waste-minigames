@@ -17,7 +17,7 @@ Each row is a separate GameBus left-menu Custom Embed (or equivalent). Do not co
 
 Notes:
 
-- Embedded student activity locks `sessionId` after TASK + authenticated user. Student work stays in one iframe: silent posts, then EXIT only from Finish challenge.
+- Embedded student activity locks `sessionId` (including attempt id) after TASK + authenticated user. Later TASK / INPUT_COLLECTIONS replay cannot mint a new attempt. Student work stays in one iframe: silent posts, then EXIT only from Finish challenge. Reopening after Finish is a new attempt.
 - Progress and tutor pages do not appear on the student Kitchen Day module nav.
 - Production GitHub Pages URLs:
   - `https://parva662.github.io/raise-food-waste-minigames/#/kitchen-day`

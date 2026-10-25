@@ -370,4 +370,46 @@ describe('Student Progress identity isolation', () => {
     expect(first?.moduleReviews.portionPrecision?.timeEfficiencyScore).toBe(5);
     expect(second?.moduleReviews.trimSmart?.timeEfficiencyScore).toBe(2);
   });
+
+  it('keeps two same-day attempts by the same student as separate records', () => {
+    const morning = 'kitchen-day:task-1:user-a:2026-10-12:morning1';
+    const afternoon = 'kitchen-day:task-1:user-a:2026-10-12:afterid2';
+    const sessions = buildKitchenSkillsStudentProgressSessions(
+      [
+        trimActivity({
+          id: 'act-trim-morning',
+          properties: [
+            { template: { slug: 'sessionId' }, value: { value: morning } },
+            { template: { slug: 'sessionDate' }, value: { value: '2026-10-12' } },
+            { template: { slug: 'submittedAt' }, value: { value: '2026-10-12T07:03:00.000Z' } },
+            { template: { slug: 'ingredientId' }, value: { value: 'carrot' } },
+            { template: { slug: 'ingredientName' }, value: { value: 'Carrot' } },
+            { template: { slug: 'ingredientWeightGrams' }, value: { value: 5000 } },
+            { template: { slug: 'trimTechniques' }, value: { value: 'trimming' } },
+            { template: { slug: 'estimatedWasteGrams' }, value: { value: 600 } },
+            { template: { slug: 'actualWasteGrams' }, value: { value: 450 } },
+            { template: { slug: 'duration' }, obj: { value: 3, unit: 'minutes' } },
+          ],
+        }),
+        trimActivity({
+          id: 'act-trim-afternoon',
+          properties: [
+            { template: { slug: 'sessionId' }, value: { value: afternoon } },
+            { template: { slug: 'sessionDate' }, value: { value: '2026-10-12' } },
+            { template: { slug: 'submittedAt' }, value: { value: '2026-10-12T14:03:00.000Z' } },
+            { template: { slug: 'ingredientId' }, value: { value: 'carrot' } },
+            { template: { slug: 'ingredientName' }, value: { value: 'Carrot' } },
+            { template: { slug: 'ingredientWeightGrams' }, value: { value: 4000 } },
+            { template: { slug: 'trimTechniques' }, value: { value: 'peeling' } },
+            { template: { slug: 'estimatedWasteGrams' }, value: { value: 500 } },
+            { template: { slug: 'actualWasteGrams' }, value: { value: 400 } },
+            { template: { slug: 'duration' }, obj: { value: 2, unit: 'minutes' } },
+          ],
+        }),
+      ],
+      identityA,
+    );
+    expect(sessions.map((session) => session.sessionId).sort()).toEqual([afternoon, morning].sort());
+    expect(sessions).toHaveLength(2);
+  });
 });

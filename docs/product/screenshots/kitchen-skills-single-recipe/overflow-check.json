@@ -1,0 +1,62 @@
+{
+  "01-portion-gkg-desktop-1200": {
+    "width": 1200,
+    "scrollWidth": 1200,
+    "offenders": []
+  },
+  "02-trim-measurement-desktop-1200": {
+    "width": 1200,
+    "scrollWidth": 1200,
+    "offenders": []
+  },
+  "03-trim-result-duration-desktop-1200": {
+    "width": 1200,
+    "scrollWidth": 1200,
+    "offenders": []
+  },
+  "04-rescue-form-desktop-1200": {
+    "width": 1200,
+    "scrollWidth": 1200,
+    "offenders": []
+  },
+  "06-finish-all-modules-desktop-1200": {
+    "width": 1200,
+    "scrollWidth": 1200,
+    "offenders": []
+  },
+  "05-finish-portion-only-desktop-1200": {
+    "width": 1200,
+    "scrollWidth": 1200,
+    "offenders": []
+  },
+  "10-mobile-challenge-390": {
+    "width": 390,
+    "scrollWidth": 390,
+    "offenders": []
+  },
+  "10b-tablet-challenge-768": {
+    "width": 768,
+    "scrollWidth": 768,
+    "offenders": []
+  },
+  "11-reflow-challenge-320": {
+    "width": 320,
+    "scrollWidth": 320,
+    "offenders": []
+  },
+  "07-tutor-portion-only-desktop-1200": {
+    "width": 1200,
+    "scrollWidth": 1200,
+    "offenders": []
+  },
+  "08-tutor-all-modules-desktop-1200": {
+    "width": 1200,
+    "scrollWidth": 1200,
+    "offenders": []
+  },
+  "09-tutor-two-same-day-attempts-desktop-1200": {
+    "width": 1200,
+    "scrollWidth": 1200,
+    "offenders": []
+  }
+}

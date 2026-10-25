@@ -160,12 +160,14 @@ describe('Kitchen Day session initialization and hydration', () => {
       embedded: true,
       taskId: 'kitchen-day-task-1',
       actorId: 'user-1',
+      attemptId: 'lockid1',
       now: new Date('2026-09-22T20:30:00.000Z'),
     });
     const reused = ensureKitchenSkillsLockedSession(locked, {
       embedded: true,
       taskId: 'kitchen-day-task-1',
       actorId: 'user-1',
+      attemptId: 'otherid',
       now: new Date('2026-09-22T21:30:00.000Z'),
     });
     expect(reused.sessionDate).toBe('2026-09-22');

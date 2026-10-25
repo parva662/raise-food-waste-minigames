@@ -212,6 +212,31 @@ describe('Kitchen Day chef session grouping', () => {
     expect(session.moduleReviews.portionPrecision).toBeNull();
   });
 
+  it('shows two Rescue ingredient records under one Rescue assessment slot', () => {
+    const withRecipe = (activity: { properties: object[] }, recipeId: string) => ({
+      ...activity,
+      properties: [
+        ...activity.properties,
+        { template: { slug: 'recipeId' }, value: { value: recipeId } },
+      ],
+    });
+    const sessions = buildKitchenSkillsTrainerSessions([
+      portionActivity('user-1', sessionA, 'mayonnaise'),
+      withRecipe(trimActivity('user-1', sessionA, 'carrot'), 'mayonnaise'),
+      withRecipe(trimActivity('user-1', sessionA, 'potato'), 'mayonnaise'),
+      withRecipe(rescueActivity('user-1', sessionA, 'carrot'), 'mayonnaise'),
+      withRecipe(rescueActivity('user-1', sessionA, 'potato'), 'mayonnaise'),
+    ]);
+    expect(sessions).toHaveLength(1);
+    const session = sessions[0]!;
+    expect(session.trimEntries).toHaveLength(2);
+    expect(session.rescueEntries).toHaveLength(2);
+    const slots = sessionAssessmentSlots(session);
+    expect(slots.filter((slot) => slot.module === 'trimSmart')).toHaveLength(1);
+    expect(slots.filter((slot) => slot.module === 'rescueAndReuse')).toHaveLength(1);
+    expect(slots.filter((slot) => slot.module === 'portionPrecision')).toHaveLength(1);
+  });
+
   it('keeps two sessions on the same date distinct by sessionId', () => {
     const sessions = buildKitchenSkillsTrainerSessions([
       trimActivity('user-1', sessionSameDateA, 'carrot'),
