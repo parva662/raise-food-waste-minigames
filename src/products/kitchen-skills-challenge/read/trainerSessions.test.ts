@@ -9,7 +9,6 @@ import {
   sessionAssessmentCounts,
   sessionAssessmentSlots,
   sessionAssessmentStatus,
-  sessionRecordedModuleLabels,
 } from '@/products/kitchen-skills-challenge/read/trainerSessions';
 import type { KitchenSkillsReviewedModule } from '@/products/kitchen-skills-challenge/domain/types';
 

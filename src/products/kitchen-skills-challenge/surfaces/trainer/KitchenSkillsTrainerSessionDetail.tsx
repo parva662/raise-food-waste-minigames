@@ -2,7 +2,7 @@ import { useMemo } from 'react';
 import type { KitchenSkillsTrainerSession } from '@/products/kitchen-skills-challenge/domain/types';
 import { KITCHEN_SKILLS_MODULE_TITLES } from '@/products/kitchen-skills-challenge/domain/types';
 import {
-  findSessionLevelAssessment,
+  findConfirmedSessionLevelAssessment,
   historicalModuleReviews,
   listSessionRecipeIds,
   recipeDisplayName,
@@ -107,8 +107,8 @@ export function KitchenSkillsTrainerSessionDetail({
     ...(selected.trimEntries.length > 0 ? (['trimSmart'] as const) : []),
     ...(selected.rescueEntries.length > 0 ? (['rescueAndReuse'] as const) : []),
   ]);
-  const assessment = findSessionLevelAssessment(selected);
-  const showUnsaved = hasUnsavedDraft && !assessment;
+  const confirmed = findConfirmedSessionLevelAssessment(selected);
+  const showUnsaved = hasUnsavedDraft && !confirmed;
 
   return (
     <div data-testid="kitchen-day-chef-selected" className="kitchen-day-tutor-session-detail">

@@ -138,7 +138,7 @@ describe('trainer assessment status (session-level)', () => {
     expect(findSessionLevelAssessment(s)).toBeNull();
   });
 
-  it('session assessment marks the session reviewed', () => {
+  it('persisted session assessment marks the session reviewed', () => {
     const assessment = sessionAssessment();
     const s = session({
       portionEntries: [portion('5')],
@@ -156,6 +156,26 @@ describe('trainer assessment status (session-level)', () => {
       outstanding: 0,
     });
     expect(reviewIdentityKey(assessment)).toBe(`${SESSION}::__session__`);
+  });
+
+  it('dispatched-but-unconfirmed session assessment is not Reviewed', () => {
+    const assessment = sessionAssessment({
+      source: 'local',
+      persistId: undefined,
+      awaitingPersist: true,
+    });
+    const s = session({
+      portionEntries: [portion('5')],
+      reviews: [assessment],
+      sessionAssessment: assessment,
+    });
+    expect(sessionAssessmentStatus(s)).toBe('needs_assessment');
+    expect(sessionAssessmentCounts(s)).toEqual({
+      recorded: 1,
+      confirmed: 0,
+      awaiting: 0,
+      outstanding: 1,
+    });
   });
 
   it('partitions staff sessions into needs vs reviewed only', () => {

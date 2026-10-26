@@ -149,10 +149,11 @@ export function sessionAssessmentCounts(
   session: KitchenSkillsTrainerSession,
 ): KitchenSkillsSessionAssessmentCounts {
   const assessment = findSessionLevelAssessment(session);
-  if (assessment) {
+  if (assessment && isReviewPersistConfirmed(assessment)) {
     return { recorded: 1, confirmed: 1, awaiting: 0, outstanding: 0 };
   }
   // Evidence exists → one outstanding session assessment; no evidence → nothing to assess.
+  // A dispatched-but-unconfirmed local row does not count as confirmed.
   const hasEvidence =
     session.portionEntries.length > 0 ||
     session.trimEntries.length > 0 ||
@@ -179,9 +180,10 @@ export function modulesAwaitingAssessmentCount(session: KitchenSkillsTrainerSess
 }
 
 /**
- * Restored session-level workflow: REVIEWED when a session assessment exists
- * (local after submit, or persisted). Historical per-module rows alone never
- * mark the whole session reviewed. Awaiting confirmation is unused for new posts.
+ * Restored session-level workflow: REVIEWED only when a session assessment is
+ * confirmed in GameBus (or authoritative non-embed local). A local postMessage
+ * row alone is never Reviewed. Historical per-module rows alone never mark the
+ * session reviewed.
  */
 export type KitchenSkillsSessionAssessmentStatus = KitchenSkillsModuleAssessmentState;
 
@@ -190,6 +192,7 @@ export function sessionAssessmentStatus(
 ): KitchenSkillsSessionAssessmentStatus {
   const assessment = findSessionLevelAssessment(session);
   if (!assessment) return 'needs_assessment';
+  if (!isReviewPersistConfirmed(assessment)) return 'needs_assessment';
   return 'reviewed';
 }
 

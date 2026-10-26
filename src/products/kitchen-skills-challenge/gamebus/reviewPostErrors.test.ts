@@ -3,6 +3,7 @@ import { kitchenSkillsTrainerTaskFixture } from '@/products/kitchen-skills-chall
 import {
   kitchenSkillsReviewCommitErrorMessage,
   kitchenSkillsReviewSavedMessage,
+  kitchenSkillsReviewSubmittedMessage,
   validateWastePracticeReviewLinkedProperties,
 } from '@/products/kitchen-skills-challenge/gamebus/reviewPostErrors';
 import type { KitchenSkillsReviewEntry } from '@/products/kitchen-skills-challenge/domain/types';
@@ -116,6 +117,7 @@ describe('wastePracticeReview linked property validation', () => {
         'reviewedGame',
       ]),
     ).toMatch(/makes these wastePracticeReview properties optional/i);
+    expect(kitchenSkillsReviewSubmittedMessage()).toMatch(/submitted/i);
     expect(kitchenSkillsReviewSavedMessage()).toMatch(/saved/i);
   });
 });

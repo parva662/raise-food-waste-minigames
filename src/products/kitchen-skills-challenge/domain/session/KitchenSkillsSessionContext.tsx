@@ -798,7 +798,7 @@ export function KitchenSkillsSessionProvider({
         };
       }
       markKitchenSkillsReviewDispatched(actorId, entry, persisted.feedFingerprint);
-      // Restore original UX: show the assessment immediately (no awaiting screen).
+      // postMessage is not GameBus persistence — keep a local submitted row without a fake persistId.
       setLocalReviews((current) => {
         const withoutIdentity = current.filter(
           (item) => reviewIdentityKey(item) !== reviewIdentityKey(entry),
@@ -808,13 +808,14 @@ export function KitchenSkillsSessionProvider({
           {
             ...entry,
             source: 'local',
-            persistId: `local:${reviewIdentityKey(entry)}`,
+            awaitingPersist: true,
           },
         ];
       });
-      return { ok: true, mode: 'local' };
+      return { ok: true, mode: 'posted_awaiting_persist' };
     }
 
+    // Non-embed: local commit is authoritative (no GameBus round-trip).
     setLocalReviews((current) =>
       hasDuplicateReviewIdentity(current, entry)
         ? current

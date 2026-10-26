@@ -5,11 +5,16 @@ import type {
   KitchenSkillsReviewEntry,
   KitchenSkillsTrainerSession,
 } from '@/products/kitchen-skills-challenge/domain/types';
-import { findSessionLevelAssessment } from '@/products/kitchen-skills-challenge/domain/session/reviewIdentity';
+import {
+  findConfirmedSessionLevelAssessment,
+  findSubmittedSessionLevelAssessment,
+  isReviewPersistConfirmed,
+} from '@/products/kitchen-skills-challenge/domain/session/reviewIdentity';
 import {
   kitchenSkillsReviewCommitErrorMessage,
   kitchenSkillsReviewDiagnosticPayload,
   kitchenSkillsReviewSavedMessage,
+  kitchenSkillsReviewSubmittedMessage,
 } from '@/products/kitchen-skills-challenge/gamebus/reviewPostErrors';
 import { gamebusDevLog } from '@/platform/gamebus/devLog';
 import {
@@ -99,11 +104,15 @@ function ScorePicker({
 }
 
 function ReviewReadback({ review }: { review: KitchenSkillsReviewEntry }) {
+  const confirmed = isReviewPersistConfirmed(review);
   return (
-    <section className="chef-results-panel" data-testid="kitchen-day-review-submitted">
+    <section
+      className="chef-results-panel"
+      data-testid={confirmed ? 'kitchen-day-review-saved' : 'kitchen-day-review-submitted'}
+    >
       <h3 className="chef-results-panel__title">Tutor assessment</h3>
-      <p className="chef-results-panel__intro" data-testid="kitchen-day-review-saved-note">
-        {kitchenSkillsReviewSavedMessage()}
+      <p className="chef-results-panel__intro">
+        {confirmed ? kitchenSkillsReviewSavedMessage() : kitchenSkillsReviewSubmittedMessage()}
       </p>
       <dl className="chef-results-metrics chef-results-metrics--compact">
         <div>
@@ -135,7 +144,8 @@ export function KitchenSkillsTrainerReviewForm({
   onDraftChange: (draft: KitchenSkillsReviewFormDraft) => void;
 }) {
   const { commitReview } = useReadyKitchenSkillsSession();
-  const existing = findSessionLevelAssessment(selected);
+  const confirmed = findConfirmedSessionLevelAssessment(selected);
+  const submitted = findSubmittedSessionLevelAssessment(selected);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
@@ -144,8 +154,11 @@ export function KitchenSkillsTrainerReviewForm({
     setSubmitting(false);
   }, [selected.sessionId]);
 
-  if (existing) {
-    return <ReviewReadback review={existing} />;
+  if (confirmed) {
+    return <ReviewReadback review={confirmed} />;
+  }
+  if (submitted) {
+    return <ReviewReadback review={submitted} />;
   }
 
   const timeScore = draft.timeScore;

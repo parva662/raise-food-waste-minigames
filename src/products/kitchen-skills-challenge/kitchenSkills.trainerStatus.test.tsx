@@ -89,14 +89,16 @@ describe('Kitchen Skills trainer session-level status', () => {
 
     await waitFor(() => {
       expect(screen.getByTestId('kitchen-day-review-submitted')).toBeInTheDocument();
-      expect(screen.getByTestId('kitchen-day-tutor-session-status')).toHaveTextContent(/reviewed/i);
     });
+    // postMessage alone is not GameBus persistence — stay Needs assessment until feed confirms.
+    expect(screen.getByTestId('kitchen-day-tutor-session-status')).toHaveTextContent(/needs assessment/i);
+    expect(screen.queryByTestId('kitchen-day-review-saved')).not.toBeInTheDocument();
     expect(postMessage.mock.calls.filter((call) => (call[0] as { type?: string }).type === 'SILENT_ACTIVITY')).toHaveLength(
       1,
     );
   });
 
-  it('does not re-post after the session assessment is already shown', async () => {
+  it('shows Reviewed only after a persisted session assessment hydrates from GameBus', async () => {
     vi.spyOn(detectEmbed, 'isGameBusEmbed').mockReturnValue(true);
     const postMessage = vi.spyOn(window.parent, 'postMessage').mockImplementation(() => undefined);
     ingestTaskForTests(kitchenSkillsTrainerTaskFixture);
@@ -127,7 +129,8 @@ describe('Kitchen Skills trainer session-level status', () => {
     await user.click(screen.getByTestId('kitchen-day-tutor-staff-user-1'));
     await waitFor(() => expect(screen.getByTestId(`kitchen-day-chef-session-${SESSION}`)).toBeInTheDocument());
     await user.click(screen.getByTestId(`kitchen-day-chef-session-${SESSION}`));
-    await waitFor(() => expect(screen.getByTestId('kitchen-day-review-submitted')).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByTestId('kitchen-day-review-saved')).toBeInTheDocument());
+    expect(screen.getByTestId('kitchen-day-tutor-session-status')).toHaveTextContent(/reviewed/i);
     expect(screen.queryByTestId('kitchen-day-review-submit')).not.toBeInTheDocument();
     expect(postMessage).not.toHaveBeenCalled();
   });

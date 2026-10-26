@@ -208,7 +208,7 @@ export function awaitingReviewsFromDispatchMarkers(
           session.actorId === marker.actorId && session.sessionId === marker.sessionId,
       );
       if (!matches) continue;
-      // Session-level markers become local session assessments (no awaiting UI).
+      // Session-level markers restore as submitted-not-confirmed (never fabricate persistId).
       if (!marker.reviewedGame) {
         out.push({
           sessionId: marker.sessionId,
@@ -218,7 +218,7 @@ export function awaitingReviewsFromDispatchMarkers(
           preparationQualityScore: marker.preparationQualityScore,
           ...(marker.chefFeedback ? { chefFeedback: marker.chefFeedback } : {}),
           source: 'local',
-          persistId: `local:${reviewIdentityKey({ sessionId: marker.sessionId })}`,
+          awaitingPersist: true,
         });
         continue;
       }

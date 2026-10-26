@@ -222,7 +222,44 @@ describe('Kitchen Day session-level tutor assessment', () => {
     expect(screen.queryByTestId('kitchen-day-review-submit')).not.toBeInTheDocument();
   });
 
-  it('shows a saved session assessment on reopen from the feed', async () => {
+  it('shows Assessment submitted after postMessage without claiming GameBus saved', async () => {
+    vi.spyOn(detectEmbed, 'isGameBusEmbed').mockReturnValue(true);
+    const postMessage = vi.spyOn(window.parent, 'postMessage').mockImplementation(() => undefined);
+    ingestTrainerFeed(baseActivities);
+    setHash('#/kitchen-day-tutor');
+    const user = userEvent.setup();
+    render(<AppRouter />);
+    await openStudentSession(user);
+
+    await user.type(screen.getByTestId('kitchen-day-review-time'), '3');
+    await user.type(screen.getByTestId('kitchen-day-review-quality'), '4');
+    await user.click(screen.getByTestId('kitchen-day-review-submit'));
+
+    await waitFor(() => {
+      expect(screen.getByTestId('kitchen-day-review-submitted')).toBeInTheDocument();
+    });
+    expect(screen.getByTestId('kitchen-day-review-submitted')).toHaveTextContent(/assessment submitted/i);
+    expect(screen.queryByTestId('kitchen-day-review-saved')).not.toBeInTheDocument();
+    expect(screen.getByTestId('kitchen-day-tutor-session-status')).toHaveTextContent(/needs assessment/i);
+    expect(screen.queryByTestId('kitchen-day-review-submit')).not.toBeInTheDocument();
+    expect(
+      postMessage.mock.calls.filter((call) => (call[0] as { type?: string }).type === 'SILENT_ACTIVITY'),
+    ).toHaveLength(1);
+
+    await user.click(screen.getByTestId('kitchen-day-tutor-back-staff'));
+    await waitFor(() => expect(screen.getByTestId(`kitchen-day-chef-session-${sessionOne}`)).toBeInTheDocument());
+    await user.click(screen.getByTestId(`kitchen-day-chef-session-${sessionOne}`));
+    await waitFor(() => {
+      expect(screen.getByTestId('kitchen-day-review-submitted')).toBeInTheDocument();
+    });
+    expect(screen.queryByTestId('kitchen-day-review-saved')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('kitchen-day-review-submit')).not.toBeInTheDocument();
+    expect(
+      postMessage.mock.calls.filter((call) => (call[0] as { type?: string }).type === 'SILENT_ACTIVITY'),
+    ).toHaveLength(1);
+  });
+
+  it('shows Assessment saved / Reviewed only after a matching persisted GameBus record exists', async () => {
     vi.spyOn(detectEmbed, 'isGameBusEmbed').mockReturnValue(true);
     ingestTrainerFeed([
       ...baseActivities,
@@ -233,9 +270,25 @@ describe('Kitchen Day session-level tutor assessment', () => {
     render(<AppRouter />);
     await openStudentSession(user);
 
-    expect(screen.getByTestId('kitchen-day-review-submitted')).toBeInTheDocument();
+    expect(screen.getByTestId('kitchen-day-review-saved')).toBeInTheDocument();
+    expect(screen.getByTestId('kitchen-day-review-saved')).toHaveTextContent(/assessment saved/i);
     expect(screen.getByTestId('kitchen-day-review-feedback-value')).toHaveTextContent('Nice work');
+    expect(screen.getByTestId('kitchen-day-tutor-session-status')).toHaveTextContent(/reviewed/i);
     expect(screen.queryByTestId('kitchen-day-review-form')).not.toBeInTheDocument();
+  });
+
+  it('does not silently report success when reopening finds no persisted assessment', async () => {
+    vi.spyOn(detectEmbed, 'isGameBusEmbed').mockReturnValue(true);
+    ingestTrainerFeed(baseActivities);
+    setHash('#/kitchen-day-tutor');
+    const user = userEvent.setup();
+    render(<AppRouter />);
+    await openStudentSession(user);
+
+    expect(screen.getByTestId('kitchen-day-review-form')).toBeInTheDocument();
+    expect(screen.queryByTestId('kitchen-day-review-saved')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('kitchen-day-review-submitted')).not.toBeInTheDocument();
+    expect(screen.getByTestId('kitchen-day-tutor-session-status')).toHaveTextContent(/needs assessment/i);
   });
 
   it('keeps historical module reviews readable without marking the session reviewed', async () => {

@@ -140,6 +140,12 @@ export function kitchenSkillsReviewCommitErrorMessage(
   return 'Assessment cannot be submitted. Check the configuration and try again.';
 }
 
+/** Shown after postMessage — not GameBus persistence proof. */
+export function kitchenSkillsReviewSubmittedMessage(): string {
+  return 'Assessment submitted.';
+}
+
+/** Shown only after a matching wastePracticeReview is observed in the GameBus feed. */
 export function kitchenSkillsReviewSavedMessage(): string {
   return 'Assessment saved.';
 }

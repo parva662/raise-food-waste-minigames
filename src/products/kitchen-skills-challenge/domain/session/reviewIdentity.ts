@@ -8,9 +8,10 @@ import type {
 import { KITCHEN_SKILLS_REVIEWED_MODULES } from '@/products/kitchen-skills-challenge/domain/types';
 
 /** True for the restored session-level assessment (no module discriminator, no recipeId). */
-export function isSessionLevelAssessment(
-  review: Pick<KitchenSkillsReviewEntry, 'recipeId' | 'reviewedGame'>,
-): boolean {
+export function isSessionLevelAssessment(review: {
+  recipeId?: string | null;
+  reviewedGame?: KitchenSkillsReviewedModule | null;
+}): boolean {
   return !normalizeRecipeId(review.recipeId ?? '') && !review.reviewedGame;
 }
 
@@ -18,7 +19,7 @@ export function isSessionLevelAssessment(
 export function reviewIdentityKey(review: {
   sessionId: string;
   recipeId?: string | null;
-  reviewedGame?: KitchenSkillsReviewedModule;
+  reviewedGame?: KitchenSkillsReviewedModule | null;
 }): string {
   if (isSessionLevelAssessment(review)) {
     return `${review.sessionId}::__session__`;
@@ -40,6 +41,22 @@ export function findSessionLevelAssessment(
 ): KitchenSkillsReviewEntry | null {
   if (session.sessionAssessment) return session.sessionAssessment;
   return session.reviews.find(isSessionLevelAssessment) ?? null;
+}
+
+/** Session assessment confirmed in GameBus (or authoritative non-embed local commit). */
+export function findConfirmedSessionLevelAssessment(
+  session: Pick<KitchenSkillsTrainerSession, 'sessionAssessment' | 'reviews'>,
+): KitchenSkillsReviewEntry | null {
+  const assessment = findSessionLevelAssessment(session);
+  return assessment && isReviewPersistConfirmed(assessment) ? assessment : null;
+}
+
+/** Dispatched session assessment that is not yet observed in the GameBus feed. */
+export function findSubmittedSessionLevelAssessment(
+  session: Pick<KitchenSkillsTrainerSession, 'sessionAssessment' | 'reviews'>,
+): KitchenSkillsReviewEntry | null {
+  const assessment = findSessionLevelAssessment(session);
+  return assessment && !isReviewPersistConfirmed(assessment) ? assessment : null;
 }
 
 export type EvidencedRecipeModule = {
@@ -141,7 +158,11 @@ export function evidencedRecipeModules(
   return pairs;
 }
 
-/** A review is confirmed only after GameBus hydration (or a non-embed local commit). */
+/**
+ * Confirmed only after GameBus hydration (`source: 'persisted'`) or an authoritative
+ * non-embed local commit (`persistId` without `awaitingPersist`).
+ * `awaitingPersist` means postMessage ran — never treat that as GameBus persistence.
+ */
 export function isReviewPersistConfirmed(review: KitchenSkillsReviewEntry): boolean {
   if (review.awaitingPersist) return false;
   return review.source === 'persisted' || Boolean(review.persistId);
