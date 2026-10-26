@@ -95,17 +95,23 @@ export interface KitchenSkillsReviewEntry {
   sessionId: string;
   sessionDate: string;
   submittedAt: string;
-  /** Required on new posts; absent on legacy session-level GameBus reviews. */
+  /**
+   * Present on historical per-module assessments.
+   * Omitted on new session-level assessments and on older rows without recipe tracking.
+   */
   recipeId?: string;
-  reviewedGame: KitchenSkillsReviewedModule;
+  /**
+   * Present on historical per-module assessments (`trimSmart` | `rescueAndReuse` | `portionPrecision`).
+   * Omitted on new session-level assessments — do not fabricate a module value for an overall review.
+   */
+  reviewedGame?: KitchenSkillsReviewedModule;
   timeEfficiencyScore: number;
   preparationQualityScore: number;
   chefFeedback?: string;
   source: KitchenSkillsRecordSource;
   persistId?: string;
   /**
-   * Set after a GameBus postMessage until the review is observed in INPUT_COLLECTIONS.
-   * Never treat awaiting rows as permanently saved for REVIEWED status.
+   * Legacy flag for historical per-module dispatch UX. New session-level posts do not use awaiting screens.
    */
   awaitingPersist?: boolean;
 }
@@ -125,11 +131,16 @@ export interface KitchenSkillsTrainerSession {
   trimEntries: KitchenSkillsTrimEntry[];
   rescueEntries: KitchenSkillsRescueEntry[];
   portionEntries: KitchenSkillsPortionEntry[];
-  /** All tutor reviews for this session (recipe-specific and legacy). */
+  /** All tutor reviews for this session (session-level, recipe-module, and legacy). */
   reviews: KitchenSkillsReviewEntry[];
   /**
-   * Legacy session-level reviews only (no recipeId).
-   * Recipe-specific assessments live in {@link reviews}.
+   * Confirmed or local session-level assessment (no `reviewedGame` / no `recipeId`).
+   * Historical per-module rows never populate this.
+   */
+  sessionAssessment: KitchenSkillsReviewEntry | null;
+  /**
+   * Historical per-module reviews without recipeId (pre-recipe tracking).
+   * Recipe-specific module assessments live in {@link reviews}.
    */
   moduleReviews: KitchenSkillsModuleReviews;
 }

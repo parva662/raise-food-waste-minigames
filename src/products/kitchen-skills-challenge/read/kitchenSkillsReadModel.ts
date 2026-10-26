@@ -213,15 +213,13 @@ export function parsePersistedReviewEntry(activity: unknown): KitchenSkillsRevie
   const timeEfficiencyScore = readActivityPropertyNumber(activity, 'timeEfficiencyScore');
   const preparationQualityScore = readActivityPropertyNumber(activity, 'preparationQualityScore');
   const chefFeedback = readActivityPropertyString(activity, 'chefFeedback');
-  const reviewedGame = readActivityPropertyString(activity, 'reviewedGame');
+  const reviewedGameRaw = readActivityPropertyString(activity, 'reviewedGame');
   const recipeIdRaw = readActivityPropertyString(activity, 'recipeId');
   const recipeId = recipeIdRaw?.trim() || undefined;
   if (
     !sessionId ||
     !sessionDate ||
     !submittedAt ||
-    !reviewedGame ||
-    !isKitchenSkillsReviewedModule(reviewedGame) ||
     timeEfficiencyScore == null ||
     preparationQualityScore == null ||
     !isKitchenSkillsReviewScore(timeEfficiencyScore) ||
@@ -229,12 +227,29 @@ export function parsePersistedReviewEntry(activity: unknown): KitchenSkillsRevie
   ) {
     return null;
   }
+
+  // Session-level assessment: no reviewedGame (and typically no recipeId).
+  if (!reviewedGameRaw?.trim()) {
+    return {
+      sessionId,
+      sessionDate,
+      submittedAt,
+      timeEfficiencyScore,
+      preparationQualityScore,
+      ...(chefFeedback ? { chefFeedback } : {}),
+      source: 'persisted',
+      persistId: readActivityId(activity) ?? undefined,
+    };
+  }
+
+  if (!isKitchenSkillsReviewedModule(reviewedGameRaw)) return null;
+
   return {
     sessionId,
     sessionDate,
     submittedAt,
     ...(recipeId ? { recipeId } : {}),
-    reviewedGame,
+    reviewedGame: reviewedGameRaw,
     timeEfficiencyScore,
     preparationQualityScore,
     ...(chefFeedback ? { chefFeedback } : {}),

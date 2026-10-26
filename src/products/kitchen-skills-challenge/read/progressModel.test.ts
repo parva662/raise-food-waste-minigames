@@ -22,6 +22,7 @@ function sessionStub(
     rescueEntries: [],
     portionEntries: [],
     reviews: [],
+    sessionAssessment: null,
     moduleReviews: {
       trimSmart: reviewed
         ? {
@@ -51,6 +52,7 @@ describe('Kitchen Day progress derived metrics', () => {
         trimEntries: [],
         rescueEntries: [],
         reviews: [],
+        sessionAssessment: null,
         moduleReviews: {
           trimSmart: null,
           rescueAndReuse: null,
@@ -88,6 +90,7 @@ describe('Kitchen Day progress derived metrics', () => {
         sessionDate: '2026-09-23',
         rescueEntries: [],
         reviews: [],
+        sessionAssessment: null,
         moduleReviews: {
           trimSmart: {
             sessionId: 's-trim',

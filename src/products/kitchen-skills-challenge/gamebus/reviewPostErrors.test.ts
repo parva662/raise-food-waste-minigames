@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { kitchenSkillsTrainerTaskFixture } from '@/products/kitchen-skills-challenge/gamebus/kitchenSkillsTaskFixtures';
 import {
-  kitchenSkillsReviewAwaitingMessage,
   kitchenSkillsReviewCommitErrorMessage,
   kitchenSkillsReviewSavedMessage,
   validateWastePracticeReviewLinkedProperties,
@@ -12,36 +11,60 @@ const entry: KitchenSkillsReviewEntry = {
   sessionId: 's1',
   sessionDate: '2026-09-23',
   submittedAt: '2026-09-23T12:00:00.000Z',
-  recipeId: 'recipe-a',
-  reviewedGame: 'portionPrecision',
   timeEfficiencyScore: 4,
   preparationQualityScore: 5,
   source: 'local',
 };
 
 describe('wastePracticeReview linked property validation', () => {
-  it('accepts the trainer fixture with all required refs linked', () => {
+  it('accepts the trainer fixture with session-level required refs linked', () => {
     expect(validateWastePracticeReviewLinkedProperties(kitchenSkillsTrainerTaskFixture, entry)).toEqual({
       ok: true,
     });
   });
 
-  it('rejects when a required property is not linked on the activity template', () => {
+  it('rejects when a session-level required property is not linked', () => {
     const task = {
       ...kitchenSkillsTrainerTaskFixture,
       activityTemplates: kitchenSkillsTrainerTaskFixture.activityTemplates.map((template) => {
         if (template.slug !== 'wastePracticeReview') return template;
         return {
           ...template,
-          linkedProperties: (template.linkedProperties ?? []).filter((item) => item.ref !== 'recipeId'),
+          linkedProperties: (template.linkedProperties ?? []).filter(
+            (item) => item.ref !== 'timeEfficiencyScore',
+          ),
         };
       }),
     };
     const result = validateWastePracticeReviewLinkedProperties(task, entry);
     expect(result.ok).toBe(false);
     if (!result.ok) {
-      expect(result.reason).toBe('unlinked_property:recipeId');
-      expect(result.missing).toContain('recipeId');
+      expect(result.reason).toBe('unlinked_property:timeEfficiencyScore');
+      expect(result.missing).toContain('timeEfficiencyScore');
+    }
+  });
+
+  it('blocks when GameBus still requires reviewedGame or recipeId', () => {
+    const task = {
+      ...kitchenSkillsTrainerTaskFixture,
+      activityTemplates: kitchenSkillsTrainerTaskFixture.activityTemplates.map((template) => {
+        if (template.slug !== 'wastePracticeReview') return template;
+        return {
+          ...template,
+          linkedProperties: [
+            ...(template.linkedProperties ?? []).filter(
+              (item) => (item.slug ?? item.ref) !== 'reviewedGame',
+            ),
+            { order: 99, name: 'reviewedGame', required: true, ref: 'reviewedGame' },
+          ],
+        };
+      }),
+    };
+    const result = validateWastePracticeReviewLinkedProperties(task, entry);
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.reason).toBe('gamebus_session_review_blocked');
+      expect(result.missing).toContain('reviewedGame');
     }
   });
 
@@ -80,15 +103,19 @@ describe('wastePracticeReview linked property validation', () => {
 
   it('describes client configuration failures without claiming a GameBus server rejection', () => {
     expect(
-      kitchenSkillsReviewCommitErrorMessage('unlinked_property:recipeId', 'Trim Smart', ['recipeId']),
-    ).toMatch(/required property links are missing on wastePracticeReview: recipeId/i);
-    expect(kitchenSkillsReviewCommitErrorMessage('missing_task_template', 'Trim Smart')).toMatch(
+      kitchenSkillsReviewCommitErrorMessage('unlinked_property:sessionId', 'Tutor', ['sessionId']),
+    ).toMatch(/required property links are missing on wastePracticeReview: sessionId/i);
+    expect(kitchenSkillsReviewCommitErrorMessage('missing_task_template', 'Tutor')).toMatch(
       /wastePracticeReview activity template is missing/i,
     );
-    expect(kitchenSkillsReviewCommitErrorMessage('already_dispatched', 'Portion Precision')).toMatch(
-      /could not be verified/i,
+    expect(kitchenSkillsReviewCommitErrorMessage('already_dispatched', 'Tutor')).toMatch(
+      /already submitted/i,
     );
-    expect(kitchenSkillsReviewAwaitingMessage()).toMatch(/Waiting for confirmation/i);
+    expect(
+      kitchenSkillsReviewCommitErrorMessage('gamebus_session_review_blocked', 'Tutor', [
+        'reviewedGame',
+      ]),
+    ).toMatch(/makes these wastePracticeReview properties optional/i);
     expect(kitchenSkillsReviewSavedMessage()).toMatch(/saved/i);
   });
 });

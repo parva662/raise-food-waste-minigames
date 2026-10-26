@@ -162,7 +162,7 @@ function ModuleReviewReadback({
         </p>
       ) : (
         <p className="kitchen-day-evidence-note" data-testid={`${testId}-legacy`}>
-          Historical session-level assessment
+          Historical per-module assessment
         </p>
       )}
       <dl className="kitchen-day-facts">
@@ -188,7 +188,7 @@ function resolveModuleReviews(
     rescueAndReuse: null,
     portionPrecision: null,
   };
-  if (!review) return base;
+  if (!review?.reviewedGame) return base;
   if (base[review.reviewedGame]) return base;
   return { ...base, [review.reviewedGame]: review };
 }

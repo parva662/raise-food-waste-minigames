@@ -58,6 +58,7 @@ function session(partial: Partial<KitchenSkillsTrainerSession>): KitchenSkillsTr
     rescueEntries: [],
     portionEntries: [],
     reviews: [],
+    sessionAssessment: null,
     moduleReviews: emptyModuleReviews(),
     ...partial,
   };
@@ -118,7 +119,8 @@ describe('review persistence identity and status', () => {
     expect(findConfirmedRecipeModuleReview(s, 'a', 'portionPrecision')?.recipeId).toBe('a');
     expect(findConfirmedRecipeModuleReview(s, 'b', 'portionPrecision')?.recipeId).toBe('b');
     expect(findConfirmedRecipeModuleReview(s, 'c', 'portionPrecision')?.recipeId).toBe('c');
-    expect(sessionAssessmentStatus(s)).toBe('reviewed');
+    // Historical per-module rows alone do not mark the session reviewed.
+    expect(sessionAssessmentStatus(s)).toBe('needs_assessment');
   });
 
   it('blocks genuine duplicate confirmed reviews but not awaiting-only rows', () => {

@@ -4,6 +4,7 @@ import { useReadyKitchenSkillsSession } from '@/products/kitchen-skills-challeng
 import { emptyModuleReviews } from '@/products/kitchen-skills-challenge/read/trainerSessions';
 import {
   isLegacySessionReview,
+  isSessionLevelAssessment,
   listSessionRecipeIds,
   recipeDisplayName,
 } from '@/products/kitchen-skills-challenge/domain/session/reviewIdentity';
@@ -19,6 +20,7 @@ function reviewsAsModuleMap(
   reviews: readonly KitchenSkillsReviewEntry[],
 ): KitchenSkillsModuleReviews {
   return reviews.reduce<KitchenSkillsModuleReviews>((acc, entry) => {
+    if (!entry.reviewedGame) return acc;
     const existing = acc[entry.reviewedGame];
     if (!existing || entry.submittedAt.localeCompare(existing.submittedAt) > 0) {
       acc[entry.reviewedGame] = entry;
@@ -31,8 +33,11 @@ export function SessionReviewView() {
   const { session, trimEntries, rescueEntries, portionEntries, reviews } =
     useReadyKitchenSkillsSession();
   const sessionReviews = reviews.filter((entry) => entry.sessionId === session.sessionId);
+  const sessionAssessment = sessionReviews.find(isSessionLevelAssessment) ?? null;
   const legacyReviews = sessionReviews.filter(isLegacySessionReview);
-  const recipeReviews = sessionReviews.filter((entry) => !isLegacySessionReview(entry));
+  const recipeReviews = sessionReviews.filter(
+    (entry) => !isLegacySessionReview(entry) && !isSessionLevelAssessment(entry),
+  );
   // Single-recipe / legacy fallback for SessionEvidence module slots.
   const moduleReviews =
     listSessionRecipeIds({
@@ -40,6 +45,7 @@ export function SessionReviewView() {
       trimEntries,
       rescueEntries,
       reviews: sessionReviews,
+      sessionAssessment: null,
       moduleReviews: emptyModuleReviews(),
       actorId: '',
       actorName: '',
@@ -61,6 +67,7 @@ export function SessionReviewView() {
     trimEntries,
     rescueEntries,
     reviews: sessionReviews,
+    sessionAssessment: null,
     moduleReviews: emptyModuleReviews(),
     actorId: '',
     actorName: '',
@@ -103,14 +110,26 @@ export function SessionReviewView() {
         collapsePortionTable
         showWasteAnalytics={false}
       />
+      {sessionAssessment ? (
+        <section data-testid="kitchen-day-session-tutor-assessment">
+          <h3>Tutor assessment</h3>
+          <p>
+            Time {sessionAssessment.timeEfficiencyScore}/5, quality{' '}
+            {sessionAssessment.preparationQualityScore}/5
+            {sessionAssessment.chefFeedback ? ` — ${sessionAssessment.chefFeedback}` : ''}
+          </p>
+        </section>
+      ) : null}
       {legacyReviews.length > 0 ? (
         <section data-testid="kitchen-day-legacy-session-reviews">
-          <h3>Historical session-level assessment</h3>
+          <h3>Historical per-module assessments</h3>
           <ul>
             {legacyReviews.map((review) => (
               <li key={review.persistId ?? `${review.reviewedGame}-${review.submittedAt}`}>
-                {KITCHEN_SKILLS_MODULE_TITLES[review.reviewedGame]}: time{' '}
-                {review.timeEfficiencyScore}/5, quality {review.preparationQualityScore}/5
+                {review.reviewedGame
+                  ? KITCHEN_SKILLS_MODULE_TITLES[review.reviewedGame]
+                  : 'Assessment'}
+                : time {review.timeEfficiencyScore}/5, quality {review.preparationQualityScore}/5
               </li>
             ))}
           </ul>
@@ -129,6 +148,7 @@ export function SessionReviewView() {
                       trimEntries,
                       rescueEntries,
                       reviews: sessionReviews,
+                      sessionAssessment: null,
                       moduleReviews: emptyModuleReviews(),
                       actorId: '',
                       actorName: '',
@@ -138,13 +158,16 @@ export function SessionReviewView() {
                     rid,
                   )
                 : 'Recipe';
+              const moduleTitle = review.reviewedGame
+                ? KITCHEN_SKILLS_MODULE_TITLES[review.reviewedGame]
+                : 'Assessment';
               return (
                 <li
                   key={review.persistId ?? reviewIdentityFallback(review)}
-                  data-testid={`kitchen-day-recipe-review-${rid}-${review.reviewedGame}`}
+                  data-testid={`kitchen-day-recipe-review-${rid}-${review.reviewedGame ?? 'session'}`}
                 >
-                  {name} · {KITCHEN_SKILLS_MODULE_TITLES[review.reviewedGame]}: time{' '}
-                  {review.timeEfficiencyScore}/5, quality {review.preparationQualityScore}/5
+                  {name} · {moduleTitle}: time {review.timeEfficiencyScore}/5, quality{' '}
+                  {review.preparationQualityScore}/5
                   {review.chefFeedback ? ` — ${review.chefFeedback}` : ''}
                 </li>
               );

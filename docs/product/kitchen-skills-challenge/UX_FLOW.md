@@ -25,7 +25,7 @@ Tutor dashboard    #/kitchen-day-tutor      (separate left-menu page)
 - Activity page: practical work only. No Progress tab. No tutor functions.
 - Session review: current locked session, read-only summaries, per-module tutor readbacks if already submitted.
 - Progress: own history, Overview / Progress tabs, weighted Trim vs kitchen reference (results only). The Overview Trim card always shows Actual trim, Kitchen reference (or Reference unavailable), and Difference when the join succeeds. Peer cards stay “Not enough peer data yet” until a privacy-safe aggregate exists. No leaderboard or percentile copy.
-- Tutor: staff list → sessions (To assess / Awaiting confirmation / Reviewed) → workspace with module tabs Portion → Trim → Rescue; evidence per module beside qualitative scores (0–5) for that module. System metrics support judgement; they do not set the scores.
+- Tutor: staff list → sessions (To assess / Reviewed) → workspace with Portion / Trim / Rescue evidence visible and one session-level assessment (time efficiency, preparation quality, optional feedback). System metrics support judgement; they do not set the scores.
 
 ## 3. Continuous student challenge (same iframe)
 
@@ -56,7 +56,7 @@ FINISH CHALLENGE  → EXIT  → new open = new attempt
 4. **Challenge complete** summary: recipe name; modules with recorded evidence only, in order Portion → Trim → Rescue. Trim lines show waste and duration (e.g. `Banaani` / `260 g waste · 1 min 24 sec`). Short destinations read `400 g to cake`; longer preparation text is not parsed for a destination — quantity + preview, full text in details. Primary action **Finish challenge**. Secondary **Keep working**. No “Start another recipe”.
 5. **Finish challenge** archives dispatched local evidence, clears the active attempt, then posts `{ type: 'EXIT' }` via `postKitchenSkillsChallengeExit`. That is the only EXIT, and it is sent only after that local archive/clear succeeds. If archive storage fails, Finish stays on the summary with an error, EXIT is not sent, and reload resumes the same attempt. Unsaved Trim/Rescue drafts confirm before they are abandoned. After a successful Finish, reopening the task is a **new** attempt with a new `sessionId`.
 
-Do not send EXIT after Portion, Trim, Reuse, Keep working, or Another ingredient. Tutor review posts one `SILENT_ACTIVITY` per evidenced module (`recipeId` + `reviewedGame`) with RAISE `actors` and keeps the tutor iframe open. Protocol details: [`../../contracts/GAMEBUS.md`](../../contracts/GAMEBUS.md) and TASK contract.
+Do not send EXIT after Portion, Trim, Reuse, Keep working, or Another ingredient. Tutor review posts one session-level `SILENT_ACTIVITY` `wastePracticeReview` (no `reviewedGame` / `recipeId` on new posts) with RAISE `actors` and keeps the tutor iframe open. Protocol details: [`../../contracts/GAMEBUS.md`](../../contracts/GAMEBUS.md) and TASK contract.
 
 ## 4. Module journeys (UI)
 

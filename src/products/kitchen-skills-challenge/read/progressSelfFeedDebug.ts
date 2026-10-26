@@ -21,7 +21,7 @@ export type KitchenSkillsSelfFeedReviewSummary = {
   parseFailures: KitchenSkillsSelfReviewParseFailure[];
   attachedReviews: Array<{
     sessionId: string;
-    reviewedGame: string;
+    reviewedGame: string | null;
     timeEfficiencyScore: number;
     preparationQualityScore: number;
     hasFeedback: boolean;
@@ -47,12 +47,14 @@ function classifyReviewParseFailure(activity: unknown): string {
   if (!sessionId) return 'missing_sessionId';
   if (!sessionDate) return 'missing_sessionDate';
   if (!submittedAt) return 'missing_submittedAt';
-  if (!reviewedGame) return 'missing_reviewedGame';
-  if (!isKitchenSkillsReviewedModule(reviewedGame)) return `invalid_reviewedGame:${reviewedGame}`;
   if (time == null) return 'missing_timeEfficiencyScore';
   if (quality == null) return 'missing_preparationQualityScore';
   if (!isKitchenSkillsReviewScore(time)) return `invalid_timeEfficiencyScore:${time}`;
   if (!isKitchenSkillsReviewScore(quality)) return `invalid_preparationQualityScore:${quality}`;
+  // reviewedGame is optional (session-level assessments omit it); invalid values still fail.
+  if (reviewedGame && !isKitchenSkillsReviewedModule(reviewedGame)) {
+    return `invalid_reviewedGame:${reviewedGame}`;
+  }
   return 'unknown';
 }
 
@@ -78,21 +80,35 @@ export function summarizeKitchenSkillsSelfFeedReviews(
     }
   }
 
-  const attachedReviews = sessions.flatMap((session) =>
-    (['trimSmart', 'rescueAndReuse', 'portionPrecision'] as const).flatMap((module) => {
-      const review = session.moduleReviews[module];
-      if (!review) return [];
-      return [
-        {
-          sessionId: session.sessionId,
-          reviewedGame: module,
-          timeEfficiencyScore: review.timeEfficiencyScore,
-          preparationQualityScore: review.preparationQualityScore,
-          hasFeedback: Boolean(review.chefFeedback?.trim()),
-        },
-      ];
-    }),
-  );
+  const attachedReviews = sessions.flatMap((session) => {
+    const moduleRows = (['trimSmart', 'rescueAndReuse', 'portionPrecision'] as const).flatMap(
+      (module) => {
+        const review = session.moduleReviews[module];
+        if (!review) return [];
+        return [
+          {
+            sessionId: session.sessionId,
+            reviewedGame: module as string | null,
+            timeEfficiencyScore: review.timeEfficiencyScore,
+            preparationQualityScore: review.preparationQualityScore,
+            hasFeedback: Boolean(review.chefFeedback?.trim()),
+          },
+        ];
+      },
+    );
+    const sessionRow = session.sessionAssessment
+      ? [
+          {
+            sessionId: session.sessionId,
+            reviewedGame: null,
+            timeEfficiencyScore: session.sessionAssessment.timeEfficiencyScore,
+            preparationQualityScore: session.sessionAssessment.preparationQualityScore,
+            hasFeedback: Boolean(session.sessionAssessment.chefFeedback?.trim()),
+          },
+        ]
+      : [];
+    return [...moduleRows, ...sessionRow];
+  });
 
   return {
     selfActivityCount: activities.length,

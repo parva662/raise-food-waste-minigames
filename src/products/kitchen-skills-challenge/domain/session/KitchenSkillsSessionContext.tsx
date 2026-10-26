@@ -87,6 +87,7 @@ import {
   findReviewByIdentity,
   hasDuplicateReviewIdentity,
   isReviewPersistConfirmed,
+  isSessionLevelAssessment,
   reviewIdentityKey,
 } from '@/products/kitchen-skills-challenge/domain/session/reviewIdentity';
 import { goToKitchenDaySection, type KitchenSkillsHashSection } from '@/app/routes';
@@ -535,7 +536,7 @@ export function KitchenSkillsSessionProvider({
     }
   }, [persisted.groupSessions]);
 
-  /** Trainer list/detail must see awaiting local reviews until GameBus hydrates them. */
+  /** Trainer list/detail must see local session assessments until GameBus hydrates them. */
   const groupSessions = useMemo(() => {
     const awaitingLocals = [...localReviews, ...markerAwaitingReviews];
     if (awaitingLocals.length === 0) return persisted.groupSessions;
@@ -549,7 +550,9 @@ export function KitchenSkillsSessionProvider({
         session.reviews,
         (left, right) => reviewIdentityKey(left) === reviewIdentityKey(right),
       );
-      return { ...session, reviews: mergedReviews };
+      const sessionAssessment =
+        session.sessionAssessment ?? mergedReviews.find(isSessionLevelAssessment) ?? null;
+      return { ...session, reviews: mergedReviews, sessionAssessment };
     });
   }, [persisted.groupSessions, localReviews, markerAwaitingReviews]);
 
@@ -753,8 +756,9 @@ export function KitchenSkillsSessionProvider({
     ) {
       return { ok: false, reason: 'invalid_scores', keepDraft: true };
     }
-    if (!normalizeRecipeId(entry.recipeId ?? '')) {
-      return { ok: false, reason: 'missing_recipe', keepDraft: true };
+    // Session-level only: never post fabricated reviewedGame / recipeId.
+    if (entry.reviewedGame || normalizeRecipeId(entry.recipeId ?? '')) {
+      return { ok: false, reason: 'invalid_scores', keepDraft: true };
     }
     if (hasDuplicateReviewIdentity(reviews, entry)) {
       return { ok: false, reason: 'duplicate_review', keepDraft: true };
@@ -764,9 +768,9 @@ export function KitchenSkillsSessionProvider({
     const attemptKey = kitchenSkillsReviewAttemptKey(entry);
     const existing = findReviewByIdentity(reviews, entry);
 
-    // Dispatched-but-unconfirmed must never post again (no GameBus ACK / idempotency).
+    // One submission per session — block reload / double-click duplicates.
     if (
-      existing?.awaitingPersist ||
+      existing ||
       hasKitchenSkillsPostAttempt(attemptKey) ||
       (actorId !== '' && hasKitchenSkillsReviewDispatchMarker(actorId, entry))
     ) {
@@ -780,7 +784,6 @@ export function KitchenSkillsSessionProvider({
     if (isGameBusEmbed()) {
       const posted = tryPostKitchenSkillsReview(entry, actorId);
       if (!posted.ok) {
-        // Definite pre-dispatch failure: attempt key was not recorded — retry is allowed.
         gamebusDevLog(
           'kitchen-skills-review.commit-failed',
           kitchenSkillsReviewDiagnosticPayload(posted.reason, entry, {
@@ -795,19 +798,23 @@ export function KitchenSkillsSessionProvider({
         };
       }
       markKitchenSkillsReviewDispatched(actorId, entry, persisted.feedFingerprint);
+      // Restore original UX: show the assessment immediately (no awaiting screen).
       setLocalReviews((current) => {
         const withoutIdentity = current.filter(
           (item) => reviewIdentityKey(item) !== reviewIdentityKey(entry),
         );
         return [
           ...withoutIdentity,
-          { ...entry, source: 'local', awaitingPersist: true },
+          {
+            ...entry,
+            source: 'local',
+            persistId: `local:${reviewIdentityKey(entry)}`,
+          },
         ];
       });
-      return { ok: true, mode: 'posted_awaiting_persist' };
+      return { ok: true, mode: 'local' };
     }
 
-    // Non-embed: local commit is authoritative (no GameBus round-trip).
     setLocalReviews((current) =>
       hasDuplicateReviewIdentity(current, entry)
         ? current

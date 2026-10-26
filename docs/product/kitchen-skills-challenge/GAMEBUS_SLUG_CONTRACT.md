@@ -115,24 +115,24 @@ This activity does **not** use `ingredientCategory`.
 
 ---
 
-## `wastePracticeReview` — one tutor assessment per recipe and evidenced module
+## `wastePracticeReview` — one tutor assessment per student session
 
 The GameBus activity slug remains `wastePracticeReview`. The product UI wording is Tutor assessment.
 
-One tutor assessment per recipe and evidenced module within a Kitchen Skills session (`sessionId` + `recipeId` + `reviewedGame`), not one judgement per ingredient. **New attempts** have one recipe, so at most three module assessments. Historical sessions with several Portion recipes still need one Portion assessment per saved recipe.
+**New posts:** one review per student Kitchen Skills session (`sessionId`). Not one judgement per module, recipe, activity, or ingredient. Do **not** post `reviewedGame` or `recipeId` on new session assessments (do not fabricate a module discriminator for an overall review).
 
 | Slug | Required | Notes |
 |------|----------|-------|
 | `sessionId` | yes | reviewed student's session |
 | `sessionDate` | yes | |
 | `submittedAt` | yes | |
-| `recipeId` | yes on **new** client posts; **optional** on the live GameBus property link until all clients are updated | Reuse the existing Portion/Trim/Reuse `recipeId` Property Template. Historical rows may omit it (legacy session-level). |
-| `reviewedGame` | yes | `trimSmart` \| `rescueAndReuse` \| `portionPrecision` |
 | `timeEfficiencyScore` | yes | integer 0–5 |
 | `preparationQualityScore` | yes | integer 0–5 |
 | `chefFeedback` | no | optional free text |
 
-**DEPRECATED / unlink or stop requiring:** `reviewedActivityId`, `reasonCode`, `freeTextNote`, `unusualEvent`, `serviceDate`.
+**Historical rows** may still include `reviewedGame` (`trimSmart` \| `rescueAndReuse` \| `portionPrecision`) and/or `recipeId` from the temporary per-module Tutor workflow. Readers must keep those rows readable. One historical module assessment must **not** mark the whole session as assessed.
+
+**DEPRECATED / unlink or stop requiring:** `reviewedGame`, `recipeId`, `reviewedActivityId`, `reasonCode`, `freeTextNote`, `unusualEvent`, `serviceDate`.
 
 ---
 
@@ -201,27 +201,26 @@ If GameBus cannot link `recipeId` as optional while keeping historical posts val
 - Confirm `finalRecipeWeightGrams`
 - Unlink obsolete top-level: `ingredientId`, `ingredientName`, `ingredientCategory`, `ingredientWeightGrams`
 
-### Tutor assessment (`wastePracticeReview`)
+### Tutor assessment (`wastePracticeReview`) — session-level restore
 
-- Make `wastePracticeReview` one assessment per recipe and evidenced module (`sessionId` + `recipeId` + `reviewedGame`)
-- Keep: `sessionId`, `sessionDate`, `submittedAt`, `reviewedGame`, `timeEfficiencyScore`, `preparationQualityScore`, `chefFeedback`
-- **Link (optional) `recipeId`** using the **existing** Portion `recipeId` Property Template before deploying the client that posts it. Do **not** mark `recipeId` required until all applicable clients are updated.
-- `reviewedGame` values: `trimSmart`, `rescueAndReuse`, `portionPrecision`
+- Make `wastePracticeReview` **one assessment per student session**
+- Keep required: `sessionId`, `sessionDate`, `submittedAt`, `timeEfficiencyScore`, `preparationQualityScore`
 - `chefFeedback` optional
 - Post `SILENT_ACTIVITY` with `actors: [selectedStudentActorId]`
 - Do **not** add `studentId`
+- Do **not** require `reviewedGame` or `recipeId` for new posts
+- **Unlink or set OPTIONAL:** `reviewedGame`, `recipeId` (must not be `required: true` on the live template)
 - Unlink / stop requiring: `reviewedActivityId`, `reasonCode`, `freeTextNote`, `unusualEvent`, `serviceDate`
 
-### Safe deployment sequence (recipeId on `wastePracticeReview`)
+### Safe deployment sequence (session-level restore)
 
-1. In GameBus, link the existing `recipeId` Property Template to `wastePracticeReview` as **OPTIONAL**.
-2. Verify the currently deployed client can still post its existing review payload (without `recipeId`).
-3. Deploy the updated application that posts `recipeId` on every new review.
-4. Verify new recipe-specific reviews persist with `recipeId`.
-5. Verify reload and tutor/student readbacks (including mixed legacy + recipe-specific histories).
-6. Only consider marking `recipeId` required after all applicable clients are updated and historical compatibility is verified.
+1. In GameBus, on the trainer Custom Embed task’s `wastePracticeReview` activity template: set `reviewedGame` and `recipeId` to **OPTIONAL**, or unlink them. Keep historical activities readable.
+2. Verify the currently deployed client still works (or take a short maintenance window).
+3. Deploy the application that posts session-level payloads (no `reviewedGame` / no `recipeId`).
+4. Verify one Submit creates exactly one persisted `wastePracticeReview` without those properties.
+5. Verify reopen shows the saved assessment; historical per-module rows remain readable and do not mark the session reviewed alone.
 
-**Admin correction if tutor submit reports missing links:** on the trainer Custom Embed task’s `wastePracticeReview` activity template, ensure the existing Portion `recipeId` Property Template is linked (optional is enough). The client also accepts GameBus linked-property identifiers as `slug` or legacy `ref`. Without a `recipeId` link, new recipe-level assessments cannot be dispatched.
+**RELEASE BLOCKER:** Do not deploy until step 1 is verified live. The SPA refuses to post when TASK marks `reviewedGame` or `recipeId` as `required: true`.
 
 ### Student Progress — do not attach a raw group Kitchen Skills feed
 
@@ -252,5 +251,5 @@ Anonymous peer comparison stays data-gated (“Not enough peer data yet”) unti
 | top-level ingredient fields on `portionPrecision` | Nested inside `recipeComposition` |
 | `ingredientName` / `ingredientWeightGrams` on reuse | Read from Trim |
 | `ingredientCategory` | Removed from Kitchen Skills Challenge; unlink from Kitchen Skills `trimSmart` only |
-| `reviewedActivityId` | Review targets the session module via `reviewedGame` |
+| `reviewedActivityId`, `reviewedGame`, `recipeId` (new posts) | Review targets the whole student session; historical module rows may still carry `reviewedGame` / `recipeId` |
 | `studentId`, `participantId` | GameBus actor identifies the student |

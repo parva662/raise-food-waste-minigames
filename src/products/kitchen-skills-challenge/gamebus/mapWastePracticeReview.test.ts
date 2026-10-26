@@ -11,21 +11,17 @@ const entry: KitchenSkillsReviewEntry = {
   sessionId: 'kitchen-day:task-1:user-1:2026-09-23',
   sessionDate: '2026-09-23',
   submittedAt: '2026-09-23T14:00:00.000Z',
-  recipeId: 'ankanrinta-flow',
-  reviewedGame: 'trimSmart',
   timeEfficiencyScore: 0,
   preparationQualityScore: 5,
   source: 'local',
 };
 
 describe('wastePracticeReview mapper', () => {
-  it('posts the exact required properties and omits blank chefFeedback', () => {
+  it('posts session-level properties and omits reviewedGame and recipeId', () => {
     expect(orderedWastePracticeReviewPropertyRefs(entry)).toEqual([
       'sessionId',
       'sessionDate',
       'submittedAt',
-      'recipeId',
-      'reviewedGame',
       'timeEfficiencyScore',
       'preparationQualityScore',
     ]);
@@ -34,25 +30,20 @@ describe('wastePracticeReview mapper', () => {
       'sessionId',
       'sessionDate',
       'submittedAt',
-      'recipeId',
-      'reviewedGame',
       'timeEfficiencyScore',
       'preparationQualityScore',
     ]);
-    expect(values.recipeId).toEqual({ value: 'ankanrinta-flow' });
-    expect(values.reviewedGame).toEqual({ value: 'trimSmart' });
+    expect(values).not.toHaveProperty('reviewedGame');
+    expect(values).not.toHaveProperty('recipeId');
     expect(values).not.toHaveProperty('chefFeedback');
     expect(values).not.toHaveProperty('studentId');
-    expect(values).not.toHaveProperty('reviewedActivityId');
-    expect(values).not.toHaveProperty('reasonCode');
-    expect(values).not.toHaveProperty('freeTextNote');
-    expect(values).not.toHaveProperty('unusualEvent');
-    expect(values).not.toHaveProperty('serviceDate');
   });
 
-  it('rejects posts without recipeId', () => {
-    const { recipeId: _omit, ...legacy } = entry;
-    expect(() => mapWastePracticeReview(legacy)).toThrow(/recipeId/);
+  it('rejects posts that fabricate reviewedGame or recipeId', () => {
+    expect(() =>
+      mapWastePracticeReview({ ...entry, reviewedGame: 'portionPrecision' }),
+    ).toThrow(/reviewedGame/);
+    expect(() => mapWastePracticeReview({ ...entry, recipeId: '4' })).toThrow(/recipeId/);
   });
 
   it('includes chefFeedback only when non-empty', () => {
@@ -68,12 +59,11 @@ describe('wastePracticeReview mapper', () => {
     expect(message.type).toBe('SILENT_ACTIVITY');
     expect(message.data.template).toBe('wastePracticeReview');
     expect(message.data.actors).toEqual(['user-1']);
-    expect(message.data.start).toBe(entry.submittedAt);
-    expect(message.data.end).toBe(entry.submittedAt);
     expect(message.data.properties.map((property) => property.template)).toEqual(
       orderedWastePracticeReviewPropertyRefs(entry),
     );
-    expect(message.data.properties.map((property) => property.template)).not.toContain('studentId');
+    expect(message.data.properties.map((property) => property.template)).not.toContain('reviewedGame');
+    expect(message.data.properties.map((property) => property.template)).not.toContain('recipeId');
     expect(() => buildWastePracticeReviewActivityMessage(kitchenSkillsTaskFixture, entry, 'user-1')).toThrow(
       /wastePracticeReview/,
     );

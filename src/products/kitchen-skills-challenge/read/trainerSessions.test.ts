@@ -115,6 +115,31 @@ function reviewActivity(
   };
 }
 
+/** Restored session-level assessment — no reviewedGame / recipeId. */
+function sessionReviewActivity(
+  actorId: string,
+  sessionId: string,
+  sessionDate = '2026-09-23',
+  scores: { time?: number; quality?: number; feedback?: string } = {},
+) {
+  const properties = [
+    { template: { slug: 'sessionId' }, value: { value: sessionId } },
+    { template: { slug: 'sessionDate' }, value: { value: sessionDate } },
+    { template: { slug: 'submittedAt' }, value: { value: `${sessionDate}T15:00:00.000Z` } },
+    { template: { slug: 'timeEfficiencyScore' }, value: { value: scores.time ?? 4 } },
+    { template: { slug: 'preparationQualityScore' }, value: { value: scores.quality ?? 3 } },
+  ];
+  if (scores.feedback) {
+    properties.push({ template: { slug: 'chefFeedback' }, value: { value: scores.feedback } });
+  }
+  return {
+    id: `review-${actorId}-session-${sessionId}`,
+    actor: { id: actorId, name: actorId === 'user-1' ? 'Student One' : 'Student Two' },
+    template: { slug: 'wastePracticeReview' },
+    properties,
+  };
+}
+
 describe('Kitchen Day chef session grouping', () => {
   it('groups completed records by participant actor and sessionId, not date only', () => {
     const sessions = buildKitchenSkillsTrainerSessions([
@@ -170,16 +195,16 @@ describe('Kitchen Day chef session grouping', () => {
     ).toEqual([]);
   });
 
-  it('buildKitchenSkillsTrainerStaffSummaries prioritizes staff awaiting assessment', () => {
+  it('buildKitchenSkillsTrainerStaffSummaries prioritizes staff needing session assessment', () => {
     const sessions = buildKitchenSkillsTrainerSessions([
       trimActivity('user-1', sessionA, 'carrot'),
-      reviewActivity('user-1', sessionA, 'trimSmart'),
+      sessionReviewActivity('user-1', sessionA),
       trimActivity('user-2', sessionB, 'onion'),
       rescueActivity('user-2', sessionB, 'onion'),
     ]);
     const staff = buildKitchenSkillsTrainerStaffSummaries(sessions);
     expect(staff.map((row) => row.actorId)).toEqual(['user-2', 'user-1']);
-    expect(staff[0]?.modulesAwaitingAssessment).toBe(2);
+    expect(staff[0]?.modulesAwaitingAssessment).toBe(1);
     expect(staff[0]?.sessionsNeedingAssessment).toBe(1);
     expect(staff[1]?.modulesAwaitingAssessment).toBe(0);
     expect(staff[1]?.sessionsReviewed).toBe(1);
@@ -287,126 +312,94 @@ describe('Kitchen Day chef session grouping', () => {
     ]);
   });
 
-  it('partitions pending, partial, and fully reviewed sessions from evidence + reviews', () => {
+  it('partitions needs vs reviewed using session-level assessments only', () => {
     const pendingOnly = 'kitchen-day:task-1:user-1:pending';
-    const partial = 'kitchen-day:task-1:user-1:partial';
+    const historicalModulesOnly = 'kitchen-day:task-1:user-1:partial';
     const complete = 'kitchen-day:task-1:user-1:complete';
-    const trimOnlyReviewed = 'kitchen-day:task-1:user-1:trim-only';
     const sessions = buildKitchenSkillsTrainerSessions([
       trimActivity('user-1', pendingOnly, 'carrot', '2026-09-25'),
-      trimActivity('user-1', partial, 'onion', '2026-09-24'),
-      rescueActivity('user-1', partial, 'onion', '2026-09-24'),
-      reviewActivity('user-1', partial, 'trimSmart', '2026-09-24'),
+      trimActivity('user-1', historicalModulesOnly, 'onion', '2026-09-24'),
+      rescueActivity('user-1', historicalModulesOnly, 'onion', '2026-09-24'),
+      reviewActivity('user-1', historicalModulesOnly, 'trimSmart', '2026-09-24'),
       trimActivity('user-1', complete, 'potato', '2026-09-23'),
       rescueActivity('user-1', complete, 'potato', '2026-09-23'),
       portionActivity('user-1', complete, 'mayonnaise', '2026-09-23'),
-      reviewActivity('user-1', complete, 'trimSmart', '2026-09-23', {
+      sessionReviewActivity('user-1', complete, '2026-09-23', {
         time: 4,
         quality: 5,
         feedback: 'Clean knife work.',
-        recipeId: 'mayonnaise',
       }),
-      reviewActivity('user-1', complete, 'rescueAndReuse', '2026-09-23', {
-        time: 3,
-        quality: 4,
-        recipeId: 'mayonnaise',
-      }),
-      reviewActivity('user-1', complete, 'portionPrecision', '2026-09-23', {
-        time: 5,
-        quality: 5,
-        recipeId: 'mayonnaise',
-      }),
-      trimActivity('user-1', trimOnlyReviewed, 'celery', '2026-09-22'),
-      reviewActivity('user-1', trimOnlyReviewed, 'trimSmart', '2026-09-22'),
     ]);
 
     expect(sessionAssessmentStatus(sessions.find((s) => s.sessionId === pendingOnly)!)).toBe('needs_assessment');
-    // Any evidenced module without a submission keeps the session in NEEDS ASSESSMENT.
-    expect(sessionAssessmentStatus(sessions.find((s) => s.sessionId === partial)!)).toBe('needs_assessment');
-    expect(sessionAssessmentCounts(sessions.find((s) => s.sessionId === partial)!)).toEqual({
-      recorded: 2,
-      confirmed: 1,
+    expect(sessionAssessmentStatus(sessions.find((s) => s.sessionId === historicalModulesOnly)!)).toBe(
+      'needs_assessment',
+    );
+    expect(sessionAssessmentCounts(sessions.find((s) => s.sessionId === historicalModulesOnly)!)).toEqual({
+      recorded: 1,
+      confirmed: 0,
       awaiting: 0,
       outstanding: 1,
     });
     expect(sessionAssessmentStatus(sessions.find((s) => s.sessionId === complete)!)).toBe('reviewed');
-    expect(sessionAssessmentStatus(sessions.find((s) => s.sessionId === trimOnlyReviewed)!)).toBe('reviewed');
+    expect(sessions.find((s) => s.sessionId === complete)?.sessionAssessment?.chefFeedback).toBe(
+      'Clean knife work.',
+    );
 
     const partitioned = partitionTrainerSessionsByAssessment(sessions);
     expect(partitioned.awaitingConfirmation).toEqual([]);
-    expect(partitioned.needsAssessment.map((s) => s.sessionId).sort()).toEqual([partial, pendingOnly].sort());
-    expect(partitioned.reviewed.map((s) => s.sessionId).sort()).toEqual([complete, trimOnlyReviewed].sort());
-    expect(modulesAwaitingAssessmentCount(sessions.find((s) => s.sessionId === trimOnlyReviewed)!)).toBe(0);
-    expect(
-      sessions
-        .find((s) => s.sessionId === complete)
-        ?.reviews.find((review) => review.reviewedGame === 'trimSmart')?.chefFeedback,
-    ).toBe('Clean knife work.');
+    expect(partitioned.needsAssessment.map((s) => s.sessionId).sort()).toEqual(
+      [historicalModulesOnly, pendingOnly].sort(),
+    );
+    expect(partitioned.reviewed.map((s) => s.sessionId)).toEqual([complete]);
   });
 
-  it('treats session status as Reviewed when every recorded module is reviewed', () => {
+  it('treats session status as Reviewed only when a session-level assessment exists', () => {
     const portionOnly = 'kitchen-day:task-1:user-1:portion-only';
     const portionTrim = 'kitchen-day:task-1:user-1:portion-trim';
-    const allThreePartial = 'kitchen-day:task-1:user-1:all-three-partial';
+    const historicalOnly = 'kitchen-day:task-1:user-1:all-three-partial';
     const portionUnreviewed = 'kitchen-day:task-1:user-1:portion-unreviewed';
     const sessions = buildKitchenSkillsTrainerSessions([
       portionActivity('user-1', portionOnly, 'mayonnaise', '2026-09-25'),
-      reviewActivity('user-1', portionOnly, 'portionPrecision', '2026-09-25', {
-        recipeId: 'mayonnaise',
-      }),
+      sessionReviewActivity('user-1', portionOnly, '2026-09-25'),
       portionActivity('user-1', portionTrim, 'mayonnaise', '2026-09-24'),
       trimActivity('user-1', portionTrim, 'carrot', '2026-09-24'),
-      reviewActivity('user-1', portionTrim, 'portionPrecision', '2026-09-24', {
+      sessionReviewActivity('user-1', portionTrim, '2026-09-24'),
+      portionActivity('user-1', historicalOnly, 'mayonnaise', '2026-09-23'),
+      trimActivity('user-1', historicalOnly, 'carrot', '2026-09-23'),
+      rescueActivity('user-1', historicalOnly, 'carrot', '2026-09-23'),
+      reviewActivity('user-1', historicalOnly, 'portionPrecision', '2026-09-23', {
         recipeId: 'mayonnaise',
       }),
-      reviewActivity('user-1', portionTrim, 'trimSmart', '2026-09-24', {
-        recipeId: 'mayonnaise',
-      }),
-      portionActivity('user-1', allThreePartial, 'mayonnaise', '2026-09-23'),
-      trimActivity('user-1', allThreePartial, 'carrot', '2026-09-23'),
-      rescueActivity('user-1', allThreePartial, 'carrot', '2026-09-23'),
-      reviewActivity('user-1', allThreePartial, 'portionPrecision', '2026-09-23', {
-        recipeId: 'mayonnaise',
-      }),
-      reviewActivity('user-1', allThreePartial, 'trimSmart', '2026-09-23', {
+      reviewActivity('user-1', historicalOnly, 'trimSmart', '2026-09-23', {
         recipeId: 'mayonnaise',
       }),
       portionActivity('user-1', portionUnreviewed, 'mayonnaise', '2026-09-22'),
     ]);
 
-    const reviewedPortionOnly = sessions.find((session) => session.sessionId === portionOnly)!;
+    const reviewedPortionOnly = sessions.find((row) => row.sessionId === portionOnly)!;
     expect(sessionAssessmentStatus(reviewedPortionOnly)).toBe('reviewed');
     expect(modulesAwaitingAssessmentCount(reviewedPortionOnly)).toBe(0);
-    // Modules without evidence never become requirements.
-    expect(sessionRecordedModuleLabels(reviewedPortionOnly)).toEqual(['Portion']);
 
-    const reviewedPortionTrim = sessions.find((session) => session.sessionId === portionTrim)!;
+    const reviewedPortionTrim = sessions.find((row) => row.sessionId === portionTrim)!;
     expect(sessionAssessmentStatus(reviewedPortionTrim)).toBe('reviewed');
     expect(modulesAwaitingAssessmentCount(reviewedPortionTrim)).toBe(0);
-    expect(sessionRecordedModuleLabels(reviewedPortionTrim)).toEqual(['Portion', 'Trim']);
 
-    const partial = sessions.find((session) => session.sessionId === allThreePartial)!;
-    expect(sessionAssessmentStatus(partial)).toBe('needs_assessment');
-    expect(modulesAwaitingAssessmentCount(partial)).toBe(1);
-    expect(sessionAssessmentSlots(partial).map((slot) => [slot.module, slot.state])).toEqual([
-      ['portionPrecision', 'reviewed'],
-      ['trimSmart', 'reviewed'],
-      ['rescueAndReuse', 'needs_assessment'],
-    ]);
+    const historical = sessions.find((row) => row.sessionId === historicalOnly)!;
+    expect(sessionAssessmentStatus(historical)).toBe('needs_assessment');
+    expect(modulesAwaitingAssessmentCount(historical)).toBe(1);
+    expect(historical.reviews.filter((review) => review.reviewedGame).length).toBe(2);
 
-    const unreviewed = sessions.find((session) => session.sessionId === portionUnreviewed)!;
+    const unreviewed = sessions.find((row) => row.sessionId === portionUnreviewed)!;
     expect(sessionAssessmentStatus(unreviewed)).toBe('needs_assessment');
     expect(modulesAwaitingAssessmentCount(unreviewed)).toBe(1);
-    expect(sessionRecordedModuleLabels(unreviewed)).toEqual(['Portion']);
 
-    const staff = buildKitchenSkillsTrainerStaffSummaries(sessions);
-    expect(staff[0]?.modulesAwaitingAssessment).toBe(2);
     const partitioned = partitionTrainerSessionsByAssessment(sessions);
-    expect(partitioned.reviewed.map((session) => session.sessionId).sort()).toEqual(
+    expect(partitioned.reviewed.map((row) => row.sessionId).sort()).toEqual(
       [portionOnly, portionTrim].sort(),
     );
-    expect(partitioned.needsAssessment.map((session) => session.sessionId).sort()).toEqual(
-      [allThreePartial, portionUnreviewed].sort(),
+    expect(partitioned.needsAssessment.map((row) => row.sessionId).sort()).toEqual(
+      [historicalOnly, portionUnreviewed].sort(),
     );
   });
 });
