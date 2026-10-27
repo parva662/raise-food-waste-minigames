@@ -47,3 +47,13 @@ export function parseMassInputGrams(raw: string, unit: MassInputUnit): number | 
   const value = Number(gramsText);
   return Number.isFinite(value) && value >= 0 ? value : null;
 }
+
+/**
+ * Initial g/kg display unit for a known gram quantity.
+ * Matches summary formatting: masses above 1000 g prefer kg so students type the
+ * same number they see on the recipe target (e.g. target 2 kg → start in kg).
+ */
+export function preferredMassInputUnit(grams: number | null | undefined): MassInputUnit {
+  if (grams != null && Number.isFinite(grams) && grams > 1000) return 'kg';
+  return 'g';
+}

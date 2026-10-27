@@ -85,11 +85,13 @@ describe('Staff Kitchen Skills Challenge bug fixes', () => {
     const recipeInput = screen.getByTestId('kitchen-day-recipe-select');
     await user.click(recipeInput);
     await user.click(screen.getByRole('option', { name: 'Hedelmät M,G' }));
-    await user.type(screen.getByTestId('kitchen-day-actual-banaani'), '500');
-    await user.click(screen.getByTestId('kitchen-day-actual-banaani-unit-kg'));
-    expect(screen.getByTestId('kitchen-day-actual-banaani')).toHaveValue('0.5');
+    // Banaani target is 1.5 kg → field starts in kg so typing 0.5 means 500 g.
+    expect(screen.getByTestId('kitchen-day-actual-banaani-unit-kg')).toHaveAttribute('aria-pressed', 'true');
+    await user.type(screen.getByTestId('kitchen-day-actual-banaani'), '0.5');
     await user.click(screen.getByTestId('kitchen-day-actual-banaani-unit-g'));
     expect(screen.getByTestId('kitchen-day-actual-banaani')).toHaveValue('500');
+    await user.click(screen.getByTestId('kitchen-day-actual-banaani-unit-kg'));
+    expect(screen.getByTestId('kitchen-day-actual-banaani')).toHaveValue('0.5');
   });
 
   it('KS-TRIM-002: Trim starting weight prefills from Portion actual grams and stays editable', async () => {
@@ -105,7 +107,8 @@ describe('Staff Kitchen Skills Challenge bug fixes', () => {
     await user.click(screen.getByRole('button', { name: 'Continue' }));
     expect(screen.queryByTestId('kitchen-day-trim-step-weight')).not.toBeInTheDocument();
     expect(screen.getByTestId('kitchen-day-trim-step-technique')).toBeInTheDocument();
-    expect(screen.getByTestId('kitchen-day-starting-weight')).toHaveValue('1500');
+    expect(screen.getByTestId('kitchen-day-starting-weight-unit-kg')).toHaveAttribute('aria-pressed', 'true');
+    expect(screen.getByTestId('kitchen-day-starting-weight')).toHaveValue('1.5');
     expect(screen.getByTestId('kitchen-day-starting-weight-source')).toBeInTheDocument();
     await user.clear(screen.getByTestId('kitchen-day-starting-weight'));
     await typeMassGrams(user, 'kitchen-day-starting-weight', '1800');
@@ -130,7 +133,8 @@ describe('Staff Kitchen Skills Challenge bug fixes', () => {
     await recordHedelmatPortion(user);
     await selectTrimIngredient(user, 'Omena', 'Omena');
     await user.click(screen.getByRole('button', { name: 'Continue' }));
-    expect(screen.getByTestId('kitchen-day-starting-weight')).toHaveValue('1200');
+    expect(screen.getByTestId('kitchen-day-starting-weight')).toHaveValue('1.2');
+    expect(screen.getByTestId('kitchen-day-starting-weight-unit-kg')).toHaveAttribute('aria-pressed', 'true');
   });
 
   it('KS-FINISH-003: successful journey does not show a student sync warning', async () => {

@@ -22,7 +22,8 @@ async function openTechniqueStep(user: ReturnType<typeof userEvent.setup>) {
   await selectTrimIngredient(user, 'Banaani', 'Banaani');
   await user.click(screen.getByRole('button', { name: 'Continue' }));
   expect(screen.getByTestId('kitchen-day-trim-step-technique')).toBeInTheDocument();
-  expect(screen.getByTestId('kitchen-day-starting-weight')).toHaveValue('1500');
+  expect(screen.getByTestId('kitchen-day-starting-weight-unit-kg')).toHaveAttribute('aria-pressed', 'true');
+  expect(screen.getByTestId('kitchen-day-starting-weight')).toHaveValue('1.5');
 }
 
 describe('Trim Smart technique selection', () => {
