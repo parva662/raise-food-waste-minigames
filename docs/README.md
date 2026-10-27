@@ -69,7 +69,8 @@ Always separate **intended product behaviour**, **current implementation**, and 
 1. [`contracts/GAMEBUS.md`](contracts/GAMEBUS.md) — official GameBus doc index  
 2. [`contracts/KITCHEN_FORECAST_ADMIN_SETUP.md`](contracts/KITCHEN_FORECAST_ADMIN_SETUP.md) — forecast admin checklist  
 3. [`how-to/verify-input-collections.md`](how-to/verify-input-collections.md) — verify embed Input Collections  
-4. [`product/kitchen-skills-challenge/GAMEBUS_SLUG_CONTRACT.md`](product/kitchen-skills-challenge/GAMEBUS_SLUG_CONTRACT.md) — Kitchen Skills locked slugs  
+4. [`how-to/configure-chef-management-dashboard-access.md`](how-to/configure-chef-management-dashboard-access.md) — Chef/admin `/admindashboard` menu + collections  
+5. [`product/kitchen-skills-challenge/GAMEBUS_SLUG_CONTRACT.md`](product/kitchen-skills-challenge/GAMEBUS_SLUG_CONTRACT.md) — Kitchen Skills locked slugs  
 
 ### AI agents (Cursor and similar)
 
@@ -100,6 +101,7 @@ Goal-oriented recipes for a concrete job:
 | [`../README.md`](../README.md#local-development) | Local development (`npm install`, `npm run dev`) — canonical instructions in the repository README |
 | [`how-to/diagnose-chef-results.md`](how-to/diagnose-chef-results.md) | Diagnose `#/chef-results` status chips, Progress, and **No forecast for this service** |
 | [`how-to/verify-input-collections.md`](how-to/verify-input-collections.md) | Verify which GameBus Input Collections the embed received |
+| [`how-to/configure-chef-management-dashboard-access.md`](how-to/configure-chef-management-dashboard-access.md) | Grant Chefs `/admindashboard` via GameBus menu + collections (no SPA hard-coding) |
 | [`how-to/live-test-tutor-three-module-assessments.md`](how-to/live-test-tutor-three-module-assessments.md) | Controlled live test: three Tutor `wastePracticeReview` posts vs GameBus persistence |
 | [`contracts/KITCHEN_FORECAST_ADMIN_SETUP.md`](contracts/KITCHEN_FORECAST_ADMIN_SETUP.md) | Configure / verify Kitchen Forecast on GameBus |
 | [`../reference/README.md`](../reference/README.md) | Menu / recipe workbook and regenerate pipelines |
