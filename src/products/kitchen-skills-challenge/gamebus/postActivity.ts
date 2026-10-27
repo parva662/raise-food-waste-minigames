@@ -35,10 +35,7 @@ export function resetKitchenSkillsPostStateForTests(): void {
 }
 
 export function kitchenSkillsReviewAttemptKey(entry: KitchenSkillsReviewEntry): string {
-  if (!entry.reviewedGame && !(entry.recipeId ?? '').trim()) {
-    return `review:${entry.sessionId}:session`;
-  }
-  return `review:${entry.sessionId}:${entry.recipeId ?? ''}:${entry.reviewedGame ?? ''}`;
+  return `review:${entry.sessionId}:${entry.recipeId ?? ''}:${entry.reviewedGame}`;
 }
 
 /** Release a prior attempt so a verified failure can be retried without permanent blocking. */

@@ -85,7 +85,6 @@ function session(
     rescueEntries: [],
     portionEntries: options.withPortion ? [portion(actorId, sessionSuffix)] : [],
     reviews: options.review ? [options.review] : [],
-    sessionAssessment: null,
     moduleReviews: {
       trimSmart: options.review ?? null,
       rescueAndReuse: null,

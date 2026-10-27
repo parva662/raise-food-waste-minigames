@@ -23,7 +23,7 @@ describe('Progress self-feed review diagnostic', () => {
         ],
       },
       {
-        id: 'review-module',
+        id: 'review-ok',
         actor: { id: 'user-1', name: 'Student One' },
         template: { slug: 'wastePracticeReview' },
         properties: [
@@ -36,18 +36,6 @@ describe('Progress self-feed review diagnostic', () => {
         ],
       },
       {
-        id: 'review-session',
-        actor: { id: 'user-1', name: 'Student One' },
-        template: { slug: 'wastePracticeReview' },
-        properties: [
-          { template: { slug: 'sessionId' }, value: { value: 's1' } },
-          { template: { slug: 'sessionDate' }, value: { value: '2026-09-23' } },
-          { template: { slug: 'submittedAt' }, value: { value: '2026-09-23T15:02:00.000Z' } },
-          { template: { slug: 'timeEfficiencyScore' }, value: { value: 2 } },
-          { template: { slug: 'preparationQualityScore' }, value: { value: 3 } },
-        ],
-      },
-      {
         id: 'review-bad',
         actor: { id: 'user-1', name: 'Student One' },
         template: { slug: 'wastePracticeReview' },
@@ -55,6 +43,8 @@ describe('Progress self-feed review diagnostic', () => {
           { template: { slug: 'sessionId' }, value: { value: 's1' } },
           { template: { slug: 'sessionDate' }, value: { value: '2026-09-23' } },
           { template: { slug: 'submittedAt' }, value: { value: '2026-09-23T15:01:00.000Z' } },
+          { template: { slug: 'timeEfficiencyScore' }, value: { value: 4 } },
+          { template: { slug: 'preparationQualityScore' }, value: { value: 5 } },
         ],
       },
     ];
@@ -63,28 +53,17 @@ describe('Progress self-feed review diagnostic', () => {
       actorName: 'Student One',
     });
     const summary = summarizeKitchenSkillsSelfFeedReviews(activities, sessions);
-    expect(summary.wastePracticeReviewCount).toBe(3);
-    expect(summary.parsedReviewCount).toBe(2);
-    expect(summary.parseFailures).toEqual([
-      { activityId: 'review-bad', reason: 'missing_timeEfficiencyScore' },
+    expect(summary.wastePracticeReviewCount).toBe(2);
+    expect(summary.parsedReviewCount).toBe(1);
+    expect(summary.parseFailures).toEqual([{ activityId: 'review-bad', reason: 'missing_reviewedGame' }]);
+    expect(summary.attachedReviews).toEqual([
+      {
+        sessionId: 's1',
+        reviewedGame: 'trimSmart',
+        timeEfficiencyScore: 4,
+        preparationQualityScore: 5,
+        hasFeedback: false,
+      },
     ]);
-    expect(summary.attachedReviews).toEqual(
-      expect.arrayContaining([
-        {
-          sessionId: 's1',
-          reviewedGame: 'trimSmart',
-          timeEfficiencyScore: 4,
-          preparationQualityScore: 5,
-          hasFeedback: false,
-        },
-        {
-          sessionId: 's1',
-          reviewedGame: null,
-          timeEfficiencyScore: 2,
-          preparationQualityScore: 3,
-          hasFeedback: false,
-        },
-      ]),
-    );
   });
 });

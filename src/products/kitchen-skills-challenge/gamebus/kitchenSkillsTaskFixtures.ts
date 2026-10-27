@@ -65,20 +65,14 @@ export const kitchenSkillsTrainerTaskFixture: TaskData = {
       slug: 'wastePracticeReview',
       name: 'Waste practice review',
       providers: [],
-      // Session-level contract: reviewedGame / recipeId must not be required.
-      // Keep them linked as optional so historical module rows remain readable.
+      // recipeId is optional on the live template until all clients post it.
       // chefFeedback is optional; include it so posts with feedback stay linked.
-      linkedProperties: [
-        ...WASTE_PRACTICE_REVIEW_REQUIRED_REFS.map((ref, index) => ({
-          order: index + 1,
-          name: ref,
-          required: true,
-          ref,
-        })),
-        { order: 90, name: 'chefFeedback', required: false, ref: 'chefFeedback' },
-        { order: 91, name: 'reviewedGame', required: false, ref: 'reviewedGame' },
-        { order: 92, name: 'recipeId', required: false, ref: 'recipeId' },
-      ],
+      linkedProperties: [...WASTE_PRACTICE_REVIEW_REQUIRED_REFS, 'chefFeedback'].map((ref, index) => ({
+        order: index + 1,
+        name: ref,
+        required: ref !== 'recipeId' && ref !== 'chefFeedback',
+        ref,
+      })),
     },
   ],
 };

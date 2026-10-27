@@ -1,19 +1,23 @@
 import { describe, expect, it } from 'vitest';
 import {
-  findSessionLevelAssessment,
-  isSessionLevelAssessment,
+  listSessionRecipeIds,
+  recipeAssessmentStatus,
+  recipeDisplayName,
   reviewIdentityKey,
 } from '@/products/kitchen-skills-challenge/domain/session/reviewIdentity';
+import { mergeKitchenSkillsRecords } from '@/products/kitchen-skills-challenge/read/kitchenSkillsReadModel';
 import {
   buildKitchenSkillsTrainerStaffSummaries,
   emptyModuleReviews,
   partitionTrainerSessionsByAssessment,
   sessionAssessmentCounts,
+  sessionAssessmentSlots,
   sessionAssessmentStatus,
 } from '@/products/kitchen-skills-challenge/read/trainerSessions';
 import type {
   KitchenSkillsPortionEntry,
   KitchenSkillsRescueEntry,
+  KitchenSkillsReviewedModule,
   KitchenSkillsReviewEntry,
   KitchenSkillsTrainerSession,
   KitchenSkillsTrimEntry,
@@ -34,12 +38,12 @@ function portion(recipeId: string, recipeName = `Recipe ${recipeId}`): KitchenSk
   };
 }
 
-function trim(recipeId: string, ingredientId = 'banana'): KitchenSkillsTrimEntry {
+function trim(recipeId: string | undefined, ingredientId = 'banana'): KitchenSkillsTrimEntry {
   return {
     sessionId: SESSION,
     sessionDate: '2026-10-20',
     submittedAt: '2026-10-20T08:38:03.000Z',
-    recipeId,
+    ...(recipeId ? { recipeId } : {}),
     ingredientId,
     ingredientName: ingredientId,
     ingredientWeightGrams: 500,
@@ -50,49 +54,43 @@ function trim(recipeId: string, ingredientId = 'banana'): KitchenSkillsTrimEntry
     preparationStartedAt: '2026-10-20T08:35:00.000Z',
     preparationEndedAt: '2026-10-20T08:38:00.000Z',
     source: 'persisted',
-  };
+  } as KitchenSkillsTrimEntry;
 }
 
-function rescue(recipeId: string, ingredientId = 'banana'): KitchenSkillsRescueEntry {
+function rescue(recipeId: string | undefined, ingredientId = 'banana'): KitchenSkillsRescueEntry {
   return {
     sessionId: SESSION,
     sessionDate: '2026-10-20',
     submittedAt: '2026-10-20T08:38:13.000Z',
-    recipeId,
+    ...(recipeId ? { recipeId } : {}),
     ingredientId,
     reusableWasteGrams: 20,
     reuseDestination: 'Stock',
     source: 'persisted',
-  };
+  } as KitchenSkillsRescueEntry;
 }
 
-function sessionAssessment(partial: Partial<KitchenSkillsReviewEntry> = {}): KitchenSkillsReviewEntry {
+function confirmed(recipeId: string | undefined, module: KitchenSkillsReviewedModule): KitchenSkillsReviewEntry {
   return {
     sessionId: SESSION,
     sessionDate: '2026-10-20',
     submittedAt: '2026-10-20T08:40:22.000Z',
-    timeEfficiencyScore: 2,
-    preparationQualityScore: 4,
-    source: 'persisted',
-    persistId: 'pid-session',
-    ...partial,
-  };
-}
-
-function historicalModule(
-  recipeId: string,
-  module: 'portionPrecision' | 'trimSmart' | 'rescueAndReuse',
-): KitchenSkillsReviewEntry {
-  return {
-    sessionId: SESSION,
-    sessionDate: '2026-10-20',
-    submittedAt: '2026-10-20T08:40:22.000Z',
-    recipeId,
+    ...(recipeId ? { recipeId } : {}),
     reviewedGame: module,
     timeEfficiencyScore: 2,
     preparationQualityScore: 4,
     source: 'persisted',
-    persistId: `pid-${recipeId}-${module}`,
+    persistId: `pid-${recipeId ?? 'legacy'}-${module}`,
+  };
+}
+
+function awaiting(recipeId: string, module: KitchenSkillsReviewedModule): KitchenSkillsReviewEntry {
+  return {
+    ...confirmed(recipeId, module),
+    submittedAt: '2026-10-20T08:41:00.000Z',
+    source: 'local',
+    persistId: undefined,
+    awaitingPersist: true,
   };
 }
 
@@ -106,98 +104,132 @@ function session(partial: Partial<KitchenSkillsTrainerSession>): KitchenSkillsTr
     rescueEntries: [],
     portionEntries: [],
     reviews: [],
-    sessionAssessment: null,
     moduleReviews: emptyModuleReviews(),
     ...partial,
   };
 }
 
-describe('trainer assessment status (session-level)', () => {
-  it('needs assessment when evidence exists but no session assessment', () => {
+describe('trainer assessment status (three states)', () => {
+  it('A: one recipe, Trim confirmed, Portion and Rescue awaiting → AWAITING CONFIRMATION, not partial', () => {
+    const s = session({
+      portionEntries: [portion('5', 'Banaanismoothie L, G')],
+      trimEntries: [trim('5')],
+      rescueEntries: [rescue('5')],
+      reviews: [
+        awaiting('5', 'portionPrecision'),
+        confirmed('5', 'trimSmart'),
+        awaiting('5', 'rescueAndReuse'),
+      ],
+    });
+    expect(sessionAssessmentSlots(s).map((slot) => [slot.module, slot.state])).toEqual([
+      ['portionPrecision', 'awaiting_confirmation'],
+      ['trimSmart', 'reviewed'],
+      ['rescueAndReuse', 'awaiting_confirmation'],
+    ]);
+    expect(sessionAssessmentCounts(s)).toEqual({ recorded: 3, confirmed: 1, awaiting: 2, outstanding: 0 });
+    expect(sessionAssessmentStatus(s)).toBe('awaiting_confirmation');
+    expect(recipeAssessmentStatus(s, '5')).toBe('awaiting_confirmation');
+    const partition = partitionTrainerSessionsByAssessment([s]);
+    expect(partition.awaitingConfirmation).toHaveLength(1);
+    expect(partition.reviewed).toHaveLength(0);
+    const [staff] = buildKitchenSkillsTrainerStaffSummaries([s]);
+    expect(staff).toMatchObject({
+      sessionsNeedingAssessment: 0,
+      sessionsAwaitingConfirmation: 1,
+      sessionsReviewed: 0,
+      modulesAwaitingAssessment: 0,
+    });
+  });
+
+  it('A: any module without a submission keeps the session and recipe in NEEDS ASSESSMENT', () => {
     const s = session({
       portionEntries: [portion('5')],
       trimEntries: [trim('5')],
       rescueEntries: [rescue('5')],
+      reviews: [awaiting('5', 'portionPrecision'), confirmed('5', 'trimSmart')],
     });
+    expect(sessionAssessmentCounts(s)).toEqual({ recorded: 3, confirmed: 1, awaiting: 1, outstanding: 1 });
     expect(sessionAssessmentStatus(s)).toBe('needs_assessment');
-    expect(sessionAssessmentCounts(s)).toEqual({
-      recorded: 1,
-      confirmed: 0,
-      awaiting: 0,
-      outstanding: 1,
-    });
+    expect(recipeAssessmentStatus(s, '5')).toBe('needs_assessment');
   });
 
-  it('historical module reviews alone do not mark the session reviewed', () => {
-    const s = session({
-      portionEntries: [portion('5')],
-      trimEntries: [trim('5')],
-      reviews: [historicalModule('5', 'portionPrecision'), historicalModule('5', 'trimSmart')],
-    });
-    expect(sessionAssessmentStatus(s)).toBe('needs_assessment');
-    expect(findSessionLevelAssessment(s)).toBeNull();
-  });
-
-  it('persisted session assessment marks the session reviewed', () => {
-    const assessment = sessionAssessment();
+  it('B: every evidenced module confirmed → REVIEWED', () => {
     const s = session({
       portionEntries: [portion('5')],
       trimEntries: [trim('5')],
       rescueEntries: [rescue('5')],
-      reviews: [assessment],
-      sessionAssessment: assessment,
+      reviews: [
+        confirmed('5', 'portionPrecision'),
+        confirmed('5', 'trimSmart'),
+        confirmed('5', 'rescueAndReuse'),
+      ],
     });
-    expect(isSessionLevelAssessment(assessment)).toBe(true);
     expect(sessionAssessmentStatus(s)).toBe('reviewed');
-    expect(sessionAssessmentCounts(s)).toEqual({
-      recorded: 1,
-      confirmed: 1,
-      awaiting: 0,
-      outstanding: 0,
-    });
-    expect(reviewIdentityKey(assessment)).toBe(`${SESSION}::__session__`);
+    expect(partitionTrainerSessionsByAssessment([s]).reviewed).toHaveLength(1);
   });
 
-  it('dispatched-but-unconfirmed session assessment is not Reviewed', () => {
-    const assessment = sessionAssessment({
-      source: 'local',
-      persistId: undefined,
-      awaitingPersist: true,
+  it('C: Portion only requires exactly one assessment', () => {
+    const s = session({ portionEntries: [portion('5')] });
+    expect(sessionAssessmentSlots(s).map((slot) => slot.module)).toEqual(['portionPrecision']);
+    expect(sessionAssessmentStatus(s)).toBe('needs_assessment');
+    const reviewed = session({ portionEntries: [portion('5')], reviews: [confirmed('5', 'portionPrecision')] });
+    expect(sessionAssessmentStatus(reviewed)).toBe('reviewed');
+  });
+
+  it('D: recipes are assessed independently by sessionId + recipeId + reviewedGame', () => {
+    const s = session({
+      portionEntries: [portion('5'), portion('2')],
+      trimEntries: [trim('5'), trim('2', 'carrot')],
+      reviews: [confirmed('5', 'portionPrecision'), confirmed('5', 'trimSmart')],
     });
+    expect(recipeAssessmentStatus(s, '5')).toBe('reviewed');
+    expect(recipeAssessmentStatus(s, '2')).toBe('needs_assessment');
+    expect(sessionAssessmentCounts(s)).toEqual({ recorded: 4, confirmed: 2, awaiting: 0, outstanding: 2 });
+    expect(reviewIdentityKey(confirmed('5', 'trimSmart'))).not.toBe(reviewIdentityKey(confirmed('2', 'trimSmart')));
+  });
+
+  it('D: Trim/Rescue rows with their own recipeId stay reachable even without Portion', () => {
+    const s = session({
+      portionEntries: [portion('5'), portion('2')],
+      trimEntries: [trim('179', 'onion')],
+      rescueEntries: [rescue('179', 'onion')],
+    });
+    expect(listSessionRecipeIds(s)).toEqual(['5', '2', '179']);
+    expect(sessionAssessmentSlots(s).filter((slot) => slot.recipeId === '179').map((slot) => slot.module)).toEqual([
+      'trimSmart',
+      'rescueAndReuse',
+    ]);
+    expect(recipeDisplayName(s, '179')).not.toBe('');
+  });
+
+  it('D: legacy Trim without recipeId attaches only to a sole Portion recipe; never guessed otherwise', () => {
+    const single = session({ portionEntries: [portion('5')], trimEntries: [trim(undefined)] });
+    expect(sessionAssessmentSlots(single).map((slot) => [slot.recipeId, slot.module])).toEqual([
+      ['5', 'portionPrecision'],
+      ['5', 'trimSmart'],
+    ]);
+    const ambiguous = session({ portionEntries: [portion('5'), portion('2')], trimEntries: [trim(undefined)] });
+    const legacySlot = sessionAssessmentSlots(ambiguous).find((slot) => slot.module === 'trimSmart');
+    expect(legacySlot).toEqual({ recipeId: null, module: 'trimSmart', state: 'needs_assessment' });
+  });
+
+  it('E: a review without recipeId never satisfies a recipe-level requirement', () => {
     const s = session({
       portionEntries: [portion('5')],
-      reviews: [assessment],
-      sessionAssessment: assessment,
+      reviews: [confirmed(undefined, 'portionPrecision')],
     });
     expect(sessionAssessmentStatus(s)).toBe('needs_assessment');
-    expect(sessionAssessmentCounts(s)).toEqual({
-      recorded: 1,
-      confirmed: 0,
-      awaiting: 0,
-      outstanding: 1,
-    });
   });
 
-  it('partitions staff sessions into needs vs reviewed only', () => {
-    const needs = session({
-      sessionId: `${SESSION}:needs`,
-      portionEntries: [{ ...portion('5'), sessionId: `${SESSION}:needs` }],
-    });
-    const assessment = sessionAssessment({ sessionId: `${SESSION}:done` });
-    const done = session({
-      sessionId: `${SESSION}:done`,
-      portionEntries: [{ ...portion('5'), sessionId: `${SESSION}:done` }],
-      reviews: [assessment],
-      sessionAssessment: assessment,
-    });
-    const partitioned = partitionTrainerSessionsByAssessment([needs, done]);
-    expect(partitioned.awaitingConfirmation).toEqual([]);
-    expect(partitioned.needsAssessment.map((row) => row.sessionId)).toEqual([needs.sessionId]);
-    expect(partitioned.reviewed.map((row) => row.sessionId)).toEqual([done.sessionId]);
-
-    const staff = buildKitchenSkillsTrainerStaffSummaries([needs, done]);
-    expect(staff[0]?.sessionsNeedingAssessment).toBe(1);
-    expect(staff[0]?.sessionsReviewed).toBe(1);
-    expect(staff[0]?.sessionsAwaitingConfirmation).toBe(0);
+  it('E: a feed update replaces the awaiting row and the session becomes REVIEWED', () => {
+    const local = [awaiting('5', 'portionPrecision')];
+    const merged = mergeKitchenSkillsRecords(
+      local,
+      [confirmed('5', 'portionPrecision')],
+      (left, right) => reviewIdentityKey(left) === reviewIdentityKey(right),
+    );
+    expect(merged).toHaveLength(1);
+    const s = session({ portionEntries: [portion('5')], reviews: merged });
+    expect(sessionAssessmentStatus(s)).toBe('reviewed');
   });
 });

@@ -9,6 +9,8 @@ const entry: KitchenSkillsReviewEntry = {
   sessionId: 'kitchen-day:task:user-1:2026-09-23',
   sessionDate: '2026-09-23',
   submittedAt: '2026-09-23T12:00:00.000Z',
+  recipeId: 'recipe-a',
+  reviewedGame: 'trimSmart',
   timeEfficiencyScore: 4,
   preparationQualityScore: 5,
   chefFeedback: '  Keep the tip steady.  ',

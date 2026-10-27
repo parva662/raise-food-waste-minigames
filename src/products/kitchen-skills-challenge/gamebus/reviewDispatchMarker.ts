@@ -1,8 +1,5 @@
 import { normalizeRecipeId } from '@/products/kitchen-skills-challenge/domain/session/ingredientUniqueness';
-import {
-  isSessionLevelAssessment,
-  reviewIdentityKey,
-} from '@/products/kitchen-skills-challenge/domain/session/reviewIdentity';
+import { reviewIdentityKey } from '@/products/kitchen-skills-challenge/domain/session/reviewIdentity';
 import type {
   KitchenSkillsReviewEntry,
   KitchenSkillsReviewedModule,
@@ -13,8 +10,8 @@ const STORAGE_PREFIX = 'ks-review-dispatched:';
 export type KitchenSkillsReviewDispatchMarker = {
   actorId: string;
   sessionId: string;
-  recipeId?: string;
-  reviewedGame?: KitchenSkillsReviewedModule;
+  recipeId: string;
+  reviewedGame: KitchenSkillsReviewedModule;
   sessionDate: string;
   submittedAt: string;
   timeEfficiencyScore: number;
@@ -46,15 +43,17 @@ export function kitchenSkillsTrainerFeedFingerprint(activities: readonly unknown
   return `${ids.length}:${hash.toString(36)}`;
 }
 
-function storageKey(
-  actorId: string,
-  entry: Pick<KitchenSkillsReviewEntry, 'sessionId' | 'recipeId' | 'reviewedGame'>,
-): string | null {
+function storageKey(actorId: string, entry: {
+  sessionId: string;
+  recipeId?: string | null;
+  reviewedGame: KitchenSkillsReviewedModule;
+}): string | null {
   const actor = actorId.trim();
-  if (!actor || !entry.sessionId) return null;
+  const recipeId = normalizeRecipeId(entry.recipeId ?? '');
+  if (!actor || !entry.sessionId || !recipeId) return null;
   return `${STORAGE_PREFIX}${actor}:${reviewIdentityKey({
     sessionId: entry.sessionId,
-    recipeId: entry.recipeId,
+    recipeId,
     reviewedGame: entry.reviewedGame,
   })}`;
 }
@@ -77,13 +76,13 @@ export function markKitchenSkillsReviewDispatched(
   feedFingerprintAtDispatch?: string | null,
 ): void {
   const key = storageKey(actorId, entry);
-  if (!key || !canUseSessionStorage()) return;
-  const recipeId = normalizeRecipeId(entry.recipeId ?? '') || undefined;
+  const recipeId = normalizeRecipeId(entry.recipeId ?? '');
+  if (!key || !recipeId || !canUseSessionStorage()) return;
   const marker: KitchenSkillsReviewDispatchMarker = {
     actorId: actorId.trim(),
     sessionId: entry.sessionId,
-    ...(recipeId ? { recipeId } : {}),
-    ...(entry.reviewedGame ? { reviewedGame: entry.reviewedGame } : {}),
+    recipeId,
+    reviewedGame: entry.reviewedGame,
     sessionDate: entry.sessionDate,
     submittedAt: entry.submittedAt,
     timeEfficiencyScore: entry.timeEfficiencyScore,
@@ -134,7 +133,13 @@ export function readKitchenSkillsReviewDispatchMarker(
     const raw = sessionStorage.getItem(key);
     if (!raw) return null;
     const parsed = JSON.parse(raw) as KitchenSkillsReviewDispatchMarker;
-    if (typeof parsed.sessionId !== 'string') return null;
+    if (
+      typeof parsed.sessionId !== 'string' ||
+      typeof parsed.recipeId !== 'string' ||
+      typeof parsed.reviewedGame !== 'string'
+    ) {
+      return null;
+    }
     return parsed;
   } catch {
     return null;
@@ -152,8 +157,12 @@ export type KitchenSkillsTrainerFeedState = {
 };
 
 /**
- * Historical helper for per-module awaiting UX. Session-level assessments do not use
- * awaiting-confirmation screens; this remains for marker-based duplicate protection tests.
+ * True only when an unconfirmed assessment is missing from a genuinely later GameBus feed:
+ * this tab dispatched it (marker with the same student + session + recipe + module), the
+ * current feed differs from the feed seen at dispatch (not a replayed snapshot), still contains
+ * the student's session, arrived more than the grace period after sending, and lacks the review
+ * (`awaitingPersist`). Only then is a deliberate, tutor-confirmed re-assessment reasonable.
+ * A delayed or incomplete GameBus feed can still satisfy this, so a duplicate stays possible.
  */
 export function isAwaitingReviewMissingFromRefreshedFeed(
   review: Pick<
@@ -166,12 +175,10 @@ export function isAwaitingReviewMissingFromRefreshedFeed(
   if (!review.awaitingPersist || feed.receivedAtMs == null || !feed.fingerprint) return false;
   if (!feed.sessionInFeed) return false;
   const marker = readKitchenSkillsReviewDispatchMarker(studentActorId, review);
-  if (!marker || marker.actorId !== studentActorId.trim() || marker.sessionId !== review.sessionId) {
-    return false;
-  }
-  if (isSessionLevelAssessment(review)) {
-    if (marker.reviewedGame || marker.recipeId) return false;
-  } else if (
+  if (
+    !marker ||
+    marker.actorId !== studentActorId.trim() ||
+    marker.sessionId !== review.sessionId ||
     marker.reviewedGame !== review.reviewedGame ||
     marker.recipeId !== normalizeRecipeId(review.recipeId ?? '')
   ) {
@@ -185,7 +192,7 @@ export function isAwaitingReviewMissingFromRefreshedFeed(
   return submittedMs + KITCHEN_SKILLS_FEED_CONFIRMATION_GRACE_MS < feed.receivedAtMs;
 }
 
-/** Build local rows from markers for tutor sessions (reload duplicate protection). */
+/** Build awaiting local rows from markers for tutor sessions (reload recovery). */
 export function awaitingReviewsFromDispatchMarkers(
   sessions: readonly { actorId: string; sessionId: string }[],
 ): KitchenSkillsReviewEntry[] {
@@ -208,25 +215,11 @@ export function awaitingReviewsFromDispatchMarkers(
           session.actorId === marker.actorId && session.sessionId === marker.sessionId,
       );
       if (!matches) continue;
-      // Session-level markers restore as submitted-not-confirmed (never fabricate persistId).
-      if (!marker.reviewedGame) {
-        out.push({
-          sessionId: marker.sessionId,
-          sessionDate: marker.sessionDate,
-          submittedAt: marker.submittedAt,
-          timeEfficiencyScore: marker.timeEfficiencyScore,
-          preparationQualityScore: marker.preparationQualityScore,
-          ...(marker.chefFeedback ? { chefFeedback: marker.chefFeedback } : {}),
-          source: 'local',
-          awaitingPersist: true,
-        });
-        continue;
-      }
       out.push({
         sessionId: marker.sessionId,
         sessionDate: marker.sessionDate,
         submittedAt: marker.submittedAt,
-        ...(marker.recipeId ? { recipeId: marker.recipeId } : {}),
+        recipeId: marker.recipeId,
         reviewedGame: marker.reviewedGame,
         timeEfficiencyScore: marker.timeEfficiencyScore,
         preparationQualityScore: marker.preparationQualityScore,

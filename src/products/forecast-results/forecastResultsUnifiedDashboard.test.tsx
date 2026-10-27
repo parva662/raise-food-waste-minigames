@@ -195,8 +195,7 @@ describe('unified Kitchen Management Dashboard', () => {
     expect(screen.getByTestId('skills-kpi-participants')).toHaveTextContent('2');
     expect(screen.getByTestId('skills-kpi-sessions')).toHaveTextContent('2');
     expect(screen.getByTestId('skills-kpi-activities')).toHaveTextContent('2');
-    // Historical per-module reviews do not satisfy the session-level assessment.
-    expect(screen.getByTestId('skills-kpi-awaiting')).toHaveTextContent('2');
+    expect(screen.getByTestId('skills-kpi-awaiting')).toHaveTextContent('1');
     expect(screen.getByTestId('skills-module-bar-trimSmart')).toBeInTheDocument();
     expect(screen.getByTestId('skills-assessment-avg-time-trimSmart')).toHaveTextContent('4.0 / 5');
     expect(screen.getByTestId('skills-assessment-avg-quality-trimSmart')).toHaveTextContent('5.0 / 5');

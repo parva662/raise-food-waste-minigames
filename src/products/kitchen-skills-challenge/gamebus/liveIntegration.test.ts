@@ -74,6 +74,8 @@ const reviewEntry: KitchenSkillsReviewEntry = {
   sessionId: 'kitchen-day:kitchen-day-task-1:user-1:2026-09-23',
   sessionDate: '2026-09-23',
   submittedAt: '2026-09-23T14:00:00.000Z',
+  recipeId: 'ankanrinta-flow',
+  reviewedGame: 'trimSmart',
   timeEfficiencyScore: 0,
   preparationQualityScore: 5,
   source: 'local',
@@ -179,12 +181,12 @@ describe('Kitchen Day split live integration gates', () => {
       'sessionId',
       'sessionDate',
       'submittedAt',
+      'recipeId',
+      'reviewedGame',
       'timeEfficiencyScore',
       'preparationQualityScore',
     ]);
     expect(postedPropertyTemplates(result.message)).not.toContain('studentId');
-    expect(postedPropertyTemplates(result.message)).not.toContain('reviewedGame');
-    expect(postedPropertyTemplates(result.message)).not.toContain('recipeId');
     expect(result.message.data.properties.map((property) => property.obj)).toEqual(
       orderedWastePracticeReviewPropertyRefs(reviewEntry).map(
         (ref) => mapWastePracticeReview(reviewEntry)[ref],
@@ -200,11 +202,61 @@ describe('Kitchen Day split live integration gates', () => {
     );
   });
 
-  it('rejects a second wastePracticeReview for the same session', () => {
+  it('rejects a second wastePracticeReview for the same session and module', () => {
     ingestTaskForTests(kitchenSkillsTrainerTaskFixture);
     vi.spyOn(window.parent, 'postMessage').mockImplementation(() => undefined);
     expect(tryPostKitchenSkillsReview(reviewEntry, 'user-1').ok).toBe(true);
     expect(tryPostKitchenSkillsReview(reviewEntry, 'user-1')).toEqual({ ok: false, reason: 'duplicate' });
+    expect(
+      tryPostKitchenSkillsReview({ ...reviewEntry, reviewedGame: 'portionPrecision' }, 'user-1').ok,
+    ).toBe(true);
+  });
+
+  it('posts three consecutive module assessments without duplicate suppression across modules', () => {
+    ingestTaskForTests(kitchenSkillsTrainerTaskFixture);
+    const postMessage = vi.spyOn(window.parent, 'postMessage').mockImplementation(() => undefined);
+    const modules = ['portionPrecision', 'trimSmart', 'rescueAndReuse'] as const;
+    const results = modules.map((reviewedGame, index) =>
+      tryPostKitchenSkillsReview(
+        {
+          ...reviewEntry,
+          reviewedGame,
+          submittedAt: `2026-09-23T14:0${index}:00.000Z`,
+          timeEfficiencyScore: index,
+          preparationQualityScore: 5 - index,
+          chefFeedback: `feedback-${reviewedGame}`,
+        },
+        'user-1',
+      ),
+    );
+
+    expect(results.every((result) => result.ok)).toBe(true);
+    const silent = postMessage.mock.calls
+      .map((call) => call[0] as { type?: string; data?: { template?: string; actors?: string[]; properties?: { template: string; obj: { value: unknown } }[] } })
+      .filter((message) => message?.type === 'SILENT_ACTIVITY' && message.data?.template === 'wastePracticeReview');
+    expect(silent).toHaveLength(3);
+    expect(silent.map((message) => message.data?.actors)).toEqual([['user-1'], ['user-1'], ['user-1']]);
+
+    const byModule = silent.map((message) => {
+      const props = Object.fromEntries(
+        (message.data?.properties ?? []).map((property) => [property.template, property.obj.value]),
+      );
+      return props;
+    });
+    expect(byModule.map((props) => props.reviewedGame)).toEqual([...modules]);
+    expect(byModule.every((props) => props.sessionId === reviewEntry.sessionId)).toBe(true);
+    expect(byModule.every((props) => props.recipeId === reviewEntry.recipeId)).toBe(true);
+    expect(byModule.map((props) => props.timeEfficiencyScore)).toEqual([0, 1, 2]);
+    expect(byModule.map((props) => props.preparationQualityScore)).toEqual([5, 4, 3]);
+
+    // Same identity still blocked; other modules already posted.
+    expect(tryPostKitchenSkillsReview({ ...reviewEntry, reviewedGame: 'portionPrecision' }, 'user-1')).toEqual({
+      ok: false,
+      reason: 'duplicate',
+    });
+    expect(postMessage.mock.calls.filter((call) => (call[0] as { type?: string }).type === 'SILENT_ACTIVITY')).toHaveLength(
+      3,
+    );
   });
 
   it('does not post a review without a selected student actor id', () => {

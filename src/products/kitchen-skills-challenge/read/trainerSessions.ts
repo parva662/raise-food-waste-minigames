@@ -3,11 +3,9 @@ import {
   evidencedRecipeModules,
   findConfirmedRecipeModuleReview,
   findRecipeModuleReview,
-  findSessionLevelAssessment,
   hasDuplicateReviewIdentity,
   isLegacySessionReview,
   isReviewPersistConfirmed,
-  isSessionLevelAssessment,
   listSessionRecipeIds,
   recipeAssessmentStatus,
   recipeModuleAssessmentState,
@@ -148,21 +146,12 @@ export type KitchenSkillsSessionAssessmentCounts = {
 export function sessionAssessmentCounts(
   session: KitchenSkillsTrainerSession,
 ): KitchenSkillsSessionAssessmentCounts {
-  const assessment = findSessionLevelAssessment(session);
-  if (assessment && isReviewPersistConfirmed(assessment)) {
-    return { recorded: 1, confirmed: 1, awaiting: 0, outstanding: 0 };
-  }
-  // Evidence exists → one outstanding session assessment; no evidence → nothing to assess.
-  // A dispatched-but-unconfirmed local row does not count as confirmed.
-  const hasEvidence =
-    session.portionEntries.length > 0 ||
-    session.trimEntries.length > 0 ||
-    session.rescueEntries.length > 0;
+  const slots = sessionAssessmentSlots(session);
   return {
-    recorded: hasEvidence ? 1 : 0,
-    confirmed: 0,
-    awaiting: 0,
-    outstanding: hasEvidence ? 1 : 0,
+    recorded: slots.length,
+    confirmed: slots.filter((slot) => slot.state === 'reviewed').length,
+    awaiting: slots.filter((slot) => slot.state === 'awaiting_confirmation').length,
+    outstanding: slots.filter((slot) => slot.state === 'needs_assessment').length,
   };
 }
 
@@ -180,19 +169,18 @@ export function modulesAwaitingAssessmentCount(session: KitchenSkillsTrainerSess
 }
 
 /**
- * Restored session-level workflow: REVIEWED only when a session assessment is
- * confirmed in GameBus (or authoritative non-embed local). A local postMessage
- * row alone is never Reviewed. Historical per-module rows alone never mark the
- * session reviewed.
+ * NEEDS ASSESSMENT while any evidenced module has no submission;
+ * AWAITING CONFIRMATION when everything is submitted but not all is in the feed;
+ * REVIEWED only when every evidenced module is confirmed.
  */
 export type KitchenSkillsSessionAssessmentStatus = KitchenSkillsModuleAssessmentState;
 
 export function sessionAssessmentStatus(
   session: KitchenSkillsTrainerSession,
 ): KitchenSkillsSessionAssessmentStatus {
-  const assessment = findSessionLevelAssessment(session);
-  if (!assessment) return 'needs_assessment';
-  if (!isReviewPersistConfirmed(assessment)) return 'needs_assessment';
+  const counts = sessionAssessmentCounts(session);
+  if (counts.recorded === 0 || counts.outstanding > 0) return 'needs_assessment';
+  if (counts.awaiting > 0) return 'awaiting_confirmation';
   return 'reviewed';
 }
 
@@ -263,12 +251,7 @@ export function attachModuleReviewToMatchingSessions(
     if (hasDuplicateReviewIdentity(session.reviews, review)) continue;
     session.reviews.push(review);
 
-    if (isSessionLevelAssessment(review)) {
-      if (!session.sessionAssessment) session.sessionAssessment = review;
-      continue;
-    }
-
-    if (isLegacySessionReview(review) && review.reviewedGame) {
+    if (isLegacySessionReview(review)) {
       if (session.moduleReviews[review.reviewedGame] === null) {
         session.moduleReviews[review.reviewedGame] = review;
       }
@@ -350,7 +333,6 @@ export function buildKitchenSkillsTrainerSessions(
       rescueEntries: [],
       portionEntries: [],
       reviews: emptySessionReviews(),
-      sessionAssessment: null,
       moduleReviews: emptyModuleReviews(),
     };
     sessions.set(key, created);

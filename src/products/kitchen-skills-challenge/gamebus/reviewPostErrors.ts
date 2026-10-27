@@ -1,8 +1,7 @@
 import { findActivityTemplate, resolveLinkedPropertyRefs } from '@/platform/gamebus/activityTemplate';
 import { selectActivityTemplate } from '@/platform/gamebus/selectActivityTemplate';
-import type { TaskActivityTemplate, TaskData, TaskLinkedProperty } from '@/platform/gamebus/types';
+import type { TaskData } from '@/platform/gamebus/types';
 import {
-  WASTE_PRACTICE_REVIEW_DEPRECATED_MODULE_REFS,
   WASTE_PRACTICE_REVIEW_REQUIRED_REFS,
   type WastePracticeReviewPropertyRef,
 } from '@/products/kitchen-skills-challenge/gamebus/mapWastePracticeReview';
@@ -14,18 +13,10 @@ function linkedPropertyRefs(task: TaskData, activitySlug: string): string[] {
   return resolveLinkedPropertyRefs(activity);
 }
 
-function linkedPropertyByRef(
-  activity: TaskActivityTemplate,
-  ref: string,
-): TaskLinkedProperty | undefined {
-  return activity.linkedProperties?.find((item) => (item.slug ?? item.ref) === ref);
-}
-
 /**
  * Client-side TASK linked-property check before postMessage.
- * Session-level posts require only the session score fields.
- * If GameBus still marks `reviewedGame` or `recipeId` as required, block with a config error
- * (do not fabricate module values).
+ * Uses canonical GameBus linked-property readers (`slug` or legacy `ref`).
+ * Does not invent selectedTaskOfMission — that field is not part of our outbound payload.
  */
 export function validateWastePracticeReviewLinkedProperties(
   task: TaskData,
@@ -34,15 +25,6 @@ export function validateWastePracticeReviewLinkedProperties(
   try {
     selectActivityTemplate(task, 'wastePracticeReview');
   } catch {
-    return {
-      ok: false,
-      reason: 'missing_task_template',
-      missing: ['wastePracticeReview'],
-    };
-  }
-
-  const activity = findActivityTemplate(task, 'wastePracticeReview');
-  if (!activity) {
     return {
       ok: false,
       reason: 'missing_task_template',
@@ -67,19 +49,6 @@ export function validateWastePracticeReviewLinkedProperties(
       missing,
     };
   }
-
-  const stillRequired = WASTE_PRACTICE_REVIEW_DEPRECATED_MODULE_REFS.filter((ref) => {
-    const prop = linkedPropertyByRef(activity, ref);
-    return prop?.required === true;
-  });
-  if (stillRequired.length > 0) {
-    return {
-      ok: false,
-      reason: 'gamebus_session_review_blocked',
-      missing: stillRequired,
-    };
-  }
-
   return { ok: true };
 }
 
@@ -95,7 +64,7 @@ function formatMissingSlugs(missing: readonly string[] | undefined): string {
  */
 export function kitchenSkillsReviewCommitErrorMessage(
   reason: string,
-  _moduleTitle: string,
+  moduleTitle: string,
   missing?: readonly string[],
 ): string {
   switch (reason) {
@@ -107,22 +76,20 @@ export function kitchenSkillsReviewCommitErrorMessage(
       const slugs = formatMissingSlugs(missing) || WASTE_PRACTICE_REVIEW_REQUIRED_REFS.join(', ');
       return `Assessment cannot be submitted because wastePracticeReview has no linked property templates (expected: ${slugs}).`;
     }
-    case 'gamebus_session_review_blocked': {
-      const slugs = formatMissingSlugs(missing) || 'reviewedGame, recipeId';
-      return `Assessment cannot be submitted until GameBus makes these wastePracticeReview properties optional or unlinks them: ${slugs}.`;
-    }
     case 'missing_student_actor':
       return 'Assessment cannot be submitted because the student session identity is missing.';
     case 'tutor_live_blocked':
       return 'Tutor assessment cannot be submitted from this page yet.';
     case 'duplicate_review':
-      return 'This challenge session already has a session review.';
+      return `This ${moduleTitle} assessment is already saved.`;
     case 'duplicate':
     case 'already_dispatched':
     case 'submission_outcome_unknown':
-      return 'This session assessment was already submitted. Do not submit again.';
+      return 'The submission status could not be verified. Do not submit again until it has been checked in GameBus.';
     case 'invalid_scores':
       return 'Select integer scores from 0 to 5 for both dimensions. Unselected is not a score.';
+    case 'missing_recipe':
+      return 'Assessment cannot be submitted because the recipe identity is missing.';
     case 'in_flight':
       return 'Another Kitchen Skills submission is already in progress. Try again in a moment.';
     case 'build_failed':
@@ -140,17 +107,20 @@ export function kitchenSkillsReviewCommitErrorMessage(
   return 'Assessment cannot be submitted. Check the configuration and try again.';
 }
 
-/** Shown after postMessage — not GameBus persistence proof. */
-export function kitchenSkillsReviewSubmittedMessage(): string {
+export function kitchenSkillsReviewAwaitingMessage(): string {
   return 'Assessment submitted.';
 }
 
-/** Shown only after a matching wastePracticeReview is observed in the GameBus feed. */
+/** Alias used when distinguishing dispatch from GameBus feed confirmation. */
+export function kitchenSkillsReviewSubmittedMessage(): string {
+  return kitchenSkillsReviewAwaitingMessage();
+}
+
 export function kitchenSkillsReviewSavedMessage(): string {
   return 'Assessment saved.';
 }
 
-/** Dev/diagnostic log payload — session only, never student names or feedback text. */
+/** Dev/diagnostic log payload — session/module only, never student names or feedback text. */
 export function kitchenSkillsReviewDiagnosticPayload(
   reason: string,
   entry: Pick<KitchenSkillsReviewEntry, 'sessionId' | 'recipeId' | 'reviewedGame'>,
@@ -160,7 +130,7 @@ export function kitchenSkillsReviewDiagnosticPayload(
     reason,
     sessionId: entry.sessionId,
     recipeId: entry.recipeId ?? null,
-    reviewedGame: entry.reviewedGame ?? null,
+    reviewedGame: entry.reviewedGame,
     ...(extra?.missing ? { missingProperties: [...extra.missing] } : {}),
   };
 }

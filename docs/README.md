@@ -100,6 +100,7 @@ Goal-oriented recipes for a concrete job:
 | [`../README.md`](../README.md#local-development) | Local development (`npm install`, `npm run dev`) — canonical instructions in the repository README |
 | [`how-to/diagnose-chef-results.md`](how-to/diagnose-chef-results.md) | Diagnose `#/chef-results` status chips, Progress, and **No forecast for this service** |
 | [`how-to/verify-input-collections.md`](how-to/verify-input-collections.md) | Verify which GameBus Input Collections the embed received |
+| [`how-to/live-test-tutor-three-module-assessments.md`](how-to/live-test-tutor-three-module-assessments.md) | Controlled live test: three Tutor `wastePracticeReview` posts vs GameBus persistence |
 | [`contracts/KITCHEN_FORECAST_ADMIN_SETUP.md`](contracts/KITCHEN_FORECAST_ADMIN_SETUP.md) | Configure / verify Kitchen Forecast on GameBus |
 | [`../reference/README.md`](../reference/README.md) | Menu / recipe workbook and regenerate pipelines |
 

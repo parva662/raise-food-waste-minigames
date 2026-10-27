@@ -1,3 +1,5 @@
+import type { KitchenSkillsReviewedModule } from '@/products/kitchen-skills-challenge/domain/types';
+
 export type KitchenSkillsReviewFormDraft = {
   timeScore: string;
   qualityScore: string;
@@ -10,9 +12,13 @@ export const EMPTY_REVIEW_DRAFT: KitchenSkillsReviewFormDraft = {
   feedback: '',
 };
 
-/** One draft per student session (session-level assessment). */
-export function reviewDraftStorageKey(actorId: string, sessionId: string): string {
-  return `${actorId}::${sessionId}::session`;
+export function reviewDraftStorageKey(
+  actorId: string,
+  sessionId: string,
+  recipeId: string,
+  module: KitchenSkillsReviewedModule,
+): string {
+  return `${actorId}::${sessionId}::${recipeId}::${module}`;
 }
 
 export function isReviewDraftDirty(draft: KitchenSkillsReviewFormDraft | undefined): boolean {
@@ -24,7 +30,7 @@ export function isReviewDraftDirty(draft: KitchenSkillsReviewFormDraft | undefin
   );
 }
 
-/** True when any unsent draft exists across sessions. */
+/** True when any unsent draft exists across sessions (pending dispatched rows are not drafts). */
 export function hasAnyUnsavedReviewDraft(
   draftsByKey: Readonly<Record<string, KitchenSkillsReviewFormDraft>>,
 ): boolean {

@@ -4,7 +4,6 @@ import {
   findRecipeModuleReview,
   hasDuplicateReviewIdentity,
   isLegacySessionReview,
-  isSessionLevelAssessment,
   recipeModulesAwaitingAssessment,
   reviewIdentityKey,
 } from '@/products/kitchen-skills-challenge/domain/session/reviewIdentity';
@@ -21,7 +20,6 @@ function session(partial: Partial<KitchenSkillsTrainerSession>): KitchenSkillsTr
     rescueEntries: [],
     portionEntries: [],
     reviews: [],
-    sessionAssessment: null,
     moduleReviews: emptyModuleReviews(),
     ...partial,
   };
@@ -51,7 +49,7 @@ describe('recipe-level review identity', () => {
     );
   });
 
-  it('treats missing recipeId with reviewedGame as a historical legacy module review', () => {
+  it('treats missing recipeId as a legacy session-level review', () => {
     expect(
       isLegacySessionReview({
         sessionId: 's1',
@@ -63,21 +61,6 @@ describe('recipe-level review identity', () => {
         source: 'persisted',
       }),
     ).toBe(true);
-  });
-
-  it('treats missing recipeId and reviewedGame as a session-level assessment', () => {
-    expect(isSessionLevelAssessment({})).toBe(true);
-    expect(isSessionLevelAssessment({ recipeId: null, reviewedGame: null })).toBe(true);
-    expect(
-      isLegacySessionReview({
-        sessionId: 's1',
-        sessionDate: '2026-09-23',
-        submittedAt: '2026-09-23T15:00:00.000Z',
-        timeEfficiencyScore: 3,
-        preparationQualityScore: 4,
-        source: 'persisted',
-      }),
-    ).toBe(false);
   });
 
   it('lists independent evidenced pairs per recipe', () => {

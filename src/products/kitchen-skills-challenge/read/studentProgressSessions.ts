@@ -59,7 +59,6 @@ export function buildKitchenSkillsStudentProgressSessions(
       rescueEntries: [],
       portionEntries: [],
       reviews: emptySessionReviews(),
-      sessionAssessment: null,
       moduleReviews: emptyModuleReviews(),
     };
     sessions.set(sessionId, created);

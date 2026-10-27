@@ -7,56 +7,18 @@ import type {
 } from '@/products/kitchen-skills-challenge/domain/types';
 import { KITCHEN_SKILLS_REVIEWED_MODULES } from '@/products/kitchen-skills-challenge/domain/types';
 
-/** True for the restored session-level assessment (no module discriminator, no recipeId). */
-export function isSessionLevelAssessment(review: {
-  recipeId?: string | null;
-  reviewedGame?: KitchenSkillsReviewedModule | null;
-}): boolean {
-  return !normalizeRecipeId(review.recipeId ?? '') && !review.reviewedGame;
-}
-
-/** Unique key for a session assessment, recipe-module assessment, or legacy module row. */
+/** Unique key for a recipe-module tutor assessment (or legacy session-level). */
 export function reviewIdentityKey(review: {
   sessionId: string;
   recipeId?: string | null;
-  reviewedGame?: KitchenSkillsReviewedModule | null;
+  reviewedGame: KitchenSkillsReviewedModule;
 }): string {
-  if (isSessionLevelAssessment(review)) {
-    return `${review.sessionId}::__session__`;
-  }
   const recipePart = normalizeRecipeId(review.recipeId ?? '') || '__legacy__';
-  return `${review.sessionId}::${recipePart}::${review.reviewedGame ?? '__unknown__'}`;
+  return `${review.sessionId}::${recipePart}::${review.reviewedGame}`;
 }
 
-/**
- * Historical per-module review without recipeId (pre-recipe tracking).
- * Not a session-level overall assessment — those omit `reviewedGame`.
- */
 export function isLegacySessionReview(review: KitchenSkillsReviewEntry): boolean {
-  return !normalizeRecipeId(review.recipeId ?? '') && Boolean(review.reviewedGame);
-}
-
-export function findSessionLevelAssessment(
-  session: Pick<KitchenSkillsTrainerSession, 'sessionAssessment' | 'reviews'>,
-): KitchenSkillsReviewEntry | null {
-  if (session.sessionAssessment) return session.sessionAssessment;
-  return session.reviews.find(isSessionLevelAssessment) ?? null;
-}
-
-/** Session assessment confirmed in GameBus (or authoritative non-embed local commit). */
-export function findConfirmedSessionLevelAssessment(
-  session: Pick<KitchenSkillsTrainerSession, 'sessionAssessment' | 'reviews'>,
-): KitchenSkillsReviewEntry | null {
-  const assessment = findSessionLevelAssessment(session);
-  return assessment && isReviewPersistConfirmed(assessment) ? assessment : null;
-}
-
-/** Dispatched session assessment that is not yet observed in the GameBus feed. */
-export function findSubmittedSessionLevelAssessment(
-  session: Pick<KitchenSkillsTrainerSession, 'sessionAssessment' | 'reviews'>,
-): KitchenSkillsReviewEntry | null {
-  const assessment = findSessionLevelAssessment(session);
-  return assessment && !isReviewPersistConfirmed(assessment) ? assessment : null;
+  return !normalizeRecipeId(review.recipeId ?? '');
 }
 
 export type EvidencedRecipeModule = {
@@ -158,11 +120,7 @@ export function evidencedRecipeModules(
   return pairs;
 }
 
-/**
- * Confirmed only after GameBus hydration (`source: 'persisted'`) or an authoritative
- * non-embed local commit (`persistId` without `awaitingPersist`).
- * `awaitingPersist` means postMessage ran — never treat that as GameBus persistence.
- */
+/** A review is confirmed only after GameBus hydration (or a non-embed local commit). */
 export function isReviewPersistConfirmed(review: KitchenSkillsReviewEntry): boolean {
   if (review.awaitingPersist) return false;
   return review.source === 'persisted' || Boolean(review.persistId);
@@ -178,7 +136,6 @@ export function findRecipeModuleReview(
   return (
     session.reviews.find(
       (review) =>
-        !isSessionLevelAssessment(review) &&
         !isLegacySessionReview(review) &&
         normalizeRecipeId(review.recipeId ?? '') === rid &&
         review.reviewedGame === module,
@@ -224,9 +181,7 @@ export function reviewsForRecipe(
   if (!rid) return [];
   return session.reviews.filter(
     (review) =>
-      !isSessionLevelAssessment(review) &&
-      !isLegacySessionReview(review) &&
-      normalizeRecipeId(review.recipeId ?? '') === rid,
+      !isLegacySessionReview(review) && normalizeRecipeId(review.recipeId ?? '') === rid,
   );
 }
 
@@ -234,15 +189,6 @@ export function legacySessionReviews(
   session: KitchenSkillsTrainerSession,
 ): KitchenSkillsReviewEntry[] {
   return session.reviews.filter(isLegacySessionReview);
-}
-
-/** Historical per-module assessments (with or without recipeId) — read-only compatibility. */
-export function historicalModuleReviews(
-  session: KitchenSkillsTrainerSession,
-): KitchenSkillsReviewEntry[] {
-  return session.reviews.filter(
-    (review) => !isSessionLevelAssessment(review) && Boolean(review.reviewedGame),
-  );
 }
 
 export function hasRecipeModuleReview(
@@ -311,17 +257,11 @@ export function countReviewedRecipes(session: KitchenSkillsTrainerSession): {
   return { reviewed, total: ids.length };
 }
 
-/**
- * Session-level: any existing assessment for the session blocks a duplicate.
- * Module-level (historical): confirmed same identity blocks.
- */
+/** Whether a review conflicts with an existing confirmed one for the same identity. */
 export function hasDuplicateReviewIdentity(
   reviews: readonly KitchenSkillsReviewEntry[],
   candidate: KitchenSkillsReviewEntry,
 ): boolean {
-  if (isSessionLevelAssessment(candidate)) {
-    return reviews.some((item) => isSessionLevelAssessment(item) && item.sessionId === candidate.sessionId);
-  }
   const key = reviewIdentityKey(candidate);
   return reviews.some(
     (item) => reviewIdentityKey(item) === key && isReviewPersistConfirmed(item),
