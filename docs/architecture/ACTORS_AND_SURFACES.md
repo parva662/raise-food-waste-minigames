@@ -21,11 +21,14 @@ People working in the kitchen (in this pilot they are often students of the kitc
 
 ### 3. Chef / trainer
 
-Supervisory role. Uses the Kitchen Skills Challenge **trainer** surface (`#/kitchen-day-tutor`) staff → sessions → module tabs to inspect student evidence and post one `wastePracticeReview` per completed module (`reviewedGame`) as `SILENT_ACTIVITY` with `actors: [selectedStudentActorId]`. Trainer listing comes from dedicated `kitchenSkillsTrainerInput.activities`. Live trainer posting is **enabled**. Do not reuse `kitchenGroupInput` (forecast/closeout).
+Supervisory role. Uses:
+
+- Kitchen Skills Challenge **trainer** surface (`#/kitchen-day-tutor`) staff → sessions → module tabs to inspect student evidence and post one `wastePracticeReview` per completed module (`reviewedGame`) as `SILENT_ACTIVITY` with `actors: [selectedStudentActorId]`. Trainer listing comes from dedicated `kitchenSkillsTrainerInput.activities`. Live trainer posting is **enabled**. Do not reuse `kitchenGroupInput` (forecast/closeout).
+- Kitchen Management Dashboard (`#/chef-results-admin` via GameBus `/admindashboard`) for the same read-only Forecast & Service + Kitchen Skills views as administrators, when GameBus grants the page/menu and group Input Collections. See [`../how-to/configure-chef-management-dashboard-access.md`](../how-to/configure-chef-management-dashboard-access.md).
 
 ### 4. Admin viewer
 
-Read-only management / research viewer. Uses Forecast Results admin (`#/chef-results-admin`). Authorization is platform/GameBus visibility, not a frontend login.
+Read-only management / research viewer. Uses Forecast Results admin (`#/chef-results-admin`). Authorization is platform/GameBus visibility (menu item + page access + Input Collections), not a frontend login or hard-coded account list.
 
 ## Surfaces vs domains
 

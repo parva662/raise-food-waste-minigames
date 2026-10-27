@@ -22,7 +22,7 @@ export function ManagementDashboardHeader({
         <h1 className="kitchen-mgmt-header__title">Kitchen Management Dashboard</h1>
         <p className="kitchen-mgmt-header__lead">
           Review Forecast &amp; Service outcomes and Kitchen Skills performance for authorized
-          administrators and researchers.
+          chefs, administrators, and researchers.
         </p>
         {isLoading ? (
           <p className="kitchen-mgmt-header__loading" data-testid="chef-results-admin-pending">

@@ -114,12 +114,12 @@ Cannot be closed from this repo’s Vitest stack (no browser E2E):
 
 | | |
 |--|--|
-| **Status** | **Merged and deployed** on `main` (`13f235a`; `#/chef-results-admin`; Forecast & Service + Kitchen Skills; Forecast-only service-date selector; Kitchen Skills reporting period; detail drawers; compact Trends; assessment means; responsive tabs; authorization TBD) |
+| **Status** | **Merged and deployed** on `main` (`#/chef-results-admin`; Forecast & Service + Kitchen Skills; Forecast-only service-date selector; Kitchen Skills reporting period; detail drawers; compact Trends; assessment means; responsive tabs) |
 | **Gherkin** | [`../../features/kitchen/kitchen-results-admin.feature`](../../features/kitchen/kitchen-results-admin.feature) |
 | **Coverage** | [`../testing/KITCHEN_RESULTS_ADMIN_ACCEPTANCE_COVERAGE.md`](../testing/KITCHEN_RESULTS_ADMIN_ACCEPTANCE_COVERAGE.md) |
-| **Input Collections** | Forecast: `kitchenGroupInput` + `inputCollectionPari.me`. Kitchen Skills: `kitchenSkillsTrainerInput` (group). Does **not** use `kitchenGroupInputSelf`. |
-| **Live admin config** | **Verified 2026-10-15** on `https://foodtracker.gamebus.eu/admindashboard` after Input Requests set `limit=500`: page receives complete `kitchenGroupInput` (**110** = 74 `chefForecast` + 36 `wasteMeasurement`) and `kitchenSkillsTrainerInput` (**73** = trim/rescue/portion/review). Template filters unchanged. PR #5 merged to `main` (`13f235a`); GitHub Pages deploy success; live embed shows unified Forecast & Service + Kitchen Skills shell with identifiable Forecast names. |
-| **Migration / doc review** | Authorization remains platform-enforced / `@pending`. Hiding the React route is not sufficient production security for identifiable Kitchen Skills data. |
+| **Input Collections** | Forecast: `kitchenGroupInput` + `inputCollectionPari.me`. Kitchen Skills: `kitchenSkillsTrainerInput` (group). Does **not** use `kitchenGroupInputSelf` for management reads. |
+| **Live admin config** | **Re-verified 2026-10-27** on `https://foodtracker.gamebus.eu/admindashboard`: embed `#/chef-results-admin`; collections `inputCollectionPari`, `kitchenGroupInput` (`limit=500`), `kitchenSkillsTrainerInput` (`limit=500`) attached. Authenticated Chef (`staff1`) loads Forecast Overview with live group data (e.g. 3 forecasts / Wed 28 Oct). **Gap:** page `menuItems` is empty — no left-menu entry for Chefs; set `isGloballyAvailable=false` and add a group-restricted menu item per [`../how-to/configure-chef-management-dashboard-access.md`](../how-to/configure-chef-management-dashboard-access.md). Unauthenticated `/admindashboard` → App page not found. |
+| **Migration / doc review** | Authorization is GameBus page/menu + collections (no SPA allow-list). Menu restriction for Chefs still needs organizer apply; Gherkin `@pending` platform scenario remains until that menu/group lock is live. |
 
 ---
 

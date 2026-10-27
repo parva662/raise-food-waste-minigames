@@ -12,7 +12,7 @@ Read-only (in-app) feedback and research views over kitchen / participant foreca
 Two surfaces exist in the current repository:
 
 1. **Kitchen Staff Dashboard / Chef Results (participant)** — participant-safe forecast feedback.
-2. **Kitchen Management Dashboard (admin / research)** — unified read-only management view at `#/chef-results-admin` with two main areas: **Forecast & Service** (Overview / Staff / Trends / History) and **Kitchen Skills** (Overview / Participants / Sessions / Assessments). Route access and production authorization remain operational concerns.
+2. **Kitchen Management Dashboard (Chef / admin / research)** — unified read-only management view at `#/chef-results-admin` with two main areas: **Forecast & Service** (Overview / Staff / Trends / History) and **Kitchen Skills** (Overview / Participants / Sessions / Assessments). Production authorization is GameBus page/menu + Input Collections (not SPA hard-coding); operators: [`../how-to/configure-chef-management-dashboard-access.md`](../how-to/configure-chef-management-dashboard-access.md).
 
 ---
 
@@ -72,6 +72,6 @@ Describe behaviour only from current source and existing docs. Detailed migratio
 
 ## Unresolved / pending (from existing docs)
 
-- Production authorization for the management route.
+- GameBus left-menu item + `isGloballyAvailable=false` for `/admindashboard` so only authorized Chef/admin groups see the management page ([`../how-to/configure-chef-management-dashboard-access.md`](../how-to/configure-chef-management-dashboard-access.md)). Input Collections on the page are already attached.
 - Doc migration review pending.
 - Some calculation/data paths remain fixture-backed where noted in existing documentation and source.
