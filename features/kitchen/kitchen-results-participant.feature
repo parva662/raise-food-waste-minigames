@@ -104,17 +104,34 @@ Feature: Kitchen staff review their own forecast simulation results
 
   Rule: Overview shows current service status, latest own result, and You vs Team
 
-    Overview must not let "Waiting for service closeout" hide the chef's latest completed historical result.
+    Overview must not let "Results pending" hide the chef's latest completed historical result.
     You vs Team compares the same service and the same metric units (g/customer or customers).
     Performance summary uses only those transparent metrics — no overall score, stars, or ranking.
+
+    Current-service status copy:
+      - Forecast submitted, no matching closeout yet → "Results pending"
+        with explanation that results appear once final service figures are recorded
+      - Personal forecast and matching closeout for the same service date → "Result ready"
+      - No personal forecast for the service date → "No forecast for this service"
+        (never show "Results pending" without a personal forecast)
+      - Do not use the user-facing label "Waiting for service closeout"
 
     @overview @ux
     Scenario: Overview keeps latest completed result while current service waits
       Given the authenticated chef has an earlier completed result
       And the current service date has an eligible forecast but no closeout yet
       When the participant opens Overview
-      Then Current service shows Waiting for service closeout
+      Then Current service shows Results pending
+      And the status explanation says results will be available once final service figures are recorded
       And Latest forecast result still shows the earlier completed service metrics
+
+    @overview @ux @status
+    Scenario: No personal forecast does not show Results pending
+      Given the current service date has no eligible personal forecast for the authenticated chef
+      And a coworker may have forecasted the same service
+      When the participant opens Overview
+      Then Current service shows No forecast for this service
+      And Results pending is not shown
 
     @overview @ux @peers
     Scenario: You vs Team is shown beside the latest own result in matching units

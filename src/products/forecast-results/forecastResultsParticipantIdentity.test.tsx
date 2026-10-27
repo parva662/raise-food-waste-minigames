@@ -190,9 +190,8 @@ describe('forecast participant identity', () => {
       ],
       sep8,
     );
-    expect(screen.getByTestId('dashboard-status-chip')).toHaveTextContent(
-      'Waiting for service closeout',
-    );
+    expect(screen.getByTestId('dashboard-status-chip')).toHaveTextContent('Results pending');
+    expect(screen.queryByText(/Waiting for service closeout/i)).not.toBeInTheDocument();
     expect(screen.getByTestId('latest-forecast-date')).toHaveTextContent(/2 September 2026/);
     await user.click(screen.getByTestId('participant-primary-tab-progress'));
     expect(screen.getByTestId(`progress-recent-row-${sep2}`)).toBeInTheDocument();

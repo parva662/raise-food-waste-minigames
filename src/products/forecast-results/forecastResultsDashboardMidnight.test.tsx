@@ -41,7 +41,7 @@ describe('participant dashboard midnight and no-service UX', () => {
       /Monday, 7 September 2026/,
     );
     expect(screen.getByTestId('dashboard-status-chip')).toHaveTextContent(
-      /Waiting for service closeout|Result ready|No forecast for this service/,
+      /Results pending|Result ready|No forecast for this service/,
     );
 
     await user.click(screen.getByTestId('participant-primary-tab-progress'));
@@ -105,7 +105,12 @@ describe('participant dashboard midnight and no-service UX', () => {
       /Monday, 17 August 2026/,
     );
     expect(screen.getByTestId('dashboard-status-chip')).not.toHaveTextContent('No service today');
-    expect(screen.getByTestId('dashboard-status-chip')).toHaveTextContent('Waiting for service closeout');
+    // Standalone fixture has no personal forecast for this Monday → not "Results pending".
+    expect(screen.getByTestId('dashboard-status-chip')).toHaveTextContent(
+      'No forecast for this service',
+    );
+    expect(screen.queryByText(/Waiting for service closeout/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/^Results pending$/i)).not.toBeInTheDocument();
   });
 
   it('shows No service today for an explicitly closed weekday', () => {

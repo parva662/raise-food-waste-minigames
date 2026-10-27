@@ -160,8 +160,9 @@ export function ForecastResultsParticipantApp() {
   const hasCurrentResult =
     isServiceDay && !isEmbeddedLoading && completeDailyResults !== null && ownResult !== null;
 
-  const pendingForecast = useMemo(() => {
-    if (!isServiceDay || !canLoadParticipantData || hasCloseout || hasCurrentResult) return null;
+  /** Authenticated user's eligible forecast for the current service date only — never another chef's. */
+  const personalForecastForService = useMemo(() => {
+    if (!isServiceDay || !canLoadParticipantData) return null;
     if (embedded && inputCollectionsReady) {
       return getParticipantEligibleForecastForDate(
         inputCollections,
@@ -181,14 +182,15 @@ export function ForecastResultsParticipantApp() {
     currentUserId,
     embedded,
     fixtureUserId,
-    hasCloseout,
-    hasCurrentResult,
     inputCollections,
     inputCollectionsReady,
     isServiceDay,
     resultsServiceDate,
     kitchenCalculationCache,
   ]);
+
+  const pendingForecast =
+    !hasCloseout && !hasCurrentResult ? personalForecastForService : null;
 
   const progressServicePoints = useMemo(() => {
     if (!canLoadProgress) return [];
@@ -250,9 +252,9 @@ export function ForecastResultsParticipantApp() {
       ? 'no-service'
       : hasCurrentResult
         ? 'result-ready'
-        : hasCloseout
-          ? 'no-forecast'
-          : 'waiting-closeout';
+        : personalForecastForService && !hasCloseout
+          ? 'results-pending'
+          : 'no-forecast';
 
   return (
     <div

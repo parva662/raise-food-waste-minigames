@@ -4,7 +4,7 @@ import { formatServiceDateLong } from '@/products/forecast-results/displayFormat
 export type DashboardStatus =
   | 'loading'
   | 'result-ready'
-  | 'waiting-closeout'
+  | 'results-pending'
   | 'no-forecast'
   | 'no-service';
 
@@ -13,22 +13,28 @@ interface DashboardHeaderProps {
   status: DashboardStatus;
 }
 
-const STATUS_COPY: Record<Exclude<DashboardStatus, 'loading'>, { label: string; className: string }> =
-  {
-    'result-ready': { label: 'Result ready', className: 'chef-results-status-chip--ready' },
-    'waiting-closeout': {
-      label: 'Waiting for service closeout',
-      className: 'chef-results-status-chip--waiting',
-    },
-    'no-forecast': {
-      label: 'No forecast for this service',
-      className: 'chef-results-status-chip--neutral',
-    },
-    'no-service': {
-      label: 'No service today',
-      className: 'chef-results-status-chip--neutral',
-    },
-  };
+const RESULTS_PENDING_EXPLANATION =
+  "Your forecast results will be available once the kitchen's final service figures have been recorded.";
+
+const STATUS_COPY: Record<
+  Exclude<DashboardStatus, 'loading'>,
+  { label: string; className: string; explanation?: string }
+> = {
+  'result-ready': { label: 'Result ready', className: 'chef-results-status-chip--ready' },
+  'results-pending': {
+    label: 'Results pending',
+    className: 'chef-results-status-chip--waiting',
+    explanation: RESULTS_PENDING_EXPLANATION,
+  },
+  'no-forecast': {
+    label: 'No forecast for this service',
+    className: 'chef-results-status-chip--neutral',
+  },
+  'no-service': {
+    label: 'No service today',
+    className: 'chef-results-status-chip--neutral',
+  },
+};
 
 export function DashboardHeader({ serviceDate, status }: DashboardHeaderProps) {
   const statusCopy = status === 'loading' ? null : STATUS_COPY[status];
@@ -66,26 +72,38 @@ export function DashboardHeader({ serviceDate, status }: DashboardHeaderProps) {
               <span>Loading results…</span>
             </div>
           ) : statusCopy ? (
-            <div
-              className={`chef-results-status-chip ${statusCopy.className}`}
-              data-testid="dashboard-status-chip"
-            >
-              {status === 'result-ready' ? (
-                <CheckCircle2 size={14} aria-hidden="true" />
-              ) : status === 'no-forecast' || status === 'no-service' ? (
-                status === 'no-service' ? (
-                  <Ban size={14} aria-hidden="true" />
+            <>
+              <div
+                className={`chef-results-status-chip ${statusCopy.className}`}
+                data-testid="dashboard-status-chip"
+              >
+                {status === 'result-ready' ? (
+                  <CheckCircle2 size={14} aria-hidden="true" />
+                ) : status === 'no-forecast' || status === 'no-service' ? (
+                  status === 'no-service' ? (
+                    <Ban size={14} aria-hidden="true" />
+                  ) : (
+                    <FileQuestion size={14} aria-hidden="true" />
+                  )
                 ) : (
-                  <FileQuestion size={14} aria-hidden="true" />
-                )
-              ) : (
-                <Clock3 size={14} aria-hidden="true" />
-              )}
-              <span>{statusCopy.label}</span>
-            </div>
+                  <Clock3 size={14} aria-hidden="true" />
+                )}
+                <span>{statusCopy.label}</span>
+              </div>
+              {statusCopy.explanation ? (
+                <p
+                  className="chef-results-dashboard-header__status-explanation"
+                  data-testid="dashboard-status-explanation"
+                >
+                  {statusCopy.explanation}
+                </p>
+              ) : null}
+            </>
           ) : null}
         </div>
       </div>
     </header>
   );
 }
+
+export { RESULTS_PENDING_EXPLANATION };

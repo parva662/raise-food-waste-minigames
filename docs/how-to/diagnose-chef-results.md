@@ -22,7 +22,7 @@ Related coverage notes: [`../testing/KITCHEN_RESULTS_PARTICIPANT_ACCEPTANCE_COVE
 2. Embed received `INPUT_COLLECTIONS` and `inputCollectionPari.me` parses to the expected GameBus user (`id`, names).
 3. Optional on this route only: open `#/chef-results?gamebusDebug=1` and check the browser console for `[gamebus] authenticated user` (id / name). The participant page does **not** render an on-page Input Collections debug panel. Wider console logging: [`verify-input-collections.md`](verify-input-collections.md).
 
-If `me.id` does not match the `actorId` on the person’s `chefForecast` activities, Progress and own-day metrics stay empty even when closeout exists — that is identity mismatch, not “waiting for closeout”.
+If `me.id` does not match the `actorId` on the person’s `chefForecast` activities, Progress and own-day metrics stay empty even when closeout exists — that is identity mismatch, not “Results pending”.
 
 ---
 
@@ -34,8 +34,8 @@ If `me.id` does not match the `actorId` on the person’s `chefForecast` activit
 |-------------|----------------|
 | Weekend / explicit closure | Header **No service today**; Progress remains available |
 | Missing menu on an open weekday | Still an operational service day; do not treat as non-service |
-| Header **Waiting for service closeout** | Operational day, no finalized closeout yet; Progress history must not clear |
-| Header / overview **No forecast for this service** | See §3 — closeout exists; personal eligible forecast does not |
+| Header **Results pending** | Operational day, personal eligible forecast present, no matching closeout yet; Progress history must not clear |
+| Header / overview **No forecast for this service** | See §3 — no personal eligible forecast for this service date (with or without closeout) |
 
 Forecast **submission** windows (08:00–08:29 today / 08:30+ next service) are Kitchen Forecast rules — they do **not** redefine the results dashboard date. Contracts: [`../contracts/KITCHEN_FORECAST_GAMEBUS.md`](../contracts/KITCHEN_FORECAST_GAMEBUS.md).
 
@@ -57,11 +57,13 @@ Exact UI copy (header chip and overview message): **No forecast for this service
 Status selection in `ForecastResultsParticipantApp` (simplified):
 
 1. Not an operational service day → **No service today**
-2. Else if the participant has a complete own daily result → **Result ready**
-3. Else if a closeout exists for the dashboard service date → **No forecast for this service** (`no-forecast`)
-4. Else → **Waiting for service closeout**
+2. Else if the participant has a complete own daily result (personal forecast + matching closeout for the same service date) → **Result ready**
+3. Else if the participant has an eligible personal forecast for the service date and closeout is missing → **Results pending**
+4. Else → **No forecast for this service** (no personal forecast, whether or not closeout exists)
 
-Overview current-service status shows **No forecast for this service** when `hasCloseout && !ownResult`. Personal simulated comparison for that date is unavailable. The actual kitchen outcome for that date may still appear. An earlier completed personal result stays visible as **Latest forecast result** and is not replaced by another chef or by the group.
+Do **not** show **Results pending** without a personal forecast. Do **not** use the user-facing label **Waiting for service closeout** on `#/chef-results`.
+
+Overview current-service status shows **No forecast for this service** when there is no personal eligible forecast (or closeout exists without an own calculable result). Personal simulated comparison for that date is unavailable. The actual kitchen outcome for that date may still appear when closeout exists. An earlier completed personal result stays visible as **Latest forecast result** and is not replaced by another chef or by the group.
 
 `ownResult` requires an eligible `chefForecast` for the authenticated user on that Helsinki service date that participates in the shared daily calculation (closeout + eligible forecasts from `kitchenGroupInput`).
 
@@ -72,7 +74,7 @@ Work top-down; stop when the layer that fails is clear.
 | Step | Check | If missing / mismatched |
 |------|--------|-------------------------|
 | 1. Service date | Header service date = Europe/Helsinki **calendar day** for the scenario under test | Wrong day / timezone assumption — not eligibility |
-| 2. Closeout present | Finalized `wasteMeasurement` for that `targetDate` / service date in the group kitchen feed | You should see **Waiting for service closeout**, not this chip |
+| 2. Closeout present | Finalized `wasteMeasurement` for that `targetDate` / service date in the group kitchen feed | Without closeout and with a personal forecast you should see **Results pending**, not this chip |
 | 3. Relevant Input Collection | `kitchenGroupInput.activities` delivered to the embed (not Kitchen Skills self/trainer feeds) | Live GameBus menu / payload slice — see [`verify-input-collections.md`](verify-input-collections.md) |
 | 4. Own forecast present | A `chefForecast` with exact `targetDate` = that service date appears in the same feed | Live data: user never submitted, or feed omitted the activity |
 | 5. Actor / user-id matching | Forecast `actorId` === authenticated `inputCollectionPari.me.id` | Identity mismatch — closeout can show; personal result stays empty |

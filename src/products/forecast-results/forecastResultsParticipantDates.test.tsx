@@ -150,22 +150,22 @@ describe('canonical participant results in embedded mode', () => {
     expect(screen.queryByTestId('forecast-impact-section')).not.toBeInTheDocument();
   });
 
-  it('shows no closeout state when the canonical date has no wasteMeasurement yet', async () => {
+  it('shows Results pending when the canonical date has a personal forecast but no wasteMeasurement yet', async () => {
     ingestInputCollectionsForTests(
       embeddedPayload(staff1Id, [
         buildAnonymizedChefForecastActivity({
           actorId: staff1Id,
           actorName: 'Staff One',
-          targetDate: sep8,
+          targetDate: sep7,
         }),
       ]),
     );
     const user = userEvent.setup();
     render(<ForecastResultsParticipantApp />);
 
-    expect(screen.getByTestId('dashboard-status-chip')).toHaveTextContent(
-      'Waiting for service closeout',
-    );
+    expect(screen.getByTestId('dashboard-status-chip')).toHaveTextContent('Results pending');
+    expect(screen.getByTestId('dashboard-status-explanation')).toBeInTheDocument();
+    expect(screen.queryByText(/Waiting for service closeout/i)).not.toBeInTheDocument();
     expect(screen.getByTestId('latest-forecast-empty')).toHaveTextContent('No forecast results yet.');
     await user.click(screen.getByTestId('participant-primary-tab-progress'));
     expect(screen.queryByTestId('kitchen-progress-section')).not.toBeInTheDocument();
