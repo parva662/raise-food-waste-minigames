@@ -134,7 +134,9 @@ describe('Kitchen Skills attempt identity', () => {
     expect(posts(spy, 'portionPrecision')).toHaveLength(0);
     expect(screen.queryByTestId('kitchen-day-finish-unconfirmed')).not.toBeInTheDocument();
     await user.click(screen.getByTestId('kitchen-day-open-finish-summary'));
-    expect(screen.getByTestId('kitchen-day-finish-unconfirmed')).toBeInTheDocument();
+    expect(screen.queryByTestId('kitchen-day-finish-unconfirmed')).not.toBeInTheDocument();
+    await user.click(screen.getByText('Show details'));
+    expect(screen.getByTestId('kitchen-day-finish-local-dispatch-note')).toBeInTheDocument();
   });
 
   it('posts two distinct Rescue activities consecutively and does not lock the second ingredient', async () => {

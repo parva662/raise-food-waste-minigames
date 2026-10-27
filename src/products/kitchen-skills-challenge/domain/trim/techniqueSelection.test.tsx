@@ -21,8 +21,8 @@ async function openTechniqueStep(user: ReturnType<typeof userEvent.setup>) {
   await recordHedelmatPortion(user);
   await selectTrimIngredient(user, 'Banaani', 'Banaani');
   await user.click(screen.getByRole('button', { name: 'Continue' }));
-  await typeMassGrams(user, 'kitchen-day-starting-weight', '5000');
-  await user.click(screen.getByTestId('kitchen-day-weight-continue'));
+  expect(screen.getByTestId('kitchen-day-trim-step-technique')).toBeInTheDocument();
+  expect(screen.getByTestId('kitchen-day-starting-weight')).toHaveValue('1500');
 }
 
 describe('Trim Smart technique selection', () => {

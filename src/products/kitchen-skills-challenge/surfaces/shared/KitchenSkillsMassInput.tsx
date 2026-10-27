@@ -8,8 +8,8 @@ import {
 } from '@/products/kitchen-skills-challenge/domain/mass';
 
 /**
- * Mass field with a compact g/kg selector. The parent always receives canonical grams text;
- * switching the unit keeps the typed number and reinterprets it in the new unit.
+ * Mass field with a compact g/kg selector. The parent always receives canonical grams text.
+ * Switching the unit converts the displayed number so the physical quantity stays the same.
  */
 export function KitchenSkillsMassInput({
   value,
@@ -19,6 +19,7 @@ export function KitchenSkillsMassInput({
   id,
   ariaLabel,
   unitGroupLabel,
+  defaultUnit = 'g',
 }: {
   /** Canonical grams text. */
   value: string;
@@ -28,9 +29,11 @@ export function KitchenSkillsMassInput({
   id?: string;
   ariaLabel?: string;
   unitGroupLabel?: string;
+  /** Initial display unit; defaults to grams for ingredient and waste entry. */
+  defaultUnit?: MassInputUnit;
 }) {
-  const [unit, setUnit] = useState<MassInputUnit>('kg');
-  const [text, setText] = useState(value);
+  const [unit, setUnit] = useState<MassInputUnit>(defaultUnit);
+  const [text, setText] = useState(() => gramsTextToMassInput(value, defaultUnit));
 
   useEffect(() => {
     if (massInputToGramsText(text, unit) === massInputToGramsText(value, 'g')) return;
@@ -47,8 +50,10 @@ export function KitchenSkillsMassInput({
 
   function updateUnit(next: MassInputUnit) {
     if (next === unit) return;
+    const gramsText = massInputToGramsText(text, unit);
     setUnit(next);
-    onChange(massInputToGramsText(text, next));
+    setText(gramsTextToMassInput(gramsText, next));
+    onChange(gramsText);
   }
 
   return (

@@ -3,7 +3,7 @@ import type userEvent from '@testing-library/user-event';
 
 type User = ReturnType<typeof userEvent.setup>;
 
-/** Select grams then type, matching the student path of overriding the kg default. */
+/** Ensure grams unit then type (idempotent when the field already defaults to g). */
 export async function typeMassGrams(user: User, testId: string, value: string) {
   await user.click(screen.getByTestId(`${testId}-unit-g`));
   await user.type(screen.getByTestId(testId), value);
@@ -73,13 +73,32 @@ export async function selectTrimIngredient(user: User, query: string, optionName
   await user.click(screen.getByRole('option', { name: optionName }));
 }
 
-export async function completeTrimAfterIngredient(user: User, actualWaste = '450') {
+export async function completeTrimAfterIngredient(
+  user: User,
+  actualWaste = '450',
+  options?: { startingWeightGrams?: string; estimatedWasteGrams?: string },
+) {
   await user.click(screen.getByRole('button', { name: 'Continue' }));
-  await typeMassGrams(user, 'kitchen-day-starting-weight', '5000');
-  await user.click(screen.getByTestId('kitchen-day-weight-continue'));
+  const weightStep = screen.queryByTestId('kitchen-day-trim-step-weight');
+  if (weightStep) {
+    await typeMassGrams(
+      user,
+      'kitchen-day-starting-weight',
+      options?.startingWeightGrams ?? '5000',
+    );
+    await user.click(screen.getByTestId('kitchen-day-weight-continue'));
+  } else if (options?.startingWeightGrams) {
+    const field = screen.getByTestId('kitchen-day-starting-weight');
+    await user.clear(field);
+    await typeMassGrams(user, 'kitchen-day-starting-weight', options.startingWeightGrams);
+  }
   await user.click(screen.getByTestId('kitchen-day-technique-trimming'));
   await user.click(screen.getByTestId('kitchen-day-technique-continue'));
-  await typeMassGrams(user, 'kitchen-day-estimated-waste', '600');
+  await typeMassGrams(
+    user,
+    'kitchen-day-estimated-waste',
+    options?.estimatedWasteGrams ?? '600',
+  );
   await user.click(screen.getByTestId('kitchen-day-estimate-continue'));
   await user.click(screen.getByTestId('kitchen-day-start-preparation'));
   await user.click(screen.getByTestId('kitchen-day-finish-preparation'));

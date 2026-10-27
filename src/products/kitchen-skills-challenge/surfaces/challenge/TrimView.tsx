@@ -3,6 +3,10 @@ import { formatDurationFromMinutes, formatGrams } from '@/products/kitchen-skill
 import { useReadyKitchenSkillsSession } from '@/products/kitchen-skills-challenge/domain/session/KitchenSkillsSessionContext';
 import { isIngredientAlreadyRecorded } from '@/products/kitchen-skills-challenge/domain/session/ingredientUniqueness';
 import {
+  formatCanonicalGramsText,
+  portionCompositionMassGrams,
+} from '@/products/kitchen-skills-challenge/domain/session/portionCompositionMass';
+import {
   remainingRecipeIngredientsForTrim,
   sessionRecipeReference,
   trimIngredientAvailability,
@@ -104,6 +108,7 @@ export function KitchenSkillsTrimView() {
     portionEntries,
     trimEntries,
     activeRecipeId,
+    activePortionEntry,
     recordedIngredientIds,
     commitTrimEntry,
     setTrimInProgress,
@@ -121,6 +126,8 @@ export function KitchenSkillsTrimView() {
   const [step, setStep] = useState<TrimStep>('ingredient');
   const [selectedIngredientId, setSelectedIngredientId] = useState('');
   const [weightRaw, setWeightRaw] = useState('');
+  /** True when Portion supplied a valid mass and the dedicated weight step was skipped. */
+  const [weightFromPortion, setWeightFromPortion] = useState(false);
   const [technique, setTechnique] = useState<TrimTechnique | null>(null);
   const [estimateRaw, setEstimateRaw] = useState('');
   const [actualRaw, setActualRaw] = useState('');
@@ -158,12 +165,43 @@ export function KitchenSkillsTrimView() {
     return () => setTrimInProgress(false);
   }, [selectedIngredientId, setTrimInProgress, step]);
 
+  function applyPortionStartingWeight(nextIngredientId: string): boolean {
+    const composition = activePortionEntry?.recipeComposition ?? [];
+    const portionGrams = portionCompositionMassGrams(composition, nextIngredientId);
+    if (portionGrams == null) {
+      setWeightRaw('');
+      setWeightFromPortion(false);
+      return false;
+    }
+    setWeightRaw(formatCanonicalGramsText(portionGrams));
+    setWeightFromPortion(true);
+    return true;
+  }
+
   function goNext() {
+    if (step === 'ingredient') {
+      if (!selectedIngredientId || duplicate) return;
+      if (applyPortionStartingWeight(selectedIngredientId)) {
+        setStep('technique');
+        return;
+      }
+      setStep('weight');
+      return;
+    }
+    if (step === 'weight') {
+      setWeightFromPortion(false);
+      setStep('technique');
+      return;
+    }
     const index = STEP_ORDER.indexOf(step);
     setStep(STEP_ORDER[index + 1] ?? step);
   }
 
   function goBack() {
+    if (step === 'technique' && weightFromPortion) {
+      setStep('ingredient');
+      return;
+    }
     const index = STEP_ORDER.indexOf(step);
     setStep(STEP_ORDER[index - 1] ?? step);
   }
@@ -172,6 +210,7 @@ export function KitchenSkillsTrimView() {
     setStep('ingredient');
     setSelectedIngredientId('');
     setWeightRaw('');
+    setWeightFromPortion(false);
     setTechnique(null);
     setEstimateRaw('');
     setActualRaw('');
@@ -310,6 +349,25 @@ export function KitchenSkillsTrimView() {
       {step === 'technique' ? (
         <div data-testid="kitchen-day-trim-step-technique">
           <h2 className="kitchen-day-card__title">Trimming technique</h2>
+          {weightFromPortion ? (
+            <label className="kitchen-day-field" data-testid="kitchen-day-trim-starting-weight-prefill">
+              <span>Starting weight</span>
+              <KitchenSkillsMassInput
+                testId="kitchen-day-starting-weight"
+                unitGroupLabel="Starting weight unit"
+                value={weightRaw}
+                onChange={setWeightRaw}
+              />
+              <span className="kitchen-day-card__copy" data-testid="kitchen-day-starting-weight-source">
+                Prefills from Portion Precision; change if the trimmed quantity differs.
+              </span>
+              {!weight.ok && weightRaw !== '' ? (
+                <p className="kitchen-day-error" data-testid="kitchen-day-starting-weight-error">
+                  Enter a starting weight greater than 0 grams.
+                </p>
+              ) : null}
+            </label>
+          ) : null}
           <div
             className="kitchen-day-chip-grid kitchen-day-chip-grid--techniques"
             data-testid="kitchen-day-technique-list"
@@ -334,7 +392,9 @@ export function KitchenSkillsTrimView() {
           <TrimStepActions
             onBack={goBack}
             continueTestId="kitchen-day-technique-continue"
-            continueDisabled={!canContinueToEstimate(technique)}
+            continueDisabled={
+              !canContinueToEstimate(technique) || (weightFromPortion && (!weight.ok || setupIssues.length > 0))
+            }
             onContinue={goNext}
           />
         </div>
