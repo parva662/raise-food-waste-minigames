@@ -43,7 +43,7 @@ Exact stored properties: slug contract. Do **not** duplicate `ingredientName` or
 
 ## 4. Journey
 
-Complete Trim through actual waste → compact reuse form (reusable mass defaults to kg; g selectable; preparation method and reuse destination; discarded remainder with spacing) → save (`SILENT_ACTIVITY`). The student can return to Trim for another ingredient. **Finish challenge** stays unavailable while any positive-waste Trim ingredient still lacks a Rescue decision. Layout: [`../UI_STANDARD.md`](../UI_STANDARD.md).
+Complete Trim through actual waste → compact reuse form (reusable mass defaults to g; kg selectable; preparation method and reuse destination; discarded remainder with spacing) → save (`SILENT_ACTIVITY`). The student can return to Trim for another ingredient. **Finish challenge** stays unavailable while any positive-waste Trim ingredient still lacks a Rescue decision. Layout: [`../UI_STANDARD.md`](../UI_STANDARD.md).
 
 ## 5. Removed (historical naming)
 
