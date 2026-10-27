@@ -4,7 +4,7 @@ import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MealSection } from '@/products/lunch-declaration/components/MealSection';
 import { RegularLunchPanel } from '@/products/lunch-declaration/components/RegularLunchPanel';
-import { SoupLunchPanel } from '@/products/lunch-declaration/components/SoupLunchPanel';
+import { SoupDessertPackagePanel } from '@/products/lunch-declaration/components/SoupDessertPackagePanel';
 import { PortionFoodCard } from '@/products/lunch-declaration/components/PortionFoodCard';
 import { GameStatusHeader } from '@/products/lunch-declaration/components/GameStatusHeader';
 import { SelectionPanel } from '@/products/lunch-declaration/components/SelectionPanel';
@@ -26,7 +26,7 @@ describe('unified portion food UI', () => {
     render(
       <PortionFoodCard
         item={slots.main}
-        categoryLabel="Main dish"
+        categoryLabel="Classic dish"
         quantity={0}
         sectionActive={false}
         menuInteractive
@@ -45,7 +45,7 @@ describe('unified portion food UI', () => {
     render(
       <PortionFoodCard
         item={slots.main}
-        categoryLabel="Main dish"
+        categoryLabel="Classic dish"
         quantity={0}
         sectionActive={false}
         menuInteractive
@@ -58,21 +58,33 @@ describe('unified portion food UI', () => {
     expect(onIncrement).toHaveBeenCalled();
   });
 
-  it('renders regular and soup panels with shared grid', () => {
-    render(
+  it('renders exclusive classic panel and soup package panel', () => {
+    const { rerender } = render(
       <RegularLunchPanel
-        main={slots.main}
-        vegetarian={slots.vegetarian}
-        mainQuantity={1}
-        vegetarianQuantity={0}
+        item={slots.main}
+        categoryLabel="Classic dish"
+        quantity={1}
         sectionActive
         menuInteractive
         onActivateSection={() => undefined}
-        onAdjustMain={() => undefined}
-        onAdjustVegetarian={() => undefined}
+        onAdjust={() => undefined}
       />,
     );
     expect(document.querySelector('.portion-food-grid')).toBeInTheDocument();
+
+    rerender(
+      <SoupDessertPackagePanel
+        soup={slots.soup}
+        dessert={slots.dessert}
+        packageQuantity={2}
+        sectionActive
+        menuInteractive
+        onActivateSection={() => undefined}
+        onAdjustPackage={() => undefined}
+      />,
+    );
+    expect(screen.getByRole('group', { name: /Soup \+ Dessert package:/i })).toBeInTheDocument();
+    expect(screen.getByText(/One quantity sets both soup and dessert/i)).toBeInTheDocument();
   });
 
   it('shows submission deadline in game header', () => {
@@ -92,27 +104,25 @@ describe('unified portion food UI', () => {
     const onActivate = vi.fn();
     render(
       <MealSection
-        sectionId="regular-lunch"
-        title="Regular lunch"
-        description="Choose the main dish, the vegetarian dish, or both."
+        sectionId="classic-dish"
+        title="Classic dish"
+        description="Choose only the classic main dish."
         active={false}
         muted={false}
         onActivate={onActivate}
       >
-        <SoupLunchPanel
-          soup={slots.soup}
-          dessert={slots.dessert}
-          soupQuantity={0}
-          dessertQuantity={0}
+        <RegularLunchPanel
+          item={slots.main}
+          categoryLabel="Classic dish"
+          quantity={0}
           sectionActive={false}
           menuInteractive
           onActivateSection={() => undefined}
-          onAdjustSoup={() => undefined}
-          onAdjustDessert={() => undefined}
+          onAdjust={() => undefined}
         />
       </MealSection>,
     );
-    await user.click(screen.getByText('Regular lunch'));
+    await user.click(screen.getByText('Choose only the classic main dish.'));
     expect(onActivate).toHaveBeenCalled();
   });
 });

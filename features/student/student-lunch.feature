@@ -29,10 +29,12 @@ Feature: Student declares attendance and intended lunch for the next operational
     - Exactly at 23:59:00 the declaration is closed.
     - Before final submission the student may change their choices freely.
     - After successful final submission the declaration cannot be changed or submitted again.
-    - Regular lunch, Soup lunch, and No lunch are mutually exclusive packages.
+    - Classic dish, Vegetarian dish, Soup + Dessert package, and No lunch are four mutually exclusive options.
+    - Classic and Vegetarian cannot be selected together; selecting one clears the other options.
+    - Soup and Dessert are always selected together with one shared package quantity.
     - Quantities use whole numbers from 0 through a configured maximum.
-    - Zero is a valid quantity on the active package.
-    - Inactive-package quantity values remaining at 0 is normal and is not unanswered data.
+    - Zero is a valid quantity on the active option while editing; submission still requires a positive quantity for food options.
+    - Inactive-option quantity values remaining at 0 is normal and is not unanswered data.
     - Student Lunch does not use a blank-vs-zero quantity UX; quantity controls are whole-number steppers.
     - Quantities use a configured maximum because the final business maximum is not yet fixed.
     - The existing Student Lunch mission must remain separate from the later plate-photo/weight mission.
@@ -244,94 +246,106 @@ Feature: Student declares attendance and intended lunch for the next operational
   # ATTENDANCE AND MEAL CHOICE
   # ---------------------------------------------------------------------------
 
-  Rule: The declaration represents either attendance with one meal package or absence
+  Rule: The declaration represents either attendance with one exclusive option or absence
 
     @meal-choice
-    Scenario: Student chooses Regular lunch
+    Scenario: Student chooses Classic dish
       Given the student has not made a final submission
-      When the student selects "Regular lunch"
-      Then the Regular lunch controls become active
-      And the Soup lunch controls are not active
+      When the student selects "Classic dish"
+      Then the Classic dish controls become active
+      And the Vegetarian dish controls are not active
+      And the Soup + Dessert package controls are not active
       And the No lunch state is not active
 
     @meal-choice
-    Scenario: Student chooses Soup lunch
+    Scenario: Student chooses Vegetarian dish
       Given the student has not made a final submission
-      When the student selects "Soup lunch"
-      Then the Soup and Dessert components are presented together as the Soup lunch package
-      And the Regular lunch controls are not active
+      When the student selects "Vegetarian dish"
+      Then the Vegetarian dish controls become active
+      And the Classic dish controls are not active
+      And the Soup + Dessert package controls are not active
       And the No lunch state is not active
 
     @meal-choice
-    Scenario: Student cannot combine Regular lunch and Soup lunch
-      Given the student selected "Regular lunch"
-      When the student selects "Soup lunch"
-      Then the active meal package becomes "Soup lunch"
-      And Regular lunch is no longer active
-      And the final declaration contains only one meal package
+    Scenario: Student chooses Soup + Dessert package
+      Given the student has not made a final submission
+      When the student selects "Soup + Dessert package"
+      Then Soup and Dessert are presented together with one package quantity
+      And the Classic and Vegetarian controls are not active
+      And the No lunch state is not active
+
+    @meal-choice
+    Scenario: Selecting one option clears the others
+      Given the student selected "Classic dish"
+      When the student selects "Vegetarian dish"
+      Then the active option becomes "Vegetarian dish"
+      And Classic dish quantities are cleared
+      And the final declaration contains only one option
 
     @meal-choice @editing
-    Scenario: Student can change meal package before final submission
-      Given the student selected "Regular lunch"
-      When the student changes the selection to "Soup lunch" before final submission
-      Then Soup lunch becomes the active meal package
+    Scenario: Student can change option before final submission
+      Given the student selected "Classic dish"
+      When the student changes the selection to "Soup + Dessert package" before final submission
+      Then Soup + Dessert package becomes the active option
       And the student can continue editing
 
   # ---------------------------------------------------------------------------
-  # REGULAR LUNCH
+  # CLASSIC AND VEGETARIAN
   # ---------------------------------------------------------------------------
 
-  Rule: Regular lunch contains Main and Vegetarian quantity choices
+  Rule: Classic and Vegetarian are mutually exclusive dish options
 
     @regular @quantity
-    Scenario: Main and Vegetarian quantities are shown for Regular lunch
-      When the student selects "Regular lunch"
-      Then a Main quantity control is visible
-      And a Vegetarian quantity control is visible
-      And both controls show that quantities are whole numbers from 0 through the configured maximum
+    Scenario: Classic and Vegetarian each have their own exclusive quantity control
+      When the student selects "Classic dish"
+      Then a Classic quantity control is visible
+      And selecting Vegetarian later clears the Classic quantity
+      And quantities are whole numbers from 0 through the configured maximum
 
     @regular @quantity
-    Scenario Outline: A Regular lunch component may have a measured quantity of zero
-      Given the student selected "Regular lunch"
-      When the student enters <mainQuantity> for Main
-      And the student enters <vegetarianQuantity> for Vegetarian
-      Then each entered zero is treated as the number zero
-      And inactive Soup lunch package quantities remaining at 0 are not treated as unanswered data
+    Scenario Outline: An exclusive dish option may be edited down to zero before review
+      Given the student selected "<option>"
+      When the student enters <quantity> for that dish
+      Then the entered value is treated as the number zero or positive whole number
+      And inactive option quantities remaining at 0 are not treated as unanswered data
 
       Examples:
-        | mainQuantity | vegetarianQuantity |
-        | 1            | 0                  |
-        | 0            | 1                  |
-        | 2            | 0                  |
-        | 0            | 2                  |
+        | option           | quantity |
+        | Classic dish     | 0        |
+        | Classic dish     | 2        |
+        | Vegetarian dish  | 0        |
+        | Vegetarian dish  | 1        |
 
     @regular @quantity
-    Scenario: Student can request positive quantities of both Regular lunch components
-      Given the student selected "Regular lunch"
-      When the student enters a valid positive whole-number quantity for Main
+    Scenario: Student cannot keep both Classic and Vegetarian quantities
+      Given the student selected "Classic dish"
+      And the student entered a valid positive whole-number quantity for Classic
+      When the student selects "Vegetarian dish"
       And the student enters a valid positive whole-number quantity for Vegetarian
-      Then both quantities are retained for review
+      Then Classic quantity is zero
+      And only Vegetarian is retained for review
 
   # ---------------------------------------------------------------------------
-  # SOUP LUNCH
+  # SOUP + DESSERT PACKAGE
   # ---------------------------------------------------------------------------
 
-  Rule: Soup lunch presents Soup and Dessert as one linked package
+  Rule: Soup + Dessert is one linked package with a single quantity
 
     @soup @quantity
-    Scenario: Soup and Dessert are shown together
-      When the student selects "Soup lunch"
-      Then a Soup quantity control is visible
-      And a Dessert quantity control is visible
+    Scenario: Soup and Dessert share one package quantity
+      When the student selects "Soup + Dessert package"
+      Then one package quantity control is visible
+      And Soup quantity always equals Dessert quantity
       And the package is presented as one meal choice rather than two independent meal packages
 
     @soup @quantity
-    Scenario: Zero remains a valid quantity for a Soup lunch component
-      Given the student selected "Soup lunch"
-      When the student enters 1 for Soup
-      And the student enters 0 for Dessert
-      Then Dessert quantity is treated as measured zero
-      And inactive Regular lunch package quantities remaining at 0 are not treated as unanswered data
+    Scenario: Selecting two Soup + Dessert packages sets Soup and Dessert to 2
+      Given the student selected "Soup + Dessert package"
+      When the student enters 2 for the package quantity
+      Then Soup quantity is 2
+      And Dessert quantity is 2
+      And Classic and Vegetarian quantities are 0
+      And inactive Classic and Vegetarian zeros are not treated as unanswered data
 
   # ---------------------------------------------------------------------------
   # NO LUNCH
@@ -351,9 +365,9 @@ Feature: Student declares attendance and intended lunch for the next operational
     @no-lunch @editing
     Scenario: Student can change back from No lunch before final submission
       Given the student selected "No lunch"
-      When the student selects "Regular lunch" before final submission
+      When the student selects "Classic dish" before final submission
       Then the declaration represents attendance again
-      And Regular lunch controls become active
+      And Classic dish controls become active
       And the student can enter new quantities
 
     @no-lunch @review
@@ -386,11 +400,11 @@ Feature: Student declares attendance and intended lunch for the next operational
         | Dessert     | 5   | 5        |
 
     @validation @quantity
-    Scenario: Inactive package zeros are not treated as unanswered fields
-      Given the student selected "Regular lunch"
-      And Regular lunch quantities are set
-      Then Soup lunch and Dessert quantity values remaining at 0 do not block submission
-      And those inactive-package zeros are not treated as blank unanswered fields
+    Scenario: Inactive option zeros are not treated as unanswered fields
+      Given the student selected "Classic dish"
+      And Classic dish quantity is set
+      Then Soup + Dessert package quantity values remaining at 0 do not block submission
+      And those inactive-option zeros are not treated as blank unanswered fields
 
     @validation @quantity
     Scenario Outline: Negative quantities are rejected
@@ -630,7 +644,7 @@ Feature: Student declares attendance and intended lunch for the next operational
     @e2e @multi-account
     Scenario: Student A and Student B submit different valid declarations independently
       Given Student A is logged into Student A's GameBus account
-      And Student A submits a valid "Regular lunch" declaration
+      And Student A submits a valid "Classic dish" declaration
       And Student A is returned to GameBus
       When Student A logs out
       And Student B logs into Student B's GameBus account
@@ -643,8 +657,8 @@ Feature: Student declares attendance and intended lunch for the next operational
     @e2e @multi-account @same-service
     Scenario: Two students can submit different choices for the same target service
       Given Student A and Student B are both assigned the declaration mission for the same target service
-      When Student A submits "Regular lunch"
-      And Student B submits "Soup lunch"
+      When Student A submits "Classic dish"
+      And Student B submits "Soup + Dessert package"
       Then both declarations are valid independent records
       And both point to the same target service date
       And each retains the authenticated student's own meal choice

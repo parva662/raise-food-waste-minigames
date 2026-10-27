@@ -228,12 +228,14 @@ describe('chef forecast UX', () => {
 
     const overview = getForecastOverview();
     expect(within(overview).getByText('150')).toBeInTheDocument();
-    expect(within(overview).getByText('Planned quantities')).toBeInTheDocument();
-    expect(within(overview).getAllByText('100').length).toBe(2);
-    expect(within(overview).getAllByText('50').length).toBe(2);
+    expect(within(overview).getByText('Planned Classic portions')).toBeInTheDocument();
+    expect(within(overview).getByText('Planned Vegetarian portions')).toBeInTheDocument();
+    expect(within(overview).getByText('Planned Soup + Dessert packages')).toBeInTheDocument();
+    expect(within(overview).getByTestId('chef-total-planned-portions')).toHaveTextContent('250');
+    expect(within(overview).getByTestId('chef-portions-difference')).toHaveTextContent('+100 portions');
   });
 
-  it('accepts mismatched customer and menu forecasts without warning', async () => {
+  it('shows a nonblocking warning when planned portions differ from expected customers', async () => {
     const user = userEvent.setup();
     renderChef();
 
@@ -244,9 +246,7 @@ describe('chef forecast UX', () => {
       soup: '50',
     });
 
-    expect(screen.queryByText(/meal portions minus/i)).not.toBeInTheDocument();
-    expect(screen.queryByText(/total meal portions/i)).not.toBeInTheDocument();
-    expect(getForecastOverview().querySelector('.chef-summary__difference')).not.toBeInTheDocument();
+    expect(screen.getByTestId('chef-portions-mismatch-warning')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Submit forecast' })).not.toBeDisabled();
   });
 
@@ -295,7 +295,7 @@ describe('chef forecast UX', () => {
     expect(within(overview).getAllByText('Not entered').length).toBeGreaterThan(0);
   });
 
-  it('does not render combined totals or arithmetic expressions', async () => {
+  it('shows live total and difference without inline arithmetic formulas', async () => {
     const user = userEvent.setup();
     renderChef();
 
@@ -307,10 +307,10 @@ describe('chef forecast UX', () => {
     });
 
     const overview = getForecastOverview();
-    expect(within(overview).queryByText(/\+/)).not.toBeInTheDocument();
-    expect(within(overview).queryByText(/100 \+ 100 \+ 50/)).not.toBeInTheDocument();
-    expect(within(overview).queryByText(/total/i)).not.toBeInTheDocument();
-    expect(within(overview).queryByText(/difference/i)).not.toBeInTheDocument();
+    expect(within(overview).getByTestId('chef-total-planned-portions')).toHaveTextContent('80');
+    expect(within(overview).getByTestId('chef-portions-difference')).toHaveTextContent('-20 portions');
+    expect(within(overview).queryByText(/80 \+ 0 \+ 0/)).not.toBeInTheDocument();
+    expect(screen.getByTestId('chef-portions-mismatch-warning')).toBeInTheDocument();
   });
 
   it('does not block submission when forecasts differ across categories', async () => {

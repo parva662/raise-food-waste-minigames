@@ -22,6 +22,7 @@ export interface SavedSnapshot extends MealDraft {
 export function createEmptyDraft(): DraftSnapshot {
   return {
     mealChoice: null,
+    lunchOption: null,
     mainQuantity: 0,
     vegetarianQuantity: 0,
     soupQuantity: 0,

@@ -1,7 +1,8 @@
-import type { MealChoice, MealDraft } from '@/shared/menu/mealChoice';
+import type { LunchOption, MealChoice, MealDraft } from '@/shared/menu/mealChoice';
+import { mealChoiceFromLunchOption } from '@/shared/menu/mealChoice';
 import { adjustPortionQuantity } from '@/products/lunch-declaration/mealChoice';
 
-export type PortionField = 'main' | 'vegetarian' | 'soup' | 'dessert';
+export type PortionField = 'main' | 'vegetarian' | 'soup' | 'dessert' | 'soup_dessert';
 
 export function emptyPortionQuantities(): Pick<
   MealDraft,
@@ -10,21 +11,31 @@ export function emptyPortionQuantities(): Pick<
   return { mainQuantity: 0, vegetarianQuantity: 0, soupQuantity: 0, dessertQuantity: 0 };
 }
 
-/** Switch active meal section and clear quantities from the previous section. */
+export function draftForLunchOption(
+  previous: MealDraft,
+  option: LunchOption,
+): MealDraft {
+  if (previous.lunchOption === option && previous.mealChoice === mealChoiceFromLunchOption(option)) {
+    return previous;
+  }
+  return {
+    lunchOption: option,
+    mealChoice: mealChoiceFromLunchOption(option),
+    ...emptyPortionQuantities(),
+  };
+}
+
+/** @deprecated Prefer draftForLunchOption — kept for call sites that still pass MealChoice. */
 export function draftForMealChoice(
   previous: MealDraft,
   choice: MealChoice,
 ): MealDraft {
-  if (previous.mealChoice === choice) {
-    return previous;
+  if (choice === 'no_lunch') return draftForLunchOption(previous, 'no_lunch');
+  if (choice === 'soup') return draftForLunchOption(previous, 'soup');
+  if (previous.lunchOption === 'vegetarian') {
+    return draftForLunchOption(previous, 'vegetarian');
   }
-  if (choice === 'no_lunch') {
-    return { mealChoice: 'no_lunch', ...emptyPortionQuantities() };
-  }
-  if (choice === 'regular') {
-    return { mealChoice: 'regular', ...emptyPortionQuantities() };
-  }
-  return { mealChoice: 'soup', ...emptyPortionQuantities() };
+  return draftForLunchOption(previous, 'classic');
 }
 
 export function applyPortionAdjustment(
@@ -33,27 +44,51 @@ export function applyPortionAdjustment(
   delta: number,
   maxQuantity: number,
 ): MealDraft {
-  const section: MealChoice = field === 'main' || field === 'vegetarian' ? 'regular' : 'soup';
-
-  if (draft.mealChoice !== section) {
-    if (delta <= 0) {
-      return draft;
+  if (field === 'soup_dessert' || field === 'soup' || field === 'dessert') {
+    if (draft.lunchOption !== 'soup') {
+      if (delta <= 0) return draft;
+      draft = draftForLunchOption(draft, 'soup');
     }
-    draft = draftForMealChoice(draft, section);
+    const current = draft.soupQuantity;
+    const nextQty = adjustPortionQuantity(current, delta, maxQuantity);
+    return {
+      ...draft,
+      lunchOption: 'soup',
+      mealChoice: 'soup',
+      mainQuantity: 0,
+      vegetarianQuantity: 0,
+      soupQuantity: nextQty,
+      dessertQuantity: nextQty,
+    };
   }
 
-  const key =
-    field === 'main'
-      ? 'mainQuantity'
-      : field === 'vegetarian'
-        ? 'vegetarianQuantity'
-        : field === 'soup'
-          ? 'soupQuantity'
-          : 'dessertQuantity';
+  const option: LunchOption = field === 'main' ? 'classic' : 'vegetarian';
+  if (draft.lunchOption !== option) {
+    if (delta <= 0) return draft;
+    draft = draftForLunchOption(draft, option);
+  }
 
-  const current = draft[key];
+  if (field === 'main') {
+    const nextQty = adjustPortionQuantity(draft.mainQuantity, delta, maxQuantity);
+    return {
+      ...draft,
+      lunchOption: 'classic',
+      mealChoice: 'regular',
+      mainQuantity: nextQty,
+      vegetarianQuantity: 0,
+      soupQuantity: 0,
+      dessertQuantity: 0,
+    };
+  }
+
+  const nextQty = adjustPortionQuantity(draft.vegetarianQuantity, delta, maxQuantity);
   return {
     ...draft,
-    [key]: adjustPortionQuantity(current, delta, maxQuantity),
+    lunchOption: 'vegetarian',
+    mealChoice: 'regular',
+    mainQuantity: 0,
+    vegetarianQuantity: nextQty,
+    soupQuantity: 0,
+    dessertQuantity: 0,
   };
 }

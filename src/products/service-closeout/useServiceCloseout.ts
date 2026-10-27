@@ -79,7 +79,37 @@ function closeoutReducer(state: ServiceCloseoutState, action: CloseoutAction): S
         draft: { ...state.draft, actualCustomers: action.value },
         finalizeError: null,
       };
-    case 'SET_PREPARED':
+    case 'SET_PREPARED': {
+      // Soup + Dessert packages: prepared dessert always follows prepared soup.
+      // Overproduction waste remains independent per category.
+      if (action.category === 'soup') {
+        return {
+          ...state,
+          draft: {
+            ...state.draft,
+            soup: {
+              ...state.draft.soup,
+              preparedQuantity: action.value,
+            },
+            dessert: {
+              ...state.draft.dessert,
+              preparedQuantity: action.value,
+            },
+          },
+          categoryErrors: {
+            ...state.categoryErrors,
+            dessert: {
+              ...state.categoryErrors.dessert,
+              prepared: null,
+            },
+          },
+          finalizeError: null,
+        };
+      }
+      if (action.category === 'dessert') {
+        // Dessert prepared is driven by soup; ignore direct edits.
+        return state;
+      }
       return {
         ...state,
         draft: {
@@ -91,6 +121,7 @@ function closeoutReducer(state: ServiceCloseoutState, action: CloseoutAction): S
         },
         finalizeError: null,
       };
+    }
     case 'SET_WASTE':
       return {
         ...state,

@@ -45,6 +45,9 @@ Feature: Kitchen staff forecast the portions needed for a lunch service
       inferred from the submission time.
     - Expected customers is a headcount forecast; menu quantities are portion forecasts.
     - Those forecasts are independent and need not sum to the expected customers.
+    - The live overview shows total planned lunch portions (Classic + Vegetarian + Soup)
+      and the difference from expected customers, with a nonblocking mismatch warning.
+    - Dessert is not counted separately in that total because it belongs to the soup package.
     - Soup and dessert are one soup-menu forecast entered once.
     - Blank means unanswered; an explicit 0 is a deliberate forecast.
     - Forecast quantities are whole numbers from 0 through 1000 inclusive.
@@ -434,12 +437,26 @@ Feature: Kitchen staff forecast the portions needed for a lunch service
       And neither value changes the soup-menu quantity
       And neither value changes expected customers
 
+    @inputs @overview-totals
+    Scenario: Live overview shows planned total and difference from expected customers
+      Given expected customers is 240
+      And Classic planned portions is 800
+      And Vegetarian planned portions is 50
+      And Soup + Dessert packages is 60
+      When the kitchen-staff member views the forecast overview
+      Then total planned lunch portions is 910
+      And the difference from expected customers is +670 portions
+      And dessert is not counted separately in the total
+      And a nonblocking warning explains that planned portions differ from expected customers
+      And submission is not blocked
+      And the calculated totals are not added to the GameBus payload
+
     @inputs @no-arithmetic
     Scenario: Portions do not have to add up to expected customers
       Given expected customers and all menu forecasts are answered
       And the portion forecasts do not sum to the expected customers
-      Then no total, difference, or balancing figure is presented as a rule
-      And no error or warning claims the forecast is inconsistent
+      Then the overview still shows the live total and difference
+      And no error claims the forecast is inconsistent
       And submission is not blocked
       And the product recognises that one customer may take more than one portion or category
 

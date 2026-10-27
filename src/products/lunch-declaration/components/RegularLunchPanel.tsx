@@ -2,49 +2,38 @@ import type { MenuItem } from '@/shared/menu/types';
 import { PortionFoodCard } from '@/products/lunch-declaration/components/PortionFoodCard';
 
 interface RegularLunchPanelProps {
-  main: MenuItem;
-  vegetarian: MenuItem;
-  mainQuantity: number;
-  vegetarianQuantity: number;
+  item: MenuItem;
+  categoryLabel: string;
+  quantity: number;
   sectionActive: boolean;
   menuInteractive: boolean;
   onActivateSection: () => void;
-  onAdjustMain: (delta: number) => void;
-  onAdjustVegetarian: (delta: number) => void;
+  onAdjust: (delta: number) => void;
+  ariaLabel?: string;
 }
 
+/** Single exclusive dish option (Classic or Vegetarian). */
 export function RegularLunchPanel({
-  main,
-  vegetarian,
-  mainQuantity,
-  vegetarianQuantity,
+  item,
+  categoryLabel,
+  quantity,
   sectionActive,
   menuInteractive,
   onActivateSection,
-  onAdjustMain,
-  onAdjustVegetarian,
+  onAdjust,
+  ariaLabel,
 }: RegularLunchPanelProps) {
   return (
-    <div className="portion-food-grid" aria-label="Regular lunch dishes">
+    <div className="portion-food-grid" aria-label={ariaLabel ?? categoryLabel}>
       <PortionFoodCard
-        item={main}
-        categoryLabel="Main dish"
-        quantity={mainQuantity}
+        item={item}
+        categoryLabel={categoryLabel}
+        quantity={quantity}
         sectionActive={sectionActive}
         menuInteractive={menuInteractive}
         onActivateSection={onActivateSection}
-        onIncrement={() => onAdjustMain(1)}
-        onDecrement={() => onAdjustMain(-1)}
-      />
-      <PortionFoodCard
-        item={vegetarian}
-        categoryLabel="Vegetarian"
-        quantity={vegetarianQuantity}
-        sectionActive={sectionActive}
-        menuInteractive={menuInteractive}
-        onActivateSection={onActivateSection}
-        onIncrement={() => onAdjustVegetarian(1)}
-        onDecrement={() => onAdjustVegetarian(-1)}
+        onIncrement={() => onAdjust(1)}
+        onDecrement={() => onAdjust(-1)}
       />
     </div>
   );

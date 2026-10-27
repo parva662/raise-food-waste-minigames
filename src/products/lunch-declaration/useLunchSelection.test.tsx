@@ -60,14 +60,26 @@ describe('useLunchSelection', () => {
     expect(result.current.draft.mainQuantity).toBe(2);
   });
 
-  it('clears regular quantities when switching to soup via dessert plus', async () => {
+  it('clears classic quantities when switching to soup package', async () => {
     const { result } = renderHook(() => useLunchSelection(() => SUBMISSION_TIMES.midday));
     await waitFor(() => expect(result.current.initialized).toBe(true));
     act(() => result.current.adjustPortion('main', 1));
-    act(() => result.current.adjustPortion('dessert', 1));
+    act(() => result.current.adjustPortion('soup_dessert', 1));
     expect(result.current.draft.mealChoice).toBe('soup');
+    expect(result.current.draft.lunchOption).toBe('soup');
     expect(result.current.draft.mainQuantity).toBe(0);
+    expect(result.current.draft.soupQuantity).toBe(1);
     expect(result.current.draft.dessertQuantity).toBe(1);
+  });
+
+  it('keeps Classic and Vegetarian mutually exclusive', async () => {
+    const { result } = renderHook(() => useLunchSelection(() => SUBMISSION_TIMES.midday));
+    await waitFor(() => expect(result.current.initialized).toBe(true));
+    act(() => result.current.adjustPortion('main', 2));
+    act(() => result.current.adjustPortion('vegetarian', 1));
+    expect(result.current.draft.lunchOption).toBe('vegetarian');
+    expect(result.current.draft.mainQuantity).toBe(0);
+    expect(result.current.draft.vegetarianQuantity).toBe(1);
   });
 
   it('treats inactive-package zeros as normal and does not block review', async () => {
@@ -106,7 +118,7 @@ describe('useLunchSelection', () => {
   it('submits no-lunch absence and keeps success confirmation facts', async () => {
     const { result } = renderHook(() => useLunchSelection(() => SUBMISSION_TIMES.midday));
     await waitFor(() => expect(result.current.initialized).toBe(true));
-    act(() => result.current.activateMealChoice('no_lunch'));
+    act(() => result.current.activateLunchOption('no_lunch'));
     act(() => result.current.enterReview());
     act(() => result.current.submit());
     expect(result.current.hasSavedDeclaration).toBe(true);
@@ -125,7 +137,7 @@ describe('useLunchSelection', () => {
     expect(result.current.submitStatus).toBe('success');
     const message = result.current.state.successMessage ?? '';
     expect(message).toMatch(/29 July 2026|Wednesday 29/);
-    expect(message).toMatch(/Main|Regular/i);
+    expect(message).toMatch(/Classic dish|Main|Regular/i);
     expect(message).toMatch(/Helsinki/);
   });
 

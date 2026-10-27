@@ -14,7 +14,7 @@ import { canSubmitMealDraft } from '@/products/lunch-declaration/declarationSele
 import { buildSelectionsFromMealDraft, buildMealSummary } from '@/products/lunch-declaration/mealChoice';
 import {
   applyPortionAdjustment,
-  draftForMealChoice,
+  draftForLunchOption,
   type PortionField,
 } from '@/products/lunch-declaration/mealDraftActions';
 import {
@@ -25,7 +25,7 @@ import {
 } from '@/products/lunch-declaration/submissionWindow';
 import { formatDisplayDate, formatSubmissionTime } from '@/shared/time/dates';
 import { tryResolveStudentLunchServiceDate } from '@/products/lunch-declaration/studentLunchServiceDate';
-import type { MealChoice } from '@/shared/menu/mealChoice';
+import type { LunchOption } from '@/shared/menu/mealChoice';
 import type { SelectionEntry } from '@/shared/menu/types';
 import type { MealSummaryLine } from '@/products/lunch-declaration/mealChoice';
 import { isGameBusEmbed, useGameBusEmbed } from '@/platform/gamebus';
@@ -47,7 +47,7 @@ export interface LunchSelectionState {
 }
 
 type LunchAction =
-  | { type: 'ACTIVATE_MEAL_CHOICE'; choice: MealChoice }
+  | { type: 'ACTIVATE_LUNCH_OPTION'; option: LunchOption }
   | { type: 'ADJUST_PORTION'; field: PortionField; delta: number; maxQuantity: number }
   | { type: 'RESET_DRAFT' }
   | { type: 'ENTER_REVIEW' }
@@ -72,8 +72,8 @@ function createInitialState(): LunchSelectionState {
 
 function lunchReducer(state: LunchSelectionState, action: LunchAction): LunchSelectionState {
   switch (action.type) {
-    case 'ACTIVATE_MEAL_CHOICE': {
-      const draft = draftForMealChoice(state.draft, action.choice);
+    case 'ACTIVATE_LUNCH_OPTION': {
+      const draft = draftForLunchOption(state.draft, action.option);
       if (draft === state.draft) return state;
       return {
         ...state,
@@ -128,6 +128,7 @@ function lunchReducer(state: LunchSelectionState, action: LunchAction): LunchSel
         ...state,
         draft: {
           mealChoice: action.savedSnapshot.mealChoice,
+          lunchOption: action.savedSnapshot.lunchOption,
           mainQuantity: action.savedSnapshot.mainQuantity,
           vegetarianQuantity: action.savedSnapshot.vegetarianQuantity,
           soupQuantity: action.savedSnapshot.soupQuantity,
@@ -144,6 +145,7 @@ function lunchReducer(state: LunchSelectionState, action: LunchAction): LunchSel
         ...state,
         draft: {
           mealChoice: action.savedSnapshot.mealChoice,
+          lunchOption: action.savedSnapshot.lunchOption,
           mainQuantity: action.savedSnapshot.mainQuantity,
           vegetarianQuantity: action.savedSnapshot.vegetarianQuantity,
           soupQuantity: action.savedSnapshot.soupQuantity,
@@ -247,6 +249,7 @@ export function useLunchSelection(clock: Clock = systemClock) {
         savedSnapshot,
         draft: {
           mealChoice: savedSnapshot.mealChoice,
+          lunchOption: savedSnapshot.lunchOption,
           mainQuantity: savedSnapshot.mainQuantity,
           vegetarianQuantity: savedSnapshot.vegetarianQuantity,
           soupQuantity: savedSnapshot.soupQuantity,
@@ -306,8 +309,8 @@ export function useLunchSelection(clock: Clock = systemClock) {
   const isConfirmDisabled =
     isReviewDisabled || state.uiStep !== 'review' || state.submitStatus === 'sending';
 
-  const activateMealChoice = useCallback((choice: MealChoice) => {
-    dispatch({ type: 'ACTIVATE_MEAL_CHOICE', choice });
+  const activateLunchOption = useCallback((option: LunchOption) => {
+    dispatch({ type: 'ACTIVATE_LUNCH_OPTION', option });
   }, []);
 
   const adjustPortion = useCallback(
@@ -318,6 +321,7 @@ export function useLunchSelection(clock: Clock = systemClock) {
         vegetarian: mealSlots.vegetarian.maxQuantity,
         soup: mealSlots.soup.maxQuantity,
         dessert: mealSlots.dessert.maxQuantity,
+        soup_dessert: Math.min(mealSlots.soup.maxQuantity, mealSlots.dessert.maxQuantity),
       };
       dispatch({
         type: 'ADJUST_PORTION',
@@ -469,7 +473,7 @@ export function useLunchSelection(clock: Clock = systemClock) {
     uiStep: state.uiStep,
     submitStatus: state.submitStatus,
     submitError: state.submitError,
-    activateMealChoice,
+    activateLunchOption,
     adjustPortion,
     resetDraft,
     enterReview,

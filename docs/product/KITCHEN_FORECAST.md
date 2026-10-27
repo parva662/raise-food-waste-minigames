@@ -46,7 +46,8 @@ The GameBus contract carries the same timing model in [§A.1](../contracts/KITCH
 - **No late forecasts:** once a service date's windows close, it can no longer be forecast. Normal successful forecasts are `on-time`; the schema may retain a `late` value only for compatibility.
 - **Explicit target date:** every forecast carries `targetDate = D`. The service date is never inferred from `submittedAt`, and another service date is never substituted.
 - **Quantities:** whole numbers **0–1000 inclusive**; negative, fractional, and >1000 are invalid. Blank = unanswered; explicit `0` = deliberate forecast; required editable fields must be answered.
-- **Headcount vs portions:** independent forecasts; they need not sum, and a mismatch is never an error.
+- **Headcount vs portions:** independent forecasts; they need not sum, and a mismatch is never an error or submission block.
+- **Live overview totals:** shows expected customers, planned Classic / Vegetarian / Soup + Dessert packages, **total planned lunch portions** (`Classic + Vegetarian + Soup`, dessert not double-counted), and **difference from expected customers**, with a nonblocking warning when they differ. Calculated totals are **not** added to the GameBus payload.
 - **Soup menu:** soup and dessert are **one** forecast entered once; `forecastSoup` and `forecastDessert` carry the same quantity; dessert is not separately editable.
 - **Optional context:** confidence and notes are optional and are **omitted** from the payload when unanswered (never `null` or empty string).
 - **Missing menu:** operational service days and menu availability are **separate** concepts. A weekday that is not explicitly closed is an operational service day even when its menu data is missing; the resolved date is unchanged and only the menu-dependent form is blocked, with a clear unavailable/configuration message.

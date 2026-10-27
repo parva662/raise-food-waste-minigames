@@ -427,6 +427,23 @@ ul {
   line-height: 1.25;
 }
 
+.portion-food-card__package-images {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem;
+}
+
+.portion-food-card__package-sep {
+  font-weight: 500;
+  opacity: 0.7;
+}
+
+.portion-food-card__package-hint {
+  margin: 0.25rem 0 0;
+  font-size: 0.8rem;
+  color: var(--text-muted, #5c6570);
+}
+
 .portion-food-card__quantity {
   margin-top: auto;
 }
@@ -1423,6 +1440,25 @@ ul {
   color: var(--color-text-secondary);
 }
 
+.chef-summary__row--emphasis dt,
+.chef-summary__row--emphasis dd {
+  font-weight: 600;
+}
+
+.chef-summary__difference--warn {
+  color: var(--warning-text, #9a5b00);
+}
+
+.chef-summary__warning {
+  margin: 0.75rem 0 0;
+  padding: 0.65rem 0.75rem;
+  border-radius: 0.5rem;
+  background: var(--warning-bg, #fff6e8);
+  color: var(--warning-text, #7a4a00);
+  font-size: 0.85rem;
+  line-height: 1.35;
+}
+
 .chef-summary__row dd {
   font-weight: 600;
   text-align: right;
@@ -2011,10 +2047,25 @@ ul {
   color: var(--color-primary-muted);
 }
 
+.closeout-grid__helper {
+  display: block;
+  margin-top: 0.2rem;
+  font-size: 0.75rem;
+  color: var(--text-muted, #5c6570);
+}
+
 .closeout-grid__name {
   font-size: var(--font-size-sm);
   font-weight: 600;
   line-height: 1.25;
+}
+
+.closeout-grid__helper {
+  display: block;
+  margin-top: 0.2rem;
+  font-size: var(--font-size-xs);
+  font-weight: 500;
+  color: var(--color-text-secondary);
 }
 
 .closeout-grid__cell {

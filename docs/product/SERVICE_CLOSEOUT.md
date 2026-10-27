@@ -44,6 +44,7 @@ One shared whole-canteen closeout per service date. Authenticated GameBus `activ
 - Service date = Europe/Helsinki calendar day (not Kitchen Forecast 08:30).
 - Missing menu does not change the service date; Finalize is blocked.
 - Actual customers / prepared / waste: required whole integers; blank ≠ zero; 0 valid; max 1000 for quantities.
+- **Soup + Dessert prepared packages:** chef enters prepared package quantity once; `preparedSoupQuantity` and `preparedDessertQuantity` stay equal; dessert prepared is read-only in the UI. Overproduction waste for Soup and Dessert remains independently measured.
 - Overproduction UI grams → GameBus kg once at mapper (`grams / 1000`).
 - Overproduction cannot exceed prepared weight; zero prepared + positive waste is invalid.
 - Forecast is read-only context; missing forecast does not block closeout.

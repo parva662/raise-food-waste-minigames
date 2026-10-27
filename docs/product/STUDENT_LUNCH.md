@@ -32,7 +32,7 @@ Do **not** rewrite the approved `.feature` merely to match current code.
 - Target = **next operational service** (skip weekends and explicitly closed / non-service days), not calendar tomorrow.
 - Menus are planned well in advance; **do not** redefine the service date by skipping a day only because menu data is missing.
 - Cutoff = **23:59:00 Europe/Helsinki** (open at 23:58:59; closed at exactly 23:59:00); open page must close without reload.
-- Meal packages **Regular / Soup / No lunch** are mutually exclusive; quantity steppers use whole numbers **0…configured max**; no blank-vs-zero UX.
+- Four exclusive options: **Classic dish / Vegetarian dish / Soup + Dessert package / No lunch**; Classic and Vegetarian cannot both be chosen; Soup and Dessert share one package quantity; quantity steppers use whole numbers **0…configured max**; no blank-vs-zero UX. GameBus `mealType` remains `regular` | `soup` | `no_lunch`.
 - Distinct **review** before final confirm; one-shot submission with failure/retry preserving entered values.
 
 ---

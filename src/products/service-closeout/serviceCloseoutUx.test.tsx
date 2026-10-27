@@ -33,9 +33,9 @@ async function fillCloseoutForm(user: ReturnType<typeof userEvent.setup>) {
   await user.type(getWasteInput('Main'), '850');
   await user.type(getPreparedInput('Vegetarian'), '52');
   await user.type(getWasteInput('Vegetarian'), '360');
+  // Soup prepared sets Dessert prepared automatically (package rule).
   await user.type(getPreparedInput('Soup'), '40');
   await user.type(getWasteInput('Soup'), '500');
-  await user.type(getPreparedInput('Dessert'), '35');
   await user.type(getWasteInput('Dessert'), '180');
 }
 
@@ -127,11 +127,27 @@ describe('service closeout UX', () => {
     const user = userEvent.setup();
     render(<ServiceCloseoutApp />);
     await user.type(screen.getByLabelText('Actual customers'), '0');
-    for (const category of ['Main', 'Vegetarian', 'Soup', 'Dessert']) {
+    for (const category of ['Main', 'Vegetarian', 'Soup']) {
       await user.type(getPreparedInput(category), '0');
       await user.type(getWasteInput(category), '0');
     }
+    expect(getPreparedInput('Dessert')).toHaveValue('0');
+    expect(getPreparedInput('Dessert')).toBeDisabled();
+    await user.type(getWasteInput('Dessert'), '0');
     expect(screen.getByRole('button', { name: 'Finalize service' })).not.toBeDisabled();
+  });
+
+  it('links Soup and Dessert prepared quantities while keeping waste independent', async () => {
+    const user = userEvent.setup();
+    render(<ServiceCloseoutApp />);
+    await user.type(getPreparedInput('Soup'), '75');
+    expect(getPreparedInput('Soup')).toHaveValue('75');
+    expect(getPreparedInput('Dessert')).toHaveValue('75');
+    expect(getPreparedInput('Dessert')).toBeDisabled();
+    await user.type(getWasteInput('Soup'), '2000');
+    await user.type(getWasteInput('Dessert'), '750');
+    expect(getWasteInput('Soup')).toHaveValue('2000');
+    expect(getWasteInput('Dessert')).toHaveValue('750');
   });
 
   it('rejects waste greater than prepared weight', async () => {
