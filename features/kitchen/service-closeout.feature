@@ -184,7 +184,7 @@ Feature: Kitchen staff record the shared Service Closeout for one lunch service
   # CATEGORIES / PREPARED / WASTE
   # ---------------------------------------------------------------------------
 
-  Rule: Main, Vegetarian, Soup and Dessert are four independent closeout categories
+  Rule: Main, Vegetarian, Soup and Dessert remain four closeout categories with linked Soup + Dessert prepared quantities
 
     For each category the closeout records:
       - exact resolved menu item ID for this service date
@@ -192,8 +192,26 @@ Feature: Kitchen staff record the shared Service Closeout for one lunch service
       - standard portion weight from application reference data
       - measured overproduction in grams in the UI/domain
 
-    Prepared quantity and overproduction are independent user-entered actuals.
+    Prepared Soup and Dessert quantities follow the Soup + Dessert package rule:
+      the chef enters prepared Soup + Dessert packages once; dessert prepared equals soup prepared.
+    Overproduction waste remains independently measured per category and is never auto-copied.
     Forecast quantities shown beside them are read-only context only.
+
+    @inputs @soup-dessert-package
+    Scenario: Prepared Soup + Dessert packages set both prepared quantities
+      When the staff enter 75 prepared Soup + Dessert packages
+      Then preparedSoupQuantity is 75
+      And preparedDessertQuantity is 75
+      And the Dessert prepared field is read-only and follows Soup
+
+    @inputs @soup-dessert-package @waste
+    Scenario: Soup and Dessert overproduction remain independent
+      Given prepared Soup + Dessert packages is 75
+      When the staff enter 2000 g Soup overproduction
+      And the staff enter 750 g Dessert overproduction
+      Then Soup overproduction remains 2000 g
+      And Dessert overproduction remains 750 g
+      And neither waste value is copied from the other
 
     @inputs @prepared @blank-vs-zero
     Scenario Outline: Prepared quantity validation for every category

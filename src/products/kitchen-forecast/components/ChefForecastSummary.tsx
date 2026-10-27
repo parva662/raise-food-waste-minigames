@@ -1,4 +1,9 @@
 import { CHEF_NOT_ENTERED_LABEL } from '@/products/kitchen-forecast/types';
+import {
+  formatPortionDifference,
+  plannedPortionsDifference,
+  totalPlannedLunchPortions,
+} from '@/products/kitchen-forecast/chefSummary';
 
 interface ChefForecastSummaryProps {
   expectedCustomers: number | null;
@@ -12,26 +17,24 @@ function formatOptionalNumber(value: number | null): string {
   return value === null ? CHEF_NOT_ENTERED_LABEL : String(value);
 }
 
-const PLANNED_QUANTITY_ROWS = [
-  { label: 'Main', valueKey: 'mainQuantity' as const },
-  { label: 'Vegetarian', valueKey: 'vegetarianQuantity' as const },
-  { label: 'Soup', valueKey: 'soupQuantity' as const },
-  { label: 'Dessert', valueKey: 'dessertQuantity' as const },
-];
-
 export function ChefForecastSummary({
   expectedCustomers,
   mainQuantity,
   vegetarianQuantity,
   soupQuantity,
-  dessertQuantity,
 }: ChefForecastSummaryProps) {
-  const quantities = {
+  const totalPlanned = totalPlannedLunchPortions({
     mainQuantity,
     vegetarianQuantity,
     soupQuantity,
-    dessertQuantity,
-  };
+  });
+  const difference = plannedPortionsDifference({
+    expectedCustomers,
+    mainQuantity,
+    vegetarianQuantity,
+    soupQuantity,
+  });
+  const showMismatchWarning = difference !== null && difference !== 0;
 
   return (
     <aside className="chef-summary" aria-label="Forecast overview">
@@ -41,16 +44,40 @@ export function ChefForecastSummary({
           <dt>Expected customers</dt>
           <dd>{formatOptionalNumber(expectedCustomers)}</dd>
         </div>
+        <div className="chef-summary__row">
+          <dt>Planned Classic portions</dt>
+          <dd>{formatOptionalNumber(mainQuantity)}</dd>
+        </div>
+        <div className="chef-summary__row">
+          <dt>Planned Vegetarian portions</dt>
+          <dd>{formatOptionalNumber(vegetarianQuantity)}</dd>
+        </div>
+        <div className="chef-summary__row">
+          <dt>Planned Soup + Dessert packages</dt>
+          <dd>{formatOptionalNumber(soupQuantity)}</dd>
+        </div>
+        <div className="chef-summary__row chef-summary__row--emphasis">
+          <dt>Total planned lunch portions</dt>
+          <dd data-testid="chef-total-planned-portions">{formatOptionalNumber(totalPlanned)}</dd>
+        </div>
+        <div className="chef-summary__row">
+          <dt>Difference from expected customers</dt>
+          <dd
+            className={
+              showMismatchWarning ? 'chef-summary__difference chef-summary__difference--warn' : 'chef-summary__difference'
+            }
+            data-testid="chef-portions-difference"
+          >
+            {difference === null ? CHEF_NOT_ENTERED_LABEL : formatPortionDifference(difference)}
+          </dd>
+        </div>
       </dl>
-      <h3 className="chef-summary__section">Planned quantities</h3>
-      <dl className="chef-summary__list">
-        {PLANNED_QUANTITY_ROWS.map((row) => (
-          <div key={row.label} className="chef-summary__row">
-            <dt>{row.label}</dt>
-            <dd>{formatOptionalNumber(quantities[row.valueKey])}</dd>
-          </div>
-        ))}
-      </dl>
+      {showMismatchWarning && (
+        <p className="chef-summary__warning" role="status" data-testid="chef-portions-mismatch-warning">
+          Planned portions differ from expected customers. This does not block submission — one customer
+          may take more than one portion.
+        </p>
+      )}
     </aside>
   );
 }

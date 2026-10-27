@@ -1,11 +1,12 @@
 import type { SelectionEntry } from '@/shared/menu/types';
 import type { ActiveDeclaration } from '@/products/lunch-declaration/types/declaration';
-import type { DailyMealSlots, MealChoice, MealDraft } from '@/shared/menu/mealChoice';
-import { clampItemQuantity } from '@/shared/menu/mealChoice';
+import type { DailyMealSlots, LunchOption, MealChoice, MealDraft } from '@/shared/menu/mealChoice';
+import { clampItemQuantity, resolveLunchOption } from '@/shared/menu/mealChoice';
 
 export function createEmptyMealDraft(): MealDraft {
   return {
     mealChoice: null,
+    lunchOption: null,
     mainQuantity: 0,
     vegetarianQuantity: 0,
     soupQuantity: 0,
@@ -18,15 +19,23 @@ export function isRegularDishSelected(quantity: number): boolean {
 }
 
 export function isMealDraftSubmittable(draft: MealDraft): boolean {
-  if (draft.mealChoice === null) return false;
-  if (draft.mealChoice === 'no_lunch') return true;
-  if (draft.mealChoice === 'soup') {
-    return draft.soupQuantity > 0 || draft.dessertQuantity > 0;
+  const option = resolveLunchOption(draft);
+  if (draft.mealChoice === null || option === null) return false;
+  if (option === 'no_lunch') return true;
+  if (option === 'soup') {
+    if (draft.lunchOption == null) {
+      return draft.soupQuantity > 0 || draft.dessertQuantity > 0;
+    }
+    return draft.soupQuantity > 0 && draft.soupQuantity === draft.dessertQuantity;
   }
-  if (draft.mealChoice === 'regular') {
-    const hasMain = draft.mainQuantity > 0;
-    const hasVeg = draft.vegetarianQuantity > 0;
-    return hasMain || hasVeg;
+  if (option === 'classic') {
+    if (draft.lunchOption == null) {
+      return draft.mainQuantity > 0 || draft.vegetarianQuantity > 0;
+    }
+    return draft.mainQuantity > 0 && draft.vegetarianQuantity === 0;
+  }
+  if (option === 'vegetarian') {
+    return draft.vegetarianQuantity > 0 && draft.mainQuantity === 0;
   }
   return false;
 }
@@ -77,6 +86,17 @@ function quantityFromSelections(
   return selections.find((entry) => entry.itemId === itemId)?.quantity ?? 0;
 }
 
+function lunchOptionFromQuantities(
+  mealChoice: MealChoice,
+  mainQuantity: number,
+  vegetarianQuantity: number,
+): LunchOption {
+  if (mealChoice === 'no_lunch') return 'no_lunch';
+  if (mealChoice === 'soup') return 'soup';
+  if (vegetarianQuantity > 0 && mainQuantity === 0) return 'vegetarian';
+  return 'classic';
+}
+
 export function mealDraftFromDeclaration(
   declaration: ActiveDeclaration,
   slots: DailyMealSlots,
@@ -89,45 +109,58 @@ export function mealDraftFromDeclaration(
   };
 
   if (declaration.noLunch || declaration.mealChoice === 'no_lunch') {
-    return { mealChoice: 'no_lunch', ...emptyQuantities };
+    return { mealChoice: 'no_lunch', lunchOption: 'no_lunch', ...emptyQuantities };
   }
 
   if (declaration.mealChoice === 'soup') {
+    const soupQuantity = quantityFromSelections(declaration.selections, slots.soup.id);
+    const dessertQuantity = quantityFromSelections(declaration.selections, slots.dessert.id);
     return {
       mealChoice: 'soup',
+      lunchOption: 'soup',
       ...emptyQuantities,
-      soupQuantity: quantityFromSelections(declaration.selections, slots.soup.id),
-      dessertQuantity: quantityFromSelections(declaration.selections, slots.dessert.id),
+      // Preserve historical unequal quantities for display; new UI always keeps them equal.
+      soupQuantity,
+      dessertQuantity,
     };
   }
 
   if (declaration.mealChoice === 'regular') {
+    const mainQuantity = quantityFromSelections(declaration.selections, slots.main.id);
+    const vegetarianQuantity = quantityFromSelections(declaration.selections, slots.vegetarian.id);
     return {
       mealChoice: 'regular',
+      lunchOption: lunchOptionFromQuantities('regular', mainQuantity, vegetarianQuantity),
       soupQuantity: 0,
       dessertQuantity: 0,
-      mainQuantity: quantityFromSelections(declaration.selections, slots.main.id),
-      vegetarianQuantity: quantityFromSelections(declaration.selections, slots.vegetarian.id),
+      mainQuantity,
+      vegetarianQuantity,
     };
   }
 
   const selectedIds = new Set(declaration.selections.map((entry) => entry.itemId));
   if (selectedIds.has(slots.soup.id) || selectedIds.has(slots.dessert.id)) {
+    const soupQuantity = quantityFromSelections(declaration.selections, slots.soup.id);
+    const dessertQuantity = quantityFromSelections(declaration.selections, slots.dessert.id);
     return {
       mealChoice: 'soup',
+      lunchOption: 'soup',
       mainQuantity: 0,
       vegetarianQuantity: 0,
-      soupQuantity: quantityFromSelections(declaration.selections, slots.soup.id),
-      dessertQuantity: quantityFromSelections(declaration.selections, slots.dessert.id),
+      soupQuantity,
+      dessertQuantity,
     };
   }
 
+  const mainQuantity = quantityFromSelections(declaration.selections, slots.main.id);
+  const vegetarianQuantity = quantityFromSelections(declaration.selections, slots.vegetarian.id);
   return {
     mealChoice: 'regular',
+    lunchOption: lunchOptionFromQuantities('regular', mainQuantity, vegetarianQuantity),
     soupQuantity: 0,
     dessertQuantity: 0,
-    mainQuantity: quantityFromSelections(declaration.selections, slots.main.id),
-    vegetarianQuantity: quantityFromSelections(declaration.selections, slots.vegetarian.id),
+    mainQuantity,
+    vegetarianQuantity,
   };
 }
 
@@ -136,7 +169,20 @@ export function mealChoiceLabel(choice: MealChoice): string {
     case 'regular':
       return 'Regular lunch';
     case 'soup':
-      return 'Soup lunch';
+      return 'Soup + Dessert';
+    case 'no_lunch':
+      return 'No lunch';
+  }
+}
+
+export function lunchOptionLabel(option: LunchOption): string {
+  switch (option) {
+    case 'classic':
+      return 'Classic dish';
+    case 'vegetarian':
+      return 'Vegetarian dish';
+    case 'soup':
+      return 'Soup + Dessert package';
     case 'no_lunch':
       return 'No lunch';
   }
@@ -151,18 +197,23 @@ export function buildMealSummary(
   draft: MealDraft,
   slots: DailyMealSlots,
 ): MealSummaryLine[] {
-  if (draft.mealChoice === 'no_lunch') {
-    return [{ label: 'Meal', detail: 'No lunch' }];
+  const option = resolveLunchOption(draft);
+  if (option === 'no_lunch' || draft.mealChoice === 'no_lunch') {
+    return [{ label: 'Option', detail: 'No lunch' }];
   }
-  if (draft.mealChoice === 'soup') {
-    const lines: MealSummaryLine[] = [{ label: 'Meal', detail: 'Soup lunch' }];
+  if (option === 'soup' || draft.mealChoice === 'soup') {
+    const lines: MealSummaryLine[] = [
+      { label: 'Option', detail: lunchOptionLabel('soup') },
+    ];
     if (draft.soupQuantity > 0) {
+      lines.push({
+        label: 'Packages',
+        detail: `${draft.soupQuantity}`,
+      });
       lines.push({
         label: 'Soup',
         detail: `${slots.soup.name} × ${draft.soupQuantity} ${slots.soup.unit}`,
       });
-    }
-    if (draft.dessertQuantity > 0) {
       lines.push({
         label: 'Dessert',
         detail: `${slots.dessert.name} × ${draft.dessertQuantity} ${slots.dessert.unit}`,
@@ -170,11 +221,32 @@ export function buildMealSummary(
     }
     return lines;
   }
-  if (draft.mealChoice === 'regular') {
-    const lines: MealSummaryLine[] = [{ label: 'Meal', detail: 'Regular lunch' }];
+  if (option === 'classic' || (draft.mealChoice === 'regular' && draft.mainQuantity > 0 && draft.vegetarianQuantity === 0)) {
+    const lines: MealSummaryLine[] = [{ label: 'Option', detail: lunchOptionLabel('classic') }];
     if (draft.mainQuantity > 0) {
       lines.push({
-        label: 'Main',
+        label: 'Quantity',
+        detail: `${slots.main.name} × ${draft.mainQuantity} ${slots.main.unit}`,
+      });
+    }
+    return lines;
+  }
+  if (option === 'vegetarian' || (draft.mealChoice === 'regular' && draft.vegetarianQuantity > 0 && draft.mainQuantity === 0)) {
+    const lines: MealSummaryLine[] = [{ label: 'Option', detail: lunchOptionLabel('vegetarian') }];
+    if (draft.vegetarianQuantity > 0) {
+      lines.push({
+        label: 'Quantity',
+        detail: `${slots.vegetarian.name} × ${draft.vegetarianQuantity} ${slots.vegetarian.unit}`,
+      });
+    }
+    return lines;
+  }
+  if (draft.mealChoice === 'regular') {
+    // Historical declarations that selected both Classic and Vegetarian
+    const lines: MealSummaryLine[] = [{ label: 'Option', detail: 'Classic and Vegetarian (historical)' }];
+    if (draft.mainQuantity > 0) {
+      lines.push({
+        label: 'Classic',
         detail: `${slots.main.name} × ${draft.mainQuantity} ${slots.main.unit}`,
       });
     }
@@ -192,7 +264,7 @@ export function buildMealSummary(
 /** @deprecated use buildMealSummary */
 export function describeMealDraft(draft: MealDraft, slots: DailyMealSlots): string[] {
   return buildMealSummary(draft, slots).map((line) =>
-    line.label === 'Meal' ? line.detail : `${line.label}: ${line.detail}`,
+    line.label === 'Option' || line.label === 'Meal' ? line.detail : `${line.label}: ${line.detail}`,
   );
 }
 
@@ -204,3 +276,5 @@ export function adjustPortionQuantity(
   if (current <= 0 && delta < 0) return 0;
   return clampItemQuantity(current + delta, maxQuantity);
 }
+
+export type { LunchOption };

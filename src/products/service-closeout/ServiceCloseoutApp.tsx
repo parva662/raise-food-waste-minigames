@@ -153,6 +153,14 @@ export function ServiceCloseoutApp({ clock, serviceDate }: ServiceCloseoutAppPro
                       preparedError={state.categoryErrors[key].prepared}
                       wasteError={state.categoryErrors[key].waste}
                       disabled={!formInteractive}
+                      preparedReadOnly={key === 'dessert'}
+                      preparedHelperText={
+                        key === 'dessert'
+                          ? 'Matches Soup + Dessert packages'
+                          : key === 'soup'
+                            ? 'Sets both Soup and Dessert prepared quantities'
+                            : undefined
+                      }
                       onPreparedChange={(value) => setPreparedQuantity(key, value)}
                       onWasteChange={(value) => setOverproductionGrams(key, value)}
                       onPreparedError={(error) => setPreparedError(key, error)}

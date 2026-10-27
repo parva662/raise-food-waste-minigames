@@ -13,6 +13,9 @@ interface ServiceCloseoutCategoryRowProps {
   preparedError: string | null;
   wasteError: string | null;
   disabled: boolean;
+  /** When true, prepared quantity is read-only (Dessert follows Soup package). */
+  preparedReadOnly?: boolean;
+  preparedHelperText?: string;
   onPreparedChange: (value: number | null) => void;
   onWasteChange: (value: number | null) => void;
   onPreparedError: (error: string | null) => void;
@@ -34,6 +37,8 @@ export function ServiceCloseoutCategoryRow({
   preparedError,
   wasteError,
   disabled,
+  preparedReadOnly = false,
+  preparedHelperText,
   onPreparedChange,
   onWasteChange,
   onPreparedError,
@@ -44,12 +49,19 @@ export function ServiceCloseoutCategoryRow({
   const preparedId = `closeout-prepared-${categoryKey}`;
   const wasteId = `closeout-waste-${categoryKey}`;
   const forecastId = `closeout-forecast-${categoryKey}`;
+  const preparedDisabled = disabled || preparedReadOnly;
+  const helperId = preparedHelperText ? `${preparedId}-helper` : undefined;
 
   return (
     <div className="closeout-grid__row" role="group" aria-label={`${label}: ${itemName}`}>
       <div className="closeout-grid__dish">
         <span className="closeout-grid__category">{label}</span>
         <span className="closeout-grid__name">{itemName}</span>
+        {preparedHelperText ? (
+          <span className="closeout-grid__helper" id={helperId}>
+            {preparedHelperText}
+          </span>
+        ) : null}
       </div>
       <div className="closeout-grid__cell closeout-grid__cell--forecast">
         <span className="closeout-grid__sr-only" id={forecastId}>
@@ -71,11 +83,14 @@ export function ServiceCloseoutCategoryRow({
           id={preparedId}
           className="closeout-grid__input"
           value={preparedQuantity}
-          disabled={disabled}
+          disabled={preparedDisabled}
           error={preparedError}
           fieldLabel={`${label} prepared portions`}
           mode="quantity"
-          describedBy={preparedError ? `${preparedId}-error` : undefined}
+          describedBy={
+            [preparedError ? `${preparedId}-error` : null, helperId].filter(Boolean).join(' ') ||
+            undefined
+          }
           onChange={onPreparedChange}
           onValidationError={onPreparedError}
         />
