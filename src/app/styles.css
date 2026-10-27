@@ -4984,6 +4984,14 @@ ul {
   min-width: 10rem;
 }
 
+.chef-results-dashboard-header__status-explanation {
+  margin: 0;
+  max-width: 22rem;
+  font-size: 0.8rem;
+  line-height: 1.35;
+  color: var(--text-muted, #5c6570);
+}
+
 .chef-results-dashboard-header__date-value {
   margin: 0;
   font-size: 0.9375rem;

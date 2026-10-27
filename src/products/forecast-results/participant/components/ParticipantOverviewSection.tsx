@@ -24,8 +24,9 @@ function PendingForecastSummary({ forecast }: { forecast: ChefForecastForCalcula
   return (
     <div className="kitchen-mgmt-surface" data-testid="participant-pending-forecast-summary">
       <h3 className="kitchen-mgmt-surface__title">Your submitted forecast</h3>
-      <p className="kitchen-mgmt-snapshot-hint">
-        Simulation metrics appear after service closeout is recorded.
+      <p className="kitchen-mgmt-snapshot-hint" data-testid="pending-forecast-explanation">
+        Your forecast results will be available once the kitchen&apos;s final service figures have
+        been recorded.
       </p>
       <dl className="chef-results-pending-forecast">
         <div>
