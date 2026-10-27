@@ -7,6 +7,7 @@ import { buildPortionRecipeMetrics } from '@/products/kitchen-skills-challenge/d
 import { getRecipeReference, listRecipeReferences } from '@/products/kitchen-skills-challenge/domain/portion/recipes';
 import { eligibleRecipeIngredientsForTrim } from '@/products/kitchen-skills-challenge/domain/session/sessionRecipe';
 import { KitchenSkillsRecipeCombobox } from '@/products/kitchen-skills-challenge/surfaces/challenge/KitchenSkillsRecipeCombobox';
+import { preferredMassInputUnit } from '@/products/kitchen-skills-challenge/domain/mass';
 import { KitchenSkillsGramsInput } from '@/products/kitchen-skills-challenge/surfaces/shared/KitchenSkillsGramsInput';
 import { KitchenSkillsMassInput } from '@/products/kitchen-skills-challenge/surfaces/shared/KitchenSkillsMassInput';
 import { formatGrams, formatRecipeAmount } from '@/products/kitchen-skills-challenge/format';
@@ -187,6 +188,7 @@ export function KitchenSkillsPortionView() {
                             id={inputId}
                             testId={`kitchen-day-actual-${line.ingredientId}`}
                             unitGroupLabel={`Unit for ${line.ingredientName}`}
+                            defaultUnit={preferredMassInputUnit(line.requiredAmount)}
                             value={actuals[line.ingredientId] ?? ''}
                             onChange={setActual}
                           />
@@ -226,6 +228,7 @@ export function KitchenSkillsPortionView() {
               <KitchenSkillsMassInput
                 testId="kitchen-day-final-recipe-weight"
                 ariaLabel="Final recipe weight"
+                defaultUnit={preferredMassInputUnit(recipe.expectedFinalWeightGrams)}
                 value={finalWeightRaw}
                 onChange={setFinalWeightRaw}
               />

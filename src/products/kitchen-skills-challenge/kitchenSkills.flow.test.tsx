@@ -113,7 +113,8 @@ describe('Kitchen Day connected flow', () => {
     expect(screen.queryByTestId('kitchen-day-add-another-ingredient')).not.toBeInTheDocument();
     expect(screen.getByTestId('kitchen-day-nav-reuse')).toHaveAttribute('aria-disabled', 'true');
     expect(screen.getByTestId('kitchen-day-trim-step-technique')).toBeInTheDocument();
-    expect(screen.getByTestId('kitchen-day-starting-weight')).toHaveValue('1500');
+    expect(screen.getByTestId('kitchen-day-starting-weight')).toHaveValue('1.5');
+    expect(screen.getByTestId('kitchen-day-starting-weight-unit-kg')).toHaveAttribute('aria-pressed', 'true');
     await user.click(screen.getByTestId('kitchen-day-technique-trimming'));
     await user.click(screen.getByTestId('kitchen-day-technique-continue'));
     await typeMassGrams(user, 'kitchen-day-estimated-waste', '600');
@@ -162,15 +163,15 @@ describe('Kitchen Day connected flow', () => {
     await recordHedelmatPortion(user);
     await selectTrimIngredient(user, 'Banaani', 'Banaani');
     await user.click(screen.getByRole('button', { name: 'Continue' }));
-    expect(screen.getByTestId('kitchen-day-starting-weight')).toHaveValue('1500');
+    expect(screen.getByTestId('kitchen-day-starting-weight')).toHaveValue('1.5');
     await user.clear(screen.getByTestId('kitchen-day-starting-weight'));
     await typeMassGrams(user, 'kitchen-day-starting-weight', '2000');
     await user.click(screen.getByTestId('kitchen-day-trim-back'));
     expect(screen.getByTestId('kitchen-day-trim-step-ingredient')).toBeInTheDocument();
     expect(screen.getByTestId('kitchen-day-ingredient-name')).toHaveValue('Banaani');
     await user.click(screen.getByRole('button', { name: 'Continue' }));
-    expect(screen.getByTestId('kitchen-day-starting-weight')).toHaveValue('1500');
-    expect(screen.getByTestId('kitchen-day-starting-weight-unit-g')).toHaveAttribute('aria-pressed', 'true');
+    expect(screen.getByTestId('kitchen-day-starting-weight')).toHaveValue('1.5');
+    expect(screen.getByTestId('kitchen-day-starting-weight-unit-kg')).toHaveAttribute('aria-pressed', 'true');
   });
 
   it('opens recipe and ingredient comboboxes with ordered options before typing', async () => {
@@ -181,7 +182,7 @@ describe('Kitchen Day connected flow', () => {
     expect(screen.getByRole('option', { name: 'Hedelmät M,G' })).toBeInTheDocument();
     expect(screen.queryByText('Type to search recipes')).not.toBeInTheDocument();
     await user.click(screen.getByRole('option', { name: 'Hedelmät M,G' }));
-    expect(screen.getByTestId('kitchen-day-actual-banaani-unit-g')).toHaveAttribute('aria-pressed', 'true');
+    expect(screen.getByTestId('kitchen-day-actual-banaani-unit-kg')).toHaveAttribute('aria-pressed', 'true');
     await typeMassGrams(user, 'kitchen-day-actual-banaani', '1500');
     await typeMassGrams(user, 'kitchen-day-actual-omena', '1200');
     await typeMassGrams(user, 'kitchen-day-actual-viinirypale-tumma-kiveton', '1000');
@@ -416,33 +417,34 @@ describe('Kitchen Day one recipe per attempt', () => {
     expect(screen.getByTestId('kitchen-day-finish-challenge')).toBeInTheDocument();
   });
 
-  it('K/N: mass fields default to g and convert the displayed number when switching units', async () => {
+  it('K/N: mass fields follow recipe scale and convert the displayed number when switching units', async () => {
     const user = userEvent.setup();
     render(<AppRouter />);
     const recipeInput = screen.getByTestId('kitchen-day-recipe-select');
     await user.click(recipeInput);
     await user.type(recipeInput, 'Hedelmät M,G');
     await user.click(screen.getByRole('option', { name: 'Hedelmät M,G' }));
-    expect(screen.getByTestId('kitchen-day-actual-banaani-unit-g')).toHaveAttribute('aria-pressed', 'true');
-    await user.type(screen.getByTestId('kitchen-day-actual-banaani'), '1250');
-    expect(screen.getByTestId('kitchen-day-actual-banaani')).toHaveValue('1250');
-    await user.click(screen.getByTestId('kitchen-day-actual-banaani-unit-kg'));
+    expect(screen.getByTestId('kitchen-day-actual-banaani-unit-kg')).toHaveAttribute('aria-pressed', 'true');
+    await user.type(screen.getByTestId('kitchen-day-actual-banaani'), '1.25');
     expect(screen.getByTestId('kitchen-day-actual-banaani')).toHaveValue('1.25');
     await user.click(screen.getByTestId('kitchen-day-actual-banaani-unit-g'));
     expect(screen.getByTestId('kitchen-day-actual-banaani')).toHaveValue('1250');
+    await user.click(screen.getByTestId('kitchen-day-actual-banaani-unit-kg'));
+    expect(screen.getByTestId('kitchen-day-actual-banaani')).toHaveValue('1.25');
     await user.clear(screen.getByTestId('kitchen-day-actual-banaani'));
-    await user.type(screen.getByTestId('kitchen-day-actual-banaani'), '1500');
-    await user.type(screen.getByTestId('kitchen-day-actual-omena'), '1200');
+    await user.type(screen.getByTestId('kitchen-day-actual-banaani'), '1.5');
+    await user.type(screen.getByTestId('kitchen-day-actual-omena'), '1.2');
+    await user.click(screen.getByTestId('kitchen-day-actual-viinirypale-tumma-kiveton-unit-g'));
     await user.type(screen.getByTestId('kitchen-day-actual-viinirypale-tumma-kiveton'), '1000');
-    await user.type(screen.getByTestId('kitchen-day-final-recipe-weight'), '3700');
+    await user.type(screen.getByTestId('kitchen-day-final-recipe-weight'), '3.7');
     await user.click(screen.getByTestId('kitchen-day-submit-portion'));
     expect(screen.getByTestId('kitchen-day-trim')).toBeInTheDocument();
     await selectTrimIngredient(user, 'Banaani', 'Banaani');
     await user.click(screen.getByRole('button', { name: 'Continue' }));
-    expect(screen.getByTestId('kitchen-day-starting-weight')).toHaveValue('1500');
-    expect(screen.getByTestId('kitchen-day-starting-weight-unit-g')).toHaveAttribute('aria-pressed', 'true');
-    await user.click(screen.getByTestId('kitchen-day-starting-weight-unit-kg'));
     expect(screen.getByTestId('kitchen-day-starting-weight')).toHaveValue('1.5');
+    expect(screen.getByTestId('kitchen-day-starting-weight-unit-kg')).toHaveAttribute('aria-pressed', 'true');
+    await user.click(screen.getByTestId('kitchen-day-starting-weight-unit-g'));
+    expect(screen.getByTestId('kitchen-day-starting-weight')).toHaveValue('1500');
   });
 
   it('reopens pending Rescue after another positive-waste Trim is saved', async () => {

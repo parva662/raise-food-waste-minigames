@@ -3,6 +3,7 @@ import {
   gramsTextToMassInput,
   massInputToGramsText,
   parseMassInputGrams,
+  preferredMassInputUnit,
   shiftDecimalText,
 } from '@/products/kitchen-skills-challenge/domain/mass';
 
@@ -35,5 +36,13 @@ describe('Kitchen Skills mass conversion', () => {
     expect(parseMassInputGrams('1001', 'g')).toBe(1001);
     expect(parseMassInputGrams('', 'g')).toBeNull();
     expect(parseMassInputGrams('abc', 'g')).toBeNull();
+  });
+
+  it('prefers kg for recipe targets above 1000 g', () => {
+    expect(preferredMassInputUnit(1000)).toBe('g');
+    expect(preferredMassInputUnit(1001)).toBe('kg');
+    expect(preferredMassInputUnit(2000)).toBe('kg');
+    expect(preferredMassInputUnit(40)).toBe('g');
+    expect(preferredMassInputUnit(null)).toBe('g');
   });
 });

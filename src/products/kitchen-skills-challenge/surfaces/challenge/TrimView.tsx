@@ -19,6 +19,7 @@ import {
   startPreparationTimer,
   type PreparationTimerState,
 } from '@/products/kitchen-skills-challenge/domain/trim/timer';
+import { preferredMassInputUnit } from '@/products/kitchen-skills-challenge/domain/mass';
 import { KitchenSkillsMassInput } from '@/products/kitchen-skills-challenge/surfaces/shared/KitchenSkillsMassInput';
 import { TrimSummaryList } from '@/products/kitchen-skills-challenge/surfaces/shared/AttemptModuleLists';
 import { KitchenSkillsRecipeCombobox } from '@/products/kitchen-skills-challenge/surfaces/challenge/KitchenSkillsRecipeCombobox';
@@ -328,6 +329,7 @@ export function KitchenSkillsTrimView() {
             <KitchenSkillsMassInput
               testId="kitchen-day-starting-weight"
               unitGroupLabel="Starting weight unit"
+              defaultUnit={preferredMassInputUnit(weight.ok ? weight.value : null)}
               value={weightRaw}
               onChange={setWeightRaw}
             />
@@ -353,8 +355,10 @@ export function KitchenSkillsTrimView() {
             <label className="kitchen-day-field" data-testid="kitchen-day-trim-starting-weight-prefill">
               <span>Starting weight</span>
               <KitchenSkillsMassInput
+                key={`trim-start-${ingredientId ?? 'none'}`}
                 testId="kitchen-day-starting-weight"
                 unitGroupLabel="Starting weight unit"
+                defaultUnit={preferredMassInputUnit(weight.ok ? weight.value : null)}
                 value={weightRaw}
                 onChange={setWeightRaw}
               />
