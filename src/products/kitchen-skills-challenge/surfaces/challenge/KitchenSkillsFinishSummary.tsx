@@ -69,13 +69,6 @@ export function KitchenSkillsFinishSummary() {
               />
             </section>
           ) : null}
-          {unconfirmedSaveCount > 0 ? (
-            <p className="kitchen-day-evidence-note" data-testid="kitchen-day-finish-unconfirmed">
-              {unconfirmedSaveCount === 1
-                ? '1 save was sent to GameBus and is not yet visible in your GameBus history.'
-                : `${unconfirmedSaveCount} saves were sent to GameBus and are not yet visible in your GameBus history.`}
-            </p>
-          ) : null}
           {finishArchiveError ? (
             <p className="kitchen-day-error" role="alert" data-testid="kitchen-day-finish-archive-error">
               {finishArchiveError}
@@ -83,6 +76,13 @@ export function KitchenSkillsFinishSummary() {
           ) : null}
           <details className="kitchen-day-finish-details" data-testid="kitchen-day-finish-details">
             <summary>Show details</summary>
+            {unconfirmedSaveCount > 0 ? (
+              <p className="kitchen-day-evidence-note" data-testid="kitchen-day-finish-local-dispatch-note">
+                Developer: {unconfirmedSaveCount} local dispatch
+                {unconfirmedSaveCount === 1 ? '' : 'es'} awaiting GameBus history confirmation (stale
+                input collection is normal after SILENT_ACTIVITY).
+              </p>
+            ) : null}
             <SessionEvidence
               trimEntries={trimEntries}
               rescueEntries={rescueEntries}

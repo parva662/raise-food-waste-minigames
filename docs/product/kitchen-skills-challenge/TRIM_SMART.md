@@ -23,11 +23,12 @@ Standalone route, no estimate step, no timer, no reference comparison. Posts `pr
 ## 4. Target flow
 
 1. Choose a remaining unused recipe ingredient (`ingredientId` + name from the attempt’s saved Portion recipe) whose kitchen Hävikki (`referenceWastePercent`) is greater than 0. 0% lines are not offered. If the recipe has none, Trim shows that there are no Trim Smart ingredients and Finish remains available. New Trim posts include `recipeId`.
-2. Technique → live plural slug `trimTechniques` (ten locked one-tap values). Layout: [`../UI_STANDARD.md`](../UI_STANDARD.md).
-3. Starting weight, estimated waste, and actual waste use the same compact **g / kg** selector as Portion and **default to kg**. Canonical storage and bounds stay in grams (`0 ≤ estimate/actual ≤ starting weight`). Switching the unit keeps the typed number. 1 kg = 1000 g. No kg properties.
-4. Estimate → actual waste after timed preparation (`duration` from the existing timer — student does not type minutes; internal timer states are never shown).
-5. See recorded measurements with g/kg formatting (no waste % or Hävikki comparison on the student result). Challenge summary lists each ingredient compactly: name, actual waste, preparation duration (e.g. `Banaani` / `260 g waste · 1 min 24 sec`).
-6. **Save ingredient** posts `SILENT_ACTIVITY`. **Another ingredient** stays on Trim for another unused recipe ingredient. **Record reuse** opens Reuse when there is reusable waste. Empty Trim activities are never required to enable Finish.
+2. Starting weight defaults from that ingredient’s **Portion Precision `recipeComposition` actual quantity** (g/kg converted to grams). Volume units (dL / L) are never auto-converted to mass — those cases require manual entry. When a valid Portion mass is available, Trim skips the dedicated starting-weight screen and shows the prefilled value as editable on the technique step. The student may change it when the physical trimmed quantity differs. Confirmed starting weight drives waste bounds, waste %, and GameBus `ingredientWeightGrams`.
+3. Technique → live plural slug `trimTechniques` (ten locked one-tap values). Layout: [`../UI_STANDARD.md`](../UI_STANDARD.md).
+4. Starting weight (when entered manually), estimated waste, and actual waste use the same compact **g / kg** selector as Portion and **default to g**. Canonical storage and bounds stay in grams (`0 ≤ estimate/actual ≤ starting weight`). Switching the unit converts the displayed number without changing the stored quantity. 1 kg = 1000 g. No kg properties.
+5. Estimate → actual waste after timed preparation (`duration` from the existing timer — student does not type minutes; internal timer states are never shown).
+6. See recorded measurements with g/kg formatting (no waste % or Hävikki comparison on the student result). Challenge summary lists each ingredient compactly: name, actual waste, preparation duration (e.g. `Banaani` / `260 g waste · 1 min 24 sec`).
+7. **Save ingredient** posts `SILENT_ACTIVITY`. **Another ingredient** stays on Trim for another unused recipe ingredient. **Record reuse** opens Reuse when there is reusable waste. Empty Trim activities are never required to enable Finish.
 
 Exact property list and types: slug contract. Worked example numbers belong in acceptance examples / tests, not as a second schema.
 

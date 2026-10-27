@@ -35,7 +35,7 @@ Exact stored properties: slug contract. Do **not** duplicate `ingredientName` or
 
 1. Keep **one** free-text GameBus property: `reuseDestination`. The field label is **Preparation method and reuse destination** (example: “Wash the peel, dry it, then use it in cake.”). Do **not** create `reuseMethod` or change the live GameBus configuration.
 2. No reuse status, later confirmation, inventory, or "was it used?" tracking.
-3. `reusableWasteGrams` is 0 … that Trim entry's `actualWasteGrams`. Fresh reusable-mass inputs default to kg; the student can select g. Switching the unit keeps the typed number and reinterprets it. Canonical storage stays grams.
+3. `reusableWasteGrams` is 0 … that Trim entry's `actualWasteGrams`. Fresh reusable-mass inputs default to g; the student can select kg. Switching the unit converts the displayed number without changing the stored quantity. Canonical storage stays grams.
 4. Each Trim ingredient under a given recipe may have at most one reuse suggestion. Saving Rescue A must leave Rescue B selectable; it must not open Finish or lock the form.
 5. No reuse points; no automatic reuse tutor score.
 6. Discarded remainder is calculated (never stored) and shown with clear spacing from the reusable-amount control.

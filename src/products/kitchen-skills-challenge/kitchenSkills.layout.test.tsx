@@ -30,8 +30,9 @@ describe('Kitchen Skills compact data-entry layout', () => {
     await recordHedelmatPortion(user);
     await selectTrimIngredient(user, 'Banaani', 'Banaani');
     await user.click(screen.getByRole('button', { name: 'Continue' }));
+    expect(screen.getByTestId('kitchen-day-trim-step-technique')).toBeInTheDocument();
     expect(screen.getByTestId('kitchen-day-starting-weight').closest('.kitchen-day-mass-input')).toBeTruthy();
-    expect(screen.getByTestId('kitchen-day-weight-continue').closest('.kitchen-day-form-actions--sticky')).toBeTruthy();
+    expect(screen.getByTestId('kitchen-day-technique-continue').closest('.kitchen-day-form-actions--sticky')).toBeTruthy();
   });
 
   it('keeps Reuse compact: grams stay short, destination is two rows, meta shares a row', async () => {
