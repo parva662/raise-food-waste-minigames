@@ -9,6 +9,7 @@
 
 export type AppMode =
   | 'student'
+  | 'student-journey'
   | 'chef'
   | 'service-closeout'
   | 'chef-results'
@@ -20,6 +21,7 @@ export type AppMode =
 
 export type RouteSurface =
   | 'lunch-declaration'
+  | 'student-journey'
   | 'kitchen-forecast'
   | 'service-closeout'
   | 'forecast-results-participant'
@@ -40,6 +42,7 @@ export const PORTION_PRECISION_ACTIVITY_REF = 'portionPrecision';
 export const WASTE_PRACTICE_REVIEW_ACTIVITY_REF = 'wastePracticeReview';
 export const SERVICE_CLOSEOUT_ACTIVITY_REF = WASTE_MEASUREMENT_ACTIVITY_REF;
 
+export const STUDENT_JOURNEY_HASH_ROUTE = '#/student-journey';
 export const CHEF_HASH_ROUTE = '#/chef';
 export const SERVICE_CLOSEOUT_HASH_ROUTE = '#/service-closeout';
 export const CHEF_RESULTS_HASH_ROUTE = '#/chef-results';
@@ -82,6 +85,15 @@ export const APP_ROUTES: readonly AppRouteDefinition[] = [
     postsActivity: true,
     gameBusEmbedKind: 'custom-task',
     expectedActivity: STUDENT_ACTIVITY_REF,
+  },
+  {
+    mode: 'student-journey',
+    surface: 'student-journey',
+    hash: STUDENT_JOURNEY_HASH_ROUTE,
+    title: 'My Food Journey',
+    postsActivity: false,
+    gameBusEmbedKind: 'custom-page',
+    expectedActivity: null,
   },
   {
     mode: 'chef',
@@ -243,6 +255,13 @@ export function getAppMode(hash: string = typeof window === 'undefined' ? '' : w
   if (kitchenDayProgressHashMatches(hash)) return 'kitchen-day-progress';
   if (kitchenDayTutorHashMatches(hash)) return 'kitchen-day-tutor';
   if (kitchenDayHashMatches(hash)) return 'kitchen-day';
+  if (
+    hash === STUDENT_JOURNEY_HASH_ROUTE ||
+    hash.startsWith('#/student-journey?') ||
+    hash.startsWith('#/student-journey/')
+  ) {
+    return 'student-journey';
+  }
   if (
     hash === CHEF_RESULTS_ADMIN_HASH_ROUTE ||
     hash.startsWith('#/chef-results-admin?') ||

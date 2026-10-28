@@ -4,6 +4,7 @@ import { getDocumentTitleForMode } from '@/app/documentTitle';
 describe('document title routing', () => {
   it('maps each app mode to the expected browser title', () => {
     expect(getDocumentTitleForMode('student')).toBe('Student Lunch');
+    expect(getDocumentTitleForMode('student-journey')).toBe('My Food Journey');
     expect(getDocumentTitleForMode('chef')).toBe('Kitchen Forecast');
     expect(getDocumentTitleForMode('service-closeout')).toBe('Service Closeout');
     expect(getDocumentTitleForMode('chef-results')).toBe('Forecast Results');

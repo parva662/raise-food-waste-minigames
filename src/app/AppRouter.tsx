@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import LunchDeclarationApp from '@/products/lunch-declaration/LunchDeclarationApp';
+import { StudentJourneyApp } from '@/products/student-journey/StudentJourneyApp';
 import { KitchenForecastApp } from '@/products/kitchen-forecast/KitchenForecastApp';
 import { ForecastResultsAdminApp } from '@/products/forecast-results/admin/ForecastResultsAdminApp';
 import { ForecastResultsParticipantApp } from '@/products/forecast-results/participant/ForecastResultsParticipantApp';
@@ -26,6 +27,10 @@ export function AppRouter() {
   useEffect(() => {
     applyDocumentTitle(mode);
   }, [mode]);
+
+  if (mode === 'student-journey') {
+    return <StudentJourneyApp />;
+  }
 
   if (mode === 'chef') {
     return <KitchenForecastApp />;

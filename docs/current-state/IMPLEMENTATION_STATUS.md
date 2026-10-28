@@ -51,7 +51,23 @@ Cannot be closed from this repo’s Vitest stack (no browser E2E):
 - Final business maximum quantity value (configured max remains in use)
 - All-zero attending meal package validity (current code still requires ≥1 positive component on Regular/Soup)
 - Open-page behaviour across Helsinki midnight (service date is locked for the page session until product decides)
-- Future student dashboard / gamification (out of scope)
+
+### Related: My Food Journey (separate product)
+
+Read-only Custom Page `#/student-journey` is implemented in `src/products/student-journey/` (see section below). It does not change Student Lunch game logic.
+
+---
+
+## My Food Journey (student dashboard)
+
+| | |
+|--|--|
+| **Status** | **Implemented in code** (`#/student-journey`; Overview + My Progress; personal `studentLunchCheckin` via `inputCollectionPari.me` + `kitchenGroupInputSelf.activities`; no ACTIVITY post; badges/streaks/plate waste explicitly unavailable) |
+| **Gherkin** | [`../../features/student/student-journey.feature`](../../features/student/student-journey.feature) |
+| **Coverage** | [`../testing/STUDENT_JOURNEY_ACCEPTANCE_COVERAGE.md`](../testing/STUDENT_JOURNEY_ACCEPTANCE_COVERAGE.md) |
+| **Product** | [`../product/STUDENT_JOURNEY.md`](../product/STUDENT_JOURNEY.md) |
+| **GameBus setup** | Manual organizer steps: [`../how-to/configure-student-food-journey-access.md`](../how-to/configure-student-food-journey-access.md). Live left-menu apply and end-to-end embed verification remain open until an organizer configures the Custom Page. |
+| **Blocked without GameBus data** | Streak values, badge inventory/progress, before/after plate measurements, personal food-waste series — SPA does not invent these |
 
 ---
 

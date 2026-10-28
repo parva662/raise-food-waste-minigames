@@ -67,6 +67,16 @@ describe('app route registry', () => {
     expect(getRouteDefinition('kitchen-day-progress').postsActivity).toBe(false);
   });
 
+  it('maps My Food Journey as a read-only Custom Page', () => {
+    expect(getAppMode('#/student-journey')).toBe('student-journey');
+    expect(getRouteDefinition('student-journey').surface).toBe('student-journey');
+    expect(getRouteDefinition('student-journey').title).toBe('My Food Journey');
+    expect(getExpectedActivityRef('#/student-journey')).toBeNull();
+    expect(getRouteDefinition('student-journey').postsActivity).toBe(false);
+    expect(getGameBusEmbedKind('#/student-journey')).toBe('custom-page');
+    expect(requiresGameBusTaskHandshake('#/student-journey')).toBe(false);
+  });
+
   it('classifies GameBus Custom Page vs Custom Task handshake by route registry', () => {
     expect(getGameBusEmbedKind('#/chef-results')).toBe('custom-page');
     expect(getGameBusEmbedKind('#/chef-results?gamebusDebug=1')).toBe('custom-page');

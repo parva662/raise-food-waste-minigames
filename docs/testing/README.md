@@ -4,6 +4,12 @@
 
 Automated tests today: **Vitest** + Testing Library (see `package.json` and `.github/workflows/test.yml`). Gherkin files under [`../../features/`](../../features/) are acceptance **contracts**, not executed scenarios in CI.
 
+## My Food Journey
+
+| Surface | Gherkin | Coverage matrix |
+|---------|---------|-----------------|
+| Student `#/student-journey` | [`../../features/student/student-journey.feature`](../../features/student/student-journey.feature) | [`STUDENT_JOURNEY_ACCEPTANCE_COVERAGE.md`](STUDENT_JOURNEY_ACCEPTANCE_COVERAGE.md) |
+
 ## Kitchen Forecast
 
 Traceability from the approved Gherkin to Vitest coverage:

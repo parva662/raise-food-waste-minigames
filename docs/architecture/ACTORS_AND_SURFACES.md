@@ -8,7 +8,7 @@ Roles determine **who may use a surface**. They do **not** determine the source 
 
 Person eating in the canteen. Older source and contracts still say “student” in places. That global terminology rename is **not** part of the repository architecture refactor.
 
-Uses **Lunch Declaration** (default / empty hash).
+Uses **Lunch Declaration** (default / empty hash) and the read-only **My Food Journey** dashboard (`#/student-journey`).
 
 ### 2. Kitchen staff
 
@@ -35,6 +35,7 @@ Read-only management / research viewer. Uses Forecast Results admin (`#/chef-res
 | Surface | Kind | Product |
 |---------|------|---------|
 | Lunch Declaration form | write | lunch-declaration |
+| My Food Journey dashboard | read | student-journey |
 | Kitchen Forecast form | write | kitchen-forecast |
 | Service Closeout form | write | service-closeout |
 | Forecast Results participant / admin | read | forecast-results |

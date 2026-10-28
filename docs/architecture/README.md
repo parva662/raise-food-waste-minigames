@@ -13,6 +13,7 @@ src/
   platform/gamebus/            generic GameBus transport
   products/
     lunch-declaration/
+    student-journey/
     kitchen-forecast/
     service-closeout/
     forecast-results/
@@ -28,6 +29,7 @@ src/
 | Product | Public hash (stable) | Source |
 |---------|----------------------|--------|
 | Lunch Declaration | default / empty | `src/products/lunch-declaration/` |
+| My Food Journey | `#/student-journey` | `src/products/student-journey/` |
 | Kitchen Forecast | `#/chef` | `src/products/kitchen-forecast/` |
 | Service Closeout | `#/service-closeout` | `src/products/service-closeout/` |
 | Forecast Results | `#/chef-results`, `#/chef-results-admin` | `src/products/forecast-results/` |
