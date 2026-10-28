@@ -5,6 +5,8 @@ interface ServiceDateSelectorProps {
   selectedDate: string;
   onSelectDate: (date: string) => void;
   compact?: boolean;
+  selectedDateIsUpcoming?: boolean;
+  todayIso?: string;
 }
 
 export function ServiceDateSelector({
@@ -12,6 +14,8 @@ export function ServiceDateSelector({
   selectedDate,
   onSelectDate,
   compact = false,
+  selectedDateIsUpcoming = false,
+  todayIso,
 }: ServiceDateSelectorProps) {
   if (serviceDates.length === 0) {
     return (
@@ -32,14 +36,28 @@ export function ServiceDateSelector({
           value={selectedDate}
           onChange={(event) => onSelectDate(event.target.value)}
           data-testid="chef-results-admin-date-select"
+          aria-describedby={selectedDateIsUpcoming ? 'kitchen-mgmt-upcoming-service' : undefined}
         >
-          {serviceDates.map((date) => (
-            <option key={date} value={date}>
-              {formatServiceDateShort(date)}
-            </option>
-          ))}
+          {serviceDates.map((date) => {
+            const upcoming = todayIso ? date > todayIso : false;
+            return (
+              <option key={date} value={date}>
+                {formatServiceDateShort(date)}
+                {upcoming ? ' (upcoming)' : ''}
+              </option>
+            );
+          })}
         </select>
       </label>
+      {selectedDateIsUpcoming ? (
+        <p
+          id="kitchen-mgmt-upcoming-service"
+          className="kitchen-mgmt-date-picker__upcoming"
+          data-testid="kitchen-mgmt-upcoming-service"
+        >
+          Upcoming service
+        </p>
+      ) : null}
       {selectedDate && !compact ? (
         <p className="kitchen-mgmt-date-picker__readable" data-testid="kitchen-mgmt-selected-date">
           {formatServiceDateShort(selectedDate)}

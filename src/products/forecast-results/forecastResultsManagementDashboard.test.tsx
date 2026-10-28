@@ -137,7 +137,8 @@ describe('kitchen management service selection', () => {
     vi.restoreAllMocks();
   });
 
-  it('defaults to latest calculable fixture service date', () => {
+  it('defaults to Helsinki today when present, else most recent past fixture date', () => {
+    // Fixture dates are July 2026; with a real clock after that range the default is 31 Jul.
     render(<ForecastResultsAdminApp />);
     const select = screen.getByTestId('chef-results-admin-date-select') as HTMLSelectElement;
     expect(select.value).toBe('2026-07-31');

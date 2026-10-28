@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { DashboardHeader, type DashboardStatus } from '@/products/forecast-results/participant/components/DashboardHeader';
 import { FixtureCurrentUserSelector } from '@/products/forecast-results/participant/components/FixtureCurrentUserSelector';
 import { ParticipantOverviewSection } from '@/products/forecast-results/participant/components/ParticipantOverviewSection';
@@ -18,9 +18,9 @@ import {
 } from '@/products/forecast-results/adapters/groupCalculationSource';
 import {
   isOperationalServiceDay,
-  msUntilNextHelsinkiMidnight,
   resolveForecastResultsServiceDate,
 } from '@/shared/calendar/operationalServiceCalendar';
+import { useHelsinkiDashboardClock } from '@/shared/calendar/useHelsinkiDashboardClock';
 import { getFixtureCurrentUserId } from '@/products/forecast-results/currentUserContext';
 import { findParticipantDailyResult } from '@/products/forecast-results/calculations/participantWeekData';
 import { buildParticipantProgressServicePoints } from '@/products/forecast-results/calculations/participantProgressData';
@@ -29,58 +29,6 @@ import { useGameBusAuthenticatedUser } from '@/products/forecast-results/useGame
 import { useForecastResultsData } from '@/products/forecast-results/useForecastResultsData';
 import { useGameBusEmbed } from '@/platform/gamebus/useGameBusEmbed';
 import type { DailyServiceResults } from '@/products/forecast-results/types';
-
-/**
- * Keep the participant dashboard clock aligned to Europe/Helsinki midnight without
- * relying on a fixed 24h timer (DST-safe) or waiting for a full page reload.
- */
-function useHelsinkiDashboardClock(): Date {
-  const [now, setNow] = useState(() => new Date());
-
-  useEffect(() => {
-    let midnightTimeoutId: number | undefined;
-    let cancelled = false;
-
-    const refresh = () => {
-      if (cancelled) return;
-      setNow(new Date());
-    };
-
-    const scheduleMidnight = () => {
-      if (midnightTimeoutId !== undefined) {
-        window.clearTimeout(midnightTimeoutId);
-      }
-      const delayMs = Math.max(msUntilNextHelsinkiMidnight(new Date()) + 1, 25);
-      midnightTimeoutId = window.setTimeout(() => {
-        refresh();
-        scheduleMidnight();
-      }, delayMs);
-    };
-
-    const onVisibility = () => {
-      if (document.visibilityState === 'visible') {
-        refresh();
-        scheduleMidnight();
-      }
-    };
-
-    scheduleMidnight();
-    // Safety net when browsers throttle background timers.
-    const intervalId = window.setInterval(refresh, 60_000);
-    document.addEventListener('visibilitychange', onVisibility);
-
-    return () => {
-      cancelled = true;
-      if (midnightTimeoutId !== undefined) {
-        window.clearTimeout(midnightTimeoutId);
-      }
-      window.clearInterval(intervalId);
-      document.removeEventListener('visibilitychange', onVisibility);
-    };
-  }, []);
-
-  return now;
-}
 
 /**
  * Participant-safe results view — own identifiable data + other-staff comparison.
