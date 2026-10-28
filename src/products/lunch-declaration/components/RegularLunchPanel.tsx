@@ -24,7 +24,7 @@ export function RegularLunchPanel({
   ariaLabel,
 }: RegularLunchPanelProps) {
   return (
-    <div className="portion-food-grid" aria-label={ariaLabel ?? categoryLabel}>
+    <div className="portion-food-grid portion-food-grid--single" aria-label={ariaLabel ?? categoryLabel}>
       <PortionFoodCard
         item={item}
         categoryLabel={categoryLabel}

@@ -52,6 +52,26 @@ describe('useLunchSelection', () => {
     expect(result.current.isReviewDisabled).toBe(false);
   });
 
+  it('seeds quantity 1 and enables Review when activating classic from the card', async () => {
+    const { result } = renderHook(() => useLunchSelection(() => SUBMISSION_TIMES.midday));
+    await waitFor(() => expect(result.current.initialized).toBe(true));
+    act(() => result.current.activateLunchOption('classic'));
+    expect(result.current.draft.lunchOption).toBe('classic');
+    expect(result.current.draft.mainQuantity).toBe(1);
+    expect(result.current.isReviewDisabled).toBe(false);
+  });
+
+  it('switches from classic to vegetarian and clears classic quantity', async () => {
+    const { result } = renderHook(() => useLunchSelection(() => SUBMISSION_TIMES.midday));
+    await waitFor(() => expect(result.current.initialized).toBe(true));
+    act(() => result.current.activateLunchOption('classic'));
+    act(() => result.current.activateLunchOption('vegetarian'));
+    expect(result.current.draft.lunchOption).toBe('vegetarian');
+    expect(result.current.draft.mainQuantity).toBe(0);
+    expect(result.current.draft.vegetarianQuantity).toBe(1);
+    expect(result.current.isReviewDisabled).toBe(false);
+  });
+
   it('increments main quantity up to max', async () => {
     const { result } = renderHook(() => useLunchSelection(() => SUBMISSION_TIMES.midday));
     await waitFor(() => expect(result.current.initialized).toBe(true));

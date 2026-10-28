@@ -26,33 +26,36 @@ export function PortionFoodCard({
   const selected = quantity > 0;
   const canDecrement = menuInteractive && sectionActive;
 
+  const activate = () => {
+    if (!menuInteractive) return;
+    onActivateSection();
+  };
+
   return (
-    <article
+    <div
       className={`portion-food-card${selected ? ' portion-food-card--selected' : ''}${!sectionActive ? ' portion-food-card--inactive-section' : ''}`}
-      onClick={menuInteractive ? onActivateSection : undefined}
-      onKeyDown={(event) => {
-        if (!menuInteractive) return;
-        if (event.key === 'Enter' || event.key === ' ') {
-          event.preventDefault();
-          onActivateSection();
-        }
-      }}
-      role="group"
-      aria-label={`${categoryLabel}: ${item.name}`}
-      tabIndex={menuInteractive ? 0 : undefined}
     >
-      <FoodImage
-        src={item.imageDedicated ?? item.image}
-        placeholderSrc={item.imagePlaceholder}
-        alt={item.name}
-        category={item.category}
-        className="portion-food-card__image"
-        fallbackClassName="portion-food-card__image-fallback"
-        iconSize={20}
-      />
-      <p className="portion-food-card__role">{categoryLabel}</p>
-      <h3 className="portion-food-card__name">{item.name}</h3>
-      <div className="portion-food-card__quantity" onClick={(event) => event.stopPropagation()}>
+      <button
+        type="button"
+        className="portion-food-card__select"
+        onClick={activate}
+        disabled={!menuInteractive}
+        aria-pressed={selected || sectionActive}
+        aria-label={`Select ${categoryLabel}: ${item.name}`}
+      >
+        <FoodImage
+          src={item.imageDedicated ?? item.image}
+          placeholderSrc={item.imagePlaceholder}
+          alt=""
+          category={item.category}
+          className="portion-food-card__image"
+          fallbackClassName="portion-food-card__image-fallback"
+          iconSize={20}
+        />
+        <p className="portion-food-card__role">{categoryLabel}</p>
+        <h3 className="portion-food-card__name">{item.name}</h3>
+      </button>
+      <div className="portion-food-card__quantity">
         <QuantityControl
           quantity={quantity}
           maxQuantity={item.maxQuantity}
@@ -64,6 +67,6 @@ export function PortionFoodCard({
           compact
         />
       </div>
-    </article>
+    </div>
   );
 }

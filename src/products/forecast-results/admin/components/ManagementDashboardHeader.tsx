@@ -7,6 +7,9 @@ interface ManagementDashboardHeaderProps {
   onSelectDate: (date: string) => void;
   /** Forecast service-date selector is Forecast & Service only. */
   showServiceDateSelector: boolean;
+  /** True when the selected date is after Helsinki today. */
+  selectedDateIsUpcoming?: boolean;
+  todayIso?: string;
 }
 
 export function ManagementDashboardHeader({
@@ -15,6 +18,8 @@ export function ManagementDashboardHeader({
   selectedDate,
   onSelectDate,
   showServiceDateSelector,
+  selectedDateIsUpcoming = false,
+  todayIso,
 }: ManagementDashboardHeaderProps) {
   return (
     <header className="kitchen-mgmt-header" data-testid="kitchen-mgmt-header">
@@ -31,12 +36,16 @@ export function ManagementDashboardHeader({
         ) : null}
       </div>
       {!isLoading && showServiceDateSelector ? (
-        <ServiceDateSelector
-          serviceDates={serviceDates}
-          selectedDate={selectedDate}
-          onSelectDate={onSelectDate}
-          compact
-        />
+        <div className="kitchen-mgmt-header__actions">
+          <ServiceDateSelector
+            serviceDates={serviceDates}
+            selectedDate={selectedDate}
+            onSelectDate={onSelectDate}
+            compact
+            selectedDateIsUpcoming={selectedDateIsUpcoming}
+            todayIso={todayIso}
+          />
+        </div>
       ) : null}
     </header>
   );

@@ -83,8 +83,48 @@ describe('unified portion food UI', () => {
         onAdjustPackage={() => undefined}
       />,
     );
-    expect(screen.getByRole('group', { name: /Soup \+ Dessert package:/i })).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: /Select Soup \+ Dessert package:/i }),
+    ).toBeInTheDocument();
     expect(screen.getByText(/One quantity sets both soup and dessert/i)).toBeInTheDocument();
+  });
+
+  it('activates classic from the meal selection surface without nested button conflicts', async () => {
+    const user = userEvent.setup();
+    const onActivateSection = vi.fn();
+    const onIncrement = vi.fn();
+    render(
+      <PortionFoodCard
+        item={slots.main}
+        categoryLabel="Classic dish"
+        quantity={0}
+        sectionActive={false}
+        menuInteractive
+        onActivateSection={onActivateSection}
+        onIncrement={onIncrement}
+        onDecrement={() => undefined}
+      />,
+    );
+    await user.click(screen.getByRole('button', { name: /Select Classic dish:/i }));
+    expect(onActivateSection).toHaveBeenCalledTimes(1);
+    expect(onIncrement).not.toHaveBeenCalled();
+    await user.click(screen.getByLabelText(`Increase ${slots.main.name}`));
+    expect(onIncrement).toHaveBeenCalledTimes(1);
+  });
+
+  it('uses a single-column grid for exclusive meal options', () => {
+    const { container } = render(
+      <RegularLunchPanel
+        item={slots.main}
+        categoryLabel="Classic dish"
+        quantity={1}
+        sectionActive
+        menuInteractive
+        onActivateSection={() => undefined}
+        onAdjust={() => undefined}
+      />,
+    );
+    expect(container.querySelector('.portion-food-grid--single')).toBeInTheDocument();
   });
 
   it('shows submission deadline in game header', () => {

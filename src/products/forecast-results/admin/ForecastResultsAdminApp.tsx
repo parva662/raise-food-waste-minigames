@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   getGroupAdminServiceDates,
   resolveAdminServicePartialState,
@@ -14,6 +14,7 @@ import {
 import { ForecastingManagementSection } from '@/products/forecast-results/admin/components/ForecastingManagementSection';
 import { ManagementAreaNav, type ManagementAreaTab } from '@/products/forecast-results/admin/components/ManagementAreaNav';
 import { ManagementDashboardHeader } from '@/products/forecast-results/admin/components/ManagementDashboardHeader';
+import { resolveDefaultAdminServiceDate } from '@/products/forecast-results/admin/resolveDefaultAdminServiceDate';
 import { KitchenSkillsManagementSection } from '@/products/forecast-results/admin/skills/KitchenSkillsManagementSection';
 import {
   buildKitchenSkillsManagementSummary,
@@ -26,6 +27,8 @@ import {
   getRawKitchenSkillsTrainerActivitiesInput,
   summarizeKitchenSkillsTrainerInput,
 } from '@/platform/gamebus/groupActivities';
+import { useHelsinkiDashboardClock } from '@/shared/calendar/useHelsinkiDashboardClock';
+import { getOperationalDateIso } from '@/shared/time/dates';
 
 /**
  * Kitchen Management Dashboard — unified Forecast & Service + Kitchen Skills.
@@ -37,6 +40,8 @@ import {
  */
 export function ForecastResultsAdminApp() {
   const { embedded, inputCollections, inputCollectionsReady } = useGameBusEmbed();
+  const now = useHelsinkiDashboardClock();
+  const todayIso = useMemo(() => getOperationalDateIso(now), [now]);
   const fixtureDates = useMemo(() => getFixtureServiceDates(), []);
   const groupDates = useMemo(() => {
     if (!embedded || !inputCollectionsReady) return [];
@@ -46,16 +51,42 @@ export function ForecastResultsAdminApp() {
   const serviceDates = embedded && inputCollectionsReady ? groupDates : fixtureDates;
   const [selectedDate, setSelectedDate] = useState<string>('');
   const [activeArea, setActiveArea] = useState<ManagementAreaTab>('forecast');
+  const [selectedDateIsUpcoming, setSelectedDateIsUpcoming] = useState(false);
+  const manualDateRef = useRef<string | null>(null);
 
   useEffect(() => {
     if (serviceDates.length === 0) {
       setSelectedDate('');
+      setSelectedDateIsUpcoming(false);
       return;
     }
-    setSelectedDate((current) =>
-      current && serviceDates.includes(current) ? current : serviceDates[serviceDates.length - 1]!,
-    );
-  }, [serviceDates]);
+
+    const manual = manualDateRef.current;
+    if (manual && serviceDates.includes(manual)) {
+      setSelectedDate(manual);
+      setSelectedDateIsUpcoming(manual > todayIso);
+      return;
+    }
+
+    setSelectedDate((current) => {
+      if (current && serviceDates.includes(current)) return current;
+      return resolveDefaultAdminServiceDate(serviceDates, todayIso)?.date ?? '';
+    });
+  }, [serviceDates, todayIso]);
+
+  useEffect(() => {
+    if (!selectedDate) {
+      setSelectedDateIsUpcoming(false);
+      return;
+    }
+    setSelectedDateIsUpcoming(selectedDate > todayIso);
+  }, [selectedDate, todayIso]);
+
+  const handleSelectDate = (date: string) => {
+    manualDateRef.current = date;
+    setSelectedDate(date);
+    setSelectedDateIsUpcoming(date > todayIso);
+  };
 
   const resultsState = useForecastResultsData(selectedDate);
   const dailyResults = resultsState.status === 'ready' ? resultsState.dailyResults : null;
@@ -102,8 +133,10 @@ export function ForecastResultsAdminApp() {
         isLoading={isLoading}
         serviceDates={serviceDates}
         selectedDate={selectedDate}
-        onSelectDate={setSelectedDate}
+        onSelectDate={handleSelectDate}
         showServiceDateSelector={activeArea === 'forecast'}
+        selectedDateIsUpcoming={selectedDateIsUpcoming}
+        todayIso={todayIso}
       />
 
       {!isLoading ? (
@@ -117,7 +150,7 @@ export function ForecastResultsAdminApp() {
                 view={serviceView}
                 historyRows={historyRows}
                 selectedDate={selectedDate}
-                onSelectDate={setSelectedDate}
+                onSelectDate={handleSelectDate}
                 embedded={embedded}
                 inputCollectionsReady={inputCollectionsReady}
                 inputCollections={inputCollections}

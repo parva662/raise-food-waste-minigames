@@ -102,4 +102,45 @@ describe('meal draft exclusive lunch options', () => {
     expect(next.soupQuantity).toBe(0);
     expect(next.dessertQuantity).toBe(0);
   });
+
+  it('seeds quantity 1 when activating classic from the selection surface', () => {
+    const next = draftForLunchOption({ ...empty }, 'classic');
+    expect(next.lunchOption).toBe('classic');
+    expect(next.mainQuantity).toBe(1);
+    expect(next.vegetarianQuantity).toBe(0);
+  });
+
+  it('seeds soup and dessert to 1 together when activating the package', () => {
+    const next = draftForLunchOption({ ...empty }, 'soup');
+    expect(next.soupQuantity).toBe(1);
+    expect(next.dessertQuantity).toBe(1);
+    expect(next.mainQuantity).toBe(0);
+  });
+
+  it('preserves a positive quantity when re-activating the same option', () => {
+    const current = {
+      mealChoice: 'regular' as const,
+      lunchOption: 'classic' as const,
+      mainQuantity: 3,
+      vegetarianQuantity: 0,
+      soupQuantity: 0,
+      dessertQuantity: 0,
+    };
+    expect(draftForLunchOption(current, 'classic')).toBe(current);
+  });
+
+  it('restores quantity 1 when re-activating an option reduced to zero', () => {
+    const next = draftForLunchOption(
+      {
+        mealChoice: 'regular',
+        lunchOption: 'classic',
+        mainQuantity: 0,
+        vegetarianQuantity: 0,
+        soupQuantity: 0,
+        dessertQuantity: 0,
+      },
+      'classic',
+    );
+    expect(next.mainQuantity).toBe(1);
+  });
 });

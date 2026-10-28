@@ -11,17 +11,51 @@ export function emptyPortionQuantities(): Pick<
   return { mainQuantity: 0, vegetarianQuantity: 0, soupQuantity: 0, dessertQuantity: 0 };
 }
 
+function seededQuantitiesForOption(
+  option: LunchOption,
+): Pick<MealDraft, 'mainQuantity' | 'vegetarianQuantity' | 'soupQuantity' | 'dessertQuantity'> {
+  if (option === 'classic') {
+    return { ...emptyPortionQuantities(), mainQuantity: 1 };
+  }
+  if (option === 'vegetarian') {
+    return { ...emptyPortionQuantities(), vegetarianQuantity: 1 };
+  }
+  if (option === 'soup') {
+    return { ...emptyPortionQuantities(), soupQuantity: 1, dessertQuantity: 1 };
+  }
+  return emptyPortionQuantities();
+}
+
+function optionActiveQuantity(draft: MealDraft, option: LunchOption): number {
+  if (option === 'classic') return draft.mainQuantity;
+  if (option === 'vegetarian') return draft.vegetarianQuantity;
+  if (option === 'soup') return draft.soupQuantity;
+  return 0;
+}
+
+/**
+ * Activate a lunch option from the selection surface.
+ * Food options start at quantity 1. Re-clicking the same option with a positive
+ * quantity preserves it; re-clicking after reducing to 0 restores 1.
+ */
 export function draftForLunchOption(
   previous: MealDraft,
   option: LunchOption,
 ): MealDraft {
-  if (previous.lunchOption === option && previous.mealChoice === mealChoiceFromLunchOption(option)) {
+  const mealChoice = mealChoiceFromLunchOption(option);
+  if (previous.lunchOption === option && previous.mealChoice === mealChoice) {
+    if (option !== 'no_lunch' && optionActiveQuantity(previous, option) === 0) {
+      return {
+        ...previous,
+        ...seededQuantitiesForOption(option),
+      };
+    }
     return previous;
   }
   return {
     lunchOption: option,
-    mealChoice: mealChoiceFromLunchOption(option),
-    ...emptyPortionQuantities(),
+    mealChoice,
+    ...seededQuantitiesForOption(option),
   };
 }
 
@@ -38,6 +72,14 @@ export function draftForMealChoice(
   return draftForLunchOption(previous, 'classic');
 }
 
+function draftSwitchedToOption(option: LunchOption): MealDraft {
+  return {
+    lunchOption: option,
+    mealChoice: mealChoiceFromLunchOption(option),
+    ...emptyPortionQuantities(),
+  };
+}
+
 export function applyPortionAdjustment(
   draft: MealDraft,
   field: PortionField,
@@ -47,7 +89,7 @@ export function applyPortionAdjustment(
   if (field === 'soup_dessert' || field === 'soup' || field === 'dessert') {
     if (draft.lunchOption !== 'soup') {
       if (delta <= 0) return draft;
-      draft = draftForLunchOption(draft, 'soup');
+      draft = draftSwitchedToOption('soup');
     }
     const current = draft.soupQuantity;
     const nextQty = adjustPortionQuantity(current, delta, maxQuantity);
@@ -65,7 +107,7 @@ export function applyPortionAdjustment(
   const option: LunchOption = field === 'main' ? 'classic' : 'vegetarian';
   if (draft.lunchOption !== option) {
     if (delta <= 0) return draft;
-    draft = draftForLunchOption(draft, option);
+    draft = draftSwitchedToOption(option);
   }
 
   if (field === 'main') {
