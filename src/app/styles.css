@@ -8096,3 +8096,198 @@ ul {
     max-width: none;
   }
 }
+
+/* My Food Journey (student custom page) */
+.student-journey-page {
+  max-width: 52rem;
+  margin-inline: auto;
+  display: grid;
+  gap: var(--spacing-md);
+}
+
+.student-journey-header {
+  padding: 1rem 1.15rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  border-top: 4px solid var(--color-primary);
+  background: var(--color-surface);
+}
+
+.student-journey-header__eyebrow {
+  margin: 0 0 0.25rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--color-primary);
+}
+
+.student-journey-header__title {
+  margin: 0;
+  font-size: clamp(1.4rem, 3vw, 1.85rem);
+  line-height: 1.2;
+}
+
+.student-journey-header__lead {
+  margin: 0.4rem 0 0;
+  max-width: 40rem;
+  color: var(--color-text-secondary);
+  font-size: 0.9rem;
+  line-height: 1.45;
+}
+
+.student-journey-loading {
+  margin: 0;
+  color: var(--color-text-secondary);
+}
+
+.student-journey-overview,
+.student-journey-progress {
+  display: grid;
+  gap: var(--spacing-md);
+}
+
+.student-journey-card {
+  padding: 1rem 1.1rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-sm);
+}
+
+.student-journey-card--muted {
+  background: color-mix(in srgb, var(--color-bg) 65%, var(--color-surface));
+}
+
+.student-journey-card__title {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 750;
+}
+
+.student-journey-card__lead,
+.student-journey-card__body {
+  margin: 0.4rem 0 0;
+  color: var(--color-text-secondary);
+  font-size: 0.875rem;
+  line-height: 1.45;
+}
+
+.student-journey-metrics {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.65rem;
+  margin: 0.85rem 0 0;
+}
+
+.student-journey-metric {
+  padding: 0.7rem 0.8rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border);
+  background: var(--color-primary-light);
+}
+
+.student-journey-metric--wide {
+  grid-column: 1 / -1;
+  background: var(--color-bg);
+}
+
+.student-journey-metric dt {
+  margin: 0;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--color-text-secondary);
+}
+
+.student-journey-metric dd {
+  margin: 0.3rem 0 0;
+  display: grid;
+  gap: 0.15rem;
+  font-size: 1.2rem;
+  font-weight: 750;
+  line-height: 1.25;
+}
+
+.student-journey-metric__detail {
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--color-text-secondary);
+}
+
+.student-journey-timeline {
+  list-style: none;
+  margin: 0.85rem 0 0;
+  padding: 0.35rem 0 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem 0.75rem;
+}
+
+.student-journey-timeline__mark {
+  display: grid;
+  justify-items: center;
+  gap: 0.3rem;
+  min-width: 3.5rem;
+}
+
+.student-journey-timeline__dot {
+  width: 0.85rem;
+  height: 0.85rem;
+  border-radius: 999px;
+  background: var(--color-primary);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary) 22%, transparent);
+}
+
+.student-journey-timeline__label {
+  font-size: 0.68rem;
+  line-height: 1.2;
+  color: var(--color-text-secondary);
+  text-align: center;
+}
+
+.student-journey-history {
+  list-style: none;
+  margin: 0.85rem 0 0;
+  padding: 0;
+  display: grid;
+  gap: 0.55rem;
+}
+
+.student-journey-history__item {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr);
+  gap: 0.5rem 1rem;
+  padding: 0.7rem 0.8rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-bg);
+}
+
+.student-journey-history__date {
+  margin: 0;
+  font-weight: 700;
+}
+
+.student-journey-history__submitted,
+.student-journey-history__qty {
+  margin: 0.2rem 0 0;
+  font-size: 0.78rem;
+  color: var(--color-text-secondary);
+}
+
+.student-journey-history__option {
+  margin: 0;
+  font-weight: 700;
+}
+
+@media (max-width: 560px) {
+  .student-journey-metrics {
+    grid-template-columns: 1fr;
+  }
+
+  .student-journey-history__item {
+    grid-template-columns: 1fr;
+  }
+}

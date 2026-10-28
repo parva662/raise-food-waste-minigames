@@ -70,7 +70,8 @@ Always separate **intended product behaviour**, **current implementation**, and 
 2. [`contracts/KITCHEN_FORECAST_ADMIN_SETUP.md`](contracts/KITCHEN_FORECAST_ADMIN_SETUP.md) — forecast admin checklist  
 3. [`how-to/verify-input-collections.md`](how-to/verify-input-collections.md) — verify embed Input Collections  
 4. [`how-to/configure-chef-management-dashboard-access.md`](how-to/configure-chef-management-dashboard-access.md) — Chef/admin `/admindashboard` menu + collections  
-5. [`product/kitchen-skills-challenge/GAMEBUS_SLUG_CONTRACT.md`](product/kitchen-skills-challenge/GAMEBUS_SLUG_CONTRACT.md) — Kitchen Skills locked slugs  
+5. [`how-to/configure-student-food-journey-access.md`](how-to/configure-student-food-journey-access.md) — Student My Food Journey Custom Page + menu  
+6. [`product/kitchen-skills-challenge/GAMEBUS_SLUG_CONTRACT.md`](product/kitchen-skills-challenge/GAMEBUS_SLUG_CONTRACT.md) — Kitchen Skills locked slugs  
 
 ### AI agents (Cursor and similar)
 
@@ -102,6 +103,7 @@ Goal-oriented recipes for a concrete job:
 | [`how-to/diagnose-chef-results.md`](how-to/diagnose-chef-results.md) | Diagnose `#/chef-results` status chips, Progress, and **No forecast for this service** |
 | [`how-to/verify-input-collections.md`](how-to/verify-input-collections.md) | Verify which GameBus Input Collections the embed received |
 | [`how-to/configure-chef-management-dashboard-access.md`](how-to/configure-chef-management-dashboard-access.md) | Grant Chefs `/admindashboard` via GameBus menu + collections (no SPA hard-coding) |
+| [`how-to/configure-student-food-journey-access.md`](how-to/configure-student-food-journey-access.md) | Add My Food Journey (`#/student-journey`) Custom Page + student menu + self Input Collections |
 | [`how-to/live-test-tutor-three-module-assessments.md`](how-to/live-test-tutor-three-module-assessments.md) | Controlled live test: three Tutor `wastePracticeReview` posts vs GameBus persistence |
 | [`contracts/KITCHEN_FORECAST_ADMIN_SETUP.md`](contracts/KITCHEN_FORECAST_ADMIN_SETUP.md) | Configure / verify Kitchen Forecast on GameBus |
 | [`../reference/README.md`](../reference/README.md) | Menu / recipe workbook and regenerate pipelines |
@@ -153,6 +155,7 @@ Understanding-oriented context: why the product and architecture look this way.
 | [`product/kitchen-skills-challenge/CHEF_REVIEW.md`](product/kitchen-skills-challenge/CHEF_REVIEW.md) | Session Review, Progress, trainer |
 | [`product/kitchen-skills-challenge/IMPLEMENTATION_BLUEPRINT.md`](product/kitchen-skills-challenge/IMPLEMENTATION_BLUEPRINT.md) | Architectural constraints + remaining admin risks (status lives in current-state) |
 | [`product/STUDENT_LUNCH.md`](product/STUDENT_LUNCH.md) | Student Lunch |
+| [`product/STUDENT_JOURNEY.md`](product/STUDENT_JOURNEY.md) | My Food Journey student dashboard |
 | [`product/KITCHEN_FORECAST.md`](product/KITCHEN_FORECAST.md) | Kitchen Forecast |
 | [`product/SERVICE_CLOSEOUT.md`](product/SERVICE_CLOSEOUT.md) | Service Closeout |
 | [`product/KITCHEN_RESULTS.md`](product/KITCHEN_RESULTS.md) | Staff + management results |

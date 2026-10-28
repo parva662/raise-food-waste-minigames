@@ -20,7 +20,7 @@ They are research/pilot tools, not a restaurant ERP.
 
 | Group | Uses |
 |-------|------|
-| Canteen participant | Lunch Declaration (default route). Source still says “student” in places; that terminology is not renamed here. |
+| Canteen participant | Lunch Declaration (default route) and My Food Journey (`#/student-journey`). Source still says “student” in places; that terminology is not renamed here. |
 | Kitchen staff | Kitchen Forecast, Service Closeout, Forecast Results, Kitchen Skills Challenge |
 | Chef / trainer | Kitchen Skills Challenge trainer surface (`wastePracticeReview` as `SILENT_ACTIVITY` with `actors`) |
 | Admin viewer | Forecast Results admin dashboard (`#/chef-results-admin`; platform visibility, no frontend auth) |
@@ -32,6 +32,7 @@ Roles determine access. They do **not** determine the source-tree layout.
 | Product | Public hash (stable) | Kind |
 |---------|----------------------|------|
 | Lunch Declaration | default / empty hash | data entry |
+| My Food Journey | `#/student-journey` | read / personal dashboard |
 | Kitchen Forecast | `#/chef` | data entry (`chefForecast`) |
 | Service Closeout | `#/service-closeout` | operational (`wasteMeasurement`) |
 | Forecast Results (participant) | `#/chef-results` | read / analytics |
