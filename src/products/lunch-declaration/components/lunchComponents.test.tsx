@@ -2,6 +2,7 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { AttendanceChoice } from '@/products/lunch-declaration/components/AttendanceChoice';
 import { MealSection } from '@/products/lunch-declaration/components/MealSection';
 import { RegularLunchPanel } from '@/products/lunch-declaration/components/RegularLunchPanel';
 import { SoupDessertPackagePanel } from '@/products/lunch-declaration/components/SoupDessertPackagePanel';
@@ -13,6 +14,7 @@ import { resolveMealSlotsForDate } from '@/shared/menu/mealSlots';
 import { publicAssetUrl } from '@/shared/menu/menuItemImage';
 import { getSubmissionWindowStatus } from '@/products/lunch-declaration/submissionWindow';
 import { FIXTURE_LUNCH_DATE, SUBMISSION_TIMES } from '@/test/fixtures/dates';
+import { formatDisplayDate } from '@/shared/time/dates';
 
 afterEach(() => {
   cleanup();
@@ -164,6 +166,27 @@ describe('unified portion food UI', () => {
     );
     await user.click(screen.getByText('Choose only the classic main dish.'));
     expect(onActivate).toHaveBeenCalled();
+  });
+
+  it('asks attendance with equal Yes/No controls', async () => {
+    const user = userEvent.setup();
+    const onSelect = vi.fn();
+    render(
+      <AttendanceChoice
+        lunchDate={FIXTURE_LUNCH_DATE}
+        attendance="undecided"
+        onSelect={onSelect}
+      />,
+    );
+    expect(
+      screen.getByRole('heading', {
+        name: `Will you eat at the canteen on ${formatDisplayDate(FIXTURE_LUNCH_DATE)}?`,
+      }),
+    ).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: /Yes, I'm having lunch/i }));
+    expect(onSelect).toHaveBeenCalledWith('yes');
+    await user.click(screen.getByRole('button', { name: /No, I'm not having lunch/i }));
+    expect(onSelect).toHaveBeenCalledWith('no');
   });
 });
 

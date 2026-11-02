@@ -1,3 +1,4 @@
+import { AttendanceChoice } from '@/products/lunch-declaration/components/AttendanceChoice';
 import { GameStatusHeader } from '@/products/lunch-declaration/components/GameStatusHeader';
 import { MealSection } from '@/products/lunch-declaration/components/MealSection';
 import { RegularLunchPanel } from '@/products/lunch-declaration/components/RegularLunchPanel';
@@ -12,6 +13,7 @@ function LunchDeclarationApp() {
   const {
     state,
     draft,
+    attendance,
     summaryLines,
     hasSavedDeclaration,
     isSubmitDisabled,
@@ -26,6 +28,7 @@ function LunchDeclarationApp() {
     uiStep,
     submitStatus,
     submitError,
+    setAttendance,
     activateLunchOption,
     adjustPortion,
     resetDraft,
@@ -41,13 +44,14 @@ function LunchDeclarationApp() {
   }
 
   const lunchOption = draft.lunchOption ?? null;
-  const anotherSectionActive = lunchOption !== null;
+  const anotherSectionActive = lunchOption !== null && lunchOption !== 'no_lunch';
 
   const classicActive = lunchOption === 'classic';
   const vegetarianActive = lunchOption === 'vegetarian';
   const soupActive = lunchOption === 'soup';
-  const noLunchActive = lunchOption === 'no_lunch';
   const showEditor = uiStep === 'edit' && !hasSavedDeclaration;
+  const showMealMenu = showEditor && attendance === 'yes';
+  const showNoLunchHint = showEditor && attendance === 'no';
 
   return (
     <div className="app">
@@ -75,80 +79,97 @@ function LunchDeclarationApp() {
 
         <div className="app-layout">
           <div className="menu-column">
-            {showEditor && menuAvailability.status === 'available' && mealSlots && (
+            {showEditor && menuAvailability.status === 'available' && mealSlots && lunchDate && (
               <div className="meal-sections">
-                <MealSection
-                  sectionId="classic-dish"
-                  title="Classic dish"
-                  description="Choose only the classic main dish."
-                  active={classicActive}
-                  muted={anotherSectionActive && !classicActive}
-                  onActivate={() => activateLunchOption('classic')}
-                  activateDisabled={!menuInteractive}
-                >
-                  <RegularLunchPanel
-                    item={mealSlots.main}
-                    categoryLabel="Classic dish"
-                    quantity={draft.mainQuantity}
-                    sectionActive={classicActive}
-                    menuInteractive={menuInteractive}
-                    onActivateSection={() => activateLunchOption('classic')}
-                    onAdjust={(delta) => adjustPortion('main', delta)}
-                    ariaLabel="Classic dish"
-                  />
-                </MealSection>
-
-                <MealSection
-                  sectionId="vegetarian-dish"
-                  title="Vegetarian dish"
-                  description="Choose only the vegetarian dish."
-                  active={vegetarianActive}
-                  muted={anotherSectionActive && !vegetarianActive}
-                  onActivate={() => activateLunchOption('vegetarian')}
-                  activateDisabled={!menuInteractive}
-                >
-                  <RegularLunchPanel
-                    item={mealSlots.vegetarian}
-                    categoryLabel="Vegetarian dish"
-                    quantity={draft.vegetarianQuantity}
-                    sectionActive={vegetarianActive}
-                    menuInteractive={menuInteractive}
-                    onActivateSection={() => activateLunchOption('vegetarian')}
-                    onAdjust={(delta) => adjustPortion('vegetarian', delta)}
-                    ariaLabel="Vegetarian dish"
-                  />
-                </MealSection>
-
-                <MealSection
-                  sectionId="soup-dessert-package"
-                  title="Soup + Dessert package"
-                  description="Soup and dessert are always taken together. Adjust one package quantity."
-                  active={soupActive}
-                  muted={anotherSectionActive && !soupActive}
-                  onActivate={() => activateLunchOption('soup')}
-                  activateDisabled={!menuInteractive}
-                >
-                  <SoupDessertPackagePanel
-                    soup={mealSlots.soup}
-                    dessert={mealSlots.dessert}
-                    packageQuantity={draft.soupQuantity}
-                    sectionActive={soupActive}
-                    menuInteractive={menuInteractive}
-                    onActivateSection={() => activateLunchOption('soup')}
-                    onAdjustPackage={(delta) => adjustPortion('soup_dessert', delta)}
-                  />
-                </MealSection>
-
-                <MealSection
-                  sectionId="no-lunch"
-                  title="No lunch"
-                  description="You will not eat at the canteen for the next service."
-                  active={noLunchActive}
-                  muted={anotherSectionActive && !noLunchActive}
-                  onActivate={() => activateLunchOption('no_lunch')}
-                  activateDisabled={!menuInteractive}
-                  fullSectionActivate
+                <AttendanceChoice
+                  lunchDate={lunchDate}
+                  attendance={attendance}
+                  disabled={!menuInteractive}
+                  onSelect={setAttendance}
                 />
+
+                {showMealMenu ? (
+                  <div
+                    className="meal-sections__menu"
+                    role="group"
+                    aria-labelledby="meal-sections-menu-heading"
+                  >
+                    <h2 id="meal-sections-menu-heading" className="meal-sections__menu-heading">
+                      Choose your meal
+                    </h2>
+                    <p className="meal-sections__menu-lead">
+                      Pick one option for this service.
+                    </p>
+
+                    <MealSection
+                      sectionId="classic-dish"
+                      title="Classic dish"
+                      description="Choose only the classic main dish."
+                      active={classicActive}
+                      muted={anotherSectionActive && !classicActive}
+                      onActivate={() => activateLunchOption('classic')}
+                      activateDisabled={!menuInteractive}
+                    >
+                      <RegularLunchPanel
+                        item={mealSlots.main}
+                        categoryLabel="Classic dish"
+                        quantity={draft.mainQuantity}
+                        sectionActive={classicActive}
+                        menuInteractive={menuInteractive}
+                        onActivateSection={() => activateLunchOption('classic')}
+                        onAdjust={(delta) => adjustPortion('main', delta)}
+                        ariaLabel="Classic dish"
+                      />
+                    </MealSection>
+
+                    <MealSection
+                      sectionId="vegetarian-dish"
+                      title="Vegetarian dish"
+                      description="Choose only the vegetarian dish."
+                      active={vegetarianActive}
+                      muted={anotherSectionActive && !vegetarianActive}
+                      onActivate={() => activateLunchOption('vegetarian')}
+                      activateDisabled={!menuInteractive}
+                    >
+                      <RegularLunchPanel
+                        item={mealSlots.vegetarian}
+                        categoryLabel="Vegetarian dish"
+                        quantity={draft.vegetarianQuantity}
+                        sectionActive={vegetarianActive}
+                        menuInteractive={menuInteractive}
+                        onActivateSection={() => activateLunchOption('vegetarian')}
+                        onAdjust={(delta) => adjustPortion('vegetarian', delta)}
+                        ariaLabel="Vegetarian dish"
+                      />
+                    </MealSection>
+
+                    <MealSection
+                      sectionId="soup-dessert-package"
+                      title="Soup + Dessert package"
+                      description="Soup and dessert are always taken together. Adjust one package quantity."
+                      active={soupActive}
+                      muted={anotherSectionActive && !soupActive}
+                      onActivate={() => activateLunchOption('soup')}
+                      activateDisabled={!menuInteractive}
+                    >
+                      <SoupDessertPackagePanel
+                        soup={mealSlots.soup}
+                        dessert={mealSlots.dessert}
+                        packageQuantity={draft.soupQuantity}
+                        sectionActive={soupActive}
+                        menuInteractive={menuInteractive}
+                        onActivateSection={() => activateLunchOption('soup')}
+                        onAdjustPackage={(delta) => adjustPortion('soup_dessert', delta)}
+                      />
+                    </MealSection>
+                  </div>
+                ) : null}
+
+                {showNoLunchHint ? (
+                  <p className="attendance-choice__no-lunch-hint" role="status">
+                    You selected no lunch. Review and confirm when you are ready.
+                  </p>
+                ) : null}
               </div>
             )}
           </div>

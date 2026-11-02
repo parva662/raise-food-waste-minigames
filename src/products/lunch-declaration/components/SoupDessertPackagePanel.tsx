@@ -32,7 +32,7 @@ export function SoupDessertPackagePanel({
       >
         <button
           type="button"
-          className="portion-food-card__select"
+          className="portion-food-card__select portion-food-card__select--package"
           onClick={() => {
             if (!menuInteractive) return;
             onActivateSection();
@@ -41,34 +41,45 @@ export function SoupDessertPackagePanel({
           aria-pressed={selected || sectionActive}
           aria-label={`Select Soup + Dessert package: ${soup.name} and ${dessert.name}`}
         >
-          <div className="portion-food-card__package-images">
-            <FoodImage
-              src={soup.imageDedicated ?? soup.image}
-              placeholderSrc={soup.imagePlaceholder}
-              alt=""
-              category={soup.category}
-              className="portion-food-card__image"
-              fallbackClassName="portion-food-card__image-fallback"
-              iconSize={20}
-            />
-            <FoodImage
-              src={dessert.imageDedicated ?? dessert.image}
-              placeholderSrc={dessert.imagePlaceholder}
-              alt=""
-              category={dessert.category}
-              className="portion-food-card__image"
-              fallbackClassName="portion-food-card__image-fallback"
-              iconSize={20}
-            />
-          </div>
-          <p className="portion-food-card__role">Soup + Dessert package</p>
-          <h3 className="portion-food-card__name">
-            {soup.name}
-            <span className="portion-food-card__package-sep"> + </span>
-            {dessert.name}
-          </h3>
-          <p className="portion-food-card__package-hint">One quantity sets both soup and dessert.</p>
+          <span className="portion-food-card__package-rows">
+            <span className="portion-food-card__package-row">
+              <FoodImage
+                src={soup.imageDedicated ?? soup.image}
+                placeholderSrc={soup.imagePlaceholder}
+                alt=""
+                category={soup.category}
+                className="portion-food-card__image"
+                fallbackClassName="portion-food-card__image-fallback"
+                iconSize={18}
+              />
+              <span className="portion-food-card__copy">
+                <span className="portion-food-card__role">Soup</span>
+                <span className="portion-food-card__name">{soup.name}</span>
+              </span>
+            </span>
+
+            <span className="portion-food-card__package-row">
+              <FoodImage
+                src={dessert.imageDedicated ?? dessert.image}
+                placeholderSrc={dessert.imagePlaceholder}
+                alt=""
+                category={dessert.category}
+                className="portion-food-card__image"
+                fallbackClassName="portion-food-card__image-fallback"
+                iconSize={18}
+              />
+              <span className="portion-food-card__copy">
+                <span className="portion-food-card__role">Dessert</span>
+                <span className="portion-food-card__name">{dessert.name}</span>
+              </span>
+            </span>
+          </span>
+
+          <span className="portion-food-card__package-hint">
+            One quantity sets both soup and dessert.
+          </span>
         </button>
+
         <div className="portion-food-card__quantity">
           <QuantityControl
             quantity={packageQuantity}
