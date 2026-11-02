@@ -2,9 +2,9 @@
 
 ## `Example_menu.xlsx`
 
-Controlled example menu source for the planned menu-import implementation. It documents the expected workbook shape and sample data for that work.
+Controlled example menu workbook. Regenerate runtime JSON with `npm run menu:convert` (see `scripts/menu/`).
 
-This file is **not** connected to runtime menu loading today. The app still uses the in-repo menu configuration under `src/`.
+The generated sample calendar currently covers **2026-07-27 – 2027-04-30**: historical continuous remap through **2026-10-30**, then cycled sample weekdays through **2027-04-30**. These are **sample** menus, not verified PoweResta operational menus. Future live menus should use the registered PoweResta API docs under [`docs/integrations/`](../docs/integrations/) once provider access is enabled — do not invent a second contract.
 
 ## Kitchen Skills Challenge recipe reference
 

@@ -32,12 +32,17 @@ export type GeneratedMenuMeta = {
   dailyMenuCount: number;
   catalogueItemCount: number;
   runtimeSchedule?: {
-    strategy: 'continuous-weekday-remap';
+    strategy: 'continuous-weekday-remap-with-cycle-extension';
     runtimeStartDate: string;
     sourceMenuDayCount: number;
     runtimeMenuDayCount: number;
     runtimeEndDate: string;
     sourceWorkbookDateRange: { start: string; end: string };
+    preservedThroughDate: string;
+    extensionStartDate: string;
+    extensionEndDate: string;
+    extensionDayCount: number;
+    cycleTemplateDayCount: number;
   };
 };
 

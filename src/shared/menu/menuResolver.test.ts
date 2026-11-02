@@ -88,9 +88,17 @@ describe('generated dated menu resolver', () => {
   it('returns unavailable before and after the generated date range', () => {
     const range = getGeneratedMenuDateRange();
     expect(range.start).toBe(MENU_DATES.runtimeMonday);
-    expect(range.end).toBe('2026-10-30');
+    expect(range.end).toBe(MENU_DATES.extendedSampleEnd);
     expect(resolveMenuForDate(MENU_DATES.beforeRange)).toEqual({ status: 'unavailable' });
     expect(resolveMenuForDate(MENU_DATES.afterRange)).toEqual({ status: 'unavailable' });
+    expect(resolveMenuForDate('2027-05-01').status).toBe('unavailable');
+  });
+
+  it('keeps the preserved historical Friday and serves the cycle-extended sample period', () => {
+    expect(resolveMenuForDate(MENU_DATES.preservedHistoricalFriday).status).toBe('available');
+    expect(resolveMenuForDate(MENU_DATES.sundayInCoverageWindow).status).toBe('unavailable');
+    expect(resolveMenuForDate(MENU_DATES.extendedSampleMonday).status).toBe('available');
+    expect(resolveMenuForDate(MENU_DATES.extendedSampleEnd).status).toBe('available');
   });
 
   it('resolves every catalogue item with image paths', () => {
@@ -142,19 +150,30 @@ describe('generated daily menu integrity', () => {
     expect(getAllGeneratedDailyMenus().length).toBeGreaterThan(0);
   });
 
-  it('exposes continuous runtime schedule metadata', () => {
+  it('exposes continuous runtime schedule metadata with cycle extension', () => {
     const meta = getGeneratedMenuMeta();
-    expect(meta.runtimeSchedule).toEqual({
-      strategy: 'continuous-weekday-remap',
-      runtimeStartDate: MENU_DATES.runtimeMonday,
-      sourceMenuDayCount: 70,
-      runtimeMenuDayCount: 70,
-      runtimeEndDate: '2026-10-30',
-      sourceWorkbookDateRange: { start: '2026-02-02', end: '2026-05-29' },
+    expect(meta.runtimeSchedule?.strategy).toBe('continuous-weekday-remap-with-cycle-extension');
+    expect(meta.runtimeSchedule?.runtimeStartDate).toBe(MENU_DATES.runtimeMonday);
+    expect(meta.runtimeSchedule?.preservedThroughDate).toBe(MENU_DATES.preservedHistoricalFriday);
+    expect(meta.runtimeSchedule?.extensionStartDate).toBe(MENU_DATES.extendedSampleMonday);
+    expect(meta.runtimeSchedule?.extensionEndDate).toBe(MENU_DATES.extendedSampleEnd);
+    expect(meta.runtimeSchedule?.runtimeEndDate).toBe(MENU_DATES.extendedSampleEnd);
+    expect(meta.runtimeSchedule?.sourceMenuDayCount).toBe(70);
+    expect(meta.runtimeSchedule?.extensionDayCount).toBeGreaterThan(0);
+    expect(meta.runtimeSchedule?.runtimeMenuDayCount).toBe(
+      (meta.runtimeSchedule?.sourceMenuDayCount ?? 0) + (meta.runtimeSchedule?.extensionDayCount ?? 0),
+    );
+    expect(meta.runtimeSchedule?.sourceWorkbookDateRange).toEqual({
+      start: '2026-02-02',
+      end: '2026-05-29',
     });
-    expect(meta.dateRange).toEqual({ start: MENU_DATES.runtimeMonday, end: '2026-10-30' });
-    expect(meta.dailyMenuCount).toBe(70);
+    expect(meta.dateRange).toEqual({
+      start: MENU_DATES.runtimeMonday,
+      end: MENU_DATES.extendedSampleEnd,
+    });
+    expect(meta.dailyMenuCount).toBe(meta.runtimeSchedule?.runtimeMenuDayCount);
   });
+
 
   it('makes 2026-09-01 available in the runtime calendar', () => {
     expect(resolveMenuForDate('2026-09-01').status).toBe('available');

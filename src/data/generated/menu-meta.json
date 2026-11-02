@@ -1,22 +1,27 @@
 {
-  "sourceWorkbook": "C:\\Users\\20184558\\gamebus-lunch-dnd-v2\\reference\\Example_menu.xlsx",
-  "generatedAt": "2026-09-14T08:39:29.288Z",
-  "menuVersion": "excel-2026-07-27-2026-10-30",
+  "sourceWorkbook": "C:\\Users\\20184558\\gamebus-kitchen-day\\reference\\Example_menu.xlsx",
+  "generatedAt": "2026-11-02T11:53:05.686Z",
+  "menuVersion": "excel-2026-07-27-2027-04-30",
   "dateRange": {
     "start": "2026-07-27",
-    "end": "2026-10-30"
+    "end": "2027-04-30"
   },
-  "dailyMenuCount": 70,
+  "dailyMenuCount": 200,
   "catalogueItemCount": 116,
   "runtimeSchedule": {
-    "strategy": "continuous-weekday-remap",
+    "strategy": "continuous-weekday-remap-with-cycle-extension",
     "runtimeStartDate": "2026-07-27",
     "sourceMenuDayCount": 70,
-    "runtimeMenuDayCount": 70,
-    "runtimeEndDate": "2026-10-30",
+    "runtimeMenuDayCount": 200,
+    "runtimeEndDate": "2027-04-30",
     "sourceWorkbookDateRange": {
       "start": "2026-02-02",
       "end": "2026-05-29"
-    }
+    },
+    "preservedThroughDate": "2026-10-30",
+    "extensionStartDate": "2026-11-02",
+    "extensionEndDate": "2027-04-30",
+    "extensionDayCount": 130,
+    "cycleTemplateDayCount": 70
   }
 }

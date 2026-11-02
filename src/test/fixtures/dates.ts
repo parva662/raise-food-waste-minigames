@@ -31,7 +31,15 @@ export const MENU_DATES = {
   missingFromWorkbook: '2026-01-07',
   closedWorkbookDay: '2026-09-11',
   beforeRange: '2026-07-26',
-  afterRange: '2026-11-03',
+  afterRange: '2027-05-03',
+  /** First weekday of the cycle-extended sample period. */
+  extendedSampleMonday: '2026-11-02',
+  /** Last weekday of the cycle-extended sample period. */
+  extendedSampleEnd: '2027-04-30',
+  /** Preserved historical end of the original 1:1 remap. */
+  preservedHistoricalFriday: '2026-10-30',
+  /** Sunday inside the required coverage window — no service. */
+  sundayInCoverageWindow: '2026-11-01',
   weekend: '2026-08-01',
   closedOverride: '2026-08-17',
   replaceOverride: '2026-09-15',
