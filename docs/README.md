@@ -34,6 +34,7 @@ Do **not** create empty tutorial or how-to folders just to fill the map. Paths s
 | Concern | Authoritative | Secondary |
 |---------|---------------|-----------|
 | Behaviour acceptance | [`../features/**/*.feature`](../features/) | Product MD (must not contradict) |
+| Future PoweResta menu API | [`integrations/POWERESTA_PUBLIC_API_REFERENCE.md`](integrations/POWERESTA_PUBLIC_API_REFERENCE.md) (+ source capture) | [`integrations/POWERESTA_MENU_INTEGRATION.md`](integrations/POWERESTA_MENU_INTEGRATION.md); live access currently disabled |
 | GameBus activity / property slugs & TASK | [`contracts/`](contracts/) + [`product/kitchen-skills-challenge/GAMEBUS_SLUG_CONTRACT.md`](product/kitchen-skills-challenge/GAMEBUS_SLUG_CONTRACT.md) | Product MD |
 | Routes (SPA hash registry) | **Canonical application source:** [`../src/app/routes.ts`](../src/app/routes.ts) (`APP_ROUTES` / hash constants). Human catalogue: [`../README.md`](../README.md) product table + [`architecture/README.md`](architecture/README.md). **GameBus left-menu / embed route contracts** (stable hashes for Custom Embed URLs): product-specific files under [`contracts/`](contracts/) — Kitchen Skills: [`contracts/KITCHEN_SKILLS_CHALLENGE_ROUTES.md`](contracts/KITCHEN_SKILLS_CHALLENGE_ROUTES.md) (does **not** own lunch / forecast / closeout / results hashes). | Product MD |
 | Official iframe protocol | **External** GameBus docs via [`contracts/GAMEBUS.md`](contracts/GAMEBUS.md) | RAISE conventions section in that file only |
@@ -132,6 +133,7 @@ Correct facts for lookup: schemas, slugs, hashes, coverage, UI tokens, external 
 | [`contracts/KITCHEN_FORECAST_GAMEBUS.md`](contracts/KITCHEN_FORECAST_GAMEBUS.md) | `chefForecast` |
 | [`contracts/SERVICE_CLOSEOUT_GAMEBUS.md`](contracts/SERVICE_CLOSEOUT_GAMEBUS.md) | `wasteMeasurement` |
 | [`product/UI_STANDARD.md`](product/UI_STANDARD.md) | Shared visual language, density, form, layout rules |
+| [`integrations/`](integrations/) | External provider contracts (PoweResta API docs registered for future menu integration; access currently disabled) |
 | [`../features/`](../features/) | Approved Gherkin acceptance specs |
 | [`testing/`](testing/) | Vitest ↔ Gherkin coverage maps |
 | [`../.github/workflows/test.yml`](../.github/workflows/test.yml) | CI test policy |
@@ -161,6 +163,7 @@ Understanding-oriented context: why the product and architecture look this way.
 | [`product/KITCHEN_RESULTS.md`](product/KITCHEN_RESULTS.md) | Staff + management results |
 | [`product/WASTE_CHALLENGES.md`](product/WASTE_CHALLENGES.md) | Practical kitchen family overview |
 | [`product/RAISE_BARLAUREA_MASTER_PLAN.md`](product/RAISE_BARLAUREA_MASTER_PLAN.md) | Study / system **explanation only** — not product SoT |
+| [`integrations/POWERESTA_MENU_INTEGRATION.md`](integrations/POWERESTA_MENU_INTEGRATION.md) | Sample Excel menus vs future PoweResta menu source |
 | [`testing/README.md`](testing/README.md) | Testing strategy notes |
 
 ---

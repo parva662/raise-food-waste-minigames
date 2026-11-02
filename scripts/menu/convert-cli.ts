@@ -40,4 +40,7 @@ console.log(
 console.log(
   `Runtime schedule: ${schedule.strategy} from ${schedule.runtimeStartDate} to ${schedule.runtimeEndDate} (${schedule.runtimeMenuDayCount} weekdays)`,
 );
+console.log(
+  `Preserved historical block through ${schedule.preservedThroughDate}; cycle extension ${schedule.extensionStartDate} – ${schedule.extensionEndDate} (${schedule.extensionDayCount} days from ${schedule.cycleTemplateDayCount} templates)`,
+);
 console.log(`Runtime date range: ${meta.dateRange.start} – ${meta.dateRange.end}`);
