@@ -36,9 +36,12 @@ import { logStudentTryPostActivityResult } from '@/products/lunch-declaration/ga
 export type LunchUiStep = 'edit' | 'review';
 /** `dispatched` = ACTIVITY postMessage succeeded; GameBus persistence not confirmed. */
 export type LunchSubmitStatus = 'idle' | 'sending' | 'failed' | 'success' | 'dispatched';
+/** UI attendance gate before meal selection. Not a GameBus field. */
+export type LunchAttendance = 'undecided' | 'yes' | 'no';
 
 export interface LunchSelectionState {
   draft: DraftSnapshot;
+  attendance: LunchAttendance;
   savedSnapshot: SavedSnapshot | null;
   successMessage: string | null;
   uiStep: LunchUiStep;
@@ -47,6 +50,7 @@ export interface LunchSelectionState {
 }
 
 type LunchAction =
+  | { type: 'SET_ATTENDANCE'; attendance: 'yes' | 'no' }
   | { type: 'ACTIVATE_LUNCH_OPTION'; option: LunchOption }
   | { type: 'ADJUST_PORTION'; field: PortionField; delta: number; maxQuantity: number }
   | { type: 'RESET_DRAFT' }
@@ -59,9 +63,16 @@ type LunchAction =
   | { type: 'RESTORE'; savedSnapshot: SavedSnapshot; draft: DraftSnapshot }
   | { type: 'CLEAR_SUCCESS' };
 
+function attendanceFromDraft(draft: DraftSnapshot): LunchAttendance {
+  if (draft.lunchOption === 'no_lunch' || draft.mealChoice === 'no_lunch') return 'no';
+  if (draft.lunchOption != null || draft.mealChoice != null) return 'yes';
+  return 'undecided';
+}
+
 function createInitialState(): LunchSelectionState {
   return {
     draft: createEmptyDraft(),
+    attendance: 'undecided',
     savedSnapshot: null,
     successMessage: null,
     uiStep: 'edit',
@@ -72,12 +83,46 @@ function createInitialState(): LunchSelectionState {
 
 function lunchReducer(state: LunchSelectionState, action: LunchAction): LunchSelectionState {
   switch (action.type) {
+    case 'SET_ATTENDANCE': {
+      if (action.attendance === 'no') {
+        const draft = draftForLunchOption(state.draft, 'no_lunch');
+        return {
+          ...state,
+          attendance: 'no',
+          draft,
+          successMessage: null,
+          submitError: null,
+          submitStatus: state.submitStatus === 'failed' ? 'idle' : state.submitStatus,
+          uiStep: 'edit',
+        };
+      }
+      if (state.attendance === 'yes' && state.draft.lunchOption !== 'no_lunch') {
+        return {
+          ...state,
+          attendance: 'yes',
+          successMessage: null,
+          submitError: null,
+          submitStatus: state.submitStatus === 'failed' ? 'idle' : state.submitStatus,
+          uiStep: 'edit',
+        };
+      }
+      return {
+        ...state,
+        attendance: 'yes',
+        draft: createEmptyDraft(),
+        successMessage: null,
+        submitError: null,
+        submitStatus: state.submitStatus === 'failed' ? 'idle' : state.submitStatus,
+        uiStep: 'edit',
+      };
+    }
     case 'ACTIVATE_LUNCH_OPTION': {
       const draft = draftForLunchOption(state.draft, action.option);
-      if (draft === state.draft) return state;
+      if (draft === state.draft && state.attendance === attendanceFromDraft(draft)) return state;
       return {
         ...state,
         draft,
+        attendance: attendanceFromDraft(draft),
         successMessage: null,
         submitError: null,
         submitStatus: state.submitStatus === 'failed' ? 'idle' : state.submitStatus,
@@ -92,9 +137,11 @@ function lunchReducer(state: LunchSelectionState, action: LunchAction): LunchSel
         action.maxQuantity,
       );
       if (draft === state.draft) return state;
+      const nextAttendance = attendanceFromDraft(draft);
       return {
         ...state,
         draft,
+        attendance: nextAttendance === 'undecided' ? 'yes' : nextAttendance,
         successMessage: null,
         submitError: null,
         submitStatus: state.submitStatus === 'failed' ? 'idle' : state.submitStatus,
@@ -105,6 +152,7 @@ function lunchReducer(state: LunchSelectionState, action: LunchAction): LunchSel
       return {
         ...state,
         draft: createEmptyDraft(),
+        attendance: 'undecided',
         successMessage: null,
         submitError: null,
         submitStatus: 'idle',
@@ -123,43 +171,50 @@ function lunchReducer(state: LunchSelectionState, action: LunchAction): LunchSel
         submitError: action.message,
         successMessage: null,
       };
-    case 'SUBMIT_SUCCESS':
+    case 'SUBMIT_SUCCESS': {
+      const draft = {
+        mealChoice: action.savedSnapshot.mealChoice,
+        lunchOption: action.savedSnapshot.lunchOption,
+        mainQuantity: action.savedSnapshot.mainQuantity,
+        vegetarianQuantity: action.savedSnapshot.vegetarianQuantity,
+        soupQuantity: action.savedSnapshot.soupQuantity,
+        dessertQuantity: action.savedSnapshot.dessertQuantity,
+      };
       return {
         ...state,
-        draft: {
-          mealChoice: action.savedSnapshot.mealChoice,
-          lunchOption: action.savedSnapshot.lunchOption,
-          mainQuantity: action.savedSnapshot.mainQuantity,
-          vegetarianQuantity: action.savedSnapshot.vegetarianQuantity,
-          soupQuantity: action.savedSnapshot.soupQuantity,
-          dessertQuantity: action.savedSnapshot.dessertQuantity,
-        },
+        draft,
+        attendance: attendanceFromDraft(draft),
         savedSnapshot: action.savedSnapshot,
         successMessage: action.message,
         submitStatus: 'success',
         submitError: null,
         uiStep: 'review',
       };
-    case 'SUBMIT_DISPATCHED':
+    }
+    case 'SUBMIT_DISPATCHED': {
+      const draft = {
+        mealChoice: action.savedSnapshot.mealChoice,
+        lunchOption: action.savedSnapshot.lunchOption,
+        mainQuantity: action.savedSnapshot.mainQuantity,
+        vegetarianQuantity: action.savedSnapshot.vegetarianQuantity,
+        soupQuantity: action.savedSnapshot.soupQuantity,
+        dessertQuantity: action.savedSnapshot.dessertQuantity,
+      };
       return {
         ...state,
-        draft: {
-          mealChoice: action.savedSnapshot.mealChoice,
-          lunchOption: action.savedSnapshot.lunchOption,
-          mainQuantity: action.savedSnapshot.mainQuantity,
-          vegetarianQuantity: action.savedSnapshot.vegetarianQuantity,
-          soupQuantity: action.savedSnapshot.soupQuantity,
-          dessertQuantity: action.savedSnapshot.dessertQuantity,
-        },
+        draft,
+        attendance: attendanceFromDraft(draft),
         savedSnapshot: action.savedSnapshot,
         successMessage: action.message,
         submitStatus: 'dispatched',
         submitError: null,
         uiStep: 'review',
       };
+    }
     case 'RESTORE':
       return {
         draft: { ...action.draft },
+        attendance: attendanceFromDraft(action.draft),
         savedSnapshot: action.savedSnapshot,
         successMessage: null,
         uiStep: 'review',
@@ -308,6 +363,10 @@ export function useLunchSelection(clock: Clock = systemClock) {
 
   const isConfirmDisabled =
     isReviewDisabled || state.uiStep !== 'review' || state.submitStatus === 'sending';
+
+  const setAttendance = useCallback((attendance: 'yes' | 'no') => {
+    dispatch({ type: 'SET_ATTENDANCE', attendance });
+  }, []);
 
   const activateLunchOption = useCallback((option: LunchOption) => {
     dispatch({ type: 'ACTIVATE_LUNCH_OPTION', option });
@@ -458,6 +517,7 @@ export function useLunchSelection(clock: Clock = systemClock) {
   return {
     state,
     draft: state.draft,
+    attendance: state.attendance,
     selections,
     summaryLines,
     hasSavedDeclaration,
@@ -473,6 +533,7 @@ export function useLunchSelection(clock: Clock = systemClock) {
     uiStep: state.uiStep,
     submitStatus: state.submitStatus,
     submitError: state.submitError,
+    setAttendance,
     activateLunchOption,
     adjustPortion,
     resetDraft,

@@ -50,10 +50,12 @@ export function PortionFoodCard({
           category={item.category}
           className="portion-food-card__image"
           fallbackClassName="portion-food-card__image-fallback"
-          iconSize={20}
+          iconSize={18}
         />
-        <p className="portion-food-card__role">{categoryLabel}</p>
-        <h3 className="portion-food-card__name">{item.name}</h3>
+        <span className="portion-food-card__copy">
+          <span className="portion-food-card__role">{categoryLabel}</span>
+          <span className="portion-food-card__name">{item.name}</span>
+        </span>
       </button>
       <div className="portion-food-card__quantity">
         <QuantityControl

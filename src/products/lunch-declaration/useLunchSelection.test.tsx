@@ -52,6 +52,38 @@ describe('useLunchSelection', () => {
     expect(result.current.isReviewDisabled).toBe(false);
   });
 
+  it('Yes attendance reveals meal path without enabling Review until a meal is chosen', async () => {
+    const { result } = renderHook(() => useLunchSelection(() => SUBMISSION_TIMES.midday));
+    await waitFor(() => expect(result.current.initialized).toBe(true));
+    act(() => result.current.setAttendance('yes'));
+    expect(result.current.attendance).toBe('yes');
+    expect(result.current.draft.mealChoice).toBeNull();
+    expect(result.current.isReviewDisabled).toBe(true);
+    act(() => result.current.activateLunchOption('classic'));
+    expect(result.current.draft.mainQuantity).toBe(1);
+    expect(result.current.isReviewDisabled).toBe(false);
+  });
+
+  it('No attendance sets no_lunch and enables Review', async () => {
+    const { result } = renderHook(() => useLunchSelection(() => SUBMISSION_TIMES.midday));
+    await waitFor(() => expect(result.current.initialized).toBe(true));
+    act(() => result.current.setAttendance('no'));
+    expect(result.current.attendance).toBe('no');
+    expect(result.current.draft.lunchOption).toBe('no_lunch');
+    expect(result.current.isReviewDisabled).toBe(false);
+  });
+
+  it('switching from No to Yes clears the absence draft', async () => {
+    const { result } = renderHook(() => useLunchSelection(() => SUBMISSION_TIMES.midday));
+    await waitFor(() => expect(result.current.initialized).toBe(true));
+    act(() => result.current.setAttendance('no'));
+    act(() => result.current.setAttendance('yes'));
+    expect(result.current.attendance).toBe('yes');
+    expect(result.current.draft.mealChoice).toBeNull();
+    expect(result.current.draft.lunchOption).toBeNull();
+    expect(result.current.isReviewDisabled).toBe(true);
+  });
+
   it('seeds quantity 1 and enables Review when activating classic from the card', async () => {
     const { result } = renderHook(() => useLunchSelection(() => SUBMISSION_TIMES.midday));
     await waitFor(() => expect(result.current.initialized).toBe(true));
@@ -138,7 +170,7 @@ describe('useLunchSelection', () => {
   it('submits no-lunch absence and keeps success confirmation facts', async () => {
     const { result } = renderHook(() => useLunchSelection(() => SUBMISSION_TIMES.midday));
     await waitFor(() => expect(result.current.initialized).toBe(true));
-    act(() => result.current.activateLunchOption('no_lunch'));
+    act(() => result.current.setAttendance('no'));
     act(() => result.current.enterReview());
     act(() => result.current.submit());
     expect(result.current.hasSavedDeclaration).toBe(true);

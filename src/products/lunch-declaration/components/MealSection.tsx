@@ -11,6 +11,8 @@ interface MealSectionProps {
   sectionId: string;
   /** When true, the whole section (not only the header) activates on click. */
   fullSectionActivate?: boolean;
+  /** Distinct absence option styling (separated from food menu cards). */
+  absenceOption?: boolean;
 }
 
 export function MealSection({
@@ -23,18 +25,26 @@ export function MealSection({
   children,
   sectionId,
   fullSectionActivate = false,
+  absenceOption = false,
 }: MealSectionProps) {
   const handleSectionClick = () => {
     if (activateDisabled) return;
     onActivate();
   };
 
+  const sectionClassName = [
+    'meal-section',
+    fullSectionActivate ? 'meal-section--full-activate' : '',
+    absenceOption ? 'meal-section--absence' : '',
+    active ? 'meal-section--active' : '',
+    muted ? 'meal-section--muted' : '',
+  ]
+    .filter(Boolean)
+    .join(' ');
+
   if (fullSectionActivate) {
     return (
-      <section
-        className={`meal-section meal-section--full-activate${active ? ' meal-section--active' : ''}${muted ? ' meal-section--muted' : ''}`}
-        aria-labelledby={`${sectionId}-heading`}
-      >
+      <section className={sectionClassName} aria-labelledby={`${sectionId}-heading`}>
         <button
           type="button"
           id={`${sectionId}-heading`}
@@ -52,7 +62,7 @@ export function MealSection({
 
   return (
     <section
-      className={`meal-section${active ? ' meal-section--active' : ''}${muted ? ' meal-section--muted' : ''}`}
+      className={sectionClassName}
       aria-labelledby={`${sectionId}-heading`}
       onClick={activateDisabled ? undefined : handleSectionClick}
       role="presentation"
