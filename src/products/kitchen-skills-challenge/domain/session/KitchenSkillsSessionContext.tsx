@@ -46,20 +46,34 @@ import { buildKitchenSkillsTrainerSessions } from '@/products/kitchen-skills-cha
 import {
   buildKitchenSkillsReadModel,
   mergeKitchenSkillsRecords,
-  parsePersistedReviewEntry,
+  parsePersistedReviewEntries,
 } from '@/products/kitchen-skills-challenge/read/kitchenSkillsReadModel';
 import type { KitchenSkillsTrainerSession } from '@/products/kitchen-skills-challenge/domain/types';
 import {
   clearKitchenSkillsPostAttempt,
   hasKitchenSkillsPostAttempt,
   kitchenSkillsReviewAttemptKey,
+  tryPostKitchenSkillsCombinedReview,
   tryPostKitchenSkillsPortion,
   tryPostKitchenSkillsRescue,
   tryPostKitchenSkillsReview,
   tryPostKitchenSkillsTrim,
 } from '@/products/kitchen-skills-challenge/gamebus/postActivity';
+import {
+  kitchenSkillsCombinedReviewAttemptKey,
+  validateCombinedModuleScores,
+  type KitchenSkillsCombinedReviewEntry,
+  COMBINED_REVIEW_MODULE_ORDER,
+} from '@/products/kitchen-skills-challenge/gamebus/combinedWastePracticeReview';
 import { gamebusDevLog } from '@/platform/gamebus/devLog';
-import { kitchenSkillsReviewDiagnosticPayload } from '@/products/kitchen-skills-challenge/gamebus/reviewPostErrors';
+import {
+  kitchenSkillsCombinedReviewDiagnosticPayload,
+  kitchenSkillsReviewDiagnosticPayload,
+} from '@/products/kitchen-skills-challenge/gamebus/reviewPostErrors';
+import {
+  dedupeReviewsByModulePreference,
+  reviewValuesMatch,
+} from '@/products/kitchen-skills-challenge/read/preferModuleReview';
 import {
   awaitingReviewsFromDispatchMarkers,
   clearKitchenSkillsReviewDispatchMarker,
@@ -115,6 +129,10 @@ interface KitchenSkillsSessionValue {
   commitRescueEntry: (entry: KitchenSkillsRescueEntry) => KitchenSkillsCommitResult;
   commitPortionEntry: (entry: KitchenSkillsPortionEntry) => KitchenSkillsCommitResult;
   commitReview: (entry: KitchenSkillsReviewEntry, studentActorId: string) => KitchenSkillsCommitResult;
+  commitCombinedReview: (
+    entry: KitchenSkillsCombinedReviewEntry,
+    studentActorId: string,
+  ) => KitchenSkillsCommitResult;
   /**
    * True when a genuinely later GameBus feed (not the snapshot seen at dispatch) still lacks this
    * unconfirmed assessment for the student's session.
@@ -216,21 +234,6 @@ function addMissing<T extends { recipeId?: string; ingredientId?: string }>(
 
 const KitchenSkillsSessionContext = createContext<KitchenSkillsSessionValue | null>(null);
 
-function reviewDedupeKey(review: KitchenSkillsReviewEntry): string {
-  return review.persistId ?? reviewIdentityKey(review);
-}
-
-function dedupePersistedReviews(
-  reviews: readonly KitchenSkillsReviewEntry[],
-): KitchenSkillsReviewEntry[] {
-  const byKey = new Map<string, KitchenSkillsReviewEntry>();
-  for (const review of reviews) {
-    const key = reviewDedupeKey(review);
-    if (!byKey.has(key)) byKey.set(key, review);
-  }
-  return [...byKey.values()];
-}
-
 function readPersistedForSession(sessionId: string): {
   trimEntries: KitchenSkillsTrimEntry[];
   rescueEntries: KitchenSkillsRescueEntry[];
@@ -244,14 +247,12 @@ function readPersistedForSession(sessionId: string): {
   const trainerActivities = extractGroupActivities(getRawKitchenSkillsTrainerActivitiesInput(payload));
   const selfActivities = extractGroupActivities(getRawKitchenSelfActivitiesInput(payload));
   const reviewsFromActivities = (activities: readonly unknown[]) =>
-    activities
-      .map((activity) => parsePersistedReviewEntry(activity))
-      .filter((entry): entry is KitchenSkillsReviewEntry => entry !== null);
+    activities.flatMap((activity) => parsePersistedReviewEntries(activity));
   return {
     ...buildKitchenSkillsReadModel(selfActivities, { sessionId }),
     // Session Review in the student embed must see tutor assessments even when they
     // arrive only via the self feed (or only via the trainer feed).
-    reviews: dedupePersistedReviews([
+    reviews: dedupeReviewsByModulePreference([
       ...reviewsFromActivities(selfActivities),
       ...reviewsFromActivities(trainerActivities),
     ]),
@@ -515,15 +516,22 @@ export function KitchenSkillsSessionProvider({
     [persisted.groupSessions, markerVersion],
   );
 
-  const reviews = useMemo(
-    () =>
-      mergeKitchenSkillsRecords(
-        [...localReviews, ...markerAwaitingReviews],
-        persisted.reviews,
-        (left, right) => reviewIdentityKey(left) === reviewIdentityKey(right),
-      ),
-    [localReviews, markerAwaitingReviews, persisted.reviews],
-  );
+  const reviews = useMemo(() => {
+    const awaiting = [...localReviews, ...markerAwaitingReviews];
+    const confirmedFromFeed = persisted.reviews.filter((persistedReview) => {
+      const awaitingMatch = awaiting.find(
+        (local) => reviewIdentityKey(local) === reviewIdentityKey(persistedReview),
+      );
+      if (!awaitingMatch) return true;
+      // Confirm only when persisted values match what was submitted.
+      return reviewValuesMatch(awaitingMatch, persistedReview);
+    });
+    const stillAwaiting = awaiting.filter((local) => {
+      if (!local.awaitingPersist) return true;
+      return !confirmedFromFeed.some((persistedReview) => reviewValuesMatch(local, persistedReview));
+    });
+    return dedupeReviewsByModulePreference([...confirmedFromFeed, ...stillAwaiting]);
+  }, [localReviews, markerAwaitingReviews, persisted.reviews]);
 
   // Clear non-authoritative dispatch markers once the feed confirms persistence.
   useEffect(() => {
@@ -544,12 +552,21 @@ export function KitchenSkillsSessionProvider({
         (review) => review.sessionId === session.sessionId,
       );
       if (localsForSession.length === 0) return session;
-      const mergedReviews = mergeKitchenSkillsRecords(
-        localsForSession,
-        session.reviews,
-        (left, right) => reviewIdentityKey(left) === reviewIdentityKey(right),
-      );
-      return { ...session, reviews: mergedReviews };
+      const confirmed = session.reviews.filter((persistedReview) => {
+        const awaitingMatch = localsForSession.find(
+          (local) => reviewIdentityKey(local) === reviewIdentityKey(persistedReview),
+        );
+        if (!awaitingMatch) return true;
+        return reviewValuesMatch(awaitingMatch, persistedReview);
+      });
+      const stillAwaiting = localsForSession.filter((local) => {
+        if (!local.awaitingPersist) return true;
+        return !confirmed.some((persistedReview) => reviewValuesMatch(local, persistedReview));
+      });
+      return {
+        ...session,
+        reviews: dedupeReviewsByModulePreference([...confirmed, ...stillAwaiting]),
+      };
     });
   }, [persisted.groupSessions, localReviews, markerAwaitingReviews]);
 
@@ -823,6 +840,114 @@ export function KitchenSkillsSessionProvider({
     return { ok: true, mode: 'local' };
   }, [reviews, persisted.feedFingerprint]);
 
+  const commitCombinedReview = useCallback(
+    (entry: KitchenSkillsCombinedReviewEntry, studentActorId: string): KitchenSkillsCommitResult => {
+      const scoreCheck = validateCombinedModuleScores(entry.modules);
+      if (!scoreCheck.ok) {
+        return {
+          ok: false,
+          reason: scoreCheck.reason === 'empty_modules' ? 'invalid_scores' : scoreCheck.reason,
+          keepDraft: true,
+        };
+      }
+      if (!normalizeRecipeId(entry.recipeId)) {
+        return { ok: false, reason: 'missing_recipe', keepDraft: true };
+      }
+
+      const moduleEntries: KitchenSkillsReviewEntry[] = COMBINED_REVIEW_MODULE_ORDER.flatMap(
+        (module) => {
+          const scores = entry.modules[module];
+          if (!scores) return [];
+          return [
+            {
+              sessionId: entry.sessionId,
+              sessionDate: entry.sessionDate,
+              submittedAt: entry.submittedAt,
+              recipeId: entry.recipeId,
+              reviewedGame: module,
+              timeEfficiencyScore: scores.timeEfficiencyScore,
+              preparationQualityScore: scores.preparationQualityScore,
+              ...(scores.chefFeedback?.trim()
+                ? { chefFeedback: scores.chefFeedback.trim() }
+                : {}),
+              source: 'local' as const,
+            },
+          ];
+        },
+      );
+
+      for (const moduleEntry of moduleEntries) {
+        if (hasDuplicateReviewIdentity(reviews, moduleEntry)) {
+          return { ok: false, reason: 'duplicate_review', keepDraft: true };
+        }
+      }
+
+      const actorId = studentActorId.trim();
+      const attemptKey = kitchenSkillsCombinedReviewAttemptKey(entry);
+      const anyAwaiting = moduleEntries.some((moduleEntry) => {
+        const existing = findReviewByIdentity(reviews, moduleEntry);
+        return (
+          existing?.awaitingPersist ||
+          hasKitchenSkillsPostAttempt(attemptKey) ||
+          hasKitchenSkillsPostAttempt(kitchenSkillsReviewAttemptKey(moduleEntry)) ||
+          (actorId !== '' && hasKitchenSkillsReviewDispatchMarker(actorId, moduleEntry))
+        );
+      });
+      if (anyAwaiting) {
+        gamebusDevLog(
+          'kitchen-skills-review.combined-already-dispatched',
+          kitchenSkillsCombinedReviewDiagnosticPayload('already_dispatched', entry, {
+            modules: moduleEntries.map((item) => item.reviewedGame),
+          }),
+        );
+        return { ok: false, reason: 'already_dispatched', keepDraft: true };
+      }
+
+      if (isGameBusEmbed()) {
+        const posted = tryPostKitchenSkillsCombinedReview(entry, actorId);
+        if (!posted.ok) {
+          gamebusDevLog(
+            'kitchen-skills-review.combined-commit-failed',
+            kitchenSkillsCombinedReviewDiagnosticPayload(posted.reason, entry, {
+              missing: posted.missing,
+              modules: moduleEntries.map((item) => item.reviewedGame),
+            }),
+          );
+          return {
+            ok: false,
+            reason: posted.reason,
+            keepDraft: true,
+            ...(posted.missing?.length ? { missing: posted.missing } : {}),
+          };
+        }
+        for (const moduleEntry of moduleEntries) {
+          markKitchenSkillsReviewDispatched(actorId, moduleEntry, persisted.feedFingerprint);
+        }
+        setLocalReviews((current) => {
+          const keys = new Set(moduleEntries.map((item) => reviewIdentityKey(item)));
+          return [
+            ...current.filter((item) => !keys.has(reviewIdentityKey(item))),
+            ...moduleEntries.map((item) => ({ ...item, awaitingPersist: true })),
+          ];
+        });
+        return { ok: true, mode: 'posted_awaiting_persist' };
+      }
+
+      setLocalReviews((current) => {
+        const keys = new Set(moduleEntries.map((item) => reviewIdentityKey(item)));
+        return [
+          ...current.filter((item) => !keys.has(reviewIdentityKey(item))),
+          ...moduleEntries.map((item) => ({
+            ...item,
+            persistId: `local:${reviewIdentityKey(item)}`,
+          })),
+        ];
+      });
+      return { ok: true, mode: 'local' };
+    },
+    [reviews, persisted.feedFingerprint],
+  );
+
   const canReassessUnconfirmedReview = useCallback(
     (entry: KitchenSkillsReviewEntry, studentActorId: string): boolean => {
       const actorId = studentActorId.trim();
@@ -939,6 +1064,7 @@ export function KitchenSkillsSessionProvider({
       commitRescueEntry,
       commitPortionEntry,
       commitReview,
+      commitCombinedReview,
       canReassessUnconfirmedReview,
       discardUnconfirmedReview,
       findTrimByIngredientId,
@@ -976,6 +1102,7 @@ export function KitchenSkillsSessionProvider({
       commitRescueEntry,
       commitPortionEntry,
       commitReview,
+      commitCombinedReview,
       canReassessUnconfirmedReview,
       discardUnconfirmedReview,
       findTrimByIngredientId,

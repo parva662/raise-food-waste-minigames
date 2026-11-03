@@ -2,7 +2,7 @@ import type { KitchenSkillsTrainerSession } from '@/products/kitchen-skills-chal
 import {
   parsePersistedPortionEntry,
   parsePersistedRescueEntry,
-  parsePersistedReviewEntry,
+  parsePersistedReviewEntries,
   parsePersistedTrimEntry,
   readActivityActorId,
   readActivityActorName,
@@ -86,13 +86,14 @@ export function buildKitchenSkillsStudentProgressSessions(
   }
 
   for (const activity of ownedActivities) {
-    const review = parsePersistedReviewEntry(activity);
-    if (!review) continue;
-    // Review-only session shell: still requires actor.id === authenticated student.
-    ensure(activity, review.sessionId, review.sessionDate);
-    attachModuleReviewToMatchingSessions(sessions.values(), activity, review, {
-      requireActorMatch: true,
-    });
+    const reviews = parsePersistedReviewEntries(activity);
+    for (const review of reviews) {
+      // Review-only session shell: still requires actor.id === authenticated student.
+      ensure(activity, review.sessionId, review.sessionDate);
+      attachModuleReviewToMatchingSessions(sessions.values(), activity, review, {
+        requireActorMatch: true,
+      });
+    }
   }
 
   return [...sessions.values()].sort((left, right) => {

@@ -2,6 +2,12 @@ import { buildKitchenSkillsTrimSmartActivityMessage } from '@/products/kitchen-s
 import { buildPortionPrecisionActivityMessage } from '@/products/kitchen-skills-challenge/gamebus/buildPortionPrecisionActivityMessage';
 import { buildRescueAndReuseActivityMessage } from '@/products/kitchen-skills-challenge/gamebus/buildRescueAndReuseActivityMessage';
 import { buildWastePracticeReviewActivityMessage } from '@/products/kitchen-skills-challenge/gamebus/buildWastePracticeReviewActivityMessage';
+import { buildCombinedWastePracticeReviewActivityMessage } from '@/products/kitchen-skills-challenge/gamebus/buildCombinedWastePracticeReviewActivityMessage';
+import {
+  kitchenSkillsCombinedReviewAttemptKey,
+  type KitchenSkillsCombinedReviewEntry,
+  COMBINED_REVIEW_MODULE_ORDER,
+} from '@/products/kitchen-skills-challenge/gamebus/combinedWastePracticeReview';
 import { getGameBusTask } from '@/platform/gamebus/bridge';
 import type { GameBusOutboundActivityMessage, TaskData } from '@/platform/gamebus/types';
 import {
@@ -11,13 +17,16 @@ import {
   canPostKitchenSkillsTrainerReview,
 } from '@/products/kitchen-skills-challenge/gamebus/liveIntegration';
 import {
+  kitchenSkillsCombinedReviewDiagnosticPayload,
   kitchenSkillsReviewDiagnosticPayload,
+  validateCombinedWastePracticeReviewLinkedProperties,
   validateWastePracticeReviewLinkedProperties,
 } from '@/products/kitchen-skills-challenge/gamebus/reviewPostErrors';
 import type {
   KitchenSkillsPortionEntry,
   KitchenSkillsRescueEntry,
   KitchenSkillsReviewEntry,
+  KitchenSkillsReviewedModule,
   KitchenSkillsTrimEntry,
 } from '@/products/kitchen-skills-challenge/domain/types';
 import { gamebusDevLog } from '@/platform/gamebus/devLog';
@@ -142,6 +151,44 @@ export function tryPostKitchenSkillsReview(
     task,
     (currentTask) => buildWastePracticeReviewActivityMessage(currentTask, entry, actorId),
     kitchenSkillsReviewAttemptKey(entry),
+    canPostKitchenSkillsTrainerReview(),
+    KITCHEN_SKILLS_TRAINER_LIVE_BLOCK_REASON,
+  );
+}
+
+export function tryPostKitchenSkillsCombinedReview(
+  entry: KitchenSkillsCombinedReviewEntry,
+  studentActorId: string,
+): KitchenSkillsPostResult {
+  const actorId = studentActorId.trim();
+  if (!actorId) {
+    return { ok: false, reason: 'missing_student_actor' };
+  }
+
+  const task = getGameBusTask();
+  if (!task) {
+    return { ok: false, reason: 'no_task' };
+  }
+
+  const modules = COMBINED_REVIEW_MODULE_ORDER.filter(
+    (module): module is KitchenSkillsReviewedModule => entry.modules[module] != null,
+  );
+  const linked = validateCombinedWastePracticeReviewLinkedProperties(task, modules);
+  if (!linked.ok) {
+    gamebusDevLog(
+      'kitchen-skills-review.combined-unlinked-properties',
+      kitchenSkillsCombinedReviewDiagnosticPayload(linked.reason, entry, {
+        missing: linked.missing,
+        modules,
+      }),
+    );
+    return { ok: false, reason: linked.reason, missing: linked.missing };
+  }
+
+  return tryPostKitchenSkillsActivity(
+    task,
+    (currentTask) => buildCombinedWastePracticeReviewActivityMessage(currentTask, entry, actorId),
+    kitchenSkillsCombinedReviewAttemptKey(entry),
     canPostKitchenSkillsTrainerReview(),
     KITCHEN_SKILLS_TRAINER_LIVE_BLOCK_REASON,
   );

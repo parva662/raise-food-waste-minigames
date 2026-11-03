@@ -7376,6 +7376,41 @@ ul {
   color: var(--color-text-secondary);
 }
 
+.kitchen-day-tutor-combined-stack {
+  display: grid;
+  gap: var(--spacing-lg);
+}
+
+.kitchen-day-tutor-combined-module {
+  display: grid;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-md) 0;
+  border-top: 1px solid color-mix(in srgb, var(--color-border) 80%, transparent);
+}
+
+.kitchen-day-tutor-combined-module:first-child {
+  border-top: 0;
+  padding-top: 0;
+}
+
+.kitchen-day-tutor-combined-module__title {
+  margin: 0;
+  font-size: var(--font-size-lg);
+  font-weight: 650;
+}
+
+.kitchen-day-tutor-workspace--combined {
+  align-items: start;
+}
+
+.kitchen-day-tutor-combined-submit {
+  display: grid;
+  gap: var(--spacing-sm);
+  justify-items: start;
+  padding: var(--spacing-md) 0 var(--spacing-lg);
+  border-top: 1px solid color-mix(in srgb, var(--color-border) 80%, transparent);
+}
+
 @media (max-width: 52rem) {
   .kitchen-day-tutor-workspace {
     grid-template-columns: 1fr;

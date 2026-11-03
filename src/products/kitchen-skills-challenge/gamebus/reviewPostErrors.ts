@@ -5,7 +5,14 @@ import {
   WASTE_PRACTICE_REVIEW_REQUIRED_REFS,
   type WastePracticeReviewPropertyRef,
 } from '@/products/kitchen-skills-challenge/gamebus/mapWastePracticeReview';
-import type { KitchenSkillsReviewEntry } from '@/products/kitchen-skills-challenge/domain/types';
+import {
+  requiredCombinedScoreRefsForModules,
+  type KitchenSkillsCombinedReviewEntry,
+} from '@/products/kitchen-skills-challenge/gamebus/combinedWastePracticeReview';
+import type {
+  KitchenSkillsReviewedModule,
+  KitchenSkillsReviewEntry,
+} from '@/products/kitchen-skills-challenge/domain/types';
 
 function linkedPropertyRefs(task: TaskData, activitySlug: string): string[] {
   const activity = findActivityTemplate(task, activitySlug);
@@ -42,6 +49,45 @@ export function validateWastePracticeReviewLinkedProperties(
   }
 
   const missing = WASTE_PRACTICE_REVIEW_REQUIRED_REFS.filter((ref) => !linked.has(ref));
+  if (missing.length > 0) {
+    return {
+      ok: false,
+      reason: `unlinked_property:${missing[0]}`,
+      missing,
+    };
+  }
+  return { ok: true };
+}
+
+/**
+ * Combined tutor route: require identity + module-specific score slugs for evidenced modules.
+ * Does not accept legacy reviewedGame / timeEfficiencyScore / preparationQualityScore / chefFeedback.
+ */
+export function validateCombinedWastePracticeReviewLinkedProperties(
+  task: TaskData,
+  modules: readonly KitchenSkillsReviewedModule[],
+): { ok: true } | { ok: false; reason: string; missing: string[] } {
+  try {
+    selectActivityTemplate(task, 'wastePracticeReview');
+  } catch {
+    return {
+      ok: false,
+      reason: 'missing_task_template',
+      missing: ['wastePracticeReview'],
+    };
+  }
+
+  const linked = new Set(linkedPropertyRefs(task, 'wastePracticeReview'));
+  const required = requiredCombinedScoreRefsForModules(modules);
+  if (linked.size === 0) {
+    return {
+      ok: false,
+      reason: 'missing_property_links',
+      missing: required,
+    };
+  }
+
+  const missing = required.filter((ref) => !linked.has(ref));
   if (missing.length > 0) {
     return {
       ok: false,
@@ -123,14 +169,33 @@ export function kitchenSkillsReviewSavedMessage(): string {
 /** Dev/diagnostic log payload — session/module only, never student names or feedback text. */
 export function kitchenSkillsReviewDiagnosticPayload(
   reason: string,
-  entry: Pick<KitchenSkillsReviewEntry, 'sessionId' | 'recipeId' | 'reviewedGame'>,
+  entry: Pick<KitchenSkillsReviewEntry, 'sessionId' | 'recipeId' | 'reviewedGame'> | {
+    sessionId: string;
+    recipeId?: string | null;
+    reviewedGame?: string;
+  },
   extra?: { missing?: readonly WastePracticeReviewPropertyRef[] | readonly string[] },
 ): Record<string, unknown> {
   return {
     reason,
     sessionId: entry.sessionId,
     recipeId: entry.recipeId ?? null,
-    reviewedGame: entry.reviewedGame,
+    reviewedGame: 'reviewedGame' in entry ? entry.reviewedGame ?? null : null,
+    ...(extra?.missing ? { missingProperties: [...extra.missing] } : {}),
+  };
+}
+
+export function kitchenSkillsCombinedReviewDiagnosticPayload(
+  reason: string,
+  entry: Pick<KitchenSkillsCombinedReviewEntry, 'sessionId' | 'recipeId'>,
+  extra?: { missing?: readonly string[]; modules?: readonly string[] },
+): Record<string, unknown> {
+  return {
+    reason,
+    sessionId: entry.sessionId,
+    recipeId: entry.recipeId,
+    combined: true,
+    ...(extra?.modules ? { modules: [...extra.modules] } : {}),
     ...(extra?.missing ? { missingProperties: [...extra.missing] } : {}),
   };
 }

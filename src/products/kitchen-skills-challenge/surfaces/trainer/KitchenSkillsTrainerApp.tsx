@@ -18,6 +18,7 @@ import type {
   KitchenSkillsTrainerStaffSummary,
 } from '@/products/kitchen-skills-challenge/domain/types';
 import { KitchenSkillsTrainerSessionDetail } from '@/products/kitchen-skills-challenge/surfaces/trainer/KitchenSkillsTrainerSessionDetail';
+import { KitchenSkillsCombinedTrainerSessionDetail } from '@/products/kitchen-skills-challenge/surfaces/trainer/KitchenSkillsCombinedTrainerSessionDetail';
 import { TrainerStatusChip } from '@/products/kitchen-skills-challenge/surfaces/trainer/TrainerStatusChip';
 import {
   hasAnyUnsavedReviewDraft,
@@ -25,6 +26,7 @@ import {
 } from '@/products/kitchen-skills-challenge/surfaces/trainer/reviewDrafts';
 import { postKitchenSkillsChallengeExit } from '@/products/kitchen-skills-challenge/gamebus/postExit';
 import {
+  kitchenDayTutorCombinedHashFor,
   kitchenDayTutorHashFor,
   parseKitchenDaySelectedActorId,
   parseKitchenDaySelectedSessionId,
@@ -35,6 +37,9 @@ const UNSAVED_DRAFT_CONFIRM =
   'You have an unsaved tutor assessment draft. Leave without submitting?';
 
 type StaffSessionTab = 'needs' | 'awaiting' | 'reviewed';
+export type KitchenSkillsTrainerVariant = 'per-module' | 'combined';
+
+type TutorHashFor = typeof kitchenDayTutorHashFor;
 
 function earliestSubmittedAt(session: KitchenSkillsTrainerSession): string | null {
   const stamps = [
@@ -69,7 +74,13 @@ function staffCountsLabel(staff: KitchenSkillsTrainerStaffSummary): string {
   ].join(' · ');
 }
 
-function KitchenSkillsTrainerBody() {
+function KitchenSkillsTrainerBody({
+  variant,
+  hashFor,
+}: {
+  variant: KitchenSkillsTrainerVariant;
+  hashFor: TutorHashFor;
+}) {
   const { session, groupSessions } = useKitchenSkillsSession();
   const sessions = groupSessions;
   const [selectedSessionId, setSelectedSessionId] = useState(() => parseKitchenDaySelectedSessionId());
@@ -78,6 +89,12 @@ function KitchenSkillsTrainerBody() {
   const [reviewDrafts, setReviewDrafts] = useState<Record<string, KitchenSkillsReviewFormDraft>>({});
   const [staffSessionTab, setStaffSessionTab] = useState<StaffSessionTab | null>(null);
   const hasUnsavedDrafts = hasAnyUnsavedReviewDraft(reviewDrafts);
+  const pageTestId =
+    variant === 'combined' ? 'kitchen-day-tutor-combined-page' : 'kitchen-day-tutor-page';
+  const title =
+    variant === 'combined'
+      ? 'Kitchen Skills Trainer (Combined)'
+      : 'Kitchen Skills Trainer';
 
   useEffect(() => {
     const sync = () => {
@@ -170,10 +187,10 @@ function KitchenSkillsTrainerBody() {
   }
 
   return (
-    <div className="chef-results-page kitchen-mgmt-page kitchen-day-tutor-page" data-testid="kitchen-day-tutor-page">
+    <div className="chef-results-page kitchen-mgmt-page kitchen-day-tutor-page" data-testid={pageTestId}>
       <header className="kitchen-day-tutor-header kitchen-day-tutor-header--sticky" data-testid="kitchen-day-tutor-header">
         <div className="kitchen-day-tutor-header__main">
-          <h1 className="kitchen-day-tutor-header__title">Kitchen Skills Trainer</h1>
+          <h1 className="kitchen-day-tutor-header__title">{title}</h1>
           <p
             className={
               headerLead.intro
@@ -188,7 +205,7 @@ function KitchenSkillsTrainerBody() {
         <div className="kitchen-day-tutor-header__actions">
           {sessionSelected && selected ? (
             <a
-              href={kitchenDayTutorHashFor({ actorId: selected.actorId })}
+              href={hashFor({ actorId: selected.actorId })}
               className="kitchen-day-button kitchen-day-button--ghost"
               data-testid="kitchen-day-tutor-back-staff"
               onClick={guardNavigationClick}
@@ -197,7 +214,7 @@ function KitchenSkillsTrainerBody() {
             </a>
           ) : staffSelected ? (
             <a
-              href={kitchenDayTutorHashFor()}
+              href={hashFor()}
               className="kitchen-day-button kitchen-day-button--ghost"
               data-testid="kitchen-day-tutor-back-staff-list"
               onClick={guardNavigationClick}
@@ -217,12 +234,21 @@ function KitchenSkillsTrainerBody() {
       </header>
 
       {selectedSessionId && selected ? (
-        <KitchenSkillsTrainerSessionDetail
-          key={`${selected.actorId}:${selected.sessionId}`}
-          selected={selected}
-          drafts={reviewDrafts}
-          onDraftChange={updateReviewDraft}
-        />
+        variant === 'combined' ? (
+          <KitchenSkillsCombinedTrainerSessionDetail
+            key={`${selected.actorId}:${selected.sessionId}:combined`}
+            selected={selected}
+            reviewDrafts={reviewDrafts}
+            onReviewDraftChange={updateReviewDraft}
+          />
+        ) : (
+          <KitchenSkillsTrainerSessionDetail
+            key={`${selected.actorId}:${selected.sessionId}`}
+            selected={selected}
+            drafts={reviewDrafts}
+            onDraftChange={updateReviewDraft}
+          />
+        )
       ) : selectedSessionId ? (
         <p className="chef-results-empty">That student session was not found.</p>
       ) : selectedActorId && selectedStaff ? (
@@ -234,6 +260,7 @@ function KitchenSkillsTrainerBody() {
             sessions={sortSessionsNewestFirst(selectedStaff.sessions)}
             activeTab={staffSessionTab}
             onTabChange={setStaffSessionTab}
+            hashFor={hashFor}
           />
         </>
       ) : selectedActorId ? (
@@ -247,6 +274,7 @@ function KitchenSkillsTrainerBody() {
           staff={filteredStaff}
           query={staffQuery}
           onQueryChange={setStaffQuery}
+          hashFor={hashFor}
         />
       )}
     </div>
@@ -280,10 +308,12 @@ function StaffOverview({
   staff,
   query,
   onQueryChange,
+  hashFor,
 }: {
   staff: readonly KitchenSkillsTrainerStaffSummary[];
   query: string;
   onQueryChange: (value: string) => void;
+  hashFor: TutorHashFor;
 }) {
   return (
     <div data-testid="kitchen-day-tutor-staff-list">
@@ -311,7 +341,7 @@ function StaffOverview({
           {staff.map((item) => (
             <li key={item.actorId}>
               <a
-                href={kitchenDayTutorHashFor({ actorId: item.actorId })}
+                href={hashFor({ actorId: item.actorId })}
                 data-testid={`kitchen-day-tutor-staff-${item.actorId}`}
                 className={
                   item.sessionsNeedingAssessment > 0
@@ -347,11 +377,13 @@ function StaffSessionWorkspace({
   sessions,
   activeTab,
   onTabChange,
+  hashFor,
 }: {
   sessions: readonly KitchenSkillsTrainerSession[];
   /** Null until the tutor picks one: open the first tab that has sessions. */
   activeTab: StaffSessionTab | null;
   onTabChange: (tab: StaffSessionTab) => void;
+  hashFor: TutorHashFor;
 }) {
   const partition = partitionTrainerSessionsByAssessment(sessions);
   const byTab: Record<StaffSessionTab, KitchenSkillsTrainerSession[]> = {
@@ -397,7 +429,7 @@ function StaffSessionWorkspace({
           <ul className="kitchen-day-tutor-rows">
             {visible.map((item) => (
               <li key={`${item.actorId}:${item.sessionId}`}>
-                <SessionRow session={item} />
+                <SessionRow session={item} hashFor={hashFor} />
               </li>
             ))}
           </ul>
@@ -407,7 +439,13 @@ function StaffSessionWorkspace({
   );
 }
 
-function SessionRow({ session }: { session: KitchenSkillsTrainerSession }) {
+function SessionRow({
+  session,
+  hashFor,
+}: {
+  session: KitchenSkillsTrainerSession;
+  hashFor: TutorHashFor;
+}) {
   const status = sessionAssessmentStatus(session);
   const counts = sessionAssessmentCounts(session);
   const earliest = earliestSubmittedAt(session);
@@ -422,7 +460,7 @@ function SessionRow({ session }: { session: KitchenSkillsTrainerSession }) {
   const modules = sessionRecordedModuleLabels(session);
   return (
     <a
-      href={kitchenDayTutorHashFor({ actorId: session.actorId, sessionId: session.sessionId })}
+      href={hashFor({ actorId: session.actorId, sessionId: session.sessionId })}
       data-testid={`kitchen-day-chef-session-${session.sessionId}`}
       className="kitchen-day-tutor-row kitchen-day-tutor-row--session"
     >
@@ -448,10 +486,19 @@ function SessionRow({ session }: { session: KitchenSkillsTrainerSession }) {
   );
 }
 
-export function KitchenSkillsTrainerApp() {
+export function KitchenSkillsTrainerApp({
+  variant = 'per-module',
+}: {
+  variant?: KitchenSkillsTrainerVariant;
+} = {}) {
+  const hashFor = variant === 'combined' ? kitchenDayTutorCombinedHashFor : kitchenDayTutorHashFor;
   return (
     <KitchenSkillsSessionProvider>
-      <KitchenSkillsTrainerBody />
+      <KitchenSkillsTrainerBody variant={variant} hashFor={hashFor} />
     </KitchenSkillsSessionProvider>
   );
+}
+
+export function KitchenSkillsCombinedTrainerApp() {
+  return <KitchenSkillsTrainerApp variant="combined" />;
 }

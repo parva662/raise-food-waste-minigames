@@ -40,11 +40,11 @@ function legacyTrimTestId(reviewedGame: KitchenSkillsReviewedModule, suffix: str
   return reviewedGame === 'trimSmart' ? `kitchen-day-review-${suffix}` : undefined;
 }
 
-function ScorePicker({
+export function ScorePicker({
   label,
   name,
   value,
-  disabled,
+  disabled = false,
   invalid,
   testId,
   legacyTestId,
@@ -53,7 +53,7 @@ function ScorePicker({
   label: string;
   name: string;
   value: string;
-  disabled: boolean;
+  disabled?: boolean;
   invalid: boolean;
   testId: string;
   legacyTestId?: string;

@@ -12,5 +12,8 @@ describe('document title routing', () => {
     expect(getDocumentTitleForMode('kitchen-day')).toBe('Kitchen Skills Challenge');
     expect(getDocumentTitleForMode('kitchen-day-progress')).toBe('Kitchen Skills Challenge Progress');
     expect(getDocumentTitleForMode('kitchen-day-tutor')).toBe('Kitchen Skills Challenge Trainer');
+    expect(getDocumentTitleForMode('kitchen-day-tutor-combined')).toBe(
+      'Kitchen Skills Challenge Trainer (Combined)',
+    );
   });
 });

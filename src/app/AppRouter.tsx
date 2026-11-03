@@ -8,7 +8,10 @@ import { ServiceCloseoutApp } from '@/products/service-closeout/ServiceCloseoutA
 import { TrimSmartApp } from '@/legacy/trim-smart-v1/TrimSmartApp';
 import { KitchenSkillsChallengeApp } from '@/products/kitchen-skills-challenge/surfaces/challenge/KitchenSkillsChallengeApp';
 import { KitchenSkillsProgressApp } from '@/products/kitchen-skills-challenge/surfaces/progress/KitchenSkillsProgressApp';
-import { KitchenSkillsTrainerApp } from '@/products/kitchen-skills-challenge/surfaces/trainer/KitchenSkillsTrainerApp';
+import {
+  KitchenSkillsCombinedTrainerApp,
+  KitchenSkillsTrainerApp,
+} from '@/products/kitchen-skills-challenge/surfaces/trainer/KitchenSkillsTrainerApp';
 import { getAppMode, getExpectedActivityRef, type AppMode } from '@/app/routes';
 import { applyDocumentTitle } from '@/app/documentTitle';
 import { setExpectedActivityRefProvider } from '@/platform/gamebus/expectedActivityRef';
@@ -62,6 +65,10 @@ export function AppRouter() {
 
   if (mode === 'kitchen-day-tutor') {
     return <KitchenSkillsTrainerApp />;
+  }
+
+  if (mode === 'kitchen-day-tutor-combined') {
+    return <KitchenSkillsCombinedTrainerApp />;
   }
 
   return <LunchDeclarationApp />;

@@ -3,6 +3,10 @@ import { isTrimTechnique } from '@/products/kitchen-skills-challenge/domain/trim
 import { isPortionUnit } from '@/products/kitchen-skills-challenge/domain/portion/validation';
 import { isKitchenSkillsReviewScore } from '@/products/kitchen-skills-challenge/domain/assessment/scores';
 import { isKitchenSkillsReviewedModule } from '@/products/kitchen-skills-challenge/gamebus/mapWastePracticeReview';
+import {
+  COMBINED_MODULE_PROPERTY_SLUGS,
+  COMBINED_REVIEW_MODULE_ORDER,
+} from '@/products/kitchen-skills-challenge/gamebus/combinedWastePracticeReview';
 import type {
   KitchenSkillsPortionEntry,
   KitchenSkillsRescueEntry,
@@ -205,8 +209,7 @@ export function parsePersistedPortionEntry(activity: unknown): KitchenSkillsPort
   };
 }
 
-export function parsePersistedReviewEntry(activity: unknown): KitchenSkillsReviewEntry | null {
-  if (getActivityTemplateReference(activity) !== 'wastePracticeReview') return null;
+function parseLegacyReviewedGameReview(activity: unknown): KitchenSkillsReviewEntry | null {
   const sessionId = readActivityPropertyString(activity, 'sessionId');
   const sessionDate = readActivityPropertyString(activity, 'sessionDate');
   const submittedAt = readActivityPropertyString(activity, 'submittedAt');
@@ -241,6 +244,65 @@ export function parsePersistedReviewEntry(activity: unknown): KitchenSkillsRevie
     source: 'persisted',
     persistId: readActivityId(activity) ?? undefined,
   };
+}
+
+function parseCombinedReviewModules(activity: unknown): KitchenSkillsReviewEntry[] {
+  const sessionId = readActivityPropertyString(activity, 'sessionId');
+  const sessionDate = readActivityPropertyString(activity, 'sessionDate');
+  const submittedAt = readActivityPropertyString(activity, 'submittedAt');
+  const recipeId = readActivityPropertyString(activity, 'recipeId')?.trim();
+  if (!sessionId || !sessionDate || !submittedAt || !recipeId) return [];
+
+  const persistId = readActivityId(activity) ?? undefined;
+  const modules: KitchenSkillsReviewEntry[] = [];
+
+  for (const reviewedGame of COMBINED_REVIEW_MODULE_ORDER) {
+    const slugs = COMBINED_MODULE_PROPERTY_SLUGS[reviewedGame];
+    const timeEfficiencyScore = readActivityPropertyNumber(activity, slugs.time);
+    const preparationQualityScore = readActivityPropertyNumber(activity, slugs.quality);
+    if (
+      timeEfficiencyScore == null ||
+      preparationQualityScore == null ||
+      !isKitchenSkillsReviewScore(timeEfficiencyScore) ||
+      !isKitchenSkillsReviewScore(preparationQualityScore)
+    ) {
+      continue;
+    }
+    const chefFeedback = readActivityPropertyString(activity, slugs.feedback) ?? undefined;
+    modules.push({
+      sessionId,
+      sessionDate,
+      submittedAt,
+      recipeId,
+      reviewedGame,
+      timeEfficiencyScore,
+      preparationQualityScore,
+      ...(chefFeedback ? { chefFeedback } : {}),
+      source: 'persisted',
+      // Distinct persist keys so three modules from one activity do not collapse in Map dedupe.
+      persistId: persistId ? `${persistId}:${reviewedGame}` : undefined,
+    });
+  }
+  return modules;
+}
+
+/**
+ * Expand one `wastePracticeReview` activity into zero or more module review rows.
+ * Combined activities (module-specific score slugs) expand to one row per scored module.
+ * Legacy activities (`reviewedGame` + shared score slugs) expand to a single row.
+ * Older session-level rows without `recipeId` remain readable as legacy reviews.
+ */
+export function parsePersistedReviewEntries(activity: unknown): KitchenSkillsReviewEntry[] {
+  if (getActivityTemplateReference(activity) !== 'wastePracticeReview') return [];
+  const combined = parseCombinedReviewModules(activity);
+  if (combined.length > 0) return combined;
+  const legacy = parseLegacyReviewedGameReview(activity);
+  return legacy ? [legacy] : [];
+}
+
+/** @deprecated Prefer {@link parsePersistedReviewEntries}; kept for single-row call sites. */
+export function parsePersistedReviewEntry(activity: unknown): KitchenSkillsReviewEntry | null {
+  return parsePersistedReviewEntries(activity)[0] ?? null;
 }
 
 export interface KitchenSkillsReadModel {
