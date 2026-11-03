@@ -115,11 +115,22 @@ This activity does **not** use `ingredientCategory`.
 
 ---
 
-## `wastePracticeReview` — one tutor assessment per recipe and evidenced module
+## `wastePracticeReview` — tutor assessment
 
 The GameBus activity slug remains `wastePracticeReview`. The product UI wording is Tutor assessment.
 
-One tutor assessment per recipe and evidenced module within a Kitchen Skills session (`sessionId` + `recipeId` + `reviewedGame`), not one judgement per ingredient. **New attempts** have one recipe, so at most three module assessments. Historical sessions with several Portion recipes still need one Portion assessment per saved recipe.
+Two SPA routes share this template:
+
+| Route | Mode | Payload shape |
+|-------|------|---------------|
+| `#/kitchen-day-tutor` | Per-module (legacy UI retained) | One `SILENT_ACTIVITY` per evidenced module using `reviewedGame` + shared score slugs |
+| `#/kitchen-day-tutor-combined` | Combined | One `SILENT_ACTIVITY` per recipe with module-specific score slugs |
+
+Both are custom-task embeds (`actors: [selectedStudentActorId]`). Deep links keep `actorId` / `sessionId` query params.
+
+### Legacy per-module payload (`#/kitchen-day-tutor`)
+
+One tutor assessment per recipe and evidenced module (`sessionId` + `recipeId` + `reviewedGame`). **New attempts** have one recipe, so at most three module assessments. Historical sessions with several Portion recipes still need one Portion assessment per saved recipe.
 
 | Slug | Required | Notes |
 |------|----------|-------|
@@ -131,6 +142,29 @@ One tutor assessment per recipe and evidenced module within a Kitchen Skills ses
 | `timeEfficiencyScore` | yes | integer 0–5 |
 | `preparationQualityScore` | yes | integer 0–5 |
 | `chefFeedback` | no | optional free text |
+
+If these legacy property links are disconnected on the live TASK, the old route **blocks submission** and names the missing slugs. It never silently posts the combined payload.
+
+### Combined payload (`#/kitchen-day-tutor-combined`)
+
+One activity per selected recipe for every evidenced module that still needs assessment (no partial submit of empty modules; no combined score). Identity slugs stay the same; module scores use dedicated properties. The combined payload **must not** depend on `reviewedGame`, `timeEfficiencyScore`, `preparationQualityScore`, or `chefFeedback`.
+
+| Slug | Required when module is included | Notes |
+|------|----------------------------------|-------|
+| `sessionId` | yes | |
+| `sessionDate` | yes | |
+| `submittedAt` | yes | |
+| `recipeId` | yes | |
+| `portionTimeEfficiencyScore` / `portionPreparationQualityScore` | when Portion is included | integer 0–5; unselected is not zero |
+| `portionChefFeedback` | no | omit when blank |
+| `trimTimeEfficiencyScore` / `trimPreparationQualityScore` | when Trim evidence exists and is still open | omit Trim properties entirely when Trim was not recorded |
+| `trimChefFeedback` | no | omit when blank |
+| `rescueTimeEfficiencyScore` / `rescuePreparationQualityScore` | when Rescue evidence exists and is still open | omit Rescue properties entirely when Rescue was not recorded |
+| `rescueChefFeedback` | no | omit when blank |
+
+**Read model:** parsers keep separate paths for (1) legacy `reviewedGame` rows, (2) combined module-specific score rows, (3) older session-level rows without `recipeId`. Combined activities expand into per-module review rows in memory (no extra GameBus activities). When legacy and combined rows overlap for the same student + full `sessionId` + `recipeId` + module, keep the later `submittedAt`; equal timestamps use lexicographically greater `persistId` as a stable tie-breaker. Do not double-count.
+
+**Rollback:** reconnect the legacy property links on `wastePracticeReview` if the old route must post again. Live combined persistence remains **unverified** until a GameBus feed round-trip is tested.
 
 **DEPRECATED / unlink or stop requiring:** `reviewedActivityId`, `reasonCode`, `freeTextNote`, `unusualEvent`, `serviceDate`.
 

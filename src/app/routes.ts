@@ -17,7 +17,8 @@ export type AppMode =
   | 'trim-smart'
   | 'kitchen-day'
   | 'kitchen-day-progress'
-  | 'kitchen-day-tutor';
+  | 'kitchen-day-tutor'
+  | 'kitchen-day-tutor-combined';
 
 export type RouteSurface =
   | 'lunch-declaration'
@@ -29,7 +30,8 @@ export type RouteSurface =
   | 'legacy-trim-smart-v1'
   | 'kitchen-skills-challenge'
   | 'kitchen-skills-progress'
-  | 'kitchen-skills-trainer';
+  | 'kitchen-skills-trainer'
+  | 'kitchen-skills-trainer-combined';
 
 export type KitchenSkillsHashSection = 'trim' | 'reuse' | 'portion' | 'review';
 
@@ -51,9 +53,11 @@ export const TRIM_SMART_HASH_ROUTE = '#/waste/trim-smart';
 export const KITCHEN_DAY_HASH_ROUTE = '#/kitchen-day';
 export const KITCHEN_DAY_PROGRESS_HASH_ROUTE = '#/kitchen-day-progress';
 export const KITCHEN_DAY_TUTOR_HASH_ROUTE = '#/kitchen-day-tutor';
+export const KITCHEN_DAY_TUTOR_COMBINED_HASH_ROUTE = '#/kitchen-day-tutor-combined';
 export const KITCHEN_SKILLS_CHALLENGE_HASH_ROUTE = KITCHEN_DAY_HASH_ROUTE;
 export const KITCHEN_SKILLS_PROGRESS_HASH_ROUTE = KITCHEN_DAY_PROGRESS_HASH_ROUTE;
 export const KITCHEN_SKILLS_TRAINER_HASH_ROUTE = KITCHEN_DAY_TUTOR_HASH_ROUTE;
+export const KITCHEN_SKILLS_TRAINER_COMBINED_HASH_ROUTE = KITCHEN_DAY_TUTOR_COMBINED_HASH_ROUTE;
 
 /**
  * GameBus embedding surface for the iframe protocol handshake.
@@ -167,6 +171,15 @@ export const APP_ROUTES: readonly AppRouteDefinition[] = [
     gameBusEmbedKind: 'custom-task',
     expectedActivity: WASTE_PRACTICE_REVIEW_ACTIVITY_REF,
   },
+  {
+    mode: 'kitchen-day-tutor-combined',
+    surface: 'kitchen-skills-trainer-combined',
+    hash: KITCHEN_DAY_TUTOR_COMBINED_HASH_ROUTE,
+    title: 'Kitchen Skills Challenge Trainer (Combined)',
+    postsActivity: true,
+    gameBusEmbedKind: 'custom-task',
+    expectedActivity: WASTE_PRACTICE_REVIEW_ACTIVITY_REF,
+  },
 ] as const;
 
 export function hashPath(hash: string = typeof window === 'undefined' ? '' : window.location.hash): string {
@@ -232,6 +245,18 @@ export function kitchenDayTutorHashFor(
   return `${KITCHEN_DAY_TUTOR_HASH_ROUTE}?${params.toString()}`;
 }
 
+export function kitchenDayTutorCombinedHashFor(
+  options?: string | { actorId?: string; sessionId?: string },
+): string {
+  const resolved =
+    typeof options === 'string' ? { sessionId: options } : options ?? {};
+  if (!resolved.actorId && !resolved.sessionId) return KITCHEN_DAY_TUTOR_COMBINED_HASH_ROUTE;
+  const params = new URLSearchParams();
+  if (resolved.actorId) params.set('actorId', resolved.actorId);
+  if (resolved.sessionId) params.set('sessionId', resolved.sessionId);
+  return `${KITCHEN_DAY_TUTOR_COMBINED_HASH_ROUTE}?${params.toString()}`;
+}
+
 export function kitchenDayHashMatches(hash: string): boolean {
   const path = hashPath(hash);
   return path === 'kitchen-day' || path.startsWith('kitchen-day/');
@@ -245,6 +270,10 @@ export function kitchenDayTutorHashMatches(hash: string): boolean {
   return hashPath(hash) === 'kitchen-day-tutor';
 }
 
+export function kitchenDayTutorCombinedHashMatches(hash: string): boolean {
+  return hashPath(hash) === 'kitchen-day-tutor-combined';
+}
+
 function trimSmartHashMatches(hash: string): boolean {
   return hashPath(hash) === 'waste/trim-smart';
 }
@@ -253,6 +282,7 @@ export function getAppMode(hash: string = typeof window === 'undefined' ? '' : w
   if (typeof window === 'undefined' && hash === '') return 'student';
   if (trimSmartHashMatches(hash)) return 'trim-smart';
   if (kitchenDayProgressHashMatches(hash)) return 'kitchen-day-progress';
+  if (kitchenDayTutorCombinedHashMatches(hash)) return 'kitchen-day-tutor-combined';
   if (kitchenDayTutorHashMatches(hash)) return 'kitchen-day-tutor';
   if (kitchenDayHashMatches(hash)) return 'kitchen-day';
   if (

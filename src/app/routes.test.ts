@@ -96,4 +96,13 @@ describe('app route registry', () => {
     expect(hashPath('#/kitchen-day-tutor?sessionId=abc')).toBe('kitchen-day-tutor');
     expect(getExpectedActivityRef('#/kitchen-day-tutor')).toBe(WASTE_PRACTICE_REVIEW_ACTIVITY_REF);
   });
+
+  it('maps the combined trainer surface without replacing the legacy tutor hash', () => {
+    expect(getAppMode('#/kitchen-day-tutor-combined')).toBe('kitchen-day-tutor-combined');
+    expect(hashPath('#/kitchen-day-tutor-combined?actorId=1&sessionId=abc')).toBe(
+      'kitchen-day-tutor-combined',
+    );
+    expect(getExpectedActivityRef('#/kitchen-day-tutor-combined')).toBe(WASTE_PRACTICE_REVIEW_ACTIVITY_REF);
+    expect(getAppMode('#/kitchen-day-tutor')).toBe('kitchen-day-tutor');
+  });
 });

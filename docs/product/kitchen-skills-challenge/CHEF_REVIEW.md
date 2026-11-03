@@ -1,7 +1,7 @@
 # Session Review, Student Progress, and tutor assessment
 
 > **Documentation role:** Explanation — feedback surfaces and tutor workflow.
-> **APPROVED PRODUCT TARGET**. Implemented on `main` at `#/kitchen-day/review`, `#/kitchen-day-progress`, and `#/kitchen-day-tutor`.
+> **APPROVED PRODUCT TARGET**. Implemented on `main` at `#/kitchen-day/review`, `#/kitchen-day-progress`, `#/kitchen-day-tutor`, and `#/kitchen-day-tutor-combined`.
 >
 > Filename is historical. Product wording is **Tutor** / **Tutor assessment**. The GameBus activity slug remains `wastePracticeReview`.
 >
@@ -50,6 +50,12 @@ Neither posts measurement activities. Progress does not invent ranking or an ove
 - **Historical compatibility:** older `wastePracticeReview` rows without `recipeId` remain readable as **Historical session-level assessment**. They do not invent a recipe association, do not mark every recipe reviewed, and do not block new recipe-specific reviews. Historical **multi-recipe** sessions keep the PR #11 recipe-selector behaviour. Recipe-less Trim/Rescue evidence keeps the non-guessing compatibility behaviour. Do not modify, delete, or rewrite historical GameBus activities.
 
 **DEPRECATED property names:** see slug contract (`reviewedActivityId`, `reasonCode`, `freeTextNote`, `unusualEvent`, `serviceDate`, …).
+
+## 3b. Combined tutor assessment (`#/kitchen-day-tutor-combined`)
+
+Preserves the staff → session selection workflow from §3. For the selected recipe, shows one vertically stacked form: **Portion Precision** always when Portion evidence exists; **Trim Smart** / **Rescue & Reuse** only when those modules have recorded evidence. Each section pairs evidence (left) with tutor scores/feedback (right); on narrow viewports the assessment stacks under its evidence. One bottom **Submit assessment** posts a single `wastePracticeReview` `SILENT_ACTIVITY` with module-specific score properties (see slug contract). Require both scores for every open evidenced module; `0` is valid; unselected is not `0`. No assessments for absent modules. No combined score.
+
+Already confirmed modules (including historical legacy `reviewedGame` rows) stay read-only; the combined submit includes only remaining open modules for that recipe. Overlapping legacy and combined histories resolve per module by later `submittedAt`, then `persistId` (never double-count). Confirmation still requires matching persisted module values in `INPUT_COLLECTIONS` (not merely any review for the recipe). Live GameBus combined persistence remains unverified until a feed round-trip is tested. Rollback for the old route requires reconnecting legacy property links.
 
 ## 4. Retrieval (product rules)
 

@@ -3,7 +3,6 @@ import {
   evidencedRecipeModules,
   findConfirmedRecipeModuleReview,
   findRecipeModuleReview,
-  hasDuplicateReviewIdentity,
   isLegacySessionReview,
   isReviewPersistConfirmed,
   listSessionRecipeIds,
@@ -23,11 +22,12 @@ import { KITCHEN_SKILLS_REVIEWED_MODULES } from '@/products/kitchen-skills-chall
 import {
   parsePersistedPortionEntry,
   parsePersistedRescueEntry,
-  parsePersistedReviewEntry,
+  parsePersistedReviewEntries,
   parsePersistedTrimEntry,
   readActivityActorId,
   readActivityActorName,
 } from '@/products/kitchen-skills-challenge/read/kitchenSkillsReadModel';
+import { preferModuleReview } from '@/products/kitchen-skills-challenge/read/preferModuleReview';
 
 const KITCHEN_SKILLS_EVIDENCE_TEMPLATES = ['trimSmart', 'rescueAndReuse', 'portionPrecision'] as const;
 
@@ -248,13 +248,22 @@ export function attachModuleReviewToMatchingSessions(
 
   for (const session of targetSessions) {
     if (!session.reviews) session.reviews = [];
-    if (hasDuplicateReviewIdentity(session.reviews, review)) continue;
-    session.reviews.push(review);
+    const existingIndex = session.reviews.findIndex(
+      (item) => reviewIdentityKey(item) === reviewIdentityKey(review),
+    );
+    if (existingIndex >= 0) {
+      const existing = session.reviews[existingIndex]!;
+      // Overlapping legacy + combined (or duplicate feed rows): keep one winner.
+      session.reviews[existingIndex] = preferModuleReview(existing, review);
+    } else {
+      session.reviews.push(review);
+    }
 
     if (isLegacySessionReview(review)) {
-      if (session.moduleReviews[review.reviewedGame] === null) {
-        session.moduleReviews[review.reviewedGame] = review;
-      }
+      const current = session.moduleReviews[review.reviewedGame];
+      session.moduleReviews[review.reviewedGame] = current
+        ? preferModuleReview(current, review)
+        : review;
     }
   }
 }
@@ -360,9 +369,9 @@ export function buildKitchenSkillsTrainerSessions(
   }
 
   for (const activity of activities) {
-    const review = parsePersistedReviewEntry(activity);
-    if (!review) continue;
-    attachModuleReviewToMatchingSessions(sessions.values(), activity, review);
+    for (const review of parsePersistedReviewEntries(activity)) {
+      attachModuleReviewToMatchingSessions(sessions.values(), activity, review);
+    }
   }
 
   return [...sessions.values()].sort((left, right) => {
