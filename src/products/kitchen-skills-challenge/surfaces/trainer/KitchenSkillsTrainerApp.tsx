@@ -36,10 +36,16 @@ import { formatOperationalTime } from '@/shared/time/dates';
 const UNSAVED_DRAFT_CONFIRM =
   'You have an unsaved tutor assessment draft. Leave without submitting?';
 
-type StaffSessionTab = 'needs' | 'awaiting' | 'reviewed';
+type LegacyStaffSessionTab = 'needs' | 'awaiting' | 'reviewed';
+type CombinedStaffSessionTab = 'needs' | 'submitted';
+type StaffSessionTab = LegacyStaffSessionTab | CombinedStaffSessionTab;
 export type KitchenSkillsTrainerVariant = 'per-module' | 'combined';
 
 type TutorHashFor = typeof kitchenDayTutorHashFor;
+
+function combinedSessionListLabel(state: ReturnType<typeof sessionAssessmentStatus>): string {
+  return state === 'needs_assessment' ? 'Needs assessment' : 'Submitted';
+}
 
 function earliestSubmittedAt(session: KitchenSkillsTrainerSession): string | null {
   const stamps = [
@@ -65,7 +71,13 @@ function plural(count: number, one: string, many = `${one}s`): string {
   return `${count} ${count === 1 ? one : many}`;
 }
 
-function staffCountsLabel(staff: KitchenSkillsTrainerStaffSummary): string {
+function staffCountsLabel(
+  staff: KitchenSkillsTrainerStaffSummary,
+  variant: KitchenSkillsTrainerVariant = 'per-module',
+): string {
+  if (variant === 'combined') {
+    return plural(staff.sessionCount, 'session');
+  }
   return [
     plural(staff.sessionCount, 'session'),
     `${staff.sessionsNeedingAssessment} to assess`,
@@ -240,6 +252,11 @@ function KitchenSkillsTrainerBody({
             selected={selected}
             reviewDrafts={reviewDrafts}
             onReviewDraftChange={updateReviewDraft}
+            onAssessAnother={() => {
+              if (!confirmLeaveUnsaved()) return;
+              window.location.hash = hashFor({ actorId: selected.actorId });
+            }}
+            onCloseTrainer={closeTrainer}
           />
         ) : (
           <KitchenSkillsTrainerSessionDetail
@@ -253,14 +270,17 @@ function KitchenSkillsTrainerBody({
         <p className="chef-results-empty">That student session was not found.</p>
       ) : selectedActorId && selectedStaff ? (
         <>
-          <p className="kitchen-day-tutor-staff-summary" data-testid="kitchen-day-tutor-staff-session-count">
-            {staffCountsLabel(selectedStaff)}
-          </p>
+          {variant === 'combined' ? null : (
+            <p className="kitchen-day-tutor-staff-summary" data-testid="kitchen-day-tutor-staff-session-count">
+              {staffCountsLabel(selectedStaff)}
+            </p>
+          )}
           <StaffSessionWorkspace
             sessions={sortSessionsNewestFirst(selectedStaff.sessions)}
             activeTab={staffSessionTab}
             onTabChange={setStaffSessionTab}
             hashFor={hashFor}
+            variant={variant}
           />
         </>
       ) : selectedActorId ? (
@@ -275,6 +295,7 @@ function KitchenSkillsTrainerBody({
           query={staffQuery}
           onQueryChange={setStaffQuery}
           hashFor={hashFor}
+          variant={variant}
         />
       )}
     </div>
@@ -309,12 +330,15 @@ function StaffOverview({
   query,
   onQueryChange,
   hashFor,
+  variant,
 }: {
   staff: readonly KitchenSkillsTrainerStaffSummary[];
   query: string;
   onQueryChange: (value: string) => void;
   hashFor: TutorHashFor;
+  variant: KitchenSkillsTrainerVariant;
 }) {
+  const combined = variant === 'combined';
   return (
     <div data-testid="kitchen-day-tutor-staff-list">
       <label className="kitchen-day-field kitchen-day-tutor-staff-search">
@@ -327,50 +351,88 @@ function StaffOverview({
           placeholder="Name"
         />
       </label>
-      <div className="kitchen-day-tutor-table-head" aria-hidden="true">
+      <div
+        className={
+          combined
+            ? 'kitchen-day-tutor-table-head kitchen-day-tutor-table-head--combined'
+            : 'kitchen-day-tutor-table-head'
+        }
+        aria-hidden="true"
+      >
         <span>Staff</span>
         <span>Sessions</span>
         <span>To assess</span>
-        <span>Awaiting</span>
-        <span>Reviewed</span>
+        {combined ? <span>Submitted</span> : (
+          <>
+            <span>Awaiting</span>
+            <span>Reviewed</span>
+          </>
+        )}
       </div>
       {staff.length === 0 ? (
         <p className="chef-results-empty">No staff match that name.</p>
       ) : (
         <ul className="kitchen-day-tutor-rows">
-          {staff.map((item) => (
-            <li key={item.actorId}>
-              <a
-                href={hashFor({ actorId: item.actorId })}
-                data-testid={`kitchen-day-tutor-staff-${item.actorId}`}
-                className={
-                  item.sessionsNeedingAssessment > 0
-                    ? 'kitchen-day-tutor-row kitchen-day-tutor-row--staff kitchen-day-tutor-row--needs'
-                    : 'kitchen-day-tutor-row kitchen-day-tutor-row--staff'
-                }
-                aria-label={`${item.actorName}: ${staffCountsLabel(item)}`}
-              >
-                <span className="kitchen-day-tutor-row__name">{item.actorName}</span>
-                <CountCell value={item.sessionCount} label={item.sessionCount === 1 ? 'session' : 'sessions'} tone="plain" />
-                <CountCell value={item.sessionsNeedingAssessment} label="to assess" tone="needs" />
-                <CountCell value={item.sessionsAwaitingConfirmation} label="awaiting" tone="awaiting" />
-                <CountCell value={item.sessionsReviewed} label="reviewed" tone="reviewed" />
-                <span className="kitchen-day-tutor-row__chevron" aria-hidden="true">
-                  →
-                </span>
-              </a>
-            </li>
-          ))}
+          {staff.map((item) => {
+            const submittedCount =
+              item.sessionsAwaitingConfirmation + item.sessionsReviewed;
+            return (
+              <li key={item.actorId}>
+                <a
+                  href={hashFor({ actorId: item.actorId })}
+                  data-testid={`kitchen-day-tutor-staff-${item.actorId}`}
+                  className={
+                    item.sessionsNeedingAssessment > 0
+                      ? `kitchen-day-tutor-row kitchen-day-tutor-row--staff kitchen-day-tutor-row--needs${combined ? ' kitchen-day-tutor-row--combined' : ''}`
+                      : `kitchen-day-tutor-row kitchen-day-tutor-row--staff${combined ? ' kitchen-day-tutor-row--combined' : ''}`
+                  }
+                  aria-label={`${item.actorName}: ${staffCountsLabel(item, variant)}`}
+                >
+                  <span className="kitchen-day-tutor-row__name">{item.actorName}</span>
+                  <CountCell
+                    value={item.sessionCount}
+                    label={item.sessionCount === 1 ? 'session' : 'sessions'}
+                    tone="plain"
+                  />
+                  <CountCell value={item.sessionsNeedingAssessment} label="to assess" tone="needs" />
+                  {combined ? (
+                    <CountCell value={submittedCount} label="submitted" tone="reviewed" />
+                  ) : (
+                    <>
+                      <CountCell
+                        value={item.sessionsAwaitingConfirmation}
+                        label="awaiting"
+                        tone="awaiting"
+                      />
+                      <CountCell value={item.sessionsReviewed} label="reviewed" tone="reviewed" />
+                    </>
+                  )}
+                  <span className="kitchen-day-tutor-row__chevron" aria-hidden="true">
+                    →
+                  </span>
+                </a>
+              </li>
+            );
+          })}
         </ul>
       )}
     </div>
   );
 }
 
-const SESSION_TABS: { id: StaffSessionTab; label: string; empty: string }[] = [
+const LEGACY_SESSION_TABS: { id: LegacyStaffSessionTab; label: string; empty: string }[] = [
   { id: 'needs', label: 'To assess', empty: 'No sessions need assessment.' },
-  { id: 'awaiting', label: 'Awaiting confirmation', empty: 'No sessions are waiting for GameBus confirmation.' },
+  {
+    id: 'awaiting',
+    label: 'Awaiting confirmation',
+    empty: 'No sessions are waiting for GameBus confirmation.',
+  },
   { id: 'reviewed', label: 'Reviewed', empty: 'No fully reviewed sessions yet.' },
+];
+
+const COMBINED_SESSION_TABS: { id: CombinedStaffSessionTab; label: string; empty: string }[] = [
+  { id: 'needs', label: 'To assess', empty: 'No sessions need assessment.' },
+  { id: 'submitted', label: 'Submitted', empty: 'No submitted sessions yet.' },
 ];
 
 function StaffSessionWorkspace({
@@ -378,21 +440,27 @@ function StaffSessionWorkspace({
   activeTab,
   onTabChange,
   hashFor,
+  variant,
 }: {
   sessions: readonly KitchenSkillsTrainerSession[];
   /** Null until the tutor picks one: open the first tab that has sessions. */
   activeTab: StaffSessionTab | null;
   onTabChange: (tab: StaffSessionTab) => void;
   hashFor: TutorHashFor;
+  variant: KitchenSkillsTrainerVariant;
 }) {
   const partition = partitionTrainerSessionsByAssessment(sessions);
+  const combined = variant === 'combined';
+  const tabs = combined ? COMBINED_SESSION_TABS : LEGACY_SESSION_TABS;
   const byTab: Record<StaffSessionTab, KitchenSkillsTrainerSession[]> = {
     needs: partition.needsAssessment,
     awaiting: partition.awaitingConfirmation,
     reviewed: partition.reviewed,
+    submitted: [...partition.awaitingConfirmation, ...partition.reviewed],
   };
+  const fallbackTab = tabs.find((item) => byTab[item.id].length > 0)?.id ?? 'needs';
   const tab =
-    activeTab ?? SESSION_TABS.find((item) => byTab[item.id].length > 0)?.id ?? 'needs';
+    activeTab && tabs.some((item) => item.id === activeTab) ? activeTab : fallbackTab;
   const visible = byTab[tab];
 
   return (
@@ -403,7 +471,7 @@ function StaffSessionWorkspace({
         aria-label="Session assessment status"
         data-testid="kitchen-day-tutor-session-tabs"
       >
-        {SESSION_TABS.map((item) => (
+        {tabs.map((item) => (
           <button
             key={item.id}
             type="button"
@@ -417,19 +485,19 @@ function StaffSessionWorkspace({
             data-testid={`kitchen-day-tutor-session-tab-${item.id}`}
             onClick={() => onTabChange(item.id)}
           >
-            {item.label} ({byTab[item.id].length})
+            {combined ? item.label : `${item.label} (${byTab[item.id].length})`}
           </button>
         ))}
       </div>
 
       <div role="tabpanel" data-testid={`kitchen-day-tutor-sessions-${tab}`}>
         {visible.length === 0 ? (
-          <p className="chef-results-empty">{SESSION_TABS.find((item) => item.id === tab)?.empty}</p>
+          <p className="chef-results-empty">{tabs.find((item) => item.id === tab)?.empty}</p>
         ) : (
           <ul className="kitchen-day-tutor-rows">
             {visible.map((item) => (
               <li key={`${item.actorId}:${item.sessionId}`}>
-                <SessionRow session={item} hashFor={hashFor} />
+                <SessionRow session={item} hashFor={hashFor} variant={variant} />
               </li>
             ))}
           </ul>
@@ -442,9 +510,11 @@ function StaffSessionWorkspace({
 function SessionRow({
   session,
   hashFor,
+  variant,
 }: {
   session: KitchenSkillsTrainerSession;
   hashFor: TutorHashFor;
+  variant: KitchenSkillsTrainerVariant;
 }) {
   const status = sessionAssessmentStatus(session);
   const counts = sessionAssessmentCounts(session);
@@ -458,11 +528,16 @@ function SessionRow({
         ? plural(recipeCount, 'recipe')
         : 'No recipe id';
   const modules = sessionRecordedModuleLabels(session);
+  const combined = variant === 'combined';
   return (
     <a
       href={hashFor({ actorId: session.actorId, sessionId: session.sessionId })}
       data-testid={`kitchen-day-chef-session-${session.sessionId}`}
-      className="kitchen-day-tutor-row kitchen-day-tutor-row--session"
+      className={
+        combined
+          ? 'kitchen-day-tutor-row kitchen-day-tutor-row--session kitchen-day-tutor-row--session-combined'
+          : 'kitchen-day-tutor-row kitchen-day-tutor-row--session'
+      }
     >
       <span className="kitchen-day-tutor-row__when">
         <span className="kitchen-day-tutor-row__date">{formatSessionDate(session.sessionDate)}</span>
@@ -472,13 +547,19 @@ function SessionRow({
         <span>{recipeLabel}</span>
         <span className="kitchen-day-tutor-row__modules">{modules.join(' · ')}</span>
       </span>
-      <span
-        className="kitchen-day-tutor-row__counts"
-        data-testid={`kitchen-day-tutor-session-counts-${session.sessionId}`}
-      >
-        {counts.confirmed} confirmed · {counts.awaiting} awaiting · {counts.outstanding} to assess
-      </span>
-      <TrainerStatusChip state={status} testId={`kitchen-day-tutor-session-status-${session.sessionId}`} />
+      {combined ? null : (
+        <span
+          className="kitchen-day-tutor-row__counts"
+          data-testid={`kitchen-day-tutor-session-counts-${session.sessionId}`}
+        >
+          {counts.confirmed} confirmed · {counts.awaiting} awaiting · {counts.outstanding} to assess
+        </span>
+      )}
+      <TrainerStatusChip
+        state={status}
+        testId={`kitchen-day-tutor-session-status-${session.sessionId}`}
+        label={combined ? combinedSessionListLabel(status) : undefined}
+      />
       <span className="kitchen-day-tutor-row__open">
         Open session →
       </span>
