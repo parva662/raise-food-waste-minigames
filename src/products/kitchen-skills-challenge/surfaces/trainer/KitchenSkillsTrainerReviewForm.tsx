@@ -46,6 +46,8 @@ export function ScorePicker({
   value,
   disabled = false,
   invalid,
+  required = false,
+  missingHint = null,
   testId,
   legacyTestId,
   onChange,
@@ -55,24 +57,44 @@ export function ScorePicker({
   value: string;
   disabled?: boolean;
   invalid: boolean;
+  /** Marks the field as required in the legend (combined tutor). */
+  required?: boolean;
+  /** Inline message when a required score is still missing. */
+  missingHint?: string | null;
   testId: string;
   legacyTestId?: string;
   onChange: (next: string) => void;
 }) {
   const groupId = useId();
+  const hintId = `${groupId}-missing`;
+  const showMissing = Boolean(missingHint);
   return (
     <fieldset
-      className="kitchen-day-score-picker"
+      className={
+        showMissing
+          ? 'kitchen-day-score-picker kitchen-day-score-picker--missing'
+          : 'kitchen-day-score-picker'
+      }
       data-testid={testId}
-      aria-invalid={invalid || undefined}
+      aria-invalid={invalid || showMissing || undefined}
+      aria-describedby={showMissing ? hintId : undefined}
       disabled={disabled}
     >
       <legend className="kitchen-day-score-picker__legend">
-        {label} <span className="kitchen-day-score-picker__scale">0–5</span>
+        {label}{' '}
+        <span className="kitchen-day-score-picker__scale">0–5</span>
+        {required ? (
+          <span className="kitchen-day-score-picker__required">
+            {' '}
+            <span aria-hidden="true">*</span>
+            <span className="visually-hidden">required</span>
+          </span>
+        ) : null}
       </legend>
       <div className="kitchen-day-score-picker__options" role="radiogroup" aria-labelledby={groupId}>
         <span id={groupId} className="visually-hidden">
           {label}
+          {required ? ' (required)' : ''}
         </span>
         {SCORE_OPTIONS.map((score) => {
           const selected = value === String(score);
@@ -102,6 +124,16 @@ export function ScorePicker({
           );
         })}
       </div>
+      {showMissing ? (
+        <p
+          id={hintId}
+          className="kitchen-day-score-picker__missing"
+          data-testid={`${testId}-missing`}
+          role="alert"
+        >
+          {missingHint}
+        </p>
+      ) : null}
       {/* Keep a text control for regression tests that type scores; radios are the primary UX. */}
       <input
         type="text"

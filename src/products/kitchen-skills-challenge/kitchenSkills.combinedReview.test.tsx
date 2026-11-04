@@ -1,6 +1,6 @@
 /** @vitest-environment jsdom */
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { cleanup, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import * as detectEmbed from '@/platform/gamebus/detectEmbed';
 import { AppRouter } from '@/app/AppRouter';
@@ -172,8 +172,10 @@ describe('combined tutor assessment', () => {
     await user.click(screen.getByTestId('kitchen-day-combined-review-submit'));
 
     await waitFor(() => {
-      expect(screen.getByTestId('kitchen-day-combined-review-portionPrecision-awaiting')).toBeInTheDocument();
+      expect(screen.getByTestId('kitchen-day-combined-submit-success')).toBeInTheDocument();
     });
+    expect(screen.getByTestId('kitchen-day-combined-review-portionPrecision-awaiting')).toBeInTheDocument();
+    expect(screen.queryByTestId('kitchen-day-combined-review-unscored')).not.toBeInTheDocument();
 
     const silent = postMessage.mock.calls
       .map((call) => call[0])
@@ -223,6 +225,7 @@ describe('combined tutor assessment', () => {
         'portionPreparationQualityScore',
       );
     });
+    expect(screen.queryByTestId('kitchen-day-combined-submit-success')).not.toBeInTheDocument();
     expect(screen.getByTestId('kitchen-day-combined-review-portionPrecision-time')).toHaveValue('1');
     expect(screen.getByTestId('kitchen-day-combined-review-trimSmart-quality')).toHaveValue('4');
   });
@@ -266,6 +269,8 @@ describe('combined tutor assessment', () => {
   it('ignores blank scores and does not treat them as zero', async () => {
     vi.spyOn(detectEmbed, 'isGameBusEmbed').mockReturnValue(true);
     const user = userEvent.setup();
+    const postMessage = vi.fn();
+    window.parent.postMessage = postMessage;
     setHash(`#/kitchen-day-tutor-combined?actorId=student-1&sessionId=${encodeURIComponent(sessionId)}`);
     render(<AppRouter />);
     ingestTaskForTests(combinedTask());
@@ -274,11 +279,89 @@ describe('combined tutor assessment', () => {
       inputCollectionPari: { me: { id: 'tutor-1', firstName: 'Tutor', lastName: 'One' } },
     });
     await waitFor(() => {
-      expect(screen.getByTestId('kitchen-day-combined-review-submit')).toBeDisabled();
+      expect(screen.getByTestId('kitchen-day-combined-review-submit')).toBeEnabled();
     });
     await user.type(screen.getByTestId('kitchen-day-combined-review-portionPrecision-time'), '1');
-    expect(screen.getByTestId('kitchen-day-combined-review-submit')).toBeDisabled();
-    fireEvent.click(screen.getByTestId('kitchen-day-combined-review-submit'));
+    await user.click(screen.getByTestId('kitchen-day-combined-review-submit'));
+    expect(screen.getByTestId('kitchen-day-combined-review-portionPrecision-quality-picker-missing')).toHaveTextContent(
+      'Select a score',
+    );
+    expect(screen.getByTestId('kitchen-day-combined-review-trimSmart-time-picker-missing')).toBeInTheDocument();
+    expect(screen.queryByTestId('kitchen-day-combined-submit-success')).not.toBeInTheDocument();
     expect(screen.queryByTestId('kitchen-day-combined-review-portionPrecision-awaiting')).not.toBeInTheDocument();
+    expect(postMessage.mock.calls.some((call) => call[0]?.type === 'SILENT_ACTIVITY')).toBe(false);
+  });
+
+  it('shows To assess and Submitted tabs without awaiting counters', async () => {
+    vi.spyOn(detectEmbed, 'isGameBusEmbed').mockReturnValue(true);
+    setHash('#/kitchen-day-tutor-combined?actorId=student-1');
+    render(<AppRouter />);
+    ingestTaskForTests(combinedTask());
+    ingestInputCollectionsForTests({
+      kitchenSkillsTrainerInput: { activities: evidenceActivities() },
+      inputCollectionPari: { me: { id: 'tutor-1', firstName: 'Tutor', lastName: 'One' } },
+    });
+    await waitFor(() => {
+      expect(screen.getByTestId('kitchen-day-tutor-session-tab-needs')).toHaveTextContent('To assess');
+    });
+    expect(screen.getByTestId('kitchen-day-tutor-session-tab-submitted')).toHaveTextContent('Submitted');
+    expect(screen.queryByTestId('kitchen-day-tutor-session-tab-awaiting')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('kitchen-day-tutor-staff-session-count')).not.toBeInTheDocument();
+    expect(screen.queryByTestId(`kitchen-day-tutor-session-counts-${sessionId}`)).not.toBeInTheDocument();
+  });
+
+  it('returns to the assignment list from the success dialog', async () => {
+    vi.spyOn(detectEmbed, 'isGameBusEmbed').mockReturnValue(true);
+    const user = userEvent.setup();
+    window.parent.postMessage = vi.fn();
+    setHash(`#/kitchen-day-tutor-combined?actorId=student-1&sessionId=${encodeURIComponent(sessionId)}`);
+    render(<AppRouter />);
+    ingestTaskForTests(combinedTask());
+    ingestInputCollectionsForTests({
+      kitchenSkillsTrainerInput: { activities: evidenceActivities() },
+      inputCollectionPari: { me: { id: 'tutor-1', firstName: 'Tutor', lastName: 'One' } },
+    });
+    await waitFor(() => {
+      expect(screen.getByTestId('kitchen-day-combined-review-submit')).toBeInTheDocument();
+    });
+    await user.type(screen.getByTestId('kitchen-day-combined-review-portionPrecision-time'), '0');
+    await user.type(screen.getByTestId('kitchen-day-combined-review-portionPrecision-quality'), '5');
+    await user.type(screen.getByTestId('kitchen-day-combined-review-trimSmart-time'), '3');
+    await user.type(screen.getByTestId('kitchen-day-combined-review-trimSmart-quality'), '4');
+    await user.click(screen.getByTestId('kitchen-day-combined-review-submit'));
+    await waitFor(() => {
+      expect(screen.getByTestId('kitchen-day-combined-assess-another')).toBeInTheDocument();
+    });
+    await user.click(screen.getByTestId('kitchen-day-combined-assess-another'));
+    await waitFor(() => {
+      expect(window.location.hash).toBe('#/kitchen-day-tutor-combined?actorId=student-1');
+    });
+  });
+
+  it('posts EXIT from the success dialog Close action', async () => {
+    vi.spyOn(detectEmbed, 'isGameBusEmbed').mockReturnValue(true);
+    const user = userEvent.setup();
+    const postMessage = vi.fn();
+    window.parent.postMessage = postMessage;
+    setHash(`#/kitchen-day-tutor-combined?actorId=student-1&sessionId=${encodeURIComponent(sessionId)}`);
+    render(<AppRouter />);
+    ingestTaskForTests(combinedTask());
+    ingestInputCollectionsForTests({
+      kitchenSkillsTrainerInput: { activities: evidenceActivities() },
+      inputCollectionPari: { me: { id: 'tutor-1', firstName: 'Tutor', lastName: 'One' } },
+    });
+    await waitFor(() => {
+      expect(screen.getByTestId('kitchen-day-combined-review-submit')).toBeInTheDocument();
+    });
+    await user.type(screen.getByTestId('kitchen-day-combined-review-portionPrecision-time'), '2');
+    await user.type(screen.getByTestId('kitchen-day-combined-review-portionPrecision-quality'), '3');
+    await user.type(screen.getByTestId('kitchen-day-combined-review-trimSmart-time'), '4');
+    await user.type(screen.getByTestId('kitchen-day-combined-review-trimSmart-quality'), '5');
+    await user.click(screen.getByTestId('kitchen-day-combined-review-submit'));
+    await waitFor(() => {
+      expect(screen.getByTestId('kitchen-day-combined-submit-close')).toBeInTheDocument();
+    });
+    await user.click(screen.getByTestId('kitchen-day-combined-submit-close'));
+    expect(postMessage).toHaveBeenCalledWith({ type: 'EXIT' }, '*');
   });
 });

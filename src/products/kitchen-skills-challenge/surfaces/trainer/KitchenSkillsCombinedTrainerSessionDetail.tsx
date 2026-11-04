@@ -21,32 +21,21 @@ import {
   type KitchenSkillsReviewFormDraft,
 } from '@/products/kitchen-skills-challenge/surfaces/trainer/reviewDrafts';
 import { normalizeRecipeId } from '@/products/kitchen-skills-challenge/domain/session/ingredientUniqueness';
-import {
-  KITCHEN_SKILLS_ASSESSMENT_STATE_LABELS,
-  sessionAssessmentCounts,
-  sessionAssessmentStatus,
-  sortModulesForTrainer,
-} from '@/products/kitchen-skills-challenge/read/trainerSessions';
-import {
-  TrainerStateDot,
-  TrainerStatusChip,
-} from '@/products/kitchen-skills-challenge/surfaces/trainer/TrainerStatusChip';
+import { sortModulesForTrainer } from '@/products/kitchen-skills-challenge/read/trainerSessions';
+import { TrainerStateDot } from '@/products/kitchen-skills-challenge/surfaces/trainer/TrainerStatusChip';
 import { useReadyKitchenSkillsSession } from '@/products/kitchen-skills-challenge/domain/session/KitchenSkillsSessionContext';
 import { parseKitchenSkillsReviewScore } from '@/products/kitchen-skills-challenge/domain/assessment/scores';
-import {
-  kitchenSkillsReviewAwaitingMessage,
-  kitchenSkillsReviewCommitErrorMessage,
-  kitchenSkillsReviewSavedMessage,
-} from '@/products/kitchen-skills-challenge/gamebus/reviewPostErrors';
+import { kitchenSkillsReviewCommitErrorMessage } from '@/products/kitchen-skills-challenge/gamebus/reviewPostErrors';
 import { COMBINED_REVIEW_MODULE_ORDER } from '@/products/kitchen-skills-challenge/gamebus/combinedWastePracticeReview';
 import { ScorePicker } from '@/products/kitchen-skills-challenge/surfaces/trainer/KitchenSkillsTrainerReviewForm';
 
 const ALL_MODULES: readonly KitchenSkillsReviewedModule[] = COMBINED_REVIEW_MODULE_ORDER;
 
-const COMPACT_STATE_LABELS: Record<KitchenSkillsModuleAssessmentState, string> = {
+/** Combined list/detail labels: awaiting + reviewed both present as Submitted. */
+const COMBINED_STATE_LABELS: Record<KitchenSkillsModuleAssessmentState, string> = {
   needs_assessment: 'To assess',
-  awaiting_confirmation: 'Awaiting',
-  reviewed: 'Reviewed',
+  awaiting_confirmation: 'Submitted',
+  reviewed: 'Submitted',
 };
 
 function evidencedModulesForRecipe(
@@ -80,13 +69,17 @@ function entriesForRecipe<T extends { recipeId?: string }>(
   });
 }
 
+function scoreMissing(draftScore: string): boolean {
+  return !parseKitchenSkillsReviewScore(draftScore).ok;
+}
+
 function ModuleStatusLabel({ state }: { state: KitchenSkillsModuleAssessmentState }) {
   return (
     <span
       className={`kitchen-day-tutor-combined-status kitchen-day-tutor-combined-status--${state}`}
       data-state={state}
     >
-      {COMPACT_STATE_LABELS[state]}
+      {COMBINED_STATE_LABELS[state]}
     </span>
   );
 }
@@ -94,18 +87,28 @@ function ModuleStatusLabel({ state }: { state: KitchenSkillsModuleAssessmentStat
 function ModuleReadback({
   module,
   review,
+  state,
 }: {
   module: KitchenSkillsReviewedModule;
-  review: NonNullable<ReturnType<typeof findConfirmedRecipeModuleReview>>;
+  review: NonNullable<
+    | ReturnType<typeof findConfirmedRecipeModuleReview>
+    | ReturnType<typeof findAwaitingRecipeModuleReview>
+  >;
+  state: 'awaiting_confirmation' | 'reviewed';
 }) {
   return (
     <div
-      className="kitchen-day-tutor-combined-assessment kitchen-day-tutor-combined-assessment--saved"
-      data-testid={`kitchen-day-combined-review-${module}-submitted`}
+      className={
+        state === 'reviewed'
+          ? 'kitchen-day-tutor-combined-assessment kitchen-day-tutor-combined-assessment--saved'
+          : 'kitchen-day-tutor-combined-assessment kitchen-day-tutor-combined-assessment--awaiting'
+      }
+      data-testid={
+        state === 'reviewed'
+          ? `kitchen-day-combined-review-${module}-submitted`
+          : `kitchen-day-combined-review-${module}-awaiting`
+      }
     >
-      <p className="kitchen-day-tutor-combined-assessment__note kitchen-day-tutor-combined-assessment__note--saved">
-        {kitchenSkillsReviewSavedMessage()}
-      </p>
       <dl className="kitchen-day-tutor-combined-readback">
         <div>
           <dt>Time</dt>
@@ -134,63 +137,27 @@ function ModuleReadback({
   );
 }
 
-function ModuleAwaiting({
-  module,
-  review,
-}: {
-  module: KitchenSkillsReviewedModule;
-  review: NonNullable<ReturnType<typeof findAwaitingRecipeModuleReview>>;
-}) {
-  return (
-    <div
-      className="kitchen-day-tutor-combined-assessment kitchen-day-tutor-combined-assessment--awaiting"
-      data-testid={`kitchen-day-combined-review-${module}-awaiting`}
-    >
-      <p
-        className="kitchen-day-tutor-combined-assessment__note kitchen-day-tutor-combined-assessment__note--awaiting"
-        data-testid={`kitchen-day-combined-review-${module}-awaiting-note`}
-      >
-        {kitchenSkillsReviewAwaitingMessage()} Feed reload confirms saved.
-      </p>
-      <dl className="kitchen-day-tutor-combined-readback">
-        <div>
-          <dt>Time</dt>
-          <dd>
-            {review.timeEfficiencyScore}
-            <span className="kitchen-day-tutor-assessment__out-of">/5</span>
-          </dd>
-        </div>
-        <div>
-          <dt>Quality</dt>
-          <dd>
-            {review.preparationQualityScore}
-            <span className="kitchen-day-tutor-assessment__out-of">/5</span>
-          </dd>
-        </div>
-      </dl>
-      {review.chefFeedback ? (
-        <p className="kitchen-day-tutor-combined-feedback-readback">{review.chefFeedback}</p>
-      ) : null}
-    </div>
-  );
-}
-
 function ModuleDraftForm({
   module,
   draft,
   onDraftChange,
   disabled,
+  showMissingHints,
 }: {
   module: KitchenSkillsReviewedModule;
   draft: KitchenSkillsReviewFormDraft;
   onDraftChange: (draft: KitchenSkillsReviewFormDraft) => void;
   disabled: boolean;
+  showMissingHints: boolean;
 }) {
   const timeName = `combined-time-${module}`;
   const qualityName = `combined-quality-${module}`;
-  const timeInvalid = draft.timeScore.trim().length > 0 && !parseKitchenSkillsReviewScore(draft.timeScore).ok;
-  const qualityInvalid =
-    draft.qualityScore.trim().length > 0 && !parseKitchenSkillsReviewScore(draft.qualityScore).ok;
+  const timeParsed = parseKitchenSkillsReviewScore(draft.timeScore);
+  const qualityParsed = parseKitchenSkillsReviewScore(draft.qualityScore);
+  const timeInvalid = draft.timeScore.trim().length > 0 && !timeParsed.ok;
+  const qualityInvalid = draft.qualityScore.trim().length > 0 && !qualityParsed.ok;
+  const timeMissing = showMissingHints && scoreMissing(draft.timeScore);
+  const qualityMissing = showMissingHints && scoreMissing(draft.qualityScore);
 
   return (
     <div
@@ -203,6 +170,8 @@ function ModuleDraftForm({
         value={draft.timeScore}
         disabled={disabled}
         invalid={timeInvalid}
+        required
+        missingHint={timeMissing ? 'Select a score' : null}
         testId={`kitchen-day-combined-review-${module}-time-picker`}
         onChange={(next) => onDraftChange({ ...draft, timeScore: next })}
       />
@@ -212,6 +181,8 @@ function ModuleDraftForm({
         value={draft.qualityScore}
         disabled={disabled}
         invalid={qualityInvalid}
+        required
+        missingHint={qualityMissing ? 'Select a score' : null}
         testId={`kitchen-day-combined-review-${module}-quality-picker`}
         onChange={(next) => onDraftChange({ ...draft, qualityScore: next })}
       />
@@ -230,26 +201,82 @@ function ModuleDraftForm({
   );
 }
 
+function CombinedSubmitSuccessDialog({
+  onAssessAnother,
+  onClose,
+}: {
+  onAssessAnother: () => void;
+  onClose: () => void;
+}) {
+  return (
+    <div
+      className="chef-zero-dialog-backdrop kitchen-day-combined-submit-backdrop"
+      role="presentation"
+      data-testid="kitchen-day-combined-submit-success-backdrop"
+    >
+      <div
+        className="chef-zero-dialog kitchen-day-combined-submit-dialog"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="kitchen-day-combined-submit-success-title"
+        data-testid="kitchen-day-combined-submit-success"
+      >
+        <header className="kitchen-day-combined-submit-dialog__header">
+          <h2 id="kitchen-day-combined-submit-success-title" className="chef-zero-dialog__title">
+            Assessment submitted
+          </h2>
+        </header>
+        <div className="chef-zero-dialog__actions kitchen-day-combined-submit-dialog__actions">
+          <button
+            type="button"
+            className="chef-zero-dialog__btn kitchen-day-button kitchen-day-button--secondary"
+            data-testid="kitchen-day-combined-assess-another"
+            onClick={onAssessAnother}
+          >
+            Assess another assignment
+          </button>
+          <button
+            type="button"
+            className="chef-zero-dialog__btn chef-zero-dialog__btn--confirm kitchen-day-button kitchen-day-button--primary"
+            data-testid="kitchen-day-combined-submit-close"
+            onClick={onClose}
+          >
+            Close
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export function KitchenSkillsCombinedTrainerSessionDetail({
   selected,
   reviewDrafts,
   onReviewDraftChange,
+  onAssessAnother,
+  onCloseTrainer,
 }: {
   selected: KitchenSkillsTrainerSession;
   reviewDrafts: Record<string, KitchenSkillsReviewFormDraft>;
   onReviewDraftChange: (key: string, draft: KitchenSkillsReviewFormDraft) => void;
+  onAssessAnother: () => void;
+  onCloseTrainer: () => void;
 }) {
   const { commitCombinedReview } = useReadyKitchenSkillsSession();
   const recipeIds = useMemo(() => listSessionRecipeIds(selected), [selected]);
   const [recipeId, setRecipeId] = useState<string | null>(() => initialRecipeId(selected, recipeIds));
   const [error, setError] = useState<string | null>(null);
   const [sending, setSending] = useState(false);
+  const [showMissingHints, setShowMissingHints] = useState(false);
+  const [showSuccessDialog, setShowSuccessDialog] = useState(false);
   const sendingRef = useRef(false);
 
   useEffect(() => {
     setRecipeId(initialRecipeId(selected, listSessionRecipeIds(selected)));
     setError(null);
     setSending(false);
+    setShowMissingHints(false);
+    setShowSuccessDialog(false);
     sendingRef.current = false;
     // eslint-disable-next-line react-hooks/exhaustive-deps -- intentional session identity deps only
   }, [selected.sessionId, selected.actorId]);
@@ -261,8 +288,6 @@ export function KitchenSkillsCombinedTrainerSessionDetail({
       activeRecipeId != null &&
       recipeModuleAssessmentState(selected, activeRecipeId, module) === 'needs_assessment',
   );
-  const counts = sessionAssessmentCounts(selected);
-  const sessionStatus = sessionAssessmentStatus(selected);
 
   const draftFor = (module: KitchenSkillsReviewedModule): KitchenSkillsReviewFormDraft => {
     if (!activeRecipeId) return EMPTY_REVIEW_DRAFT;
@@ -278,35 +303,23 @@ export function KitchenSkillsCombinedTrainerSessionDetail({
     );
   };
 
-  const canSubmit = (() => {
-    if (!activeRecipeId || pendingModules.length === 0 || sending) return false;
-    return pendingModules.every((module) => {
-      const draft = draftFor(module);
-      return (
-        parseKitchenSkillsReviewScore(draft.timeScore).ok &&
-        parseKitchenSkillsReviewScore(draft.qualityScore).ok
-      );
-    });
-  })();
-
   const submit = () => {
     if (sendingRef.current || !activeRecipeId) return;
     if (pendingModules.length === 0) return;
-    for (const module of pendingModules) {
+    const incomplete = pendingModules.some((module) => {
       const draft = draftFor(module);
-      if (
-        !parseKitchenSkillsReviewScore(draft.timeScore).ok ||
-        !parseKitchenSkillsReviewScore(draft.qualityScore).ok
-      ) {
-        setError(
-          'Select integer scores from 0 to 5 for both dimensions on every open module. Unselected is not a score.',
-        );
-        return;
-      }
+      return scoreMissing(draft.timeScore) || scoreMissing(draft.qualityScore);
+    });
+    if (incomplete) {
+      setShowMissingHints(true);
+      setError(null);
+      setShowSuccessDialog(false);
+      return;
     }
     sendingRef.current = true;
     setSending(true);
     setError(null);
+    setShowSuccessDialog(false);
     const submittedAt = new Date().toISOString();
     const modulesPayload: Parameters<typeof commitCombinedReview>[0]['modules'] = {};
     for (const module of pendingModules) {
@@ -316,9 +329,8 @@ export function KitchenSkillsCombinedTrainerSessionDetail({
       if (!time.ok || !quality.ok) {
         sendingRef.current = false;
         setSending(false);
-        setError(
-          'Select integer scores from 0 to 5 for both dimensions on every open module. Unselected is not a score.',
-        );
+        setShowMissingHints(true);
+        setShowSuccessDialog(false);
         return;
       }
       modulesPayload[module] = {
@@ -340,6 +352,7 @@ export function KitchenSkillsCombinedTrainerSessionDetail({
     if (!result.ok) {
       sendingRef.current = false;
       setSending(false);
+      setShowSuccessDialog(false);
       setError(kitchenSkillsReviewCommitErrorMessage(result.reason, 'combined', result.missing));
       return;
     }
@@ -351,17 +364,12 @@ export function KitchenSkillsCombinedTrainerSessionDetail({
     }
     setSending(false);
     sendingRef.current = false;
+    setShowMissingHints(false);
+    setShowSuccessDialog(true);
   };
 
   return (
     <div className="kitchen-day-tutor-session" data-testid="kitchen-day-tutor-combined-session">
-      <div className="kitchen-day-tutor-session__progress" data-testid="kitchen-day-tutor-session-status">
-        <TrainerStatusChip state={sessionStatus} />
-        <span>
-          {counts.outstanding} to assess · {counts.awaiting} awaiting · {counts.confirmed} reviewed
-        </span>
-      </div>
-
       {recipeIds.length > 1 ? (
         <div className="kitchen-day-tutor-recipe-chips" data-testid="kitchen-day-tutor-combined-recipe-chips">
           <p className="kitchen-day-tutor-recipe-chips__meta">
@@ -385,6 +393,7 @@ export function KitchenSkillsCombinedTrainerSessionDetail({
                   onClick={() => {
                     setRecipeId(id);
                     setError(null);
+                    setShowMissingHints(false);
                   }}
                 >
                   <TrainerStateDot state={status === 'no_evidence' ? 'needs_assessment' : status} />
@@ -444,7 +453,6 @@ export function KitchenSkillsCombinedTrainerSessionDetail({
                     {KITCHEN_SKILLS_MODULE_TITLES[module]}
                   </h2>
                   <ModuleStatusLabel state={state} />
-                  <span className="visually-hidden">{KITCHEN_SKILLS_ASSESSMENT_STATE_LABELS[state]}</span>
                 </header>
 
                 <div className="kitchen-day-tutor-combined-module__body">
@@ -465,15 +473,16 @@ export function KitchenSkillsCombinedTrainerSessionDetail({
                   </div>
                   <div className="kitchen-day-tutor-combined-module__assessment">
                     {confirmed ? (
-                      <ModuleReadback module={module} review={confirmed} />
+                      <ModuleReadback module={module} review={confirmed} state="reviewed" />
                     ) : awaiting ? (
-                      <ModuleAwaiting module={module} review={awaiting} />
+                      <ModuleReadback module={module} review={awaiting} state="awaiting_confirmation" />
                     ) : (
                       <ModuleDraftForm
                         module={module}
                         draft={draftFor(module)}
                         onDraftChange={(draft) => setDraft(module, draft)}
                         disabled={sending}
+                        showMissingHints={showMissingHints}
                       />
                     )}
                   </div>
@@ -495,16 +504,7 @@ export function KitchenSkillsCombinedTrainerSessionDetail({
                 >
                   {error}
                 </p>
-              ) : (
-                <p
-                  className="kitchen-day-tutor-combined-submit__hint"
-                  data-testid="kitchen-day-combined-review-unscored"
-                >
-                  {canSubmit || sending
-                    ? 'Scores ready for every open module.'
-                    : 'Select both scores for every open module to submit.'}
-                </p>
-              )}
+              ) : null}
               {sending ? (
                 <p className="visually-hidden" data-testid="kitchen-day-combined-review-sending">
                   Sending
@@ -514,7 +514,7 @@ export function KitchenSkillsCombinedTrainerSessionDetail({
                 type="button"
                 className="kitchen-day-button kitchen-day-button--primary"
                 data-testid="kitchen-day-combined-review-submit"
-                disabled={!canSubmit}
+                disabled={sending}
                 onClick={submit}
               >
                 Submit assessment
@@ -525,13 +525,17 @@ export function KitchenSkillsCombinedTrainerSessionDetail({
               className="kitchen-day-tutor-combined-submit__done"
               data-testid="kitchen-day-combined-review-all-done"
             >
-              Every evidenced module for this recipe is submitted or saved.
+              Every evidenced module for this recipe is submitted.
             </p>
           )}
         </div>
       ) : (
         <p data-testid="kitchen-day-tutor-combined-empty">No recipe evidence is available for assessment.</p>
       )}
+
+      {showSuccessDialog ? (
+        <CombinedSubmitSuccessDialog onAssessAnother={onAssessAnother} onClose={onCloseTrainer} />
+      ) : null}
     </div>
   );
 }

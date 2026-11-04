@@ -7006,6 +7006,24 @@ ul {
   outline-offset: 1px;
 }
 
+.kitchen-day-score-picker__required {
+  color: var(--color-meat, #c0392b);
+  font-weight: 700;
+}
+
+.kitchen-day-score-picker__missing {
+  margin: 0.35rem 0 0;
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  color: var(--color-meat, #c0392b);
+}
+
+.kitchen-day-score-picker--missing .kitchen-day-score-picker__options {
+  outline: 1px solid color-mix(in srgb, var(--color-meat, #c0392b) 45%, transparent);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+
 .kitchen-day-tutor-unsaved-hint {
   font-weight: 500;
   color: var(--color-primary-dark);
@@ -7103,6 +7121,11 @@ ul {
   grid-template-columns: minmax(8rem, 2fr) repeat(4, minmax(4.5rem, 1fr)) 1.25rem;
 }
 
+.kitchen-day-tutor-row--staff.kitchen-day-tutor-row--combined,
+.kitchen-day-tutor-table-head--combined {
+  grid-template-columns: minmax(8rem, 2fr) repeat(3, minmax(4.5rem, 1fr)) 1.25rem;
+}
+
 .kitchen-day-tutor-table-head {
   display: grid;
   gap: 0 var(--spacing-md);
@@ -7152,6 +7175,10 @@ ul {
 
 .kitchen-day-tutor-row--session {
   grid-template-columns: minmax(9rem, 1.3fr) minmax(9rem, 1.4fr) minmax(12rem, 1.6fr) auto auto;
+}
+
+.kitchen-day-tutor-row--session-combined {
+  grid-template-columns: minmax(9rem, 1.3fr) minmax(9rem, 1.6fr) auto auto;
 }
 
 .kitchen-day-tutor-row__when,
@@ -7641,11 +7668,50 @@ ul {
   background: color-mix(in srgb, var(--color-bg) 55%, var(--color-surface));
 }
 
-.kitchen-day-tutor-combined-submit__hint,
 .kitchen-day-tutor-combined-submit__done {
   margin: 0;
+  padding: var(--spacing-md);
   font-size: var(--font-size-sm);
   color: var(--color-text-secondary);
+}
+
+.kitchen-day-combined-submit-dialog {
+  display: flex;
+  flex-direction: column;
+  width: min(28rem, 100%);
+  max-width: 100%;
+  min-width: 0;
+  background: var(--color-surface);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  padding: var(--spacing-md);
+  gap: var(--spacing-md);
+}
+
+.kitchen-day-combined-submit-dialog__header {
+  margin: 0;
+}
+
+.kitchen-day-combined-submit-dialog__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-sm);
+  justify-content: stretch;
+}
+
+.kitchen-day-combined-submit-dialog__actions .kitchen-day-button {
+  flex: 1 1 10rem;
+  min-height: 3rem;
+}
+
+@media (max-width: 28rem) {
+  .kitchen-day-combined-submit-dialog__actions {
+    flex-direction: column;
+  }
+
+  .kitchen-day-combined-submit-dialog__actions .kitchen-day-button {
+    width: 100%;
+  }
 }
 
 .kitchen-day-tutor-combined-submit__error {
