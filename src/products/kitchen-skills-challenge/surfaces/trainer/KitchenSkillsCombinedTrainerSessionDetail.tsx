@@ -12,6 +12,7 @@ import {
   recipeDisplayName,
   recipeModuleAssessmentState,
   recipeModuleHasEvidence,
+  type KitchenSkillsModuleAssessmentState,
 } from '@/products/kitchen-skills-challenge/domain/session/reviewIdentity';
 import { SessionEvidence } from '@/products/kitchen-skills-challenge/surfaces/shared/SessionEvidence';
 import {
@@ -21,6 +22,7 @@ import {
 } from '@/products/kitchen-skills-challenge/surfaces/trainer/reviewDrafts';
 import { normalizeRecipeId } from '@/products/kitchen-skills-challenge/domain/session/ingredientUniqueness';
 import {
+  KITCHEN_SKILLS_ASSESSMENT_STATE_LABELS,
   sessionAssessmentCounts,
   sessionAssessmentStatus,
   sortModulesForTrainer,
@@ -40,6 +42,12 @@ import { COMBINED_REVIEW_MODULE_ORDER } from '@/products/kitchen-skills-challeng
 import { ScorePicker } from '@/products/kitchen-skills-challenge/surfaces/trainer/KitchenSkillsTrainerReviewForm';
 
 const ALL_MODULES: readonly KitchenSkillsReviewedModule[] = COMBINED_REVIEW_MODULE_ORDER;
+
+const COMPACT_STATE_LABELS: Record<KitchenSkillsModuleAssessmentState, string> = {
+  needs_assessment: 'To assess',
+  awaiting_confirmation: 'Awaiting',
+  reviewed: 'Reviewed',
+};
 
 function evidencedModulesForRecipe(
   session: KitchenSkillsTrainerSession,
@@ -68,9 +76,19 @@ function entriesForRecipe<T extends { recipeId?: string }>(
   return entries.filter((entry) => {
     const entryRid = normalizeRecipeId(entry.recipeId ?? '');
     if (entryRid) return entryRid === rid;
-    // Legacy rows without recipeId attach only when the session has a single recipe.
     return listSessionRecipeIds(session).length === 1;
   });
+}
+
+function ModuleStatusLabel({ state }: { state: KitchenSkillsModuleAssessmentState }) {
+  return (
+    <span
+      className={`kitchen-day-tutor-combined-status kitchen-day-tutor-combined-status--${state}`}
+      data-state={state}
+    >
+      {COMPACT_STATE_LABELS[state]}
+    </span>
+  );
 }
 
 function ModuleReadback({
@@ -81,41 +99,38 @@ function ModuleReadback({
   review: NonNullable<ReturnType<typeof findConfirmedRecipeModuleReview>>;
 }) {
   return (
-    <section
-      className="kitchen-day-tutor-assessment kitchen-day-tutor-assessment--saved"
+    <div
+      className="kitchen-day-tutor-combined-assessment kitchen-day-tutor-combined-assessment--saved"
       data-testid={`kitchen-day-combined-review-${module}-submitted`}
     >
-      <div className="kitchen-day-tutor-assessment__header">
-        <h3 className="kitchen-day-tutor-assessment__title">{KITCHEN_SKILLS_MODULE_TITLES[module]}</h3>
-      </div>
-      <p className="kitchen-day-tutor-assessment__status kitchen-day-tutor-assessment__status--saved">
+      <p className="kitchen-day-tutor-combined-assessment__note kitchen-day-tutor-combined-assessment__note--saved">
         {kitchenSkillsReviewSavedMessage()}
       </p>
-      <dl className="kitchen-day-tutor-assessment__readback">
+      <dl className="kitchen-day-tutor-combined-readback">
         <div>
-          <dt>Time efficiency</dt>
+          <dt>Time</dt>
           <dd data-testid={`kitchen-day-combined-review-${module}-time-value`}>
             {review.timeEfficiencyScore}
             <span className="kitchen-day-tutor-assessment__out-of">/5</span>
           </dd>
         </div>
         <div>
-          <dt>Preparation quality</dt>
+          <dt>Quality</dt>
           <dd data-testid={`kitchen-day-combined-review-${module}-quality-value`}>
             {review.preparationQualityScore}
             <span className="kitchen-day-tutor-assessment__out-of">/5</span>
           </dd>
         </div>
-        {review.chefFeedback ? (
-          <div className="kitchen-day-tutor-assessment__feedback">
-            <dt>Feedback</dt>
-            <dd data-testid={`kitchen-day-combined-review-${module}-feedback-value`}>
-              {review.chefFeedback}
-            </dd>
-          </div>
-        ) : null}
       </dl>
-    </section>
+      {review.chefFeedback ? (
+        <p
+          className="kitchen-day-tutor-combined-feedback-readback"
+          data-testid={`kitchen-day-combined-review-${module}-feedback-value`}
+        >
+          {review.chefFeedback}
+        </p>
+      ) : null}
+    </div>
   );
 }
 
@@ -127,36 +142,36 @@ function ModuleAwaiting({
   review: NonNullable<ReturnType<typeof findAwaitingRecipeModuleReview>>;
 }) {
   return (
-    <section
-      className="kitchen-day-tutor-assessment kitchen-day-tutor-assessment--awaiting"
+    <div
+      className="kitchen-day-tutor-combined-assessment kitchen-day-tutor-combined-assessment--awaiting"
       data-testid={`kitchen-day-combined-review-${module}-awaiting`}
     >
-      <div className="kitchen-day-tutor-assessment__header">
-        <h3 className="kitchen-day-tutor-assessment__title">{KITCHEN_SKILLS_MODULE_TITLES[module]}</h3>
-      </div>
       <p
-        className="kitchen-day-tutor-assessment__status kitchen-day-tutor-assessment__status--awaiting"
+        className="kitchen-day-tutor-combined-assessment__note kitchen-day-tutor-combined-assessment__note--awaiting"
         data-testid={`kitchen-day-combined-review-${module}-awaiting-note`}
       >
-        {kitchenSkillsReviewAwaitingMessage()} Saved status updates when the GameBus feed reloads.
+        {kitchenSkillsReviewAwaitingMessage()} Feed reload confirms saved.
       </p>
-      <dl className="kitchen-day-tutor-assessment__readback">
+      <dl className="kitchen-day-tutor-combined-readback">
         <div>
-          <dt>Time efficiency</dt>
-          <dd>{review.timeEfficiencyScore}<span className="kitchen-day-tutor-assessment__out-of">/5</span></dd>
+          <dt>Time</dt>
+          <dd>
+            {review.timeEfficiencyScore}
+            <span className="kitchen-day-tutor-assessment__out-of">/5</span>
+          </dd>
         </div>
         <div>
-          <dt>Preparation quality</dt>
-          <dd>{review.preparationQualityScore}<span className="kitchen-day-tutor-assessment__out-of">/5</span></dd>
+          <dt>Quality</dt>
+          <dd>
+            {review.preparationQualityScore}
+            <span className="kitchen-day-tutor-assessment__out-of">/5</span>
+          </dd>
         </div>
-        {review.chefFeedback ? (
-          <div className="kitchen-day-tutor-assessment__feedback">
-            <dt>Feedback</dt>
-            <dd>{review.chefFeedback}</dd>
-          </div>
-        ) : null}
       </dl>
-    </section>
+      {review.chefFeedback ? (
+        <p className="kitchen-day-tutor-combined-feedback-readback">{review.chefFeedback}</p>
+      ) : null}
+    </div>
   );
 }
 
@@ -178,13 +193,10 @@ function ModuleDraftForm({
     draft.qualityScore.trim().length > 0 && !parseKitchenSkillsReviewScore(draft.qualityScore).ok;
 
   return (
-    <section
-      className="kitchen-day-tutor-assessment"
+    <div
+      className="kitchen-day-tutor-combined-assessment"
       data-testid={`kitchen-day-combined-review-${module}-form`}
     >
-      <div className="kitchen-day-tutor-assessment__header">
-        <h3 className="kitchen-day-tutor-assessment__title">{KITCHEN_SKILLS_MODULE_TITLES[module]}</h3>
-      </div>
       <ScorePicker
         label="Time efficiency"
         name={timeName}
@@ -203,18 +215,18 @@ function ModuleDraftForm({
         testId={`kitchen-day-combined-review-${module}-quality-picker`}
         onChange={(next) => onDraftChange({ ...draft, qualityScore: next })}
       />
-      <label className="kitchen-day-field kitchen-day-tutor-assessment__feedback-field">
+      <label className="kitchen-day-field kitchen-day-tutor-combined-feedback-field">
         <span>Feedback (optional)</span>
         <textarea
-          className="kitchen-day-input kitchen-day-tutor-assessment__feedback-input"
+          className="kitchen-day-input kitchen-day-tutor-combined-feedback-input"
           data-testid={`kitchen-day-combined-review-${module}-feedback`}
           value={draft.feedback}
           disabled={disabled}
-          rows={3}
+          rows={2}
           onChange={(event) => onDraftChange({ ...draft, feedback: event.target.value })}
         />
       </label>
-    </section>
+    </div>
   );
 }
 
@@ -239,7 +251,6 @@ export function KitchenSkillsCombinedTrainerSessionDetail({
     setError(null);
     setSending(false);
     sendingRef.current = false;
-    // Reset when the tutor opens a different student session.
     // eslint-disable-next-line react-hooks/exhaustive-deps -- intentional session identity deps only
   }, [selected.sessionId, selected.actorId]);
 
@@ -287,7 +298,9 @@ export function KitchenSkillsCombinedTrainerSessionDetail({
         !parseKitchenSkillsReviewScore(draft.timeScore).ok ||
         !parseKitchenSkillsReviewScore(draft.qualityScore).ok
       ) {
-        setError('Select integer scores from 0 to 5 for both dimensions on every open module. Unselected is not a score.');
+        setError(
+          'Select integer scores from 0 to 5 for both dimensions on every open module. Unselected is not a score.',
+        );
         return;
       }
     }
@@ -303,7 +316,9 @@ export function KitchenSkillsCombinedTrainerSessionDetail({
       if (!time.ok || !quality.ok) {
         sendingRef.current = false;
         setSending(false);
-        setError('Select integer scores from 0 to 5 for both dimensions on every open module. Unselected is not a score.');
+        setError(
+          'Select integer scores from 0 to 5 for both dimensions on every open module. Unselected is not a score.',
+        );
         return;
       }
       modulesPayload[module] = {
@@ -325,13 +340,7 @@ export function KitchenSkillsCombinedTrainerSessionDetail({
     if (!result.ok) {
       sendingRef.current = false;
       setSending(false);
-      setError(
-        kitchenSkillsReviewCommitErrorMessage(
-          result.reason,
-          'combined',
-          result.missing,
-        ),
-      );
+      setError(kitchenSkillsReviewCommitErrorMessage(result.reason, 'combined', result.missing));
       return;
     }
     for (const module of pendingModules) {
@@ -388,8 +397,27 @@ export function KitchenSkillsCombinedTrainerSessionDetail({
       ) : null}
 
       {activeRecipeId ? (
-        <div className="kitchen-day-tutor-combined-stack" data-testid="kitchen-day-tutor-combined-stack">
+        <div className="kitchen-day-tutor-combined-panel" data-testid="kitchen-day-tutor-combined-stack">
+          <div
+            className="kitchen-day-tutor-combined-module-strip"
+            aria-label="Module assessment status"
+            data-testid="kitchen-day-tutor-combined-module-strip"
+          >
+            {modules.map((module) => {
+              const state = recipeModuleAssessmentState(selected, activeRecipeId, module);
+              return (
+                <span key={module} className="kitchen-day-tutor-combined-module-strip__item">
+                  <span className="kitchen-day-tutor-combined-module-strip__name">
+                    {KITCHEN_SKILLS_MODULE_TITLES[module]}
+                  </span>
+                  <ModuleStatusLabel state={state} />
+                </span>
+              );
+            })}
+          </div>
+
           {modules.map((module) => {
+            const state = recipeModuleAssessmentState(selected, activeRecipeId, module);
             const confirmed = findConfirmedRecipeModuleReview(selected, activeRecipeId, module);
             const awaiting = findAwaitingRecipeModuleReview(selected, activeRecipeId, module);
             const portionEntries =
@@ -411,11 +439,16 @@ export function KitchenSkillsCombinedTrainerSessionDetail({
                 className="kitchen-day-tutor-combined-module"
                 data-testid={`kitchen-day-tutor-combined-module-${module}`}
               >
-                <h2 className="kitchen-day-tutor-combined-module__title">
-                  {KITCHEN_SKILLS_MODULE_TITLES[module]}
-                </h2>
-                <div className="kitchen-day-tutor-workspace kitchen-day-tutor-workspace--combined">
-                  <div className="kitchen-day-tutor-workspace__evidence">
+                <header className="kitchen-day-tutor-combined-module__header">
+                  <h2 className="kitchen-day-tutor-combined-module__title">
+                    {KITCHEN_SKILLS_MODULE_TITLES[module]}
+                  </h2>
+                  <ModuleStatusLabel state={state} />
+                  <span className="visually-hidden">{KITCHEN_SKILLS_ASSESSMENT_STATE_LABELS[state]}</span>
+                </header>
+
+                <div className="kitchen-day-tutor-combined-module__body">
+                  <div className="kitchen-day-tutor-combined-module__evidence">
                     <SessionEvidence
                       trimEntries={trimEntries}
                       rescueEntries={rescueEntries}
@@ -426,10 +459,11 @@ export function KitchenSkillsCombinedTrainerSessionDetail({
                       sessionPortionEntries={selected.portionEntries}
                       hideSectionTitles
                       hidePortionRecipeTitle
+                      collapsePortionTable
                       showWasteAnalytics={module === 'trimSmart'}
                     />
                   </div>
-                  <div className="kitchen-day-tutor-workspace__assessment">
+                  <div className="kitchen-day-tutor-combined-module__assessment">
                     {confirmed ? (
                       <ModuleReadback module={module} review={confirmed} />
                     ) : awaiting ? (
@@ -449,24 +483,28 @@ export function KitchenSkillsCombinedTrainerSessionDetail({
           })}
 
           {pendingModules.length > 0 ? (
-            <div className="kitchen-day-tutor-combined-submit" data-testid="kitchen-day-tutor-combined-submit-bar">
+            <div
+              className="kitchen-day-tutor-combined-submit"
+              data-testid="kitchen-day-tutor-combined-submit-bar"
+            >
               {error ? (
                 <p
-                  className="kitchen-day-tutor-assessment__status kitchen-day-tutor-assessment__status--warning"
+                  className="kitchen-day-tutor-combined-submit__error"
                   data-testid="kitchen-day-combined-review-error"
                   role="alert"
                 >
                   {error}
                 </p>
-              ) : null}
-              {!canSubmit && !sending ? (
+              ) : (
                 <p
-                  className="kitchen-day-tutor-assessment__status"
+                  className="kitchen-day-tutor-combined-submit__hint"
                   data-testid="kitchen-day-combined-review-unscored"
                 >
-                  Select both scores for every open module to submit.
+                  {canSubmit || sending
+                    ? 'Scores ready for every open module.'
+                    : 'Select both scores for every open module to submit.'}
                 </p>
-              ) : null}
+              )}
               {sending ? (
                 <p className="visually-hidden" data-testid="kitchen-day-combined-review-sending">
                   Sending
@@ -484,7 +522,7 @@ export function KitchenSkillsCombinedTrainerSessionDetail({
             </div>
           ) : (
             <p
-              className="kitchen-day-tutor-assessment__status kitchen-day-tutor-assessment__status--saved"
+              className="kitchen-day-tutor-combined-submit__done"
               data-testid="kitchen-day-combined-review-all-done"
             >
               Every evidenced module for this recipe is submitted or saved.
