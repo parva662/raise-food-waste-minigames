@@ -164,6 +164,8 @@ Understanding-oriented context: why the product and architecture look this way.
 | [`product/WASTE_CHALLENGES.md`](product/WASTE_CHALLENGES.md) | Practical kitchen family overview |
 | [`product/RAISE_BARLAUREA_MASTER_PLAN.md`](product/RAISE_BARLAUREA_MASTER_PLAN.md) | Study / system **explanation only** — not product SoT |
 | [`integrations/POWERESTA_MENU_INTEGRATION.md`](integrations/POWERESTA_MENU_INTEGRATION.md) | Sample Excel menus vs future PoweResta menu source |
+| [`integrations/POWERESTA_MENU_ADAPTER.md`](integrations/POWERESTA_MENU_ADAPTER.md) | Menu category adapter design (blocked on live confirmation) |
+| [`integrations/POWERESTA_SYNC_ARCHITECTURE.md`](integrations/POWERESTA_SYNC_ARCHITECTURE.md) | Future server-side sync proposal (disabled) |
 | [`testing/README.md`](testing/README.md) | Testing strategy notes |
 
 ---
@@ -173,6 +175,7 @@ Understanding-oriented context: why the product and architecture look this way.
 | Path | Notes |
 |------|--------|
 | [`current-state/IMPLEMENTATION_STATUS.md`](current-state/IMPLEMENTATION_STATUS.md) | Approved vs code vs live on `main` |
+| [`current-state/DEFERRED_BUG_BACKLOG.md`](current-state/DEFERRED_BUG_BACKLOG.md) | Parked issues (do not fix inside unrelated workstreams) |
 | [`current-state/ROADMAP.md`](current-state/ROADMAP.md) | Integration follow-ups |
 | [`decisions/`](decisions/) | Future ADRs (stub) |
 | [`archive/`](archive/) | **HISTORICAL** — including [`archive/SPEC_LEGACY.md`](archive/SPEC_LEGACY.md) |

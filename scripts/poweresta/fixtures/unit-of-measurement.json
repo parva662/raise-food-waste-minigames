@@ -1,0 +1,15 @@
+{
+  "_fixtureNote": "Documentation-derived unit-of-measurement shape — not a verified live response.",
+  "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+  "code": "g",
+  "type": "mass",
+  "ratio": 1,
+  "quantityType": "string",
+  "names": [
+    {
+      "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+      "languageId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+      "name": "gram"
+    }
+  ]
+}

@@ -27,10 +27,12 @@ PoweResta is intended to become the authoritative live menu data source when pro
 
 Until then:
 
-- Keep using the Excel → generated JSON pipeline for demos and pilot embeds.
+- Keep using the Excel → generated JSON pipeline for demos and pilot embeds (currently through **2027-04-30** sample coverage).
 - Treat [`POWERESTA_PUBLIC_API_REFERENCE.md`](POWERESTA_PUBLIC_API_REFERENCE.md) and [`POWERESTA_PUBLIC_API_SOURCE_CAPTURE_2026-11-02.md`](POWERESTA_PUBLIC_API_SOURCE_CAPTURE_2026-11-02.md) as the contract to implement against.
+- Use the offline client under `scripts/poweresta/` for request/response preparation; live network stays disabled by default.
+- See [`POWERESTA_MENU_ADAPTER.md`](POWERESTA_MENU_ADAPTER.md), [`POWERESTA_RECIPE_KITCHEN_SKILLS_MAPPING.md`](POWERESTA_RECIPE_KITCHEN_SKILLS_MAPPING.md), and [`POWERESTA_SYNC_ARCHITECTURE.md`](POWERESTA_SYNC_ARCHITECTURE.md).
 - Request API access from the provider before integration testing.
-- Do not implement automatic switching to PoweResta in this change set.
+- Do not implement automatic switching to PoweResta until authorized.
 - Do not reconstruct the API contract from informal notes when the registered docs already exist.
 
 GameBus activity posting, Input Collections, and mission structure stay independent of the menu provider swap.

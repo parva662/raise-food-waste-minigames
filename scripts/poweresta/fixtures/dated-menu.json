@@ -1,0 +1,29 @@
+{
+  "_fixtureNote": "Documentation-derived dated menu shape — not a verified live response. No recipeId on rows (per docs).",
+  "menuId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+  "siteId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+  "date": "2026-11-03",
+  "version": 1,
+  "mealOptions": [
+    {
+      "names": [{ "language": "en", "name": "Example meal option" }],
+      "prices": [],
+      "rows": [
+        {
+          "names": [{ "language": "en", "name": "Example dish A" }],
+          "allergens": [{ "language": "en", "allergens": ["Milk"] }],
+          "diets": [{ "language": "en", "diets": ["Lactose-free"], "dietShorts": ["L"] }],
+          "ingredients": [{ "language": "en", "ingredients": "Example ingredients text" }],
+          "publicInfos": [{ "language": "en", "publicInfos": "Example public info" }]
+        },
+        {
+          "names": [{ "language": "en", "name": "Example dish B" }],
+          "allergens": [],
+          "diets": [{ "language": "en", "diets": ["Vegetarian"], "dietShorts": ["Veg"] }],
+          "ingredients": [{ "language": "en", "ingredients": "Example vegetarian ingredients" }],
+          "publicInfos": []
+        }
+      ]
+    }
+  ]
+}

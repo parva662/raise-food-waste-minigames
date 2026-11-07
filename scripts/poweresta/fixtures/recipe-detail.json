@@ -1,0 +1,50 @@
+{
+  "_fixtureNote": "Documentation-derived recipe detail shape — not a verified live response. Loss field units unconfirmed.",
+  "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+  "siteId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+  "workspaceId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+  "code": "DOC-RECIPE-001",
+  "sizeBatch": 100,
+  "numberBatch": 1,
+  "sizePortion": 10,
+  "numberPortion": 10,
+  "lossServing": 0,
+  "lossCooking": 0,
+  "names": [
+    {
+      "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+      "languageId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+      "name": "Documentation example recipe",
+      "type": "string"
+    }
+  ],
+  "rows": [
+    {
+      "id": "row-1",
+      "itemId": "item-1",
+      "tradeItemId": "trade-1",
+      "subRecipeId": "",
+      "order": 1,
+      "type": 1,
+      "quantity": "1000",
+      "quantityUnitOfMeasurementId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+      "lossPreparation": "0",
+      "translated": [
+        {
+          "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+          "languageId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+          "info": "Example info",
+          "header": "Example header",
+          "method": "Example preparation method"
+        }
+      ],
+      "itemNames": [
+        {
+          "languageId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+          "name": "Example ingredient"
+        }
+      ],
+      "isFoodstuff": true
+    }
+  ]
+}

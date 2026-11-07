@@ -1,0 +1,8 @@
+{
+  "_fixtureNote": "Documentation-derived menu metadata shape — not a verified live response.",
+  "menuId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+  "siteId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+  "version": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+  "menuNames": [{ "language": "en", "name": "Example lunch" }],
+  "menuInformation": [{ "language": "en", "information": "Documentation fixture only" }]
+}
